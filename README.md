@@ -379,6 +379,7 @@ jobs:
     steps:
       - name: Input parameters
         run: |
+          echo "Input parameters:" >> $GITHUB_STEP_SUMMARY
           echo "Version: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "Python version: ${{ github.event.inputs.python-version }}" >> $GITHUB_STEP_SUMMARY
           echo "Poetry version options: ${{ github.event.inputs.poetry_version_options }}" >> $GITHUB_STEP_SUMMARY
@@ -423,6 +424,7 @@ jobs:
       PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
   get-current-version:
+    needs: [publish]
     outputs:
       current_version: ${{ steps.get_version.outputs.CURRENT_VERSION }}
     runs-on: ubuntu-latest
@@ -435,11 +437,15 @@ jobs:
         run: |
           echo CURRENT_VERSION=$(poetry version | cut -d' ' -f2) >> $GITHUB_OUTPUT
 
+      - name: Output current version
+        run: |
+          echo "Released version: ${{ steps.get_version.outputs.CURRENT_VERSION }}" >> $GITHUB_STEP_SUMMARY
+
   github-release:
-    needs: [publish]
+    needs: [get-current-version]
     uses: Netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
     with:
-      version: ${{ needs.publish.outputs.current_version }}
+      version: ${{ needs.get-current-version.outputs.current_version }}
       publish: false
 ```
 
