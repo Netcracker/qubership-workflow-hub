@@ -12,6 +12,11 @@ on:
         required: true
         default: 'false'
         type: string
+      config-name:
+        description: 'Release Drafter configuration file'
+        required: false
+        default: 'release-drafter-config.yml'
+        type: string
 
 jobs:
   draft-release:
@@ -33,7 +38,7 @@ jobs:
       - name: Run Release Drafter
         uses: release-drafter/release-drafter@v5
         with:
-          config-name: release-drafter.yml
+          config-name: ${{ inputs.config-name }}
           publish: ${{ inputs.publish }}
           name: ${{ env.RELEASE_VERSION }}
           tag: v${{ env.RELEASE_VERSION }}
