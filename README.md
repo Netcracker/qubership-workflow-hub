@@ -340,6 +340,8 @@ Python project release workflow is used to make a Github release and publish rel
 Create new a file `.github/workflows/python-release.yaml` and copy the code below or just copy the [prepared file](./docs/examples/python-release.yaml):
 
 ```yaml
+---
+
 name: Python Release
 
 on:
@@ -420,11 +422,24 @@ jobs:
     secrets:
       PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
+  get-current-version:
+    outputs:
+      current_version: ${{ steps.get_version.outputs.CURRENT_VERSION }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get current version
+        id: get_version
+        run: |
+          echo CURRENT_VERSION=$(poetry version | cut -d' ' -f2) >> $GITHUB_OUTPUT
+
   github-release:
     needs: [publish]
     uses: Netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
     with:
-      version: ${{ inputs.version }}
+      version: ${{ needs.publish.outputs.current_version }}
       publish: false
 ```
 
