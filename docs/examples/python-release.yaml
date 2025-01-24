@@ -82,6 +82,7 @@ jobs:
       PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
   get-current-version:
+    needs: [publish]
     outputs:
       current_version: ${{ steps.get_version.outputs.CURRENT_VERSION }}
     runs-on: ubuntu-latest
@@ -99,8 +100,8 @@ jobs:
           echo "Released version: ${{ steps.get_version.outputs.CURRENT_VERSION }}" >> $GITHUB_STEP_SUMMARY
 
   github-release:
-    needs: [publish]
+    needs: [get-current-version]
     uses: Netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
     with:
-      version: ${{ needs.publish.outputs.current_version }}
+      version: ${{ needs.get-current-version.outputs.current_version }}
       publish: false
