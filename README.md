@@ -374,7 +374,7 @@ on:
         default: '--maxfail=3 -v'
 
 jobs:
-  check-tag:
+  show-params:
     runs-on: ubuntu-latest
     steps:
       - name: Input parameters
@@ -387,24 +387,29 @@ jobs:
           echo "Pytest run: ${{ github.event.inputs.pytest_run }}" >> $GITHUB_STEP_SUMMARY
           echo "Pytest parameters: ${{ github.event.inputs.pytest_params }}" >> $GITHUB_STEP_SUMMARY
 
+  check-tag:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Check if tag exists
+        if: ${{ inputs.version != '' }}
         id: check_tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-checker@master
+        uses: netcracker/qubership-workflow-hub/actions/tag-checker@main
         with:
           tag: 'v${{ github.event.inputs.version }}'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Output result
+        if: ${{ inputs.version != '' }}
         run: |
           echo "Tag exists: ${{ steps.check_tag.outputs.exists }}"
           echo "Tag name: ${{ steps.check_tag.outputs.tag_name }}"
 
       - name: Fail if tag exists
-        if: steps.check_tag.outputs.exists == 'true'
+        if: inputs.version != '' && steps.check_tag.outputs.exists == 'true'
         run: |
           echo "Tag already exists: ${{ steps.check_tag.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
           echo "Tag already exists: ${{ steps.check_tag.outputs.tag_name }}"
@@ -435,7 +440,8 @@ jobs:
       - name: Get current version
         id: get_version
         run: |
-          echo CURRENT_VERSION=$(poetry version | cut -d' ' -f2) >> $GITHUB_OUTPUT
+          echo CURRENT_VERSION=$(grep -e '^version =' pyproject.toml | cut -d'=' -f2) >> $GITHUB_OUTPUT
+          # echo CURRENT_VERSION=$(poetry version | cut -d' ' -f2) >> $GITHUB_OUTPUT
 
       - name: Output current version
         run: |
