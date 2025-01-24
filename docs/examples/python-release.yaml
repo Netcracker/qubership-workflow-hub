@@ -1,4 +1,4 @@
-name: Python Publish
+name: Python Release
 
 on:
   workflow_dispatch:

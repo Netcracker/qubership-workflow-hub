@@ -20,6 +20,7 @@ on:
         required: false
         type: string
         default: "21"
+        description: 'Java version (e.g., 21)'
 
 jobs:
   check-tag:
