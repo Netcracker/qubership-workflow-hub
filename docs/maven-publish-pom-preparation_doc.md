@@ -6,6 +6,34 @@ This documentation provides the instruction how to change project's `pom.xml` fi
 
 ## POM file required changes
 
+### Mandatory maven central properties
+
+Add following entries under `project` section (see [maven central requirements](https://central.sonatype.org/publish/requirements/) for more info).  Make sure to update description, and scm sections according to your project details.
+
+```xml
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Your project description</description>
+    <url>https://netcracker.com</url>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Netcracker</name>
+            <email>opensourcegroup@netcracker.com</email>
+            <organization>Netcracker Technology</organization>
+            <organizationUrl>https://github.com/Netcracker</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+         <connection>scm:git:git://github.com/Netcracker/your-repository.git</connection>
+         <developerConnection>scm:git:ssh://github.com:Netcracker/your-repository.git</developerConnection>
+         <url>https://github.com/Netcracker/your-repository/tree/main</url>
+    </scm>
+```
 ### Distribution management
 
 Under `project` add a new section
@@ -21,7 +49,7 @@ Under `project` add a new section
 
 ### Build plugins
 
-In a sectin `project.build.plugins` add next entries:
+In a section `project.build.plugins` add next entries:
 
 ```xml
             <plugin>
