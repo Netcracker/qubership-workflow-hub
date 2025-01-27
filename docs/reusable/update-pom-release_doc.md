@@ -23,7 +23,7 @@ The workflow requires the following inputs:
 | Input Name | Type   | Required | Description                                    |
 |------------|--------|----------|------------------------------------------------|
 | `file`     | string | true     | Path to the `pom.xml` file to be updated.      |
-| `revision` | string | true     | New version to set in the `<revision>` tag.    |
+| `version` | string | true     | New version to set in the `<revision>` tag.    |
 
 ---
 
@@ -43,7 +43,7 @@ Runs on `ubuntu-latest` and performs the following steps:
    - Updates the `<revision>` tag in the specified `pom.xml` file using `sed`.
    ```bash
    echo "Updating version in ${{ inputs.file }}..."
-   sed -i "s|<revision>.*</revision>|<revision>${{ inputs.revision }}</revision>|" ${{ inputs.file }}
+   sed -i "s|<revision>.*</revision>|<revision>${{ inputs.version }}</revision>|" ${{ inputs.file }}
    ```
 
 #### c. **Commit Changes**
@@ -52,7 +52,7 @@ Runs on `ubuntu-latest` and performs the following steps:
    git config --global user.email "publisher@qubership.org"
    git config --global user.name "Qubership User"
    git add ${{ inputs.file }}
-   git commit -m "Update version to ${{ inputs.revision }} for release"
+   git commit -m "Update version to ${{ inputs.version }} for release"
    git push origin main
    ```
 
@@ -75,7 +75,7 @@ jobs:
     uses: Netcracker/qubership-workflow-hub/.github/workflows/update-version.yml
     with:
       file: "path/to/pom.xml"
-      revision: "1.0.1"
+      version: "1.0.1"
 ```
 
 ---

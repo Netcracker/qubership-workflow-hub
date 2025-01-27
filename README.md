@@ -237,13 +237,13 @@ jobs:
       - name: Output result
         run: |
           echo "Tag exists: ${{ steps.check_tag.outputs.exists }}"
-          echo "Tag name: ${{ steps.check_tag.outputs.tag_name }}"
+          echo "Tag name: v${{ github.event.inputs.version }}"
 
       - name: Fail if tag exists
         if: steps.check_tag.outputs.exists == 'true'
         run: |
-          echo "Tag already exists: ${{ steps.check_tag.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "Tag already exists: ${{ steps.check_tag.outputs.tag_name }}"
+          echo "Tag already exists: v${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "Tag already exists: v${{ github.event.inputs.version }}"
           exit 1
 
   update-pom-version:
@@ -251,7 +251,7 @@ jobs:
     uses: Netcracker/qubership-workflow-hub/.github/workflows/update-pom-release.yml@main
     with:
       file: 'pom.xml'
-      revision: ${{ github.event.inputs.version }}
+      version: ${{ github.event.inputs.version }}
 
   upload_to_maven_central:
     needs: [update-pom-version]
@@ -259,7 +259,7 @@ jobs:
     with:
       maven_command: "--batch-mode deploy"
       java_version: ${{ github.event.inputs.java_version }}
-      revision: ${{ github.event.inputs.version }}
+      version: ${{ github.event.inputs.version }}
     secrets:
       maven_username: ${{ secrets.MAVEN_USER }}
       maven_password: ${{ secrets.MAVEN_PASSWORD }}
@@ -406,13 +406,13 @@ jobs:
         if: ${{ inputs.version != '' }}
         run: |
           echo "Tag exists: ${{ steps.check_tag.outputs.exists }}"
-          echo "Tag name: ${{ steps.check_tag.outputs.tag_name }}"
+          echo "Tag name: v${{ github.event.inputs.version }}"
 
       - name: Fail if tag exists
         if: inputs.version != '' && steps.check_tag.outputs.exists == 'true'
         run: |
-          echo "Tag already exists: ${{ steps.check_tag.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "Tag already exists: ${{ steps.check_tag.outputs.tag_name }}"
+          echo "Tag already exists: v${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "Tag already exists: v${{ github.event.inputs.version }}"
           exit 1
 
   publish:

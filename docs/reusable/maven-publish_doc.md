@@ -25,7 +25,7 @@ The workflow accepts the following inputs:
 | `maven_command` | string | false    | `--batch-mode deploy`  | Maven command to execute for the build and deployment. |
 | `java_version`  | string | false    | `21`                  | Version of Java to set up for the Maven build.         |
 | `server_id`     | string | false    | `central`             | Server ID for Maven deployment.                       |
-| `revision`      | string | true     |                        | The revision tag for the code to publish.             |
+| `version`      | string | true     |                        | The version tag for the code to publish.             |
 
 ### Secrets
 
@@ -47,11 +47,11 @@ The following secrets are required for secure Maven publishing:
 Runs on `ubuntu-latest` and consists of the following steps:
 
 #### a. **Checkout Code**
-   - Checks out the repository code at the specified revision.
+   - Checks out the repository code at the specified version.
    ```yaml
    uses: actions/checkout@v4
    with:
-     ref: v${{ inputs.revision }}
+     ref: v${{ inputs.version }}
      fetch-depth: 0
    ```
 
@@ -117,7 +117,7 @@ jobs:
       maven_command: "clean deploy"
       java_version: "17"
       server_id: "my-repo"
-      revision: "1.0.0"
+      version: "1.0.0"
     secrets:
       maven_username: ${{ secrets.MAVEN_USERNAME }}
       maven_password: ${{ secrets.MAVEN_PASSWORD }}
