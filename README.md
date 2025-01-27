@@ -229,7 +229,7 @@ jobs:
 
       - name: Check if tag exists
         id: check_tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-checker@master
+        uses: netcracker/qubership-workflow-hub/actions/tag-checker@main
         with:
           tag: 'v${{ github.event.inputs.version }}'
         env:
@@ -249,15 +249,19 @@ jobs:
 
   update-pom-version:
     needs: [check-tag]
+    runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Update pom.xml
-        uses: Netcracker/qubership-workflow-hub/.github/actions/pom-updater@main
+        uses: Netcracker/qubership-workflow-hub/actions/pom-updater@main
         with:
-          newValue: ${{ github.event.inputs.version }}
+          new_value: ${{ github.event.inputs.version }}
       - name: Commit Changes
-        uses: Netcracker/qubership-workflow-hub/.github/actiona/commit-and-push@main
+        uses: Netcracker/qubership-workflow-hub/actions/commit-and-push@main
         with:
-          commitMessage: "Update pom.xml version to ${{ github.event.inputs.version }}"
+          commit_message: "Update pom.xml version to ${{ github.event.inputs.version }}"
 
   upload_to_maven_central:
     needs: [update-pom-version]
