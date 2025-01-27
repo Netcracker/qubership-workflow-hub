@@ -198,6 +198,7 @@ Create new a file `.github/workflows/maven-release.yaml` and copy the code below
 
 ```yaml
 ---
+
 name: Release And Upload to Maven Central
 
 on:
@@ -212,7 +213,7 @@ on:
         required: false
         type: string
         default: "21"
-        description: "Java version"
+        description: 'Java version (e.g., 21)'
 
 jobs:
   check-tag:
@@ -248,10 +249,15 @@ jobs:
 
   update-pom-version:
     needs: [check-tag]
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/update-pom-release.yml@main
-    with:
-      file: 'pom.xml'
-      version: ${{ github.event.inputs.version }}
+    steps:
+      - name: Update pom.xml
+        uses: Netcracker/qubership-workflow-hub/.github/actions/pom-updater@main
+        with:
+          newValue: ${{ github.event.inputs.version }}
+      - name: Commit Changes
+        uses: Netcracker/qubership-workflow-hub/.github/actiona/commit-and-push@main
+        with:
+          commitMessage: "Update pom.xml version to ${{ github.event.inputs.version }}"
 
   upload_to_maven_central:
     needs: [update-pom-version]
