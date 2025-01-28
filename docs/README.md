@@ -5,9 +5,9 @@ This index provides a quick overview of the available workflow documentation in 
 ---
 
 ## Table of Contents
-- [Reusable Workflows](#reusable-workflows)
+- [Reusable Workflows](#flows)
+- [Actions](#actions)
 - [Usage](#usage)
-- [Examples](#examples)
 
 ---
 
@@ -20,33 +20,18 @@ This index provides a quick overview of the available workflow documentation in 
 | Python Build          | Automates building, testing, and publishing Python packages.                | [Python Build](./reusable/python-publish.md)        |
 
 
+## Actions
+
+| Action Name                  | Description                                                                 | Documentation Link                                   |
+|--------------------------------|-----------------------------------------------------------------------------|-----------------------------------------------------|
+| commit-and-push        | Automates signing and deploying Maven artifacts to a repository.            | [Maven Publish](./reusable/maven-publish_doc.md)   |
+| pom-updater        | Automates creating and tagging releases on GitHub.                          | [GitHub Release](./reusable/create-github-release_doc.md) |
+| tag-checker          | Automates building, testing, and publishing Python packages.                | [Python Build](./reusable/python-publish.md)        |
+| custom-event          | Automates building, testing, and publishing Python packages.                | [Python Build](./reusable/python-publish.md)        |
+
+
 ---
 
 ## Usage
 
 Refer to the respective documentation for detailed instructions on inputs, secrets, and example usage. For any questions or issues, feel free to contact the repository maintainers.
-
----
-
-## Examples
-
-### Maven Publish
-```yaml
-uses: ./.github/workflows/maven-publish.yml
-with:
-  # inputs
-```
-### GitHub Release
-```yaml
-uses: ./.github/workflows/github-release.yml
-with:
-  # inputs
-```
-
-
-### Python Build 
-```yaml
-uses: ./.github/workflows/python-build.yml
-with:
-  # inputs
-```
