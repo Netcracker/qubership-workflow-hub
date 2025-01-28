@@ -8,7 +8,7 @@
 
 | Name         | Required  | Description                                                                                     | Default                                   |
 |--------------|-----------|-------------------------------------------------------------------------------------------------|-------------------------------------------|
-| `filePath`   | No        | The path to the XML file to update.                                                             | `./pom.xml`                               |
+| `file_path`   | No        | The path to the XML file to update.                                                             | `./pom.xml`                               |
 | `path`       | No        | The XPath expression to locate the node to update.                                              | `//p:project/p:properties/p:revision`     |
 | `new_value`   | Yes       | The new value to set for the selected XML node.                                                 | N/A                                       |
 
