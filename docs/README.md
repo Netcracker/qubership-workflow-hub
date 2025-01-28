@@ -22,12 +22,12 @@ This index provides a quick overview of the available workflow documentation in 
 
 ## Actions
 
-| Action Name                  | Description                                                                 | Documentation Link                                   |
-|--------------------------------|-----------------------------------------------------------------------------|-----------------------------------------------------|
-| commit-and-push        | Automates signing and deploying Maven artifacts to a repository.            | [Maven Publish](./reusable/maven-publish_doc.md)   |
-| pom-updater        | Automates creating and tagging releases on GitHub.                          | [GitHub Release](./reusable/create-github-release_doc.md) |
-| tag-checker          | Automates building, testing, and publishing Python packages.                | [Python Build](./reusable/python-publish.md)        |
-| custom-event          | Automates building, testing, and publishing Python packages.                | [Python Build](./reusable/python-publish.md)        |
+| Action Name      | Description                                                         | Documentation Link                                   |
+|------------------|---------------------------------------------------------------------|-----------------------------------------------------|
+| commit-and-push  | Automates committing and pushing changes to a remote repository.    | [commit-and-push](./actions/commit-and-push/readme.md) |
+| pom-updater      | Automatically updates the `pom.xml` file in Maven projects.         | [pom-updater](./actions/pom-updater/readme.md) |
+| tag-checker      | Verifies the presence of specific tags in the repository.           | [tag-checker](./actions/tag-checker/readme.md) |
+| custom-event     | Generate anf Process custom events in the workflow.                 | [custom-event](./actions/custom-event/readme.md) |
 
 
 ---
