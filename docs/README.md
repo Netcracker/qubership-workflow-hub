@@ -1,4 +1,4 @@
-# Workflow and Action Documentation Index
+# Workflow and Action Documentation
 
 This index provides a quick overview of the available workflow and action documentation in this repository. Each workflow and action serves a distinct purpose and is reusable via `workflow_call`. Use the table below to navigate to the specific documentation.
 
