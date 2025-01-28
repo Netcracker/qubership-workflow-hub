@@ -2,7 +2,7 @@ name: 'Update XML Node'
 description: 'Updates an XML node in a specified file using an XPath expression.'
 
 inputs:
-  filePath:
+  file_path:
     description: 'The path to the XML file to update. Defaults to `./pom.xml`.'
     required: false
     default: './pom.xml'

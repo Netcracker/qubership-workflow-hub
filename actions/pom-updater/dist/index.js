@@ -35060,7 +35060,7 @@ const fs = __nccwpck_require__(9896);
 
 async function run() {
   try {
-    const filePath = core.getInput('filePath') || 'pom.xml';
+    const filePath = core.getInput('file_path') || 'pom.xml';
     const xpathExpression = core.getInput('path') || '//p:project/p:properties/p:revision';
     const newValue = core.getInput('new_value');
 

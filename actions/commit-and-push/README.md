@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Commit and Push Changes
         uses: netcracker/qubership-workflow-hub/actions/commit-and-push@main

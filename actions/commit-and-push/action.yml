@@ -3,21 +3,41 @@ description: 'Automatically commits and pushes changes to the repository.'
 
 inputs:
   author_name:
-    description: 'The name of the commit author. Defaults to `github-actions`.'
+    description: 'The name of the commit author. Defaults to `qubership-actios[bot]`.'
     required: false
-    default: 'qubership-actions[bot]'
+    default: 'qubership-actios[bot]'
   author_email:
-    description: 'The email of the commit author. Defaults to `qubership-actions[bot]@qubership.com`.'
+    description: 'The email of the commit author. Defaults to `qubership-actios[bot]@qubership.com`.'
     required: false
-    default: 'qubership-actions[bot]@qubership.com'
+    default: 'qubership-actios[bot]@qubership.com'
   commit_message:
     description: 'The commit message. Defaults to `Automated commit`.'
     required: false
     default: 'Automated commit'
 
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: 'composite'
+  steps:
+    - name: Configure git
+      shell: bash
+      run: |
+         set -x
+         git config --global user.email "${{ inputs.author_email }}"
+         git config --global user.name "${{ inputs.author_name }}"
+
+    - name: Commit changes
+      shell: bash
+      run: |
+         set -x
+         git add .
+         git commit -m "${{ inputs.commit_message }}" || echo "No changes to commit."
+      continue-on-error: true
+
+    - name: Push changes
+      shell: bash
+      run: |
+          set -x
+          git push origin ${{ inputs.branch_name }}
 
 branding:
   icon: 'git-commit'
