@@ -8,12 +8,12 @@ This documentation provides the instruction how to change project's `pom.xml` fi
 
 ### Mandatory maven central properties
 
-Add following entries under `project` section (see [maven central requirements](https://central.sonatype.org/publish/requirements/) for more info).  Make sure to update description, and scm sections according to your project details.
+Add following entries under `project` section (see [maven central requirements](https://central.sonatype.org/publish/requirements/) for more info).  Make sure to update description, url and scm sections according to your project details.
 
 ```xml
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Your project description</description>
-    <url>https://netcracker.com</url>
+    <url>https://github.com/Netcracker/your-repository</url>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -25,7 +25,7 @@ Add following entries under `project` section (see [maven central requirements](
             <name>Netcracker</name>
             <email>opensourcegroup@netcracker.com</email>
             <organization>Netcracker Technology</organization>
-            <organizationUrl>https://github.com/Netcracker</organizationUrl>
+            <organizationUrl>https://www.netcracker.com</organizationUrl>
         </developer>
     </developers>
     <scm>
