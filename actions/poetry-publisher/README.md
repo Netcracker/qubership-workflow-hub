@@ -1,5 +1,7 @@
 # 🚀 Poetry Publisher GitHub Action
 
+**Category:** Deployment & Package Management
+
 This **Poetry Publisher** GitHub Action automates the process of building, testing, and publishing Python packages using [Poetry](https://python-poetry.org/).
 
 ## 📌 Features
