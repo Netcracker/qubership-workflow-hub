@@ -75,7 +75,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          cahe: pip
+          cache: pip
 
       - name: Run Poetry Publisher Action
         uses: Netcracker/qubership-workflow-hub/actions/poetry-publisher
