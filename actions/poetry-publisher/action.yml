@@ -1,0 +1,91 @@
+name: 'Poetry Publisher'
+description: ''
+
+inputs:
+
+  package_version:
+    description: 'Specific application version to set for the package'
+    required: false
+    default: ''
+
+  poetry_version_bump:
+    description: 'Options for patching version (e.g., "patch", "minor")'
+    required: false
+    default: 'patch'
+
+  poetry_build_options:
+    description: 'Additional parameters for poetry build'
+    required: false
+    default: ''
+
+  run_pytest:
+    description: 'Run tests with pytest'
+    required: false
+    default: 'false'
+
+  pytest_options:
+    description: 'Parameters for pytest'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --user pipx
+        pipx ensurepath
+        pipx install poetry
+
+    - name: Remove dist
+      shell: bash
+      run: rm -rf dist/
+
+    - name: Check token length
+      shell: bash
+      run: |
+        if [ -z "${{ env.PYPI_TOKEN }}" ] || [ ${#PYPI_TOKEN} -lt 10 ]; then
+          echo "Invalid token length"
+          exit 1
+        fi
+      env:
+        PYPI_TOKEN: ${{ env.PYPI_API_TOKEN }}
+
+    - name: Set package version
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.package_version }}" ]; then
+          poetry version ${{ inputs.package_version }}
+        else
+          poetry version ${{ inputs.poetry_version_bump }}
+        fi
+
+    - name: Build package
+      shell: bash
+      run: poetry build ${{ inputs.poetry_build_options }}
+
+    - name: Validate build
+      shell: bash
+      run: |
+        ls -l dist/
+        echo "Build validation complete."
+
+    - name: Run tests
+      shell: bash
+      if: ${{ inputs.run_pytest != 'false' }}
+      run: |
+        poetry install
+        poetry run pytest ${{ inputs.pytest_options }}
+
+
+    - name: Publish to PyPi
+      shell: bash
+      run: |
+        poetry config pypi-token.pypi $PYPI_TOKEN
+        poetry config repositories.test https://test.pypi.org/legacy/
+        poetry publish --no-interaction -u __token__ -p $PYPI_TOKEN -r test
+      env:
+        PYPI_TOKEN: ${{ env.PYPI_API_TOKEN }}
