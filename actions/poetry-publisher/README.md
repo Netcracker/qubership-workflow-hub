@@ -61,7 +61,7 @@ on:
       pytest_options:
         description: "Parameters for pytest"
         required: false
-        default: ''
+        default: '--maxfail=3 -v'
 
 jobs:
   publish:
