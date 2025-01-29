@@ -34,7 +34,7 @@ runs:
       run: |
          set -x
          git add .
-         git commit -m "${{ inputs.commit_message }}" || echo "No changes to commit."
+         git commit -m "${{ inputs.commit_message }} [ci skip]" || echo "No changes to commit. [ci skip]"
       continue-on-error: true
 
     - name: Push changes
