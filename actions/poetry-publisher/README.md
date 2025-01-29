@@ -27,7 +27,7 @@ This **Poetry Publisher** GitHub Action automates the process of building, testi
 |-------------|------------------------------------|----------|
 | `PYPI_TOKEN` | API token for publishing to PyPI | ✅ Yes |
 
-## 🚀 Usage Example
+## 📝 Usage Example
 
 Here’s an example of how to use this action in a GitHub workflow:
 

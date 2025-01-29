@@ -27,7 +27,7 @@ This **Commit and Push** GitHub Action automates the process of committing chang
 |---------------|--------------------------------------|----------|
 | `GITHUB_TOKEN` | GitHub token for authentication   | ✅ Yes |
 
-## 🚀 Usage Example
+## 📝 Usage Example
 
 Here’s an example of how to use this action in a GitHub workflow:
 
