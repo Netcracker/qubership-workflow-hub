@@ -11,23 +11,23 @@ This **Poetry Publisher** GitHub Action automates the process of building, testi
 - Runs tests using `pytest` (if enabled).
 - Publishes the package to Test PyPI.
 
-## 🛠️ Inputs
+## Inputs
 
 | Name                  | Description                                      | Required | Default |
 |-----------------------|--------------------------------------------------|----------|---------|
-| `package_version`     | Specific version to set for the package         | ❌ No    | `''` (empty) |
-| `poetry_version_bump` | Version increment option (`patch`, `minor`, etc.) | ❌ No    | `patch` |
-| `poetry_build_options` | Additional build parameters for Poetry         | ❌ No    | `''` (empty) |
-| `run_pytest`         | Run tests with `pytest` before publishing        | ❌ No    | `false` |
-| `pytest_options`     | Additional parameters for `pytest`               | ❌ No    | `''` (empty) |
+| `package_version`     | Specific version to set for the package         | No    | `''` (empty) |
+| `poetry_version_bump` | Version increment option (`patch`, `minor`, etc.) | No    | `patch` |
+| `poetry_build_options` | Additional build parameters for Poetry         | No    | `''` (empty) |
+| `run_pytest`         | Run tests with `pytest` before publishing        | No    | `false` |
+| `pytest_options`     | Additional parameters for `pytest`               | No    | `''` (empty) |
 
-## 🔑 Environment Variables
+## Environment Variables
 
 | Name         | Description                        | Required |
 |-------------|------------------------------------|----------|
-| `PYPI_TOKEN` | API token for publishing to PyPI | ✅ Yes |
+| `PYPI_TOKEN` | API token for publishing to PyPI | Yes |
 
-## 📝 Usage Example
+## Usage Example
 
 Here’s an example of how to use this action in a GitHub workflow:
 
