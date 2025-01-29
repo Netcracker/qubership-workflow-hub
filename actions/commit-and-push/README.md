@@ -1,38 +1,62 @@
-# Commit and Push Action
+# 🚀 Commit and Push GitHub Action
 
-**Category**: Source Code Management
+**Category:** Source Code Management
 
-**Description**: This action automatically commits and pushes changes to the repository.
+This **Commit and Push** GitHub Action automates the process of committing changes and pushing them to a remote repository.
 
-## Inputs
+## 📌 Features
 
-| Name             | Required  | Description                                                   | Default                |
-|------------------|-----------|---------------------------------------------------------------|------------------------|
-| `author_name`    | No        | The name of the commit author.                                | `qubership-actions[bot]`       |
-| `author_email`   | No        | The email of the commit author.                               | `qubership-actions[bot]@qubership.com`   |
-| `commit_message` | No        | The commit message for the commit.                           | `Automated commit`     |
-| `branch_name` | No        | The branch to push the changes to.                           | `main`     |
+- Automatically commits and pushes modified files.
+- Allows customization of commit author name and email.
+- Supports configurable commit messages.
+- Pushes changes to a specified branch.
+- Skips commits if there are no changes.
 
-## Example Usage
+## 🛠️ Inputs
+
+| Name              | Description                                                | Required | Default |
+|-------------------|------------------------------------------------------------|----------|---------|
+| `author_name`    | The name of the commit author.                             | ❌ No    | `qubership-actios[bot]` |
+| `author_email`   | The email of the commit author.                            | ❌ No    | `qubership-actios[bot]@qubership.com` |
+| `commit_message` | The commit message for the new commit.                     | ❌ No    | `Automated commit` |
+| `branch_name`    | The branch to push the changes to.                         | ❌ No    | `main` |
+
+## 🔑 Environment Variables
+
+| Name           | Description                          | Required |
+|---------------|--------------------------------------|----------|
+| `GITHUB_TOKEN` | GitHub token for authentication   | ✅ Yes |
+
+## 🚀 Usage Example
+
+Here’s an example of how to use this action in a GitHub workflow:
 
 ```yaml
-name: Commit and Push
+name: Auto Commit and Push
+
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   commit-and-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Commit and Push Changes
-        uses: netcracker/qubership-workflow-hub/actions/commit-and-push@main
+      - name: Make changes
+        run: echo "Automated update" >> update.log
+
+      - name: Run Commit and Push Action
+        uses: Netcracker/qubership-workflow-hub/actions/commit-and-push@main
         with:
-          author_name: 'Your Name'
-          author_email: 'your-email@example.com'
-          commit_message: 'Update files with automated script'
-          branch_name: 'main'
+          author_name: "Bot User"
+          author_email: "bot@example.com"
+          commit_message: "Automated commit from GitHub Actions"
+          branch_name: "main"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

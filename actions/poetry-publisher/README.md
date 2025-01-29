@@ -75,9 +75,6 @@ jobs:
           python-version: '3.11'
           cahe: pip
 
-      - name: Install dependencies
-        run: python -m pip install --upgrade pip poetry
-
       - name: Run Poetry Publisher Action
         uses: ./.github/actions/poetry-publisher
         with:
