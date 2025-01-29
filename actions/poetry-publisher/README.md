@@ -76,7 +76,7 @@ jobs:
           cahe: pip
 
       - name: Run Poetry Publisher Action
-        uses: ./.github/actions/poetry-publisher
+        uses: Netcracker/qubership-workflow-hub/actions/poetry-publisher
         with:
           package_version: ${{ github.event.inputs.package_version }}
           poetry_version_bump: ${{ github.event.inputs.poetry_version_bump }}
