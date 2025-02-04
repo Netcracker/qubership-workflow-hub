@@ -7,20 +7,31 @@ jobs:
   read-config:
     runs-on: ubuntu-latest
     outputs:
-      repos: ${{ steps.read_config.outputs.repos }}
+      repos: ${{ steps.get_repo_list.outputs.repos }}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Read contributors Configuration File
-        id: read_config
+      - name: Get repo list
+        id: get_repo_list
         run: |
-          repos=$(python3 ${{ github.workspace }}/scripts/read-user-list.py ${{ github.workspace }}/.github/contributors.yaml repos)
-          echo "repos=[\"${repos//','/\",\"}\"]"
-          echo "repos=[\"${repos//','/\",\"}\"]" >> $GITHUB_OUTPUT
+          repos=$(gh repo list ${{ github.repository_owner }} -L 200 --json url --jq '.[].url' --jq 'map(.url)| [.[] | sub("https://github.com/";"")]')
+          echo "repos=${repos}" >> $GITHUB_OUTPUT
+          echo "${{ github.repository_owner }}'s Repositories: ${repos}" >> $GITHUB_STEP_SUMMARY
+          echo "${{ github.repository_owner }}'s Repositories: ${repos}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Show repo list
+        run: |
+          echo "Repos raw: ${{ steps.get_repo_list.outputs.repos }}"
 
+  show-info:
+    needs: [read-config]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show repo list
+        run: |
+          echo "Repos raw: ${{ needs.read-config.outputs.repos }}"
   apply:
     needs: [read-config]
+    continue-on-error: true
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,21 +39,40 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Print collab info
-        id: print-collab-info
+        with:
+          repository: ${{ matrix.repo }}
+
+      - name: Check configuration file existence
         run: |
-          echo ${{ matrix.repo }}
-          echo "users=$(python3 ${{ github.workspace }}/scripts/read-user-list.py ${{ github.workspace }}/.github/contributors.yaml users ${{ matrix.repo }})" >> $GITHUB_OUTPUT
+          echo "Repository: ${{ matrix.repo }}" >> $GITHUB_STEP_SUMMARY
+          if [ -f ${{ github.workspace }}/.github/contributors.yaml ]; then
+            echo "Configuration file .github/contributors.yaml exists"
+          else
+            echo "Configuration file .github/contributors.yaml does not exist"
+            echo "Configuration file .github/contributors.yaml does not exist in repository ${{ matrix.repo }}" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+      - name: Get collab users
+        id: get_collab_users
+        run: |
+          import yaml
+          import os
+          var_name='repo_users'
+          repo_users=",".join(yaml.safe_load(open('${{ github.workspace }}/.github/contributors.yaml'))['contributors'])
+          print(repo_users)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+            print(f'{var_name}={repo_users}', file=fh)
+        shell: python
       - name: Print config
         run: |
           echo "Repo: ${{ matrix.repo }}"
-          echo "Users: ${{ steps.print-collab-info.outputs.users }}"
+          echo "Users: ${{ steps.get_collab_users.outputs.repo_users }}"
       - name: Run Manager Collaborators Action
         id: manager-collaborators-action
         uses: gateixeira/manage-collaborators-action@v1.0.1
         with:
           token: ${{ secrets.USER_MANAGE_TOKEN }}
           repositories: ${{ matrix.repo}}
-          users: ${{ steps.print-collab-info.outputs.users }}
+          users: ${{ steps.get_collab_users.outputs.repo_users }}
           role: push
           action: add
