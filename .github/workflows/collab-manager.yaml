@@ -1,0 +1,48 @@
+name: Add contributors
+
+on:
+  workflow_dispatch
+
+jobs:
+  read-config:
+    runs-on: ubuntu-latest
+    outputs:
+      repos: ${{ steps.read_config.outputs.repos }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Read contributors Configuration File
+        id: read_config
+        run: |
+          repos=$(python3 ${{ github.workspace }}/scripts/read-user-list.py ${{ github.workspace }}/.github/contributors.yaml repos)
+          echo "repos=[\"${repos//','/\",\"}\"]"
+          echo "repos=[\"${repos//','/\",\"}\"]" >> $GITHUB_OUTPUT
+
+  apply:
+    needs: [read-config]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo: ${{ fromJson(needs.read-config.outputs.repos) }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Print collab info
+        id: print-collab-info
+        run: |
+          echo ${{ matrix.repo }}
+          echo "users=$(python3 ${{ github.workspace }}/scripts/read-user-list.py ${{ github.workspace }}/.github/contributors.yaml users ${{ matrix.repo }})" >> $GITHUB_OUTPUT
+      - name: Print config
+        run: |
+          echo "Repo: ${{ matrix.repo }}"
+          echo "Users: ${{ steps.print-collab-info.outputs.users }}"
+      - name: Run Manager Collaborators Action
+        id: manager-collaborators-action
+        uses: gateixeira/manage-collaborators-action@v1.0.1
+        with:
+          token: ${{ secrets.USER_MANAGE_TOKEN }}
+          repositories: ${{ matrix.repo}}
+          users: ${{ steps.print-collab-info.outputs.users }}
+          role: push
+          action: add
