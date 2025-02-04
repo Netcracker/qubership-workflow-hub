@@ -97,3 +97,9 @@ jobs:
           git add .
           git commit -m "Update version to ${{ inputs.version }} for release"
           git push -u origin main
+
+      - name: Upload python package
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package
+          path: dist/*
