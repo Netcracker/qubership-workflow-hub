@@ -12,7 +12,7 @@ jobs:
       - name: Get repo list
         id: get_repo_list
         run: |
-          repos=$(gh repo list ${{ github.repository_owner }} -L 200 --json url --jq '.[].url' --jq 'map(.url)| [.[] | sub("https://github.com/";"")]')
+          repos=$(gh repo list ${{ github.repository_owner }} -L 200 --json nameWithOwner --jq 'map(.nameWithOwner)')
           echo "repos=${repos}" >> $GITHUB_OUTPUT
           echo "${{ github.repository_owner }}'s Repositories: ${repos}" >> $GITHUB_STEP_SUMMARY
           echo "${{ github.repository_owner }}'s Repositories: ${repos}"
