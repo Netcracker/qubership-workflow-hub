@@ -1,0 +1,122 @@
+# Remake it into a normal action game with version calc, bump and all the crap
+name: NPM Build and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        default: "1.0.1"
+        description: "New version (e.g., 1.0.1)"
+        required: true
+      node-version:
+        default: "20"
+        description: "Node.js version (e.g., 20)"
+        required: true
+      registry-url:
+        default: "https://npm.pkg.github.com"
+        description: "NPM registry URL"
+        required: false
+      update-nc-dependency:
+        type: boolean
+        default: false
+        description: "Update dependencies"
+        required: false
+      dist-tag:
+        default: "next"
+        description: "NPM dist-tag"
+        required: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ github.event.inputs.node-version }}
+          registry-url: ${{ github.event.inputs.registry-url }}
+          scope: '@nookoy'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+
+      - name: Check if project is a Lerna monorepo
+        id: check-lerna
+        run: |
+          if [ -f lerna.json ]; then
+            echo "Lerna project detected."
+            echo "IS_LERNA=true" >> $GITHUB_ENV
+          else
+            echo "Not a Lerna project."
+            echo "IS_LERNA=false" >> $GITHUB_ENV
+          fi
+
+      - name: Update dependencies (if required)
+        if: ${{ github.event.inputs.update-nc-dependency == 'true' }}
+        run: |
+          npm ls --json | jq -r '.dependencies | keys[]' | grep "@netcracker" | xargs --no-run-if-empty npm update
+
+      - name: Update package version (for Lerna or NPM)
+        run: |
+          if [ "$IS_LERNA" = "true" ]; then
+            echo "Updating version in lerna.json and all package.json files..."
+            npx lerna version ${{ github.event.inputs.version }} --yes --no-git-tag-version --no-push
+          else
+            echo "Updating version in package.json..."
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          fi
+        #   git diff --color
+        #   git diff >> changes.txt
+
+
+      - name: Get package version
+        id: get_version
+        run: |
+            if [ "$IS_LERNA" == "true" ]; then
+              VERSION=$(lerna list --json | jq -r '.[0].version')
+            else
+              VERSION=$(jq -r '.version' package.json)
+            fi
+            echo "package_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Project
+        run: |
+          if npm run | grep -q "build"; then
+            npm run build
+          else
+            echo "Build script not found in package.json. Stopping workflow."
+            exit 1
+          fi
+
+      - name: Run tests
+        run: npm test --if-present
+
+      - name: Commit and Push changes
+        uses: ./actions/commit-and-push
+        with:
+          branch_name: 'main'
+
+    #  Debug
+    #   - name: Configure npm authentication
+    #     run: |
+    #       echo "@nookyo:registry=https://npm.pkg.github.com/" > ~/.npmrc
+    #       echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+
+      - name: Publish Package
+        run: |
+          npm config get registry
+          if [ "$IS_LERNA" = "true" ]; then
+            echo "Publishing with Lerna..."
+            npx lerna publish from-package --yes --no-push --no-git-reset --no-git-tag-version --dist-tag ${{ github.event.inputs.dist-tag }}
+          else
+            echo "Publishing with npm..."
+            npm publish --tag ${{ github.event.inputs.dist-tag }}
+          fi
