@@ -35062,7 +35062,7 @@ async function run() {
   try {
     // const filePath = core.getInput('file_path') || 'pom.xml';
     // {"pom1": "path/to/pom1.xml", "pom2": "path/to/pom2.xml"}
-    const filePathsInput = core.getInput('file_paths') || '{"default": "pom.xml"}';
+    const filePathsInput = core.getInput('file_path') || '{"default": "pom.xml"}';
     let filePathsObj;
     try {
       filePathsObj = JSON.parse(filePathsInput);
