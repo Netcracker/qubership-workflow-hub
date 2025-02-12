@@ -33,10 +33,10 @@ async function run() {
       const nodes = select(xpathExpression, doc);
 
       if (nodes.length === 0) {
-        throw new Error(`No nodes found for expression: ${xpathExpression}`);
+        throw new Error(`❗️ No nodes found for expression: ${xpathExpression}`);
       }
 
-      core.info(`Found ${nodes.length} nodes for expression: ${xpathExpression}`);
+      core.info(`🔷 Found ${nodes.length} nodes for expression: ${xpathExpression}`);
 
       nodes.forEach((node) => {
         core.info(`🔷 Updated node value ${node.textContent} ->: ${newValue}`);
