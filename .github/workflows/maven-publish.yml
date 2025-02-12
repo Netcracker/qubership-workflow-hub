@@ -77,7 +77,6 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.maven_gpg_passphrase }}
 
       - name: Upload all Maven target directories
-        if: ${{ inputs.upload-artifact == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: maven-targets
