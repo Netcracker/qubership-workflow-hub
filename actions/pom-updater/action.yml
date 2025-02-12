@@ -13,6 +13,9 @@ inputs:
   new_value:
     description: 'The new value to set for the selected XML node.'
     required: true
+outputs:
+  artifact_id:
+    description: 'The artifact ID of the updated XML file.'
 
 runs:
   using: 'node16'
