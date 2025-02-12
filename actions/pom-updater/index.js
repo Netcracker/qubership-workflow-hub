@@ -5,7 +5,18 @@ const fs = require('fs');
 
 async function run() {
   try {
-    const filePath = core.getInput('file_path') || 'pom.xml';
+    // const filePath = core.getInput('file_path') || 'pom.xml';
+    // {"pom1": "path/to/pom1.xml", "pom2": "path/to/pom2.xml"}
+    const filePathsInput = core.getInput('file_paths') || '{"default": "pom.xml"}';
+    let filePathsObj;
+    try {
+      filePathsObj = JSON.parse(filePathsInput);
+    } catch (err) {
+      throw new Error('Input "file_paths" should be valid JSON object.');
+    }
+    const filePaths = Object.values(filePathsObj);
+
+
     const xpathExpression = core.getInput('path') || '//p:project/p:properties/p:revision';
     const newValue = core.getInput('new_value');
 
@@ -14,26 +25,31 @@ async function run() {
     }
 
     const select = xpath.useNamespaces({ p: 'http://maven.apache.org/POM/4.0.0' });
-    const xml = fs.readFileSync(filePath, 'utf8');
-    const doc = new DOMParser().parseFromString(xml);
-    const nodes = select(xpathExpression, doc);
 
-    if (nodes.length === 0) {
-      throw new Error(`No nodes found for expression: ${xpathExpression}`);
-    }
+    filePaths.forEach(element => {
 
-    core.info(`Found ${nodes.length} nodes for expression: ${xpathExpression}`);
+      const xml = fs.readFileSync(element, 'utf8');
+      const doc = new DOMParser().parseFromString(xml);
+      const nodes = select(xpathExpression, doc);
 
-    nodes.forEach((node) => {
-      core.info(`Updated node value ${node.textContent} to: ${newValue}`);
-      node.textContent = newValue;
+      if (nodes.length === 0) {
+        throw new Error(`No nodes found for expression: ${xpathExpression}`);
+      }
 
+      core.info(`Found ${nodes.length} nodes for expression: ${xpathExpression}`);
+
+      nodes.forEach((node) => {
+        core.info(`Updated node value ${node.textContent} to: ${newValue}`);
+        node.textContent = newValue;
+
+      });
+
+      const serializedXml = new XMLSerializer().serializeToString(doc);
+      fs.writeFileSync(element, serializedXml);
+
+      core.info(`Updated file: ${element}`);
     });
 
-    const serializedXml = new XMLSerializer().serializeToString(doc);
-    fs.writeFileSync(filePath, serializedXml);
-
-    core.info(`Updated file: ${filePath}`);
     //const updatedXml = fs.readFileSync(filePath, 'utf8');
     //core.info(`Updated XML:\n${updatedXml}`);
 
