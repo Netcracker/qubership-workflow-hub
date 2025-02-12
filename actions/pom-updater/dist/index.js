@@ -35067,7 +35067,7 @@ async function run() {
     try {
       filePathsObj = JSON.parse(filePathsInput);
     } catch (err) {
-      throw new Error('Input "file_paths" should be valid JSON object.');
+      throw new Error('❗️ Input "file_paths" should be valid JSON object.');
     }
     const filePaths = Object.values(filePathsObj);
 
@@ -35076,7 +35076,7 @@ async function run() {
     const newValue = core.getInput('new_value');
 
     if (!newValue) {
-      throw new Error('Input "newValue" is required but not provided.');
+      throw new Error('❗️ Input "newValue" is required but not provided.');
     }
 
     const select = xpath.useNamespaces({ p: 'http://maven.apache.org/POM/4.0.0' });
@@ -35094,7 +35094,7 @@ async function run() {
       core.info(`Found ${nodes.length} nodes for expression: ${xpathExpression}`);
 
       nodes.forEach((node) => {
-        core.info(`Updated node value ${node.textContent} to: ${newValue}`);
+        core.info(`🔷 Updated node value ${node.textContent} ->: ${newValue}`);
         node.textContent = newValue;
 
       });
@@ -35102,14 +35102,15 @@ async function run() {
       const serializedXml = new XMLSerializer().serializeToString(doc);
       fs.writeFileSync(element, serializedXml);
 
-      core.info(`Updated file: ${element}`);
+      core.warning(`💡 Updated file: ${element}`);
     });
 
     //const updatedXml = fs.readFileSync(filePath, 'utf8');
     //core.info(`Updated XML:\n${updatedXml}`);
+    core.info('✅ Action completed successfully!');
 
   } catch (error) {
-    core.setFailed(`Action failed: ${error.message}`);
+    core.setFailed(`❌ Action failed: ${error.message}`);
   }
 }
 
