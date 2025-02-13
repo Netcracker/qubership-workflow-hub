@@ -35108,7 +35108,11 @@ async function run() {
       core.info(`💡 Updated file: ${filePath}`);
     }
 
-    core.setOutput('artifact_id', await getArtifactId());
+    let = artifact = await getArtifactId()
+    core.setOutput('artifact_id', artifact);
+
+    core.info(`🔷 Updated artifactId: ${artifact}`);
+
     core.info('✅ Action completed successfully!');
   } catch (error) {
     core.setFailed(`❌ Action failed: ${error.message}`);
