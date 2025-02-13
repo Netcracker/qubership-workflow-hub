@@ -42,7 +42,7 @@ on:
         required: true
 
 jobs:
-  publish:
+  upload:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
