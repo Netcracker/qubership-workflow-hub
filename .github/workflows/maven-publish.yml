@@ -26,6 +26,10 @@ on:
         required: false
         type: boolean
         default: false
+      artifact-id:
+        default: artifact
+        required: false
+        type: string
 
     secrets:
       maven_username:
@@ -80,5 +84,5 @@ jobs:
         if: ${{ inputs.upload-artifact }}
         uses: actions/upload-artifact@v4
         with:
-          name: maven-targets
+          name: ${{ inputs.artifact-id }}
           path: '**/target'
