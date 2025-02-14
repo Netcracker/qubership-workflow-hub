@@ -1,35 +1,34 @@
 ---
-
 name: Python Release
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Specify version (optional)'
+        description: "Specify version (optional)"
         required: false
-        default: ''
+        default: ""
       python-version:
-        description: 'Python version to use'
+        description: "Python version to use"
         required: false
-        default: '3.11'
+        default: "3.11"
       poetry_version_options:
-        description: 'Poetry version bump (e.g., patch, minor, major)'
+        description: "Poetry version bump (e.g., patch, minor, major)"
         required: false
-        default: 'patch'
+        default: "patch"
       poetry_build_params:
-        description: 'Additional poetry build parameters'
+        description: "Additional poetry build parameters"
         required: false
-        default: ''
+        default: ""
       pytest_run:
-        description: 'Run pytest (true/false)'
+        description: "Run pytest (true/false)"
         required: true
         type: boolean
         default: true
       pytest_params:
-        description: 'Parameters for pytest'
+        description: "Parameters for pytest"
         required: false
-        default: '--maxfail=3 -v'
+        default: "--maxfail=3 -v"
 
 jobs:
   show-params:
@@ -56,7 +55,7 @@ jobs:
         id: check_tag
         uses: netcracker/qubership-workflow-hub/actions/tag-checker@main
         with:
-          tag: 'v${{ github.event.inputs.version }}'
+          tag: "v${{ github.event.inputs.version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

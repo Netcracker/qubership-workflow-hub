@@ -20,10 +20,10 @@ This workflow can be triggered via a `workflow_call` event, allowing it to be re
 
 The workflow requires the following inputs:
 
-| Input Name | Type   | Required | Description                                    |
-|------------|--------|----------|------------------------------------------------|
-| `file`     | string | true     | Path to the `pom.xml` file to be updated.      |
-| `version` | string | true     | New version to set in the `<revision>` tag.    |
+| Input Name | Type   | Required | Description                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `file`     | string | true     | Path to the `pom.xml` file to be updated.   |
+| `version`  | string | true     | New version to set in the `<revision>` tag. |
 
 ---
 
@@ -34,27 +34,33 @@ The workflow requires the following inputs:
 Runs on `ubuntu-latest` and performs the following steps:
 
 #### a. **Checkout Repository**
-   - Uses the `actions/checkout@v4` action to clone the repository.
-   ```yaml
-   uses: actions/checkout@v4
-   ```
+
+- Uses the `actions/checkout@v4` action to clone the repository.
+
+```yaml
+uses: actions/checkout@v4
+```
 
 #### b. **Update Version in the POM File**
-   - Updates the `<revision>` tag in the specified `pom.xml` file using `sed`.
-   ```bash
-   echo "Updating version in ${{ inputs.file }}..."
-   sed -i "s|<revision>.*</revision>|<revision>${{ inputs.version }}</revision>|" ${{ inputs.file }}
-   ```
+
+- Updates the `<revision>` tag in the specified `pom.xml` file using `sed`.
+
+```bash
+echo "Updating version in ${{ inputs.file }}..."
+sed -i "s|<revision>.*</revision>|<revision>${{ inputs.version }}</revision>|" ${{ inputs.file }}
+```
 
 #### c. **Commit Changes**
-   - Configures Git user credentials, commits the changes, and pushes them to the `main` branch.
-   ```bash
-   git config --global user.email "publisher@qubership.org"
-   git config --global user.name "Qubership User"
-   git add ${{ inputs.file }}
-   git commit -m "Update version to ${{ inputs.version }} for release"
-   git push origin main
-   ```
+
+- Configures Git user credentials, commits the changes, and pushes them to the `main` branch.
+
+```bash
+git config --global user.email "publisher@qubership.org"
+git config --global user.name "Qubership User"
+git add ${{ inputs.file }}
+git commit -m "Update version to ${{ inputs.version }} for release"
+git push origin main
+```
 
 ---
 

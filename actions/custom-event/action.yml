@@ -9,8 +9,8 @@ inputs:
     required: false
     default: "{}"
   github-token:
-    description: 'GitHub Token'
-    required: true    
+    description: "GitHub Token"
+    required: true
 outputs:
   status:
     description: "Status of the dispatch request"

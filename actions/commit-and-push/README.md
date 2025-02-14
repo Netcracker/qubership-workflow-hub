@@ -14,18 +14,18 @@ This **Commit and Push** GitHub Action automates the process of committing chang
 
 ## Inputs
 
-| Name              | Description                                                | Required | Default |
-|-------------------|------------------------------------------------------------|----------|---------|
-| `author_name`    | The name of the commit author.                             |  No    | `qubership-actios[bot]` |
-| `author_email`   | The email of the commit author.                            |  No    | `qubership-actios[bot]@qubership.com` |
-| `commit_message` | The commit message for the new commit.                     |  No    | `Automated commit` |
-| `branch_name`    | The branch to push the changes to.                         |  No    | `main` |
+| Name             | Description                            | Required | Default                               |
+| ---------------- | -------------------------------------- | -------- | ------------------------------------- |
+| `author_name`    | The name of the commit author.         | No       | `qubership-actios[bot]`               |
+| `author_email`   | The email of the commit author.        | No       | `qubership-actios[bot]@qubership.com` |
+| `commit_message` | The commit message for the new commit. | No       | `Automated commit`                    |
+| `branch_name`    | The branch to push the changes to.     | No       | `main`                                |
 
 ## Environment Variables
 
-| Name           | Description                          | Required |
-|---------------|--------------------------------------|----------|
-| `GITHUB_TOKEN` | GitHub token for authentication   | Yes |
+| Name           | Description                     | Required |
+| -------------- | ------------------------------- | -------- |
+| `GITHUB_TOKEN` | GitHub token for authentication | Yes      |
 
 ## Usage Example
 
@@ -60,3 +60,4 @@ jobs:
           branch_name: "main"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```

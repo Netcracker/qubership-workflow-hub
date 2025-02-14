@@ -1,5 +1,4 @@
 ---
-
 name: Conventional Commits PR Check
 
 on:

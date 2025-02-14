@@ -1,12 +1,10 @@
 ---
-
 name: Automatic PR Labeler
 
 on:
   pull_request:
     branches: [main]
-    types:
-      [opened, reopened]
+    types: [opened, reopened]
 
 jobs:
   assign-labels:
@@ -15,4 +13,4 @@ jobs:
     if: github.event.pull_request.merged == false
     with:
       pull_request_number: ${{ github.event.pull_request.number }}
-      config_file: './.github/auto-labeler-config.yaml'
+      config_file: "./.github/auto-labeler-config.yaml"

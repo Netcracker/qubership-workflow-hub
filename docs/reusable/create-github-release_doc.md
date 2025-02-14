@@ -20,12 +20,12 @@ This workflow is designed to be triggered via a `workflow_call` event, allowing 
 
 The workflow accepts the following inputs:
 
-| Input Name      | Type    | Required | Default | Description                              |
-|-----------------|---------|----------|---------|------------------------------------------|
-| `revision`      | string  | true     |         | The version tag for the release.         |
-| `draft`         | boolean | false    | `false` | Whether the release is a draft.          |
-| `prerelease`    | boolean | false    | `false` | Whether the release is a prerelease.     |
-| `release_info`  | string  | false    |         | Additional release notes or information. |
+| Input Name     | Type    | Required | Default | Description                              |
+| -------------- | ------- | -------- | ------- | ---------------------------------------- |
+| `revision`     | string  | true     |         | The version tag for the release.         |
+| `draft`        | boolean | false    | `false` | Whether the release is a draft.          |
+| `prerelease`   | boolean | false    | `false` | Whether the release is a prerelease.     |
+| `release_info` | string  | false    |         | Additional release notes or information. |
 
 ---
 
@@ -36,37 +36,46 @@ The workflow accepts the following inputs:
 Runs on `ubuntu-latest` and consists of the following steps:
 
 #### a. **Checkout Repository**
-   - Checks out the repository code from the `main` branch.
-   ```yaml
-   uses: actions/checkout@v4
-   with:
-     ref: main
-     fetch-depth: 0
-   ```
+
+- Checks out the repository code from the `main` branch.
+
+```yaml
+uses: actions/checkout@v4
+with:
+  ref: main
+  fetch-depth: 0
+```
 
 #### b. **Pull Latest Changes**
-   - Ensures the local repository is up to date with the latest changes from the `main` branch.
-   ```bash
-   git fetch origin main
-   git reset --hard origin/main
-   git log -1
-   ```
+
+- Ensures the local repository is up to date with the latest changes from the `main` branch.
+
+```bash
+git fetch origin main
+git reset --hard origin/main
+git log -1
+```
 
 #### c. **Create and Push Tag**
-   - Creates a new tag with the specified revision and pushes it to the remote repository.
-   ```bash
-   git config --global user.email "tech@qubership.com"
-   git config --global user.name "tech"
-   git tag -a v${{ inputs.revision }} -m "Release v${{ inputs.revision }}"
-   git push origin v${{ inputs.revision }}
-   ```
+
+- Creates a new tag with the specified revision and pushes it to the remote repository.
+
+```bash
+git config --global user.email "tech@qubership.com"
+git config --global user.name "tech"
+git tag -a v${{ inputs.revision }} -m "Release v${{ inputs.revision }}"
+git push origin v${{ inputs.revision }}
+```
 
 #### d. **Create GitHub Release Using `gh` CLI**
-   - Creates a new GitHub release with the specified revision, using the GitHub CLI.
-   ```bash
-   gh release create v${{ inputs.revision }} --title "Release v${{ inputs.revision }}" --notes "Release v${{ inputs.revision }}"
-   ```
-   - Requires the `GITHUB_TOKEN` secret for authentication.
+
+- Creates a new GitHub release with the specified revision, using the GitHub CLI.
+
+```bash
+gh release create v${{ inputs.revision }} --title "Release v${{ inputs.revision }}" --notes "Release v${{ inputs.revision }}"
+```
+
+- Requires the `GITHUB_TOKEN` secret for authentication.
 
 ---
 

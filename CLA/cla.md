@@ -12,7 +12,7 @@ This Contributor Licensing Agreement (“CLA”) applies to any Contribution tha
 
 The term “Contribution” or “Contributed Materials” means any original work of authorship, including modifications or additions to an existing work, source code, object code, patch, tool, sample, graphic, specification, manual, documentation, comment, or any other material posted or submitted by You to Netcracker for inclusion in, or documentation of, any of the products owned or managed by Netcracker (the ‘Work”). For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to Netcracker, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, Netcracker for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by You as "Not a Contribution."
 
- If you agree to be bound by these terms, fill in the information requested above and sign the CLA where indicated below. Read this agreement carefully before signing. These terms and conditions constitute a binding legal agreement.
+If you agree to be bound by these terms, fill in the information requested above and sign the CLA where indicated below. Read this agreement carefully before signing. These terms and conditions constitute a binding legal agreement.
 
 ## 2. Grant of Copyright License.
 
