@@ -1,0 +1,39 @@
+name: Create tag
+
+on:
+  workflow_call:
+    inputs:
+      tag-name:
+        required: true
+        type: string
+        description: 'Tag version'
+      ref:
+        description: "Branch name to create tag from"
+        required: false
+        type: string
+        default: main
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Input parameters
+        run: |
+          echo "Tag version: ${{ inputs.tag-name }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.ref_name }}
+
+      - name: Create tag
+        run: |
+          git config --global user.email "qubership-actios[bot]"
+          git config --global user.name "qubership-actios[bot]@qubership.com"
+          git tag -a v${{ inputs.tag-name }} -m "Tag v${{ inputs.tag-name }}"
+
+      - name: Push tag
+        run: git push origin v${{ inputs.tag-name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
