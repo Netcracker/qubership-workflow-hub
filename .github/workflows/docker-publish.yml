@@ -26,7 +26,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: v${{ github.event.inputs.version }}
+          ref: v${{ inputs.ref }}
 
       - name: Debug
         run: |
