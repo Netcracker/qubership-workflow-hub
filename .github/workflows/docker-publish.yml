@@ -32,6 +32,7 @@ jobs:
         run: |
           echo "artifact_id ${{ inputs.artifact-id }}"
           echo "version ${{ github.event.inputs.version }}"
+          echo "ref ${{ inputs.ref }}"
           echo "GITHUB_REPOSITORY ${{ github.repository }}"
           echo "GITHUB_REF ${{ github.ref }}"
 
