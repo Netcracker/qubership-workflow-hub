@@ -12,7 +12,7 @@ async function run() {
     if (!token) {
       throw new Error('GitHub token is not provided. Make sure it is passed as an environment variable.');
     }
-    
+
     const octokit = github.getOctokit(token);
 
     // Retrieve the list of tags

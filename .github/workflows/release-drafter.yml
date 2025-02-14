@@ -7,7 +7,7 @@ on:
         required: true
         type: string
         description: 'Release version'
-      branch:
+      ref:
         description: "Branch name to create release from"
         required: false
         type: string
@@ -33,10 +33,10 @@ jobs:
           echo "Enable publish release: ${{ inputs.publish }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.ref_name }}
+          ref: ${{ inputs.ref ||  github.ref_name }}
 
       - name: Run Release Drafter
         uses: release-drafter/release-drafter@v6.1.0
