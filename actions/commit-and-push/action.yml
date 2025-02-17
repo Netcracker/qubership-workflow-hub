@@ -3,11 +3,11 @@ description: 'Automatically commits and pushes changes to the repository.'
 
 inputs:
   author_name:
-    description: 'The name of the commit author. Defaults to `qubership-actios[bot]`.'
+    description: 'The name of the commit author. Defaults to `qubership-actions[bot]`.'
     required: false
     default: 'qubership-actios[bot]'
   author_email:
-    description: 'The email of the commit author. Defaults to `qubership-actios[bot]@qubership.com`.'
+    description: 'The email of the commit author. Defaults to `qubership-actions[bot]@qubership.com`.'
     required: false
     default: 'qubership-actios[bot]@qubership.com'
   commit_message:
