@@ -1,4 +1,3 @@
-
 # PR Add Messages Action
 
 This action collects commit messages from a pull request and adds them to the pull request description.
@@ -11,7 +10,6 @@ This action collects commit messages from a pull request and adds them to the pu
 
 ```yaml
 ---
-
 name: "Add commit messages to PR body"
 
 on:
@@ -36,4 +34,3 @@ This action performs the following steps:
 1. **Checkout Code:** Checks out the code from the repository.
 2. **Collect Commit Messages:** Collects all commit messages from the pull request.
 3. **Update PR Description:** Updates the pull request description with the collected commit messages.
-

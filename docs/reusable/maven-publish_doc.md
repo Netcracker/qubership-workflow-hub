@@ -21,7 +21,7 @@ This workflow is designed to be triggered via a `workflow_call` event, allowing 
 The workflow accepts the following inputs:
 
 | Input Name      | Type   | Required | Default               | Description                                            |
-|-----------------|--------|----------|-----------------------|--------------------------------------------------------|
+| --------------- | ------ | -------- | --------------------- | ------------------------------------------------------ |
 | `maven_command` | string | false    | `--batch-mode deploy` | Maven command to execute for the build and deployment. |
 | `java_version`  | string | false    | `21`                  | Version of Java to set up for the Maven build.         |
 | `server_id`     | string | false    | `central`             | Server ID for Maven deployment.                        |
@@ -32,12 +32,12 @@ The workflow accepts the following inputs:
 
 The following secrets are required for secure Maven publishing:
 
-| Secret Name               | Required | Description                                  |
-|---------------------------|----------|----------------------------------------------|
-| `maven_username`          | true     | Username for the Maven repository.           |
-| `maven_password`          | true     | Password for the Maven repository.           |
-| `maven_gpg_private_key`   | true     | GPG private key for signing artifacts.       |
-| `maven_gpg_passphrase`    | true     | Passphrase for the GPG private key.          |
+| Secret Name             | Required | Description                            |
+| ----------------------- | -------- | -------------------------------------- |
+| `maven_username`        | true     | Username for the Maven repository.     |
+| `maven_password`        | true     | Password for the Maven repository.     |
+| `maven_gpg_private_key` | true     | GPG private key for signing artifacts. |
+| `maven_gpg_passphrase`  | true     | Passphrase for the GPG private key.    |
 
 ---
 
@@ -48,54 +48,64 @@ The following secrets are required for secure Maven publishing:
 Runs on `ubuntu-latest` and consists of the following steps:
 
 #### a. **Checkout Code**
-   - Checks out the repository code at the specified version.
-   ```yaml
-   uses: actions/checkout@v4
-   with:
-     ref: v${{ inputs.version }}
-     fetch-depth: 0
-   ```
+
+- Checks out the repository code at the specified version.
+
+```yaml
+uses: actions/checkout@v4
+with:
+  ref: v${{ inputs.version }}
+  fetch-depth: 0
+```
 
 #### b. **Cache Maven Dependencies**
-   - Caches the `.m2` directory to speed up Maven builds.
-   ```yaml
-   uses: actions/cache@v3
-   with:
-     path: ~/.m2
-     key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-     restore-keys: |
-       ${{ runner.os }}-maven-
-   ```
+
+- Caches the `.m2` directory to speed up Maven builds.
+
+```yaml
+uses: actions/cache@v3
+with:
+  path: ~/.m2
+  key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+  restore-keys: |
+    ${{ runner.os }}-maven-
+```
 
 #### c. **Set up JDK**
-   - Sets up the Java environment and configures Maven settings for deployment.
-   ```yaml
-   uses: actions/setup-java@v4
-   with:
-     java-version: ${{ inputs.java_version }}
-     distribution: 'temurin'
-     server-id: ${{ inputs.server_id }}
-     server-username: MAVEN_USERNAME
-     server-password: MAVEN_PASSWORD
-     gpg-private-key: ${{ secrets.maven_gpg_private_key }}
-     gpg-passphrase: MAVEN_GPG_PASSPHRASE
-   ```
+
+- Sets up the Java environment and configures Maven settings for deployment.
+
+```yaml
+uses: actions/setup-java@v4
+with:
+  java-version: ${{ inputs.java_version }}
+  distribution: "temurin"
+  server-id: ${{ inputs.server_id }}
+  server-username: MAVEN_USERNAME
+  server-password: MAVEN_PASSWORD
+  gpg-private-key: ${{ secrets.maven_gpg_private_key }}
+  gpg-passphrase: MAVEN_GPG_PASSPHRASE
+```
 
 #### d. **Display Maven Settings**
-   - Displays the `settings.xml` to confirm proper configuration.
-   ```yaml
-   run: cat ~/.m2/settings.xml
-   ```
+
+- Displays the `settings.xml` to confirm proper configuration.
+
+```yaml
+run: cat ~/.m2/settings.xml
+```
 
 #### e. **Sign and Deploy to Maven Central**
-   - Executes the Maven command to sign and deploy artifacts.
-   ```yaml
-   run: mvn ${{ inputs.maven_command }}
-   env:
-     MAVEN_USERNAME: ${{ secrets.maven_username }}
-     MAVEN_PASSWORD: ${{ secrets.maven_password }}
-     MAVEN_GPG_PASSPHRASE: ${{ secrets.maven_gpg_passphrase }}
-   ```
+
+- Executes the Maven command to sign and deploy artifacts.
+
+```yaml
+run: mvn ${{ inputs.maven_command }}
+env:
+  MAVEN_USERNAME: ${{ secrets.maven_username }}
+  MAVEN_PASSWORD: ${{ secrets.maven_password }}
+  MAVEN_GPG_PASSPHRASE: ${{ secrets.maven_gpg_passphrase }}
+```
 
 ---
 

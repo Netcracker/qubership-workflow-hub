@@ -1,23 +1,22 @@
 # Custom Event Action
 
-This  Action triggers a custom `repository_dispatch` event in the repository.
+This Action triggers a custom `repository_dispatch` event in the repository.
 
 ## Inputs
 
-| Name            | Description                                         | Required | Default |
-|-----------------|-----------------------------------------------------|----------|---------|
-| `event_type`    | The type of the custom event to trigger.            | Yes      | None    |
-| `client_payload`| Optional JSON payload to send with the event.       | No       | `{}`    |
-| `GITHUB_TOKEN`  | GitHub Token for authentication.                   | Yes      | None    |
+| Name             | Description                                   | Required | Default |
+| ---------------- | --------------------------------------------- | -------- | ------- |
+| `event_type`     | The type of the custom event to trigger.      | Yes      | None    |
+| `client_payload` | Optional JSON payload to send with the event. | No       | `{}`    |
+| `GITHUB_TOKEN`   | GitHub Token for authentication.              | Yes      | None    |
 
 ## Outputs
 
-| Name     | Description                        |
-|----------|------------------------------------|
-| `status` | HTTP status code of the request.   |
+| Name     | Description                      |
+| -------- | -------------------------------- |
+| `status` | HTTP status code of the request. |
 
 ## Usage
-
 
 Below is an example of how to use this action in a GitHub Actions workflow:
 
@@ -37,15 +36,12 @@ jobs:
           event_name: "my-custom-event"
           client_payload: '{"key": "value"}'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}  
-
-  ```
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+```
 
 ### `client_payload` Explanation
 
 The `client_payload` input allows you to pass custom data as a JSON string. Below are examples with specific values:
-
 
 ```yaml
 with:
@@ -53,12 +49,9 @@ with:
   client_payload: '{"environment": "production", "version": "1.2.3"}'
 ```
 
-
 #### Example: Accessing Parameters from `client_payload`
 
 When triggering a `repository_dispatch` event, the `client_payload` parameters can be accessed directly in the target workflow. Here's how to retrieve the specific parameters defined earlier (`environment`, `version`, `branch`, `build_id`, etc.):
-
-
 
 ```yaml
 name: Payload Variables

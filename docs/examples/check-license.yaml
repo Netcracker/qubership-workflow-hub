@@ -1,5 +1,4 @@
 ---
-
 name: Check Go Modules Licenses
 on:
   push:

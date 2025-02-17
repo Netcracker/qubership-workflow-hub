@@ -6,11 +6,11 @@
 
 ## Inputs
 
-| Name         | Required  | Description                                                                                     | Default                                   |
-|--------------|-----------|-------------------------------------------------------------------------------------------------|-------------------------------------------|
-| `file_path`   | No        | The path to the XML file to update.                                                             | `./pom.xml`                               |
-| `path`       | No        | The XPath expression to locate the node to update.                                              | `//p:project/p:properties/p:revision`     |
-| `new_value`   | Yes       | The new value to set for the selected XML node.                                                 | N/A                                       |
+| Name        | Required | Description                                        | Default                               |
+| ----------- | -------- | -------------------------------------------------- | ------------------------------------- |
+| `file_path` | No       | The path to the XML file to update.                | `./pom.xml`                           |
+| `path`      | No       | The XPath expression to locate the node to update. | `//p:project/p:properties/p:revision` |
+| `new_value` | Yes      | The new value to set for the selected XML node.    | N/A                                   |
 
 ## Example Usage
 
@@ -29,6 +29,7 @@ jobs:
       - name: Update Pom
         uses: netcracker/qubership-workflow-hub/actions/pom-updater@main
         with:
-          file_path: './pom.xml'
-          path: '//p:project/p:properties/p:revision'
-          new_value: '1.0.1'
+          file_path: "./pom.xml"
+          path: "//p:project/p:properties/p:revision"
+          new_value: "1.0.1"
+```

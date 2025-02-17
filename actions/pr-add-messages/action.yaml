@@ -1,5 +1,4 @@
 ---
-
 name: "Add commit messages to PR's description"
 description: "Collects all commit messages in PR and adds them at the end of PR's description."
 
@@ -12,7 +11,7 @@ runs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: "3.9"
 
     - name: Install dependencies
       shell: bash

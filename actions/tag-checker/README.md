@@ -4,15 +4,15 @@ This Action checks whether a specified tag exists in a repository.
 
 ## Inputs
 
-| Name           | Description                       | Required | Default |
-|----------------|-----------------------------------|----------|---------|
-| `tag`          | The tag name to check.            | Yes      | None    |
-| `GITHUB_TOKEN` | GitHub Token for authentication.  | Yes      | None    |
+| Name           | Description                      | Required | Default |
+| -------------- | -------------------------------- | -------- | ------- |
+| `tag`          | The tag name to check.           | Yes      | None    |
+| `GITHUB_TOKEN` | GitHub Token for authentication. | Yes      | None    |
 
 ## Outputs
 
-| Name    | Description                                   |
-|---------|-----------------------------------------------|
+| Name     | Description                                  |
+| -------- | -------------------------------------------- |
 | `exists` | `True` if the tag exists, `False` otherwise. |
 
 ## Usage
@@ -40,6 +40,7 @@ jobs:
           tag: 'v1.0.0'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+
       - name: Output result
         run: echo "Tag exists: ${{ steps.check-tag.outputs.exists }}"
+```

@@ -7,6 +7,7 @@ This documentation describes the functionality, inputs, secrets, and usage of th
 ## Purpose
 
 The **Python Build** workflow enables seamless CI/CD for Python projects. It supports:
+
 - Environment setup with a specific Python version.
 - Version management (manual or automatic increments).
 - Package building using Poetry.
@@ -18,20 +19,20 @@ The **Python Build** workflow enables seamless CI/CD for Python projects. It sup
 
 ## Workflow Inputs
 
-| Name                    | Type    | Required | Default | Description                                      |
-|-------------------------|---------|----------|---------|--------------------------------------------------|
-| `version`               | string  | false    |         | The specific version to set for the package.     |
-| `poetry_version_options`| string  | false    | patch   | The version increment option for Poetry.         |
-| `python-version`        | string  | false    | 3.11    | The Python version to use.                       |
-| `poetry_build_params`   | string  | false    |         | Additional parameters for the Poetry build.      |
-| `pytest_run`            | boolean | true     |         | Whether to run pytest tests.                     |
-| `pytest_params`         | string  | false    |         | Additional parameters for pytest.                |
+| Name                     | Type    | Required | Default | Description                                  |
+| ------------------------ | ------- | -------- | ------- | -------------------------------------------- |
+| `version`                | string  | false    |         | The specific version to set for the package. |
+| `poetry_version_options` | string  | false    | patch   | The version increment option for Poetry.     |
+| `python-version`         | string  | false    | 3.11    | The Python version to use.                   |
+| `poetry_build_params`    | string  | false    |         | Additional parameters for the Poetry build.  |
+| `pytest_run`             | boolean | true     |         | Whether to run pytest tests.                 |
+| `pytest_params`          | string  | false    |         | Additional parameters for pytest.            |
 
 ## Workflow Secrets
 
-| Name            | Required | Description                        |
-|-----------------|----------|------------------------------------|
-| `PYPI_API_TOKEN`| true     | The API token for publishing to PyPI.|
+| Name             | Required | Description                           |
+| ---------------- | -------- | ------------------------------------- |
+| `PYPI_API_TOKEN` | true     | The API token for publishing to PyPI. |
 
 ## Workflow Jobs
 
@@ -67,12 +68,12 @@ jobs:
   publish:
     uses: ./.github/workflows/python-build.yml
     with:
-      version: '1.0.0'
-      poetry_version_options: 'minor'
-      python-version: '3.11'
-      poetry_build_params: '--format wheel'
+      version: "1.0.0"
+      poetry_version_options: "minor"
+      python-version: "3.11"
+      poetry_build_params: "--format wheel"
       pytest_run: true
-      pytest_params: '--maxfail=1 --disable-warnings'
+      pytest_params: "--maxfail=1 --disable-warnings"
     secrets:
       PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 ```
@@ -84,5 +85,3 @@ jobs:
 - Ensure that the PYPI_API_TOKEN secret is added to your repository settings.
 - Adjust the python-version, poetry_version_options, and other inputs as needed for your project.
 - The pytest_run input must be set to true or false to indicate whether to run tests.
-
-

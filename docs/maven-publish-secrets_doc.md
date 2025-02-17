@@ -1,4 +1,3 @@
-
 ## Preparing GPG Key to Sign Java Artifacts
 
 To publish Java artifacts to Maven Central, you need to sign them with a GPG key. Follow these steps to prepare your GPG key:
@@ -16,6 +15,7 @@ gpg --full-generate-key
 ```
 
 Follow the prompts to configure your key. Choose the following options:
+
 - Key type: RSA and RSA
 - Key size: 4096 bits
 - Expiration: Choose an appropriate expiration date
@@ -84,7 +84,7 @@ Add the following configuration to your `pom.xml` file to sign your artifacts:
 
 ### Step 7: Provide GPG Passphrase
 
-When running Maven commands, you will be prompted to enter your GPG passphrase. You can also configure Maven to use the passphrase automatically by adding it to your `settings.xml` file (not recommended for security reasons). In case of using GitHub workflow the `settings.xml` will be created automatically and store the secrets secure way. 
+When running Maven commands, you will be prompted to enter your GPG passphrase. You can also configure Maven to use the passphrase automatically by adding it to your `settings.xml` file (not recommended for security reasons). In case of using GitHub workflow the `settings.xml` will be created automatically and store the secrets secure way.
 
 With these steps, your Java artifacts will be signed with your GPG key.
 
@@ -93,6 +93,7 @@ With these steps, your Java artifacts will be signed with your GPG key.
 To configure a GitHub repository to publish artifacts to Maven Central, you need to set up GitHub Actions workflows and add specific secrets to your repository. Here are the steps:
 
 ### Step 1: Set Up GitHub Actions Workflow
+
 Create a GitHub Actions workflow file in your repository. For example, create a file named .github/workflows/release.yml with the following content:
 
 ```yaml
@@ -150,7 +151,7 @@ Go to your repository settings and add the following secrets:
 `MAVEN_GPG_PRIVATE_KEY`: Your GPG private key, exported as an ASCII-armored string.  
 `MAVEN_GPG_PASSPHRASE`: The passphrase for your GPG key.  
 `MAVEN_USER`: Your Maven Central username.  
-`MAVEN_PASSWORD`: Your Maven Central token.  
+`MAVEN_PASSWORD`: Your Maven Central token.
 
 Exporting GPG Private Key
 To export your GPG private key, run the following command and copy the output:

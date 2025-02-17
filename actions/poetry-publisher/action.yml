@@ -1,37 +1,35 @@
-name: 'Poetry Publisher'
-description: ''
+name: "Poetry Publisher"
+description: ""
 
 inputs:
-
   package_version:
-    description: 'Specific application version to set for the package'
+    description: "Specific application version to set for the package"
     required: false
-    default: ''
+    default: ""
 
   poetry_version_bump:
     description: 'Options for patching version (e.g., "patch", "minor")'
     required: false
-    default: 'patch'
+    default: "patch"
 
   poetry_build_options:
-    description: 'Additional parameters for poetry build'
+    description: "Additional parameters for poetry build"
     required: false
-    default: ''
+    default: ""
 
   run_pytest:
-    description: 'Run tests with pytest'
+    description: "Run tests with pytest"
     required: false
-    default: 'false'
+    default: "false"
 
   pytest_options:
-    description: 'Parameters for pytest'
+    description: "Parameters for pytest"
     required: false
-    default: ''
+    default: ""
 
 runs:
   using: composite
   steps:
-
     - name: Install dependencies
       shell: bash
       run: |
@@ -79,7 +77,6 @@ runs:
       run: |
         poetry install
         poetry run pytest ${{ inputs.pytest_options }}
-
 
     - name: Publish to PyPi
       shell: bash

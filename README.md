@@ -32,12 +32,13 @@ Detailed description of existing workflows can be found here [Index of Workflow 
     - [Step 2: Create Configuration File](#step-2-create-configuration-file)
 
 ---
+
 Below is the short description of how to implement common workflows in any Netcracker repository. All necessery secrets and variables for common workflows are already present on organization level, no additional settings or configurations are required.
 
 <span id="secrets_table"></span>**The organization level secrets and vars used in actions**
 
 | Name                          | Purpose                                                                              |
-|-------------------------------|--------------------------------------------------------------------------------------|
+| ----------------------------- | ------------------------------------------------------------------------------------ |
 | secrets.PERSONAL_ACCESS_TOKEN | Used by actions to access repositories data                                          |
 | secrets.MAVEN_USER            | User name to authenticate in Maven Central repository to publish released artifacts  |
 | secrets.MAVEN_PASSWORD        | User token to authenticate in Maven Central repository to publish released artifacts |
@@ -63,7 +64,7 @@ on:
   issue_comment:
     types: [created]
   pull_request_target:
-    types: [opened,closed,synchronize]
+    types: [opened, closed, synchronize]
 jobs:
   cla_assistant:
     uses: Netcracker/qubership-workflow-hub/.github/workflows/cla.yaml@main
@@ -71,7 +72,7 @@ jobs:
       personal_access_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 ```
 
-The `PERSONAL_ACCESS_TOKEN` is defined on organization level then you can use it in any Netcracker/* repository.
+The `PERSONAL_ACCESS_TOKEN` is defined on organization level then you can use it in any Netcracker/\* repository.
 
 ### Prettier
 
@@ -135,14 +136,12 @@ Create a new workflow in your repository. Create a file `.github/workflows/autom
 
 ```yaml
 ---
-
 name: Automatic PR Labeler
 
 on:
   pull_request:
     branches: [main]
-    types:
-      [opened, reopened]
+    types: [opened, reopened]
 
 jobs:
   assign-labels:
@@ -151,7 +150,7 @@ jobs:
     if: github.event.pull_request.merged == false
     with:
       pull_request_number: ${{ github.event.pull_request.number }}
-      config_file: './.github/auto-labeler-config.yaml'
+      config_file: "./.github/auto-labeler-config.yaml"
 ```
 
 #### Step 2: Add configuration file
@@ -160,42 +159,42 @@ Create a new configuration file `.github/auto-labeler-config.yaml`. Copy code be
 
 ```yaml
 conventional-commits:
-  - type: 'fix'
-    nouns: ['FIX', 'Fix', 'fix', 'FIXED', 'Fixed', 'fixed']
-    labels: ['bug']
-  - type: 'feature'
-    nouns: ['FEATURE', 'Feature', 'feature', 'FEAT', 'Feat', 'feat']
-    labels: ['enhancement']
-  - type: 'breaking_change'
-    nouns: ['BREAKING CHANGE', 'BREAKING', 'MAJOR']
-    labels: ['breaking-change']
-  - type: 'refactor'
-    nouns: ['refactor','Refactor']
-    labels: ['refactor']
-  - type: 'documentation'
-    nouns: ['doc','document','documentation']
-    labels: ['documentation']
-  - type: 'build'
-    nouns: ['build','rebuild']
-    labels: ['build']
-  - type: 'config'
-    nouns: ['config', 'conf', 'cofiguration', 'configure']
-    labels: ['config']
+  - type: "fix"
+    nouns: ["FIX", "Fix", "fix", "FIXED", "Fixed", "fixed"]
+    labels: ["bug"]
+  - type: "feature"
+    nouns: ["FEATURE", "Feature", "feature", "FEAT", "Feat", "feat"]
+    labels: ["enhancement"]
+  - type: "breaking_change"
+    nouns: ["BREAKING CHANGE", "BREAKING", "MAJOR"]
+    labels: ["breaking-change"]
+  - type: "refactor"
+    nouns: ["refactor", "Refactor"]
+    labels: ["refactor"]
+  - type: "documentation"
+    nouns: ["doc", "document", "documentation"]
+    labels: ["documentation"]
+  - type: "build"
+    nouns: ["build", "rebuild"]
+    labels: ["build"]
+  - type: "config"
+    nouns: ["config", "conf", "cofiguration", "configure"]
+    labels: ["config"]
 ```
 
 #### Step 3: Follow the conventional commits messages strategy
 
 The configuration file from [previous step](#step-2-add-configuration-file) defines the next rules for PR labeling based on words in **commit messages**:
 
-| Commit message word(s) | Label |
-| -- | -- |
-| 'FIX', 'Fix', 'fix', 'FIXED', 'Fixed', 'fixed' | bug |
-| 'FEATURE', 'Feature', 'feature', 'FEAT', 'Feat', 'feat' | enhancement |
-| 'BREAKING CHANGE', 'BREAKING', 'MAJOR' | breaking-change |
-| 'refactor','Refactor' | refactor |
-| 'doc','document','documentation' | documentation |
-| 'build','rebuild' | build |
-| 'config', 'conf', 'cofiguration', 'configure' | config |
+| Commit message word(s)                                  | Label           |
+| ------------------------------------------------------- | --------------- |
+| 'FIX', 'Fix', 'fix', 'FIXED', 'Fixed', 'fixed'          | bug             |
+| 'FEATURE', 'Feature', 'feature', 'FEAT', 'Feat', 'feat' | enhancement     |
+| 'BREAKING CHANGE', 'BREAKING', 'MAJOR'                  | breaking-change |
+| 'refactor','Refactor'                                   | refactor        |
+| 'doc','document','documentation'                        | documentation   |
+| 'build','rebuild'                                       | build           |
+| 'config', 'conf', 'cofiguration', 'configure'           | config          |
 
 Labels on PRs used to generate release notes for GitHub releases. You can edit labels configuration and [release notes generation template](#step-3-add-configuration-file-for-github-release) to extend or improve the default ones.
 
@@ -209,7 +208,6 @@ To add commit messages in pull request description into your repository just cre
 
 ```yaml
 ---
-
 name: "Add commit messages to PR body"
 
 on:
@@ -239,7 +237,6 @@ To add the workflow into your repository just create the new file `.github/workf
 
 ```yaml
 ---
-
 name: Conventional Commits PR Check
 
 on:
@@ -274,7 +271,6 @@ To add the workflow into your repository just create the new file `.github/workf
 
 ```yaml
 ---
-
 name: "Lint PR Title"
 
 on:
@@ -308,6 +304,7 @@ The workflow consists of several sequential jobs:
 1. [Update pom.xml file with the release version](./docs/reusable/update-pom-release_doc.md).
 2. [Publish released artifacts into Maven Central](./docs/reusable/maven-publish_doc.md)
 3. [Create GitHub release](./docs/reusable/create-github-release_doc.md)
+
 ---
 
 To make it use one need to do several preparations in the project.
@@ -322,7 +319,6 @@ Create new a file `.github/workflows/maven-release.yaml` and copy the code below
 
 ```yaml
 ---
-
 name: Release And Upload to Maven Central
 
 on:
@@ -330,14 +326,14 @@ on:
     inputs:
       version:
         required: true
-        default: '2025.1-1.0.0'
+        default: "2025.1-1.0.0"
         type: string
-        description: 'Release version (e.g., 2025.1-1.0.0)'
+        description: "Release version (e.g., 2025.1-1.0.0)"
       java_version:
         required: false
         type: string
         default: "21"
-        description: 'Java version (e.g., 21)'
+        description: "Java version (e.g., 21)"
 
 jobs:
   check-tag:
@@ -357,7 +353,7 @@ jobs:
         id: check_tag
         uses: netcracker/qubership-workflow-hub/actions/tag-checker@main
         with:
-          tag: 'v${{ github.event.inputs.version }}'
+          tag: "v${{ github.event.inputs.version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -427,29 +423,28 @@ This workflow will:
 Upload [prepared configuration file](./docs/examples/release-drafter-config.yml) to your repository in `.github/` folder. You can customize it in future for your needs.
 
 ```yaml
-name-template: 'v$RESOLVED_VERSION'
-tag-template: 'v$RESOLVED_VERSION'
-
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
 
 categories:
-  - title: '💥 Breaking Changes'
+  - title: "💥 Breaking Changes"
     labels:
       - breaking-change
-  - title: '🚀 New Features'
+  - title: "🚀 New Features"
     labels:
       - feature
       - en
-  - title: '🐛 Bug Fixes'
+  - title: "🐛 Bug Fixes"
     labels:
       - bug
       - fix
       - bugfix
-  - title: '🛠️ Technical Debt'
+  - title: "🛠️ Technical Debt"
     labels:
       - refactor
 
-change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
-no-changes-template: 'No significant changes'
+change-template: "- $TITLE (#$NUMBER) by @$AUTHOR"
+no-changes-template: "No significant changes"
 
 template: |
   ## 🚀 Release
@@ -478,37 +473,36 @@ Create new a file `.github/workflows/python-release.yaml` and copy the code belo
 
 ```yaml
 ---
-
 name: Python Release
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Specify version (optional)'
+        description: "Specify version (optional)"
         required: false
-        default: ''
+        default: ""
       python-version:
-        description: 'Python version to use'
+        description: "Python version to use"
         required: false
-        default: '3.11'
+        default: "3.11"
       poetry_version_options:
-        description: 'Poetry version bump (e.g., patch, minor, major)'
+        description: "Poetry version bump (e.g., patch, minor, major)"
         required: false
-        default: 'patch'
+        default: "patch"
       poetry_build_params:
-        description: 'Additional poetry build parameters'
+        description: "Additional poetry build parameters"
         required: false
-        default: ''
+        default: ""
       pytest_run:
-        description: 'Run pytest (true/false)'
+        description: "Run pytest (true/false)"
         required: true
         type: boolean
         default: true
       pytest_params:
-        description: 'Parameters for pytest'
+        description: "Parameters for pytest"
         required: false
-        default: '--maxfail=3 -v'
+        default: "--maxfail=3 -v"
 
 jobs:
   show-params:
@@ -535,7 +529,7 @@ jobs:
         id: check_tag
         uses: netcracker/qubership-workflow-hub/actions/tag-checker@main
         with:
-          tag: 'v${{ github.event.inputs.version }}'
+          tag: "v${{ github.event.inputs.version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -593,6 +587,7 @@ jobs:
 ```
 
 This workflow is designed to be run manually. It has six input parameters on manual execution:
+
 - `Specify version (optional)` -- a string represents the version number (optional). If empty the version number will be cretad automatically.
 - `Python version to use` -- a string represents Python version to use to build artifacts (e.g., `3.11`)
 - `Poetry version bump` -- which part of semver version to bump (e.g., `patch`, `minor`, `major`)'
@@ -624,7 +619,6 @@ Create new a file `.github/workflows/check-license.yaml` and copy the code below
 
 ```yaml
 ---
-
 name: Check Go Modules Licenses
 on:
   push:
