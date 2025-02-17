@@ -14,10 +14,6 @@ inputs:
     description: "The commit message. Defaults to `Automated commit`."
     required: false
     default: "Automated commit"
-  branch_name:
-    description: "The branch to push the changes to. Defaults to `main`."
-    required: false
-    default: "main"
 
 runs:
   using: "composite"
@@ -41,7 +37,7 @@ runs:
       shell: bash
       run: |
         set -x
-        git push origin ${{ inputs.branch_name }}
+        git push origin HEAD
 
 branding:
   icon: "git-commit"
