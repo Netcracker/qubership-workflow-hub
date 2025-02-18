@@ -10,7 +10,7 @@ name: "Generate SBOM file for project"
 description: "Generate Software Bill of Materials (SBOM) file for the project and CycloneDX vulnerability report"
 
 inputs:
-  projet_type:
+  project_type:
     description: "Type of project"
     required: true
 
