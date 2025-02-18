@@ -1,0 +1,140 @@
+---
+
+# Input parameter project_type is required. It can have one of the next values:
+# - go
+# - python
+# - maven
+# - docker
+
+name: "Generate SBOM file for project"
+description: "Generate Software Bill of Materials (SBOM) file for the project and CycloneDX vulnerability report"
+
+inputs:
+  projet_type:
+    description: "Type of project"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check input parameters
+      shell: bash
+      run: |
+        if [ "${{ inputs.project_type }}" != "go" ] && [ "${{ inputs.project_type }}" != "python" ] && [ "${{ inputs.project_type }}" != "maven" ] && [ "${{ inputs.project_type }}" != "docker" ]; then
+          echo "Invalid project type. Please provide one of the next values: go, python, maven, docker"
+          exit 1
+        fi
+
+    - name: "Checout code"
+      uses: actions/checkout@v4
+
+    # GO steps --------- start
+    - name: Find go.mod files
+      if: ${{ inputs.project_type == 'go' }}
+      id: find
+      run: |
+        GO_MOD_FILE=$(find . -name go.mod | head -n 1)
+        if [ -f ${GO_MOD_FILE} ]; then
+          echo "GO_MOD_FILE=${GO_MOD_FILE}" >> $GITHUB_ENV
+          echo "GO_MOD_DIR=$(dirname ${GO_MOD_FILE})" >> $GITHUB_ENV
+          echo "GO_MOD_DIR=$(dirname ${GO_MOD_FILE})" >> $GITHUB_OUTPUT
+          MODULE=$(cat ${GO_MOD_FILE} | grep -e "^module " | awk '{print $2}')
+          echo "MODULE=${MODULE}" >> $GITHUB_ENV
+          echo "#######################################################"
+          echo "Module: ${MODULE}"
+          echo "go.mod: ${GO_MOD_FILE}"
+          echo "go.mod dir: ${GO_MOD_DIR}"
+        else
+          echo "No go.mod file found"
+          exit 1
+        fi
+      shell: bash
+
+    - name: Setup Go
+      if: ${{ inputs.project_type == 'go' }}
+      id: go
+      uses: actions/setup-go@v5
+      with:
+        cache-dependency-path: "**/*.sum"
+        go-version-file: "${{ env.GO_MOD_FILE }}"
+
+    - name: Setup Go vendor
+      if: ${{ inputs.project_type == 'go' }}
+      run: |
+        echo "############### go get ${MODULE} ####################"
+        go get ${MODULE}/... || true
+        echo "############### go mod vendor #######################"
+        go mod vendor -e
+      working-directory: "${{ github.workspace }}/${{ env.GO_MOD_DIR }}"
+      shell: bash
+    # GO steps --------- end
+
+    # Maven stepsl --------- start
+    - name: Setup java
+      if: ${{ inputs.project_type == 'maven' }}
+      uses: actions/setup-java@v2
+      with:
+        distribution: "adopt"
+        java-version: "21"
+
+    - name: Build with Maven
+      if: ${{ inputs.project_type == 'maven' }}
+      run: mvn -B -Dmaven.test.skip=true clean install
+      shell: bash
+      working-directory: "${{ github.workspace }}"
+    # Maven steps --------- end
+
+    # Python steps --------- start
+    - name: Setup Python
+      if: ${{ inputs.project_type == 'python' }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
+
+    - name: Install dependencies
+      if: ${{ inputs.project_type == 'python' }}
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --user pipx
+        pipx ensurepath
+        pipx install poetry
+
+    - name: Remove dist
+      if: ${{ inputs.project_type == 'python' }}
+      shell: bash
+      run: rm -rf dist/
+
+    - name: Build package
+      if: ${{ inputs.project_type == 'python' }}
+      shell: bash
+      run: poetry build ${{ inputs.poetry_build_options }}
+    # Python steps --------- end
+
+    - name: "Generate BOM"
+      run: |
+        cd ${GITHUB_WORKSPACE}/${GO_MOD_DIR}
+        docker run --rm -v /tmp:/tmp -v $(pwd):/app:rw -t ghcr.io/cyclonedx/cdxgen:v8.6.0 -r /app -p -o /app/bom.json
+        docker rmi -f $(docker images -aq)
+      shell: bash
+
+    - name: "Upload bom.json"
+      uses: actions/upload-artifact@v4.6.0
+      with:
+        name: "BOM file"
+        path: ${{ github.workspace }}/**/bom.json
+        retention-days: 5
+
+    - name: "Generate Depscan report"
+      run: |
+        cd ${GITHUB_WORKSPACE}/${GO_MOD_DIR}
+        docker run --rm -v $PWD:/app ghcr.io/owasp-dep-scan/dep-scan \
+        --src /app --reports-dir /app/reports --bom /app/bom.json
+      shell: bash
+
+    - name: "Upload Depscan report"
+      uses: actions/upload-artifact@v4.6.0
+      with:
+        name: "DEPSCAN report"
+        path: ${{ github.workspace }}/**/reports/*
+        retention-days: 5
