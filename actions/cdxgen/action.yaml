@@ -70,17 +70,21 @@ runs:
     # GO steps --------- end
 
     # Maven stepsl --------- start
-    - name: Setup java
+    - name: Set up JDK
       if: ${{ inputs.project_type == 'maven' }}
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v4
       with:
-        distribution: "adopt"
         java-version: "21"
+        distribution: 'temurin'
+        gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-    - name: Build with Maven
+    - name: Maven build
       if: ${{ inputs.project_type == 'maven' }}
-      run: mvn -B -Dmaven.test.skip=true clean install
       shell: bash
+      run: mvn -B -Dmaven.test.skip=true clean install
+      env:
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
       working-directory: "${{ github.workspace }}"
     # Maven steps --------- end
 
