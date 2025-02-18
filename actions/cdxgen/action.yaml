@@ -76,15 +76,11 @@ runs:
       with:
         java-version: "21"
         distribution: 'temurin'
-        gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-        gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
     - name: Maven build
       if: ${{ inputs.project_type == 'maven' }}
       shell: bash
-      run: mvn -B -Dmaven.test.skip=true clean install
-      env:
-        MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      run: mvn -B -Dmaven.test.skip=true -DskipTests -Dgpg.skip=true clean install
       working-directory: "${{ github.workspace }}"
     # Maven steps --------- end
 
