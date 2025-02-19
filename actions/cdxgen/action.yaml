@@ -22,6 +22,7 @@ runs:
 
     - name: "Generate BOM"
       run: |
+        cd ${GITHUB_WORKSPACE}
         docker run --rm -v /tmp:/tmp -v $(pwd):/app:rw -t ghcr.io/cyclonedx/cdxgen:v8.6.0 -r /app -p -o /app/${{ github.event.repository.name }}_sbom.json
         docker rmi -f $(docker images -aq)
       shell: bash
@@ -35,7 +36,7 @@ runs:
 
     - name: "Generate Depscan report"
       run: |
-        cd ${GITHUB_WORKSPACE}/${GO_MOD_DIR}
+        cd ${GITHUB_WORKSPACE}
         docker run --rm -v $PWD:/app ghcr.io/owasp-dep-scan/dep-scan \
         --src /app --reports-dir /app/reports --bom /app/${{ github.event.repository.name }}_sbom.json
       shell: bash
