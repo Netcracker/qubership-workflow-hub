@@ -23,7 +23,7 @@ runs:
     - name: "Check input"
       shell: bash
       run: |
-        if: [[ "${{ inputs.project_type }}" != "" ]]
+        if [[ "${{ inputs.project_type }}" != "" ]]
         then
           echo "Project type is provided: ${{ inputs.project_type }}"
           echo "PROJECT_TYPE='-t ${{ inputs.project_type }}'" >> $GITHUB_ENV
