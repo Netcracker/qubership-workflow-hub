@@ -15,9 +15,6 @@ on:
         required: false
         type: string
         default: "central"
-      version:
-        required: true
-        type: string
       ref:
         required: false
         type: string
@@ -40,6 +37,11 @@ on:
         required: true
       maven_gpg_passphrase:
         required: true
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
 
 jobs:
   upload:
@@ -65,7 +67,7 @@ jobs:
           java-version: ${{ inputs.java_version }}
           distribution: 'temurin'
           server-id: ${{ inputs.server_id }}
-          server-username: MAVEN_USERNAME
+          # server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.maven_gpg_private_key }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
@@ -76,8 +78,10 @@ jobs:
       - name: Sign and Deploy jar to Maven Central
         run: mvn ${{ inputs.maven_command }}
         env:
-          MAVEN_USERNAME: ${{ secrets.maven_username }}
-          MAVEN_PASSWORD: ${{ secrets.maven_password }}
+          # MAVEN_USERNAME: ${{ secrets.maven_username }}
+          MAVEN_USERNAME: ${{ github.actor }}
+          # MAVEN_PASSWORD: ${{ secrets.maven_password }}
+          MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.maven_gpg_passphrase }}
 
       - name: Upload all Maven target directories
