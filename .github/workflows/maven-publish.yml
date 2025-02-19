@@ -76,15 +76,11 @@ jobs:
       - name: Display settings.xml
         run: cat ~/.m2/settings.xml
 
-      - name: Sign and Deploy jar to Maven Central
+      - name: Sign and Deploy jar
         run: mvn ${{ inputs.maven_command }}
         env:
           # MAVEN_USERNAME: ${{ secrets.maven_username }}
-          # MAVEN_USERNAME: ${{ github.actor }}
-          # MAVEN_PASSWORD: ${{ secrets.maven_password }}
-
           MAVEN_PASSWORD: ${{ secrets.maven_password }}
-
           MAVEN_GPG_PASSPHRASE: ${{ secrets.maven_gpg_passphrase }}
 
       - name: Upload all Maven target directories
