@@ -30,13 +30,13 @@ on:
 
     secrets:
       maven_username:
-        required: true
+        required: false
       maven_password:
         required: true
       maven_gpg_private_key:
-        required: true
+        required: false
       maven_gpg_passphrase:
-        required: true
+        required: false
 
 permissions:
   contents: write
