@@ -26,10 +26,10 @@ runs:
         if [[ "${{ inputs.project_type }}" != "" ]]
         then
           echo "Project type is provided: ${{ inputs.project_type }}"
-          echo "PROJECT_TYPE='-t ${{ inputs.project_type }}'" >> $GITHUB_ENV
+          echo "PROJECT_TYPE=-t ${{ inputs.project_type }}" >> $GITHUB_ENV
         else
           echo "Project type is not provided"
-          echo "PROJECT_TYPE=''" >> $GITHUB_ENV
+          echo "PROJECT_TYPE=" >> $GITHUB_ENV
         fi
 
     - name: "Generate BOM"
