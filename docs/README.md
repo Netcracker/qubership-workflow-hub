@@ -17,9 +17,8 @@ This index provides a quick overview of the available workflow and action docume
 | [tag-creator](../docs/reusable//tag-creator.md)              | Creates a new tag in the repository.     |
 
 
-## Template Flows
 
-| Name                                             | Description                                                      |
+| Template Workflow                                             | Description                                                      |
 | --------------------------------------------------------- | ---------------------------------------------------------------- |
 | [automatic-pr-labeler](../.github/workflows/automatic-pr-labeler.yaml) | Automatically labels pull requests when they are opened or reopened. |
 | [auto-labeler](../.github/workflows/auto-labeler.yaml)          | Automatically labels pull requests based on conventional commits. |

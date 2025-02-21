@@ -55,24 +55,9 @@ The action for [CLA](./CLA/cla.md) "signing" for contributors.
 
 > More info about underlying GitHub action can be found here [contributor-assistant](https://github.com/contributor-assistant/github-action)
 
-To add the CLA signing into your repository just create the new file `.github/workflows/cla.yaml` and paste the code below or just copy the [prepared file](./docs/examples/cla.yaml):
+To add the CLA signing into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/cla.yaml) into `.github/workflow` directory of your repository.
 
-```yaml
----
-name: CLA Assistant
-on:
-  issue_comment:
-    types: [created]
-  pull_request_target:
-    types: [opened, closed, synchronize]
-jobs:
-  cla_assistant:
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/cla.yaml@main
-    secrets:
-      personal_access_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-```
-
-The `PERSONAL_ACCESS_TOKEN` is defined on organization level then you can use it in any Netcracker/\* repository.
+The `PERSONAL_ACCESS_TOKEN` used in the workflow is defined on organization level then you can use it in any Netcracker/\* repository.
 
 ### Prettier
 
@@ -80,20 +65,7 @@ The action to check style and syntax of several document types. It creates PR if
 
 > More info about underlying GitHub action can be found here [prettier-fix](https://github.com/WorkOfStan/prettier-fix)
 
-To add the prettier into your repository just create the new file `.github/workflows/prettier.yaml` and paste the code belowor just copy the [prepared file](./docs/examples/prettier.yaml):
-
-```yaml
----
-name: Prettier-fix
-on: [pull_request, push, workflow_dispatch]
-
-permissions:
-  contents: write
-
-jobs:
-  call-prettier-fix:
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/prettierFix.yaml@main
-```
+To add the prettier into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/prettier.yaml) into `.github/workflow` directory of your repository.
 
 ### Profanity filter
 
@@ -101,28 +73,7 @@ The action to check PRs/issues comments on profany words.
 
 > More info about underlying GitHub action can be found here [profanity-filter](https://github.com/IEvangelist/profanity-filter)
 
-To add the profanity filter into your repository just create the new file `.github/workflows/profanity-filter.yaml` and paste the code below or just copy the [prepared file](./docs/examples/profanity-filter.yaml):
-
-```yaml
----
-name: Profanity filter
-
-on:
-  issue_comment:
-    types: [created, edited]
-  issues:
-    types: [opened, edited, reopened]
-  pull_request:
-    types: [opened, edited, reopened]
-
-permissions:
-  issues: write
-  pull-requests: write
-
-jobs:
-  call-apply-filter:
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/profanityFilter.yaml@main
-```
+To add the profanity filter into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/profanity-filter.yaml) into `.github/workflow` directory of your repository.
 
 ### Automatic PR labels based on conventional commits
 
@@ -132,55 +83,11 @@ The workflow automatically label PR on it's open/reopen events. It checks all th
 
 #### Step 1: Create workflow file
 
-Create a new workflow in your repository. Create a file `.github/workflows/automatic-pr-labeler.yaml` and copy the code below or just copy the [prepared file](./docs/examples/automatic-pr-labeler.yaml):
-
-```yaml
----
-name: Automatic PR Labeler
-
-on:
-  pull_request:
-    branches: [main]
-    types: [opened, reopened]
-
-jobs:
-  assign-labels:
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/auto-labeler.yaml@main
-    name: Assign labels in pull request
-    if: github.event.pull_request.merged == false
-    with:
-      pull_request_number: ${{ github.event.pull_request.number }}
-      config_file: "./.github/auto-labeler-config.yaml"
-```
+Create a new workflow in your repository. Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/automatic-pr-labeler.yaml) into `.github/workflow` directory of your repository.
 
 #### Step 2: Add configuration file
 
-Create a new configuration file `.github/auto-labeler-config.yaml`. Copy code below or just copy the [prepared file](./docs/examples/auto-labeler-config.yaml)
-
-```yaml
-conventional-commits:
-  - type: "fix"
-    nouns: ["FIX", "Fix", "fix", "FIXED", "Fixed", "fixed"]
-    labels: ["bug"]
-  - type: "feature"
-    nouns: ["FEATURE", "Feature", "feature", "FEAT", "Feat", "feat"]
-    labels: ["enhancement"]
-  - type: "breaking_change"
-    nouns: ["BREAKING CHANGE", "BREAKING", "MAJOR"]
-    labels: ["breaking-change"]
-  - type: "refactor"
-    nouns: ["refactor", "Refactor"]
-    labels: ["refactor"]
-  - type: "documentation"
-    nouns: ["doc", "document", "documentation"]
-    labels: ["documentation"]
-  - type: "build"
-    nouns: ["build", "rebuild"]
-    labels: ["build"]
-  - type: "config"
-    nouns: ["config", "conf", "cofiguration", "configure"]
-    labels: ["config"]
-```
+Create a new configuration file `.github/auto-labeler-config.yaml`. Copy [prepared file](./docs/examples/auto-labeler-config.yaml)  into `.github` directory of your repository.
 
 #### Step 3: Follow the conventional commits messages strategy
 
@@ -204,26 +111,7 @@ The workflow will collect commit messages from pull request and add them in pull
 
 ---
 
-To add commit messages in pull request description into your repository just create the new file `.github/workflows/pr-collect-commit-messages.yaml` and paste the code below or just copy the [prepared file](./docs/examples/pr-collect-commit-messages.yaml):
-
-```yaml
----
-name: "Add commit messages to PR body"
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-permissions:
-  pull-requests: write
-
-jobs:
-  update-pr-body:
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Update PR body"
-        uses: netcracker/qubership-workflow-hub/actions/pr-add-messages@main
-```
+To add commit messages in pull request description into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-collect-commit-messages.yaml) into `.github/workflow` directory of your repository.
 
 ### Conventional Commits PR Check
 
@@ -233,31 +121,7 @@ More info on underlying Github action can be found here [Conventional Commits Gi
 
 ---
 
-To add the workflow into your repository just create the new file `.github/workflows/pr-conventional-commits.yaml` and paste the code below or just copy the [prepared file](./docs/examples/pr-conventional-commits.yaml):
-
-```yaml
----
-name: Conventional Commits PR Check
-
-on:
-  pull_request_target:
-    types:
-      - opened
-      - edited
-      - synchronize
-      - reopened
-
-permissions:
-  pull-requests: read
-jobs:
-  build:
-    name: Conventional Commits
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: webiny/action-conventional-commits@v1.3.0
-```
+To add the workflow into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-conventional-commits.yaml) into `.github/workflow` directory of your repository.
 
 ### Lint PR Title
 
@@ -267,32 +131,7 @@ More info on underlying Github action can be found here [Semantic Pull Request](
 
 ---
 
-To add the workflow into your repository just create the new file `.github/workflows/pr-lint-title.yaml` and paste the code below or just copy the [prepared file](./docs/examples/pr-lint-title.yaml):
-
-```yaml
----
-name: "Lint PR Title"
-
-on:
-  pull_request_target:
-    types:
-      - opened
-      - edited
-      - synchronize
-      - reopened
-
-permissions:
-  pull-requests: read
-
-jobs:
-  main:
-    name: Validate PR title
-    runs-on: ubuntu-latest
-    steps:
-      - uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-```
+To add the workflow into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-lint-title.yaml) into `.github/workflow` directory of your repository.
 
 ---
 
@@ -301,9 +140,15 @@ jobs:
 Maven project release workflow is used to make a Github release and publish released artifacts into Maven Central.
 The workflow consists of several sequential jobs:
 
-1. [Update pom.xml file with the release version](./docs/reusable/update-pom-release_doc.md).
-2. [Publish released artifacts into Maven Central](./docs/reusable/maven-publish_doc.md)
-3. [Create GitHub release](./docs/reusable/create-github-release_doc.md)
+1. Checks if the tag already exists.
+2. [Updates the version in the pom.xml file](./docs/reusable/update-pom-release_doc.md)
+3. Commits the changes to the repository.
+4. Builds the project using Maven.
+5. Runs tests.
+6. Tags the commit with the release version.
+7. [Deploys the artifact to the Maven repository](./docs/reusable/maven-publish_doc.md)
+8. Builds and publishes a Docker image.
+9. [Create GitHub release](./docs/reusable/create-github-release_doc.md)
 
 ---
 
@@ -315,145 +160,29 @@ First of all please make sure the `pom.xml` file prepared to build source code a
 
 ### Step 2: Maven release workflow
 
-Create new a file `.github/workflows/maven-release.yaml` and copy the code below or just copy the [prepared file](./docs/examples/maven-release.yaml):
+Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/maven-release.yaml) into `.github/workflow` directory of your repository.
 
-```yaml
----
-name: Release And Upload to Maven Central
-
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        required: true
-        default: "2025.1-1.0.0"
-        type: string
-        description: "Release version (e.g., 2025.1-1.0.0)"
-      java_version:
-        required: false
-        type: string
-        default: "21"
-        description: "Java version (e.g., 21)"
-
-jobs:
-  check-tag:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Input parameters
-        run: |
-          echo "Version: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "Java version: ${{ github.event.inputs.java_version }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check if tag exists
-        id: check_tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-checker@main
-        with:
-          tag: "v${{ github.event.inputs.version }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Output result
-        run: |
-          echo "Tag exists: ${{ steps.check_tag.outputs.exists }}"
-          echo "Tag name: v${{ github.event.inputs.version }}"
-
-      - name: Fail if tag exists
-        if: steps.check_tag.outputs.exists == 'true'
-        run: |
-          echo "Tag already exists: v${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "Tag already exists: v${{ github.event.inputs.version }}"
-          exit 1
-
-  update-pom-version:
-    needs: [check-tag]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Update pom.xml
-        uses: Netcracker/qubership-workflow-hub/actions/pom-updater@main
-        with:
-          new_value: ${{ github.event.inputs.version }}
-      - name: Commit Changes
-        uses: Netcracker/qubership-workflow-hub/actions/commit-and-push@main
-        with:
-          commit_message: "Update pom.xml version to ${{ github.event.inputs.version }}"
-
-  upload_to_maven_central:
-    needs: [update-pom-version]
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/maven-publish.yml@main
-    with:
-      maven_command: "--batch-mode deploy"
-      java_version: ${{ github.event.inputs.java_version }}
-      version: ${{ github.event.inputs.version }}
-    secrets:
-      maven_username: ${{ secrets.MAVEN_USER }}
-      maven_password: ${{ secrets.MAVEN_PASSWORD }}
-      maven_gpg_passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-      maven_gpg_private_key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-
-  github-release:
-    needs: [upload_to_maven_central]
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
-    with:
-      version: ${{ github.event.inputs.version }}
-      publish: false
-```
-
-This workflow is designed to be run manually. It has two input parameters on manual execution:
+This workflow is designed to be run manually. It has four input parameters on manual execution:
 
 - `Release version` -- a string represents version number of the release
 - `Java version` -- a string represents Java version to use to build artifacts.
+- `Release docker image if there is Docker file` -- build and publish docker image to GitHub packages if Dockerfile exists
+- `Dry run` -- if selected the workflow will go through all the steps, but will not publish anything.
 
 This workflow will:
 
 - Check the provided release/tag existence and fail if it alredy exists.
 - Set the release version in `pom.xml` file
-- Create and publish artifacts into Maven Central.
+- Build maven artifact package from `main` codebase
+- Run tests
+- Create a new tag
+- Build and publish artifacts into Maven Central
+- Build and publish docker image into GitHub packages
 - Create GitHub release in `draft` state.
 
 ### Step 3: Add configuration file for GitHub release
 
-Upload [prepared configuration file](./docs/examples/release-drafter-config.yml) to your repository in `.github/` folder. You can customize it in future for your needs.
-
-```yaml
-name-template: "v$RESOLVED_VERSION"
-tag-template: "v$RESOLVED_VERSION"
-
-categories:
-  - title: "💥 Breaking Changes"
-    labels:
-      - breaking-change
-  - title: "🚀 New Features"
-    labels:
-      - feature
-      - en
-  - title: "🐛 Bug Fixes"
-    labels:
-      - bug
-      - fix
-      - bugfix
-  - title: "🛠️ Technical Debt"
-    labels:
-      - refactor
-
-change-template: "- $TITLE (#$NUMBER) by @$AUTHOR"
-no-changes-template: "No significant changes"
-
-template: |
-  ## 🚀 Release
-
-  ### What's Changed
-  $CHANGES
-
-  **Contributors:** $CONTRIBUTORS
-```
+Upload [prepared configuration file](./docs/examples/release-drafter-config.yml) to your repository in `.github` folder. You can customize it in future for your needs.
 
 ### Step 4: Prepare actions secrets
 
@@ -469,122 +198,7 @@ Python project release workflow is used to make a Github release and publish rel
 
 ### Step 1: Python release workflow
 
-Create new a file `.github/workflows/python-release.yaml` and copy the code below or just copy the [prepared file](./docs/examples/python-release.yaml):
-
-```yaml
----
-name: Python Release
-
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Specify version (optional)"
-        required: false
-        default: ""
-      python-version:
-        description: "Python version to use"
-        required: false
-        default: "3.11"
-      poetry_version_options:
-        description: "Poetry version bump (e.g., patch, minor, major)"
-        required: false
-        default: "patch"
-      poetry_build_params:
-        description: "Additional poetry build parameters"
-        required: false
-        default: ""
-      pytest_run:
-        description: "Run pytest (true/false)"
-        required: true
-        type: boolean
-        default: true
-      pytest_params:
-        description: "Parameters for pytest"
-        required: false
-        default: "--maxfail=3 -v"
-
-jobs:
-  show-params:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Input parameters
-        run: |
-          echo "Input parameters:" >> $GITHUB_STEP_SUMMARY
-          echo "Version: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "Python version: ${{ github.event.inputs.python-version }}" >> $GITHUB_STEP_SUMMARY
-          echo "Poetry version options: ${{ github.event.inputs.poetry_version_options }}" >> $GITHUB_STEP_SUMMARY
-          echo "Poetry build parameters: ${{ github.event.inputs.poetry_build_params }}" >> $GITHUB_STEP_SUMMARY
-          echo "Pytest run: ${{ github.event.inputs.pytest_run }}" >> $GITHUB_STEP_SUMMARY
-          echo "Pytest parameters: ${{ github.event.inputs.pytest_params }}" >> $GITHUB_STEP_SUMMARY
-
-  check-tag:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check if tag exists
-        if: ${{ inputs.version != '' }}
-        id: check_tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-checker@main
-        with:
-          tag: "v${{ github.event.inputs.version }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Output result
-        if: ${{ inputs.version != '' }}
-        run: |
-          echo "Tag exists: ${{ steps.check_tag.outputs.exists }}"
-          echo "Tag name: v${{ github.event.inputs.version }}"
-
-      - name: Fail if tag exists
-        if: inputs.version != '' && steps.check_tag.outputs.exists == 'true'
-        run: |
-          echo "Tag already exists: v${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "Tag already exists: v${{ github.event.inputs.version }}"
-          exit 1
-
-  publish:
-    needs: [check-tag]
-    uses: netcracker/qubership-workflow-hub/.github/workflows/python-publish.yml@main
-    with:
-      version: ${{ inputs.version }}
-      poetry_version_options: ${{ inputs.poetry_version_options }}
-      python-version: ${{ inputs.python-version }}
-      poetry_build_params: ${{ inputs.poetry_build_params }}
-      pytest_run: ${{ inputs.pytest_run }}
-      pytest_params: ${{ inputs.pytest_params }}
-    secrets:
-      PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-
-  get-current-version:
-    needs: [publish]
-    outputs:
-      current_version: ${{ steps.get_version.outputs.CURRENT_VERSION }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Get current version
-        id: get_version
-        run: |
-          echo CURRENT_VERSION=$(grep -e '^version =' pyproject.toml | cut -d'=' -f2) >> $GITHUB_OUTPUT
-          # echo CURRENT_VERSION=$(poetry version | cut -d' ' -f2) >> $GITHUB_OUTPUT
-
-      - name: Output current version
-        run: |
-          echo "Released version: ${{ steps.get_version.outputs.CURRENT_VERSION }}" >> $GITHUB_STEP_SUMMARY
-
-  github-release:
-    needs: [get-current-version]
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
-    with:
-      version: ${{ needs.get-current-version.outputs.current_version }}
-      publish: false
-```
+Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/python-release.yaml) into `.github/workflow` directory of your repository.
 
 This workflow is designed to be run manually. It has six input parameters on manual execution:
 
@@ -615,29 +229,8 @@ The workflow will check licenses of all dependencies if they are in scope of all
 
 ### Step 1: Create GO Project Check Modules License workflow
 
-Create new a file `.github/workflows/check-license.yaml` and copy the code below or just copy the [prepared file](./docs/examples/check-license.yaml):
-
-```yaml
----
-name: Check Go Modules Licenses
-on:
-  push:
-
-jobs:
-  check-license:
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/go-check-license.yaml@main
-```
+Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/check-license.yaml) into `.github/workflow` directory of your repository.
 
 ### Step 2: Create Configuration File
 
-Create a new file `.wwhrd.yml` in the root of repository and copy the code below or just copy the [prepared file](./docs/examples/.wwhrd.yml):
-
-```yaml
-allowlist:
-  - Apache-2.0
-  - MIT
-  - BSD-3-Clause
-  - BSD-2-Clause
-  - ISC
-  - MPL-2.0
-```
+Copy the [prepared file](./docs/examples/.wwhrd.yml) into root directory of your repository.
