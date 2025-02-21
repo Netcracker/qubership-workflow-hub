@@ -87,7 +87,7 @@ Create a new workflow in your repository. Copy the [prepared file](https://githu
 
 #### Step 2: Add configuration file
 
-Create a new configuration file `.github/auto-labeler-config.yaml`. Copy [prepared file](./docs/auto-labeler-config.yaml)  into `.github` directory of your repository.
+Create a new configuration file `.github/auto-labeler-config.yaml`. Copy [prepared file](./docs/examples/auto-labeler-config.yaml)  into `.github` directory of your repository.
 
 #### Step 3: Follow the conventional commits messages strategy
 
