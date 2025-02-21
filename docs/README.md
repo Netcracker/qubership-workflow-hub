@@ -6,22 +6,55 @@ This index provides a quick overview of the available workflow and action docume
 
 ## Flows
 
-| Workflow Name                                             | Description                                                      |
+| Reusable Workflow                                             | Description                                                      |
+| [create-github-release](../.github/workflows/create-github-release.yml) | Automates creating and tagging releases on GitHub.               |
+| [docker-publish](../.github/workflows/docker-publish.yml)              | Automates building and publishing Docker images.     |
+| [github-release](../.github/workflows/github-release.yaml)              | Creates a GitHub release based on the specified version.     |
+| [maven-publish](../.github/workflows/maven-publish.yml)              | Automates signing and deploying Maven artifacts to a repository.     |
+| [python-publish](../.github/workflows/python-publish.yml)              | Automates building, testing, and publishing Python packages.     |
+| [release-drafter](../.github/workflows/release-drafter.yml)              | Drafts a new release based on merged pull requests.     |
+| [tag-creator](../.github/workflows/tag-creator.yml)              | Creates a new tag in the repository.     |
+
+
+
+| Template Workflow                                             | Description                                                      |
 | --------------------------------------------------------- | ---------------------------------------------------------------- |
-| [Maven Publish](./reusable/maven-publish_doc.md)          | Automates signing and deploying Maven artifacts to a repository. |
-| [GitHub Release](./reusable/create-github-release_doc.md) | Automates creating and tagging releases on GitHub.               |
-| [Python Build](./reusable/python-publish.md)              | Automates building, testing, and publishing Python packages.     |
+| [automatic-pr-labeler](../.github/workflows/automatic-pr-labeler.yaml) | Automatically labels pull requests when they are opened or reopened. |
+| [auto-labeler](../.github/workflows/auto-labeler.yaml)          | Automatically labels pull requests based on conventional commits. | ? template
+| [cla](../.github/workflows/cla.yaml)              | Manages Contributor License Agreements (CLA) for pull requests.     | ? template
+| [go-check-license](../.github/workflows/go-check-license.yaml)              | Checks licenses for Go modules.     |
+| [pr-collect-commit-messages](../.github/workflows/pr-collect-commit-messages.yaml)              | Collects commit messages from a pull request and adds them to the description.     |
+| [pr-conventional-commits](../.github/workflows/pr-conventional-commits.yaml)              | Checks if pull request commits follow the Conventional Commits specification.     |
+| [pr-lint-title](../.github/workflows/pr-lint-title.yaml)              | Lints the pull request title to ensure it follows the Conventional Commits specification.     |
+| [prettier](../.github/workflows/prettier.yaml)              | Runs Prettier to format code.     |
+| [prettierFix](../.github/workflows/prettierFix.yaml)              | Fixes code formatting issues using Prettier.     |
+| [profanity-filter](../.github/workflows/profanity-filter.yaml)              | Filters profanity in issues, comments, and pull requests.     |
+| [profanityFilter](../.github/workflows/profanityFilter.yaml)              | Filters profanity in issues, comments, and pull requests.     |
+| [super-linter](../.github/workflows/super-linter.yaml)              | Runs multiple linters to validate code.     |
+
+
 
 ## Actions
 
 | Action Name                                            | Description                                                      |
 | ------------------------------------------------------ | ---------------------------------------------------------------- |
-| [commit-and-push](./actions/commit-and-push/readme.md) | Automates committing and pushing changes to a remote repository. |
-| [pom-updater](./actions/pom-updater/readme.md)         | Automatically updates the `pom.xml` file in Maven projects.      |
-| [tag-checker](./actions/tag-checker/readme.md)         | Verifies the presence of specific tags in the repository.        |
-| [custom-event](./actions/custom-event/readme.md)       | Generate and process custom events in the workflow.              |
+| [commit-and-push](../actions/commit-and-push/README.md) | Automates committing and pushing changes to a remote repository. |
+| [pom-updater](../actions/pom-updater/README.md)         | Automatically updates the `pom.xml` file in Maven projects.      |
+| [tag-checker](../actions/tag-checker/README.md)         | Verifies the presence of specific tags in the repository.        |
+| [custom-event](../actions/custom-event/README.md)       | Triggers a custom `repository_dispatch` event in the repository. |
+| [pr-add-messages](../actions/pr-add-messages/README.md) | Adds commit messages to the pull request description.            |
+| [cdxgen](../actions/cdxgen/README.md)                   | Generates SBOM file and CycloneDX vulnerability report.          |
+| [poetry-publisher](../actions/poetry-publisher/README.md) | Automates building, testing, and publishing Python packages using Poetry. |
 
 ---
+
+
+| Workflow                                            | Description                                                      |
+| ------------------------------------------------------ | ---------------------------------------------------------------- |
+
+
+
+
 
 ## Usage
 

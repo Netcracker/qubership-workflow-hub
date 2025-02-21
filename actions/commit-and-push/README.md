@@ -48,5 +48,3 @@ jobs:
           author_name: "Bot User"
           author_email: "bot@example.com"
           commit_message: "Automated commit from GitHub Actions"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
