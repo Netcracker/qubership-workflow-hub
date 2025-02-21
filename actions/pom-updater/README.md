@@ -50,4 +50,4 @@ jobs:
           new_value: '1.2.3'
 
       - name: Output artifact ID
-        run: echo "Artifact ID: ${{ steps.update-pom.outputs.artifact_id }}"
+        run: echo "Artifact ID ${{ steps.update-pom.outputs.artifact_id }}"
