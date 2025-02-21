@@ -7,6 +7,7 @@ This index provides a quick overview of the available workflow and action docume
 ## Flows
 
 | Reusable Workflow                                             | Description                                                      |
+| --------------------------------------------------------- | ---------------------------------------------------------------- |
 | [create-github-release](../.github/workflows/create-github-release.yml) | Automates creating and tagging releases on GitHub.               |
 | [docker-publish](../.github/workflows/docker-publish.yml)              | Automates building and publishing Docker images.     |
 | [github-release](../.github/workflows/github-release.yaml)              | Creates a GitHub release based on the specified version.     |
@@ -14,8 +15,6 @@ This index provides a quick overview of the available workflow and action docume
 | [python-publish](../.github/workflows/python-publish.yml)              | Automates building, testing, and publishing Python packages.     |
 | [release-drafter](../.github/workflows/release-drafter.yml)              | Drafts a new release based on merged pull requests.     |
 | [tag-creator](../.github/workflows/tag-creator.yml)              | Creates a new tag in the repository.     |
-
-
 
 | Template Workflow                                             | Description                                                      |
 | --------------------------------------------------------- | ---------------------------------------------------------------- |
@@ -32,8 +31,6 @@ This index provides a quick overview of the available workflow and action docume
 | [profanityFilter](../.github/workflows/profanityFilter.yaml)              | Filters profanity in issues, comments, and pull requests.     |
 | [super-linter](../.github/workflows/super-linter.yaml)              | Runs multiple linters to validate code.     |
 
-
-
 ## Actions
 
 | Action Name                                            | Description                                                      |
@@ -47,14 +44,6 @@ This index provides a quick overview of the available workflow and action docume
 | [poetry-publisher](../actions/poetry-publisher/README.md) | Automates building, testing, and publishing Python packages using Poetry. |
 
 ---
-
-
-| Workflow                                            | Description                                                      |
-| ------------------------------------------------------ | ---------------------------------------------------------------- |
-
-
-
-
 
 ## Usage
 
