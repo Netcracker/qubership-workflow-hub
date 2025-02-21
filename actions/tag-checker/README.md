@@ -1,8 +1,13 @@
-# Tag Checker Action
+# 🚀 Tag Checker Action
 
-This Action checks whether a specified tag exists in a repository.
+This **Tag Checker** GitHub Action checks whether a specified tag exists in a repository.
 
-## Inputs
+## Features
+
+- Checks if a specified tag exists in the repository.
+- Outputs whether the tag exists or not.
+
+## 📌 Inputs
 
 | Name           | Description                      | Required | Default |
 | -------------- | -------------------------------- | -------- | ------- |
@@ -15,7 +20,7 @@ This Action checks whether a specified tag exists in a repository.
 | -------- | -------------------------------------------- |
 | `exists` | `True` if the tag exists, `False` otherwise. |
 
-## Usage
+## Usage Example
 
 Below is an example of how to use this action in a GitHub Actions workflow:
 
@@ -26,6 +31,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   check-tag:
@@ -43,4 +49,3 @@ jobs:
 
       - name: Output result
         run: echo "Tag exists: ${{ steps.check-tag.outputs.exists }}"
-```

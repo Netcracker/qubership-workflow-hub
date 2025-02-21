@@ -1,8 +1,14 @@
-# Custom Event Action
+# 🚀 Custom Event Action
 
-This Action triggers a custom `repository_dispatch` event in the repository.
+This **Custom Event** GitHub Action triggers a custom `repository_dispatch` event in the repository.
 
-## Inputs
+## Features
+
+- Triggers a custom `repository_dispatch` event.
+- Allows sending a custom JSON payload.
+- Outputs the HTTP status code of the request.
+
+## 📌 Inputs
 
 | Name             | Description                                   | Required | Default |
 | ---------------- | --------------------------------------------- | -------- | ------- |
@@ -16,7 +22,7 @@ This Action triggers a custom `repository_dispatch` event in the repository.
 | -------- | -------------------------------- |
 | `status` | HTTP status code of the request. |
 
-## Usage
+## Usage Example
 
 Below is an example of how to use this action in a GitHub Actions workflow:
 
@@ -33,40 +39,7 @@ jobs:
       - name: Trigger custom event
         uses: netcracker/qubership-workflow-hub/actions/custom-event@main
         with:
-          event_name: "my-custom-event"
+          event_type: "my-custom-event"
           client_payload: '{"key": "value"}'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
-```
-
-### `client_payload` Explanation
-
-The `client_payload` input allows you to pass custom data as a JSON string. Below are examples with specific values:
-
-```yaml
-with:
-  event_name: "my-custom-event"
-  client_payload: '{"environment": "production", "version": "1.2.3"}'
-```
-
-#### Example: Accessing Parameters from `client_payload`
-
-When triggering a `repository_dispatch` event, the `client_payload` parameters can be accessed directly in the target workflow. Here's how to retrieve the specific parameters defined earlier (`environment`, `version`, `branch`, `build_id`, etc.):
-
-```yaml
-name: Payload Variables
-
-on:
-  repository_dispatch:
-    types:
-      - my-custom-event
-
-jobs:
-  print-payload:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Access to variables
-        run: |
-          echo "Environment: ${{ github.event.client_payload.environment }}"
-          echo "Version: ${{ github.event.client_payload.version }}"
-```
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
