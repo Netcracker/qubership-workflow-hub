@@ -20,8 +20,8 @@ This index provides a quick overview of the available workflow and action docume
 | Template Workflow                                             | Description                                                      |
 | --------------------------------------------------------- | ---------------------------------------------------------------- |
 | [automatic-pr-labeler](../.github/workflows/automatic-pr-labeler.yaml) | Automatically labels pull requests when they are opened or reopened. |
-| [auto-labeler](../.github/workflows/auto-labeler.yaml)          | Automatically labels pull requests based on conventional commits. | ? template
-| [cla](../.github/workflows/cla.yaml)              | Manages Contributor License Agreements (CLA) for pull requests.     | ? template
+| [auto-labeler](../.github/workflows/auto-labeler.yaml)          | Automatically labels pull requests based on conventional commits. |
+| [cla](../.github/workflows/cla.yaml)              | Manages Contributor License Agreements (CLA) for pull requests.     |
 | [go-check-license](../.github/workflows/go-check-license.yaml)              | Checks licenses for Go modules.     |
 | [pr-collect-commit-messages](../.github/workflows/pr-collect-commit-messages.yaml)              | Collects commit messages from a pull request and adds them to the description.     |
 | [pr-conventional-commits](../.github/workflows/pr-conventional-commits.yaml)              | Checks if pull request commits follow the Conventional Commits specification.     |
