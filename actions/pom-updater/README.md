@@ -1,35 +1,53 @@
-# Pom update Action
+# 🚀 POM Updater Action
 
-**Category**: File Management
+This Action updates specified nodes in a Maven `pom.xml` file with a new value.
 
-**Description**: This action updates an XML node's value in a specified file using an XPath expression.
+## Features
 
-## Inputs
+- Updates specified nodes in `pom.xml` files.
+- Supports multiple file paths.
+- Allows customization of XPath expressions.
+- Outputs the `artifactId` from the `pom.xml` file.
 
-| Name        | Required | Description                                        | Default                               |
-| ----------- | -------- | -------------------------------------------------- | ------------------------------------- |
-| `file_path` | No       | The path to the XML file to update.                | `./pom.xml`                           |
-| `path`      | No       | The XPath expression to locate the node to update. | `//p:project/p:properties/p:revision` |
-| `new_value` | Yes      | The new value to set for the selected XML node.    | N/A                                   |
+## 📌 Inputs
 
-## Example Usage
+| Name        | Description                                      | Required | Default                |
+| ----------- | ------------------------------------------------ | -------- | ---------------------- |
+| `file_path` | JSON object mapping names to file paths to update. | No       | `{"default": "pom.xml"}` |
+| `path`      | XPath expression to select nodes to update.      | No       | `//p:project/p:properties/p:revision` |
+| `new_value` | The new value to set for the selected nodes.     | Yes      | None                   |
+
+## Outputs
+
+| Name          | Description                |
+| ------------- | -------------------------- |
+| `artifact_id` | The `artifactId` from the `pom.xml` file. |
+
+## Usage
+
+Below is an example of how to use this action in a GitHub Actions workflow:
 
 ```yaml
-name: Update Pom
+name: Update POM Workflow
+
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  update-xml:
+  update-pom:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Update Pom
+      - name: Update POM version
         uses: netcracker/qubership-workflow-hub/actions/pom-updater@main
         with:
-          file_path: "./pom.xml"
-          path: "//p:project/p:properties/p:revision"
-          new_value: "1.0.1"
-```
+          file_path: '{"default": "pom.xml"}'
+          path: '//p:project/p:properties/p:revision'
+          new_value: '1.2.3'
+
+      - name: Output artifact ID
+        run: echo "Artifact ID: ${{ steps.update-pom.outputs.artifact_id }}"
