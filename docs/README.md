@@ -8,13 +8,13 @@ This index provides a quick overview of the available workflow and action docume
 
 | Name                                             | Description                                                      |
 | --------------------------------------------------------- | ---------------------------------------------------------------- |
-| [github-release](../.doc/reusable/github-release.md) | Automates creating and tagging releases on GitHub.               |
-| [docker-publish](../.doc/reusable/docker-publish.md)              | Automates building and publishing Docker images.     |
-| [github-release](../.doc/reusable/github-release.md)              | Creates a GitHub release based on the specified version.     |
-| [maven-publish](../.doc/reusable/maven-publish.md)              | Automates signing and deploying Maven artifacts to a repository.     |
-| [python-publish](../.doc/reusable/python-publish.md)              | Automates building, testing, and publishing Python packages.     |
-| [release-drafter](../.doc/reusable/release-drafter.md)              | Drafts a new release based on merged pull requests.     |
-| [tag-creator](../.doc/reusable//tag-creator.md)              | Creates a new tag in the repository.     |
+| [github-release](../doc/reusable/github-release.md) | Automates creating and tagging releases on GitHub.               |
+| [docker-publish](../doc/reusable/docker-publish.md)              | Automates building and publishing Docker images.     |
+| [github-release](../doc/reusable/github-release.md)              | Creates a GitHub release based on the specified version.     |
+| [maven-publish](../doc/reusable/maven-publish.md)              | Automates signing and deploying Maven artifacts to a repository.     |
+| [python-publish](../doc/reusable/python-publish.md)              | Automates building, testing, and publishing Python packages.     |
+| [release-drafter](../doc/reusable/release-drafter.md)              | Drafts a new release based on merged pull requests.     |
+| [tag-creator](../doc/reusable//tag-creator.md)              | Creates a new tag in the repository.     |
 
 
 ## Template Flows
