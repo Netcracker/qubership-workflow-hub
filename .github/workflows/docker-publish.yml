@@ -67,6 +67,14 @@ jobs:
               echo "image=ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: step 1
+        if: ${{ inputs.artifact-id }}
+        run: echo ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}
+
+      - name: step 2
+        if: ${{ !inputs.artifact-id }}
+        run: echo ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}
+
       - name: debug
         run: |
              echo artifact =  ${{ inputs.artifact-id }}
@@ -83,6 +91,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Extract Docker metadata
         id: meta
