@@ -19,5 +19,5 @@ conventional-commits:
     nouns: ["build", "rebuild"]
     labels: ["build"]
   - type: "config"
-    nouns: ["config", "conf", "cofiguration", "configure"]
+    nouns: ["config", "conf", "configuration", "configure"]
     labels: ["config"]

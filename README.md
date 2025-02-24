@@ -55,7 +55,7 @@ The action for [CLA](./CLA/cla.md) "signing" for contributors.
 
 > More info about underlying GitHub action can be found here [contributor-assistant](https://github.com/contributor-assistant/github-action)
 
-To add the CLA signing into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/cla.yaml) into `.github/workflow` directory of your repository.
+To add the CLA signing into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/cla.yaml) into `.github/workflows` directory of your repository.
 
 The `PERSONAL_ACCESS_TOKEN` used in the workflow is defined on organization level then you can use it in any Netcracker/\* repository.
 
@@ -65,7 +65,7 @@ The action to check style and syntax of several document types. It creates PR if
 
 > More info about underlying GitHub action can be found here [prettier-fix](https://github.com/WorkOfStan/prettier-fix)
 
-To add the prettier into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/prettier.yaml) into `.github/workflow` directory of your repository.
+To add the prettier into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/prettier.yaml) into `.github/workflows` directory of your repository.
 
 ### Profanity filter
 
@@ -73,7 +73,7 @@ The action to check PRs/issues comments on profany words.
 
 > More info about underlying GitHub action can be found here [profanity-filter](https://github.com/IEvangelist/profanity-filter)
 
-To add the profanity filter into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/profanity-filter.yaml) into `.github/workflow` directory of your repository.
+To add the profanity filter into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/profanity-filter.yaml) into `.github/workflows` directory of your repository.
 
 ### Automatic PR labels based on conventional commits
 
@@ -83,7 +83,7 @@ The workflow automatically label PR on it's open/reopen events. It checks all th
 
 #### Step 1: Create workflow file
 
-Create a new workflow in your repository. Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/automatic-pr-labeler.yaml) into `.github/workflow` directory of your repository.
+Create a new workflow in your repository. Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/automatic-pr-labeler.yaml) into `.github/workflows` directory of your repository.
 
 #### Step 2: Add configuration file
 
@@ -111,7 +111,7 @@ The workflow will collect commit messages from pull request and add them in pull
 
 ---
 
-To add commit messages in pull request description into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-collect-commit-messages.yaml) into `.github/workflow` directory of your repository.
+To add commit messages in pull request description into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-collect-commit-messages.yaml) into `.github/workflows` directory of your repository.
 
 ### Conventional Commits PR Check
 
@@ -121,7 +121,7 @@ More info on underlying Github action can be found here [Conventional Commits Gi
 
 ---
 
-To add the workflow into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-conventional-commits.yaml) into `.github/workflow` directory of your repository.
+To add the workflow into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-conventional-commits.yaml) into `.github/workflows` directory of your repository.
 
 ### Lint PR Title
 
@@ -131,7 +131,7 @@ More info on underlying Github action can be found here [Semantic Pull Request](
 
 ---
 
-To add the workflow into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-lint-title.yaml) into `.github/workflow` directory of your repository.
+To add the workflow into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-lint-title.yaml) into `.github/workflows` directory of your repository.
 
 ---
 
@@ -160,7 +160,7 @@ First of all please make sure the `pom.xml` file prepared to build source code a
 
 ### Step 2: Maven release workflow
 
-Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/maven-release.yaml) into `.github/workflow` directory of your repository.
+Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/maven-release.yaml) into `.github/workflows` directory of your repository.
 
 This workflow is designed to be run manually. It has four input parameters on manual execution:
 
@@ -198,7 +198,7 @@ Python project release workflow is used to make a Github release and publish rel
 
 ### Step 1: Python release workflow
 
-Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/python-release.yaml) into `.github/workflow` directory of your repository.
+Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/python-release.yaml) into `.github/workflows` directory of your repository.
 
 This workflow is designed to be run manually. It has six input parameters on manual execution:
 
@@ -229,7 +229,7 @@ The workflow will check licenses of all dependencies if they are in scope of all
 
 ### Step 1: Create GO Project Check Modules License workflow
 
-Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/check-license.yaml) into `.github/workflow` directory of your repository.
+Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/check-license.yaml) into `.github/workflows` directory of your repository.
 
 ### Step 2: Create Configuration File
 
