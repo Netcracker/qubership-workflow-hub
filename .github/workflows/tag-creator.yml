@@ -31,7 +31,7 @@ jobs:
         run: |
           git config --global user.email "qubership-actios[bot]"
           git config --global user.name "qubership-actios[bot]@qubership.com"
-          git tag -a ${{ inputs.tag-name }} -m "Tag v${{ inputs.tag-name }}"
+          git tag -a ${{ inputs.tag-name }} -m "Tag ${{ inputs.tag-name }}"
 
       - name: Push tag
         run: git push origin v${{ inputs.tag-name }}
