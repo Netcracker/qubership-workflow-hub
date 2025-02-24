@@ -8,6 +8,7 @@ on:
         required: false
         type: string
       artifact-id:
+        default: ""
         required: false
         type: string
       context:
@@ -60,7 +61,7 @@ jobs:
       - name:  Set image name
         id: set_image_name
         run: |
-          if [ -z "${{ inputs.artifact-id }}" ]; then
+          if [ -n "${{ inputs.artifact-id }}" ]; then
               echo "image=ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}" >> $GITHUB_OUTPUT
           else
               echo "image=ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}" >> $GITHUB_OUTPUT
@@ -68,7 +69,7 @@ jobs:
 
       - name: debug
         run: |
-             echo ${{ inputs.component }}
+             echo ${{ inputs.artifact-id }}
              echo ${{ steps.set_image_name.outputs.image }}
 
 
