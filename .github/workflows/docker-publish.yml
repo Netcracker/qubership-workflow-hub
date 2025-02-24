@@ -69,8 +69,8 @@ jobs:
 
       - name: debug
         run: |
-             echo ${{ inputs.artifact-id }}
-             echo ${{ steps.set_image_name.outputs.image }}
+             echo artifact =  ${{ inputs.artifact-id }}
+             echo image = ${{ steps.set_image_name.outputs.image }}
              cat $GITHUB_OUTPUT
 
 
