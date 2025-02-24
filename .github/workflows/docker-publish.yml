@@ -22,6 +22,12 @@ on:
         default: true
         required: false
         type: boolean
+      file:
+        default: '[
+                    {"name": "default", "file": "Dockerfile", "context": "."}
+                  ]'
+        required: false
+        type: string
 jobs:
   docker:
     runs-on: ubuntu-latest
