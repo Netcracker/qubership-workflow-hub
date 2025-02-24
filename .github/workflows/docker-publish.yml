@@ -1,5 +1,5 @@
+---
 name: Docker build and publish
-
 on:
   workflow_call:
     inputs:
@@ -34,13 +34,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component:  ${{ fromJson(inputs.component) }}
+        component: ${{ fromJson(inputs.component) }}
         # platform: ${{ inputs.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-           ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref }}
 
       - name: Debug
         run: |
