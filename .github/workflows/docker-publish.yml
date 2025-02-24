@@ -33,6 +33,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         component:  ${{ fromJson(inputs.component) }}
         # platform: ${{ inputs.platform }}
