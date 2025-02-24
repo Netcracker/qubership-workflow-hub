@@ -43,7 +43,7 @@ on:
 
 
 jobs:
-  deploy:
+  mvn:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
