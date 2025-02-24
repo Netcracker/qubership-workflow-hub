@@ -71,7 +71,8 @@ jobs:
 
       - name: Debug
         run: |
-             echo ${{ steps.set_image_name.outputs.image }}
+             echo IMAGE = ${{ steps.set_image_name.outputs.image }}
+             echo  ${{ inputs.component }}
              echo ${{ env }}
 
       - name: Set up Docker Buildx
