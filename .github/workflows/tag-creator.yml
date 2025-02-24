@@ -34,6 +34,6 @@ jobs:
           git tag -a ${{ inputs.tag-name }} -m "Tag ${{ inputs.tag-name }}"
 
       - name: Push tag
-        run: git push origin v${{ inputs.tag-name }}
+        run: git push origin ${{ inputs.tag-name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
