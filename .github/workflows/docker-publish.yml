@@ -74,7 +74,7 @@ jobs:
         with:
           context: ${{ inputs.context }}
           # images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}
-          images: echo ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
