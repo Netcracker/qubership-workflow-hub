@@ -24,7 +24,7 @@ on:
         type: boolean
 
       component:
-        default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
+        default: '[{"file": "./Dockerfile", "context": "."}]'
         required: false
         type: string
       platform:
