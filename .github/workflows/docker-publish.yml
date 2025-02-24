@@ -57,27 +57,18 @@ jobs:
 
 
 
-      - name: Set image name
+      - name:  Set image name
         id: set_image_name
         run: |
-            artifact_id="${{ inputs.artifact-id }}"
-            component_name="${{ matrix.component.name }}"
-            echo "artifact_id: '$artifact_id'"
-            echo "component_name: '$component_name'"
-            if [ -n "$artifact_id" ]; then
-              echo "image=ghcr.io/${{ github.repository_owner }}/$artifact_id" >> $GITHUB_OUTPUT
-            else
-              echo "image=ghcr.io/${{ github.repository_owner }}/$component_name" >> $GITHUB_OUTPUT
-            fi
-      # - name: Load Docker tags from file
-      #   id: load-tags
-      #   run: echo "TAGS=$(cat .github/docker-tags.txt)" >> $GITHUB_ENV
+          if [ -n "${{ inputs.artifact-id }}" ]; then
+              echo "image=ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}" >> $GITHUB_OUTPUT
+          else
+              echo "image=ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Debug
-        run: |
-             echo IMAGE = ${{ steps.set_image_name.outputs.image }}
-             echo  ${{ inputs.component }}
-             echo ${{ env }}
+      - name: debug
+        run:  echo ${{ steps.set_image_name.outputs.image }}
+
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
