@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:  ${{ fromJson(inputs.component) }}
+        component:  ${{ fromJson(inputs.component) }}
         # platform: ${{ inputs.platform }}
     steps:
       - name: Checkout repository
