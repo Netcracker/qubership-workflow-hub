@@ -1,5 +1,5 @@
+---
 name: Create tag
-
 on:
   workflow_call:
     inputs:
