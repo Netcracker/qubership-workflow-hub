@@ -37,7 +37,7 @@ jobs:
     strategy:
       matrix:
         include:  ${{ fromJson(inputs.component) }}
-        platform: ${{ inputs.platform }}
+        # platform: ${{ inputs.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
