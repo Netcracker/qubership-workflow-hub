@@ -55,6 +55,16 @@ jobs:
         with:
           name: ${{ inputs.artifact-id }}
 
+
+
+      - name: Set image name
+        id: set_image_name
+        run: |
+          if [ "${{ inputs.artifact-id }}" != "" ]; then
+            echo "image=ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}" >> $GITHUB_OUTPUT
+          else
+            echo "image=ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}" >> $GITHUB_OUTPUT
+          fi
       # - name: Load Docker tags from file
       #   id: load-tags
       #   run: echo "TAGS=$(cat .github/docker-tags.txt)" >> $GITHUB_ENV
@@ -75,9 +85,7 @@ jobs:
         with:
           context: ${{ inputs.context }}
           # images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}
-          # images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}
-
-          images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id || matrix.component.name }}
+          images: ${{ steps.set_image_name.outputs.image }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
