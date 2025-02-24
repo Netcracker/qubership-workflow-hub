@@ -71,6 +71,7 @@ jobs:
         run: |
              echo ${{ inputs.artifact-id }}
              echo ${{ steps.set_image_name.outputs.image }}
+             cat $GITHUB_OUTPUT
 
 
       - name: Set up Docker Buildx
