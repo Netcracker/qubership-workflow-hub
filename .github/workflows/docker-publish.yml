@@ -23,7 +23,6 @@ on:
         default: true
         required: false
         type: boolean
-
       component:
         default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
         required: false
