@@ -38,8 +38,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: v${{ inputs.ref }}
+        # with:
+        #   ref: v${{ inputs.ref }}
 
       - name: Debug
         run: |
