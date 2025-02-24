@@ -22,18 +22,22 @@ on:
         default: true
         required: false
         type: boolean
-      file:
-        default: '[
-                    {"name": "default", "file": "Dockerfile", "context": "."}
-                  ]'
+
+      component:
+        default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
+        required: false
+        type: string
+      platform:
+        default: 'linux/amd64'
         required: false
         type: string
 jobs:
   docker:
     runs-on: ubuntu-latest
-    # strategy:
-    #     matrix:
-    #       platform: [linux/amd64, linux/arm64, linux/arm/v7]
+    strategy:
+      matrix:
+        include:  ${{ fromJson(inputs.component) }}
+        platform: ${{ inputs.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -86,8 +90,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile
+          context: ${{ matrix.component.context }}
+          file: ${{ matrix.component.file }}
           push: ${{ !inputs.dry-run }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
