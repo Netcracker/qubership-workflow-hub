@@ -33,7 +33,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ toJson(inputs.component) }}
+      matrix: ${{ fromJson(inputs.component) }}
         # include:  ${{ fromJson(inputs.component) }}
         # platform: ${{ inputs.platform }}
     steps:
