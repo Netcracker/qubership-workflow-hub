@@ -61,7 +61,7 @@ jobs:
       - name:  Set image name
         id: set_image_name
         run: |
-          if ![ -n "${{ inputs.artifact-id }}" ]; then
+          if [ -n "${{ inputs.artifact-id }}" ]; then
               echo "image=ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}" >> $GITHUB_OUTPUT
           else
               echo "image=ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}" >> $GITHUB_OUTPUT
