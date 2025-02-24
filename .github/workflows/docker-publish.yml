@@ -24,7 +24,7 @@ on:
         type: boolean
 
       component:
-        default: '[{"file": "./Dockerfile", "context": "."}]'
+        default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
         required: false
         type: string
       platform:
@@ -37,12 +37,12 @@ jobs:
     strategy:
       matrix:
         include:  ${{ fromJson(inputs.component) }}
-        # platform: ${{ inputs.platform }}
+        platform: ${{ inputs.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # with:
-        #   ref: v${{ inputs.ref }}
+        with:
+          ref: v${{ inputs.ref }}
 
       - name: Debug
         run: |
@@ -77,7 +77,10 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           context: ${{ inputs.context }}
-          images: ghcr.io/${{ github.repository_owner }}/${{ inputs['artifact-id'] != '' && inputs['artifact-id'] || matrix.component.name }}
+          # images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}
+          # images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}
+
+          images: ghcr.io/${{ github.repository_owner }}/${{ inputs['artifact-id'] || matrix.component.name }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
