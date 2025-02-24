@@ -68,12 +68,7 @@ jobs:
           fi
 
       - name: step 1
-        if: ${{ inputs.artifact-id }}
-        run: echo ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}
-
-      - name: step 2
-        if: ${{ !inputs.artifact-id }}
-        run: echo ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}
+        run: echo ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}
 
       - name: debug
         run: |
