@@ -40,8 +40,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # with:
-        #   ref: v${{ inputs.ref }}
+        with:
+           ref: ${{ inputs.ref }}
 
       - name: Debug
         run: |
@@ -73,7 +73,6 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           context: ${{ inputs.context }}
-          # images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}
           images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}
           tags: |
             type=ref,event=branch
