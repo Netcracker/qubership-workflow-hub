@@ -27,17 +27,14 @@ on:
         default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
         required: false
         type: string
-      platform:
-        default: 'linux/amd64'
-        required: false
-        type: string
+
 jobs:
   docker:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:  ${{ fromJson(inputs.component) }}
-        platform: ${{ inputs.platform }}
+        # platform: ${{ inputs.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
