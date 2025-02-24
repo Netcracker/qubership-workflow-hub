@@ -56,27 +56,6 @@ jobs:
         with:
           name: ${{ inputs.artifact-id }}
 
-
-
-      - name:  Set image name
-        id: set_image_name
-        run: |
-          if [ -n "${{ inputs.artifact-id }}" ]; then
-              echo "image=ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}" >> $GITHUB_OUTPUT
-          else
-              echo "image=ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: step 1
-        run: echo ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}
-
-      - name: debug
-        run: |
-             echo artifact =  ${{ inputs.artifact-id }}
-             echo image = ${{ steps.set_image_name.outputs.image }}
-             cat $GITHUB_OUTPUT
-
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -94,7 +73,7 @@ jobs:
         with:
           context: ${{ inputs.context }}
           # images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id }}
-          images: ${{ steps.set_image_name.outputs.image }}
+          images: echo ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
