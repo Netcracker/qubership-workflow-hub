@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       artifact-id:
-        default: ""
+        default: ''
         required: false
         type: string
       context:
