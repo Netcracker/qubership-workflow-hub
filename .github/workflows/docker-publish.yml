@@ -77,7 +77,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           context: ${{ inputs.context }}
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.component.name }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' && inputs.artifact-id || matrix.component.name }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
