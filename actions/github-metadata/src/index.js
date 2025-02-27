@@ -9,7 +9,7 @@ const github = require("@actions/github");
 const ConfigLoader = require("./configLoader");
 const RefExtractor = require("./extractor");
 
-function generateSnapshotVersionParts() {
+function generateSnapshotTimeParts() {
   const now = new Date();
   const iso = now.toISOString(); // "2025-02-25T14:30:53.123Z"
   const date = iso.slice(0, 10).replace(/-/g, ""); // "20250225"
@@ -74,7 +74,8 @@ async function run() {
   const branchTemplateMapping = { ...branchTemplateConfig, ...inputTemplates };
   let template = branchTemplateMapping[ref.name] || def_template;
 
-  const parts = generateSnapshotVersionParts();
+  const parts = generateSnapshotTimeParts();
+
   const semverParts = extractSemverParts(ref.name);
 
   const values = { ...ref, ...semverParts, ...parts, ...github.context, tag };
