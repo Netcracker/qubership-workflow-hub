@@ -62,8 +62,8 @@ runs:
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}
-        cp -f ${{ github.event.repository.name }}_sbom.json ./reports/${{ github.event.repository.name }}_sbom.json
-        cat > ./reports/index.html <<EOL
+        sudo cp -f ${{ github.event.repository.name }}_sbom.json ./reports/${{ github.event.repository.name }}_sbom.json
+        sudo cat > ./reports/index.html <<EOL
         <!DOCTYPE html>
         <html lang="en">
         <head>
