@@ -16,7 +16,7 @@ class RefExtractor {
         } else {
             core.warning(`Cant detect type ref: ${ref}`);
         }
-        //return { name, isTag };
+        return { name, isTag };
     }
 }
 
