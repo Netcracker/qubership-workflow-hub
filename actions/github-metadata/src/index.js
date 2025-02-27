@@ -39,7 +39,7 @@ async function run() {
   const name = core.getInput('ref') || github.context.ref;
   const ref = new RefExtractor().extract(name);
 
-  core.warning(`Ref: ${name.name}`);
+  core.warning(`Ref: ${ref.name}`);
 
   // const configPath = core.getInput("config-path") || "./.github/metadata-extractor-config.yml";
   // const config = new ConfigLoader(configPath).load();
