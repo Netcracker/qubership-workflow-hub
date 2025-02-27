@@ -63,7 +63,7 @@ runs:
       run: |
         cd ${GITHUB_WORKSPACE}
         sudo cp -f ${{ github.event.repository.name }}_sbom.json ./reports/${{ github.event.repository.name }}_sbom.json
-        sudo cat > ./reports/index.html <<EOL
+        cat > ./index.html <<EOL
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -91,6 +91,7 @@ runs:
         </body>
         </html>
         EOL
+        sudo cp -f ./index.html ./reports/index.html
 
     - name: "Upload Depscan report"
       uses: actions/upload-artifact@v4.6.0
