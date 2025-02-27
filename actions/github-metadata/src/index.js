@@ -7,7 +7,7 @@ const core = require("@actions/core");
 const github = require("@actions/github");
 
 const ConfigLoader = require("./configLoader");
-const RefExtractor = require("./refExtractor");
+const RefExtractor = require("./extractor");
 
 function generateSnapshotVersionParts() {
   const now = new Date();
