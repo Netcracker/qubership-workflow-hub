@@ -106,5 +106,6 @@ runs:
         path: ${{ github.workspace }}/reports/
 
     - name: "Set output"
+      shell: bash
       run: |
         echo "Uploaded page artifact-idL: ${{ steps.upload.outputs.artifact_id }}" >> $GITHUB_STEP_SUMMARY
