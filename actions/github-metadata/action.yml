@@ -38,7 +38,7 @@ outputs:
         description: "Patch version."
 runs:
   using: "node20"
-  main: "dist/index.js"
+  main: "index.js"
 
 branding:
   icon: "edit"
