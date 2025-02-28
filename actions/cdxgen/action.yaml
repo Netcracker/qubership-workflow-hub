@@ -14,7 +14,7 @@ inputs:
     required: false
 outputs:
   page-url:
-    description: "Random number"
+    description: "GitHub pages URL"
     value: ${{ steps.deployment.outputs.page_url }}
 runs:
   using: "composite"
