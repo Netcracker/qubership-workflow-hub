@@ -44,7 +44,7 @@ Below is the short description of how to implement common workflows in any Netcr
 | Name                          | Purpose                                                                              |
 | ----------------------------- | ------------------------------------------------------------------------------------ |
 | secrets.PERSONAL_ACCESS_TOKEN | Used by actions to access repositories data                                          |
-| secrets.MAVEN_USER            | User name to authenticate in Maven Central repository to publish released artifacts  |
+| secrets.MAVEN_USER            | Username to authenticate in Maven Central repository to publish released artifacts   |
 | secrets.MAVEN_PASSWORD        | User token to authenticate in Maven Central repository to publish released artifacts |
 | secrets.MAVEN_GPG_PRIVATE_KEY | GPG private key to sign artefacts (jar, pom etc) to publish them into Maven Central  |
 | secrets.MAVEN_GPG_PASSPHRASE  | GPG private key passphrase                                                           |
@@ -121,7 +121,7 @@ To add commit messages in pull request description into your repository copy the
 
 The workflow will check commits in pull request if they follow [Conventional Commits](conventionalcommits.org) strategy.
 
-More info on underlying Github action can be found here [Conventional Commits GitHub Action](https://github.com/webiny/action-conventional-commits)
+More info on underlying GitHub action can be found here [Conventional Commits GitHub Action](https://github.com/webiny/action-conventional-commits)
 
 ---
 
@@ -131,7 +131,7 @@ To add the workflow into your repository copy the [prepared file](https://github
 
 The workflow will check pull request title if it follows [Conventional Commits](conventionalcommits.org) strategy.
 
-More info on underlying Github action can be found here [Semantic Pull Request](https://github.com/amannn/action-semantic-pull-request).
+More info on underlying GitHub action can be found here [Semantic Pull Request](https://github.com/amannn/action-semantic-pull-request).
 
 ---
 
@@ -141,7 +141,7 @@ To add the workflow into your repository copy the [prepared file](https://github
 
 ## Maven project release workflow
 
-Maven project release workflow is used to make a Github release and publish released artifacts into Maven Central.
+Maven project release workflow is used to make a GitHub release and publish released artifacts into Maven Central.
 The workflow consists of several sequential jobs:
 
 1. Checks if the tag already exists.
@@ -197,7 +197,7 @@ The workflow needs several secrets to be prepared to work properly. For `Netcrac
 
 ## Python Project Release Workflow
 
-Python project release workflow is used to make a Github release and publish released artifacts into PyPi.
+Python project release workflow is used to make a GitHub release and publish released artifacts into PyPi.
 
 ---
 
@@ -226,7 +226,7 @@ The step exactly the same as [Step 3: Add configuration file for GitHub release]
 
 ## Docker Project Release Workflow
 
-Docker project release workflow is used to make a Github release and publish released artifacts into GitHub docker registry.
+Docker project release workflow is used to make a GitHub release and publish released artifacts into GitHub docker registry.
 The workflow consists of several sequential jobs:
 
 1. Checks if the tag already exists.
