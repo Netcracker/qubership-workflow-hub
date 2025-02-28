@@ -8,7 +8,7 @@ This documentation provides the instruction how to change project's `pom.xml` fi
 
 ### Mandatory maven central properties
 
-Add following entries under `project` section (see [maven central requirements](https://central.sonatype.org/publish/requirements/) for more info). Make sure to update description, url and scm sections according to your project details.
+Add following entries under `project` section (see [maven central requirements](https://central.sonatype.org/publish/requirements/) for more info). Make sure to update description, `url` and `scm` sections according to your project details.
 
 ```xml
     <name>${project.groupId}:${project.artifactId}</name>
