@@ -92,6 +92,8 @@ runs:
         </html>
         EOL
         sudo cp -f ./index.html ./reports/index.html
+        sudo mkdir -p ./output/cyclondx-report
+        sudo cp -rf ./reports/* ./output/cyclondx-report
 
     - name: "Upload Depscan report"
       uses: actions/upload-artifact@v4.6.0
@@ -104,7 +106,7 @@ runs:
       id: upload
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ${{ github.workspace }}/reports/
+        path: ${{ github.workspace }}/output/
 
     - name: "Set output"
       shell: bash
