@@ -35,17 +35,54 @@ Add following entries under `project` section (see [maven central requirements](
     </scm>
 ```
 
-### Distribution management
+### Profiles
 
-Under `project` add a new section
+Under `project` add a new section `profiles` to manage deployment destination Maven Central or GitHub packages. Do not forget to change `REPOSITORY_NAME` in the code below to your repository name.
 
 ```xml
-    <distributionManagement>
-        <repository>
+    <profiles>
+        <profile>
             <id>central</id>
-            <name>Central Maven Repository</name>
-        </repository>
-    </distributionManagement>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.6.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <distributionManagement>
+                <repository>
+                    <id>central</id>
+                    <name>Central Maven Repository</name>
+                </repository>
+            </distributionManagement>
+        </profile>
+
+        <profile>
+            <id>github</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub Packages</name>
+                    <url>https://maven.pkg.github.com/Netcracker/REPOSITORY_NAME</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 ```
 
 ### Build plugins
@@ -53,17 +90,6 @@ Under `project` add a new section
 In a section `project.build.plugins` add next entries:
 
 ```xml
-            <plugin>
-                <groupId>org.sonatype.central</groupId>
-                <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.6.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <publishingServerId>central</publishingServerId>
-                    <autoPublish>true</autoPublish>
-                    <waitUntil>published</waitUntil>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>

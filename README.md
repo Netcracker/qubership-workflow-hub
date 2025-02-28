@@ -171,6 +171,7 @@ This workflow is designed to be run manually. It has four input parameters on ma
 - `Release version` -- a string represents version number of the release
 - `Java version` -- a string represents Java version to use to build artifacts.
 - `Release docker image if there is Docker file` -- build and publish docker image to GitHub packages if Dockerfile exists
+- `Release mode (github or central)` -- Choose which profile to use
 - `Dry run` -- if selected the workflow will go through all the steps, but will not publish anything.
 
 This workflow will:
@@ -180,7 +181,7 @@ This workflow will:
 - Build maven artifact package from `main` codebase
 - Run tests
 - Create a new tag
-- Build and publish artifacts into Maven Central
+- Build and publish artifacts into Maven Central or GitHub packages
 - Build and publish docker image into GitHub packages
 - Create GitHub release in `draft` state.
 
