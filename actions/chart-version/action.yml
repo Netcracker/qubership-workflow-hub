@@ -21,10 +21,9 @@ runs:
       - name: Debug
         shell: bash
         run: |
-              echo "📌 Input parameters:"
-              echo "::notice:: Chart Version: ${{ inputs.chart-version }}"
-              echo "::notice:: Chart App Version: ${{ inputs.chart-app-version }}"
-              echo "::notice:: Chart YAML Path: ${{ inputs.chart-yaml-path }}"
+              echo "Chart Version: \`${{ inputs.chart-version }}\`" >> $GITHUB_STEP_SUMMARY
+              echo "Chart App Version: \`${{ inputs.chart-app-version }}\`" >> $GITHUB_STEP_SUMMARY
+              echo "Chart YAML Path: \`${{ inputs.chart-yaml-path }}`\" >> $GITHUB_STEP_SUMMARY
 
       - name: Install yq
         shell: bash
