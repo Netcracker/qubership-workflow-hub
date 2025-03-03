@@ -21,9 +21,9 @@ runs:
       - name: Debug
         shell: bash
         run: |
-              echo "Chart Version: ${{ github.event.inputs.chart-version }}"
-              echo "Chart App Version: ${{ github.event.inputs.chart-app-version }}"
-              echo "Chart YAML Path: ${{ github.event.inputs.chart-yaml-path }}"
+              echo "Chart Version: ${{ inputs.chart-version }}"
+              echo "Chart App Version: ${{ inputs.chart-app-version }}"
+              echo "Chart YAML Path: ${{ inputs.chart-yaml-path }}"
 
       - name: Install yq
         shell: bash
@@ -35,8 +35,8 @@ runs:
       - name: Eval Chart.yaml
         shell: bash
         run: |
-                current_version=$(yq '.version' ${{ github.event.inputs.chart-yaml-path }})
-                echo "Change: $current_version" -> ${{ github.event.inputs.chart-version }}
-                yq eval '.version = "${{ github.event.inputs.chart-version }}"' -i  ${{ github.event.inputs.chart-yaml-path }}
-                cat ${{ github.event.inputs.chart-yaml-path }}
+                current_version=$(yq '.version' ${{ inputs.chart-yaml-path }})
+                echo "Change: $current_version" -> ${{ inputs.chart-version }}
+                yq eval '.version = "${{ inputs.chart-version }}"' -i  ${{ inputs.chart-yaml-path }}
+                cat ${{ inputs.chart-yaml-path }}
 
