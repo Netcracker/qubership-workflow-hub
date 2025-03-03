@@ -28,6 +28,8 @@ runs:
       - name: Eval Chart.yaml
         shell: bash
         run: |
+                current_version=$(yq '.version' charts/qubership-jaeger/Chart.yaml)
+                echo "Change: $current_version" -> ${{ github.event.inputs.chart-version }}
                 yq eval '.version = "${{ github.event.inputs.chart-version }}"' -i  ${{ github.event.inputs.chart-yaml-path }}
                 cat ${{ github.event.inputs.chart-yaml-path }}
 
