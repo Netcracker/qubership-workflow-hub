@@ -18,6 +18,13 @@ runs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug
+        shell: bash
+        run: |
+              echo "Chart Version: ${{ github.event.inputs.chart-version }}"
+              echo "Chart App Version: ${{ github.event.inputs.chart-app-version }}"
+              echo "Chart YAML Path: ${{ github.event.inputs.chart-yaml-path }}"
+
       - name: Install yq
         shell: bash
         run: |
