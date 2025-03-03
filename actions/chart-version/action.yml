@@ -36,7 +36,7 @@ runs:
         shell: bash
         run: |
                 current_version=$(yq '.version' ${{ inputs.chart-yaml-path }})
-                echo "::waqrning:: 💡 Change: $current_version" to  ${{ inputs.chart-version }}
+                echo "::warning:: 💡 Change: $current_version" to  ${{ inputs.chart-version }}
                 yq eval '.version = "${{ inputs.chart-version }}"' -i  ${{ inputs.chart-yaml-path }}
                 echo "✅ done"
 
