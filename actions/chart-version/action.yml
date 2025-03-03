@@ -32,11 +32,15 @@ runs:
               chmod +x yq
               sudo mv yq /usr/local/bin/yq
 
-      - name: Eval Chart.yaml
+      - name: Show changes
         shell: bash
         run: |
                 current_version=$(yq '.version' ${{ inputs.chart-yaml-path }})
                 echo "Change: $current_version" -> ${{ inputs.chart-version }}
+
+      - name: Eval Chart.yaml
+        shell: bash
+        run: |
                 yq eval '.version = "${{ inputs.chart-version }}"' -i  ${{ inputs.chart-yaml-path }}
                 cat ${{ inputs.chart-yaml-path }}
 
