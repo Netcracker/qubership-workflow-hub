@@ -22,9 +22,9 @@ runs:
         shell: bash
         run: |
               echo "📌 Input parameters:"
-              echo "Chart Version: ${{ inputs.chart-version }}"
-              echo "Chart App Version: ${{ inputs.chart-app-version }}"
-              echo "Chart YAML Path: ${{ inputs.chart-yaml-path }}"
+              echo "::notice:: Chart Version: ${{ inputs.chart-version }}"
+              echo "::notice:: Chart App Version: ${{ inputs.chart-app-version }}"
+              echo "::notice:: Chart YAML Path: ${{ inputs.chart-yaml-path }}"
 
       - name: Install yq
         shell: bash
