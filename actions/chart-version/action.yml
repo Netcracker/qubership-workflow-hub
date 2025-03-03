@@ -38,5 +38,5 @@ runs:
                 current_version=$(yq '.version' ${{ inputs.chart-yaml-path }})
                 echo "::warning:: 💡 Change: $current_version" to  ${{ inputs.chart-version }}
                 yq eval '.version = "${{ inputs.chart-version }}"' -i  ${{ inputs.chart-yaml-path }}
-                echo "✅ done"
+                echo "::notice::✅ Successfully updated version!"
 
