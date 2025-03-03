@@ -21,7 +21,7 @@ runs:
       - name: Debug
         shell: bash
         run: |
-              echp "📌 Input parameters:"
+              echo "📌 Input parameters:"
               echo "Chart Version: ${{ inputs.chart-version }}"
               echo "Chart App Version: ${{ inputs.chart-app-version }}"
               echo "Chart YAML Path: ${{ inputs.chart-yaml-path }}"
