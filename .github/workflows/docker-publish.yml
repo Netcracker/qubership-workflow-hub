@@ -27,6 +27,10 @@ on:
         default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
         required: false
         type: string
+      platforms:
+        default: "linux/amd64"
+        required: false
+        type: string
 
 jobs:
   docker:
@@ -90,3 +94,4 @@ jobs:
           push: ${{ !inputs.dry-run }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ inputs.platforms }}
