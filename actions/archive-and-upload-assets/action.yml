@@ -1,0 +1,23 @@
+name: "Work with Assets"
+description: "Work with assets in a repository."
+
+inputs:
+  config-path:
+    description: "The path to the asset configuration file."
+    required: true
+  ref:
+    description: "The tag for Release to upload assets."
+    required: true
+  dist-path:
+    description: "The path to upload archive."
+    required: false
+    default: "dist"
+  upload:
+    default: 'false'
+    description: "Upload assets to a repository."
+    required: false
+
+
+runs:
+ using: "node16"
+ main: "dist/index.js"
