@@ -49,6 +49,7 @@ jobs:
 
 ## Assinee configuration
 
+File have to be placed in `./.github/assigne-config.yml`
 ```yaml
 assignees:
   - user1
