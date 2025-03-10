@@ -11,7 +11,7 @@ inputs:
   github-token:
     description: "GitHub Token"
     required: true
-  ownre:
+  owner:
     description: "Owner of the repository"
     required: false
   repo:
