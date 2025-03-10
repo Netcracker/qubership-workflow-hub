@@ -33,7 +33,7 @@ Below is an example of how to use this reusable workflow in a GitHub Actions wor
 name: Example Workflow
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopen, synchronize]
 
 permissions:
