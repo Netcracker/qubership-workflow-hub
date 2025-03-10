@@ -15,6 +15,7 @@ This index provides a quick overview of the available workflow and action docume
 | [python-publish](../docs/reusable/python-publish.md)              | Automates building, testing, and publishing Python packages.     |
 | [release-drafter](../docs/reusable/release-drafter.md)              | Drafts a new release based on merged pull requests.     |
 | [tag-creator](../docs/reusable//tag-creator.md)              | Creates a new tag in the repository.     |
+| [pr-auto-assigner](../docs/reusable/pr-auto-assigner.md) | Automatically assigns reviewers to pull requests.                |
 
 
 ## Template Flows
