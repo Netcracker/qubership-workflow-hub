@@ -41,7 +41,7 @@ permissions:
   contents: read
 
 jobs:
-  call-pr-auto-assign:
+  pr-auto-assign:
     uses: netcracker/qubership-workflow-hub/.github/workflows/re-pr-assigner.yml@main
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
