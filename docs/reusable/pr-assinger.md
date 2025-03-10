@@ -47,3 +47,12 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+## Assinee configuration
+
+```yaml
+assignees:
+  - user1
+  - user2
+  - user3
+```
+
