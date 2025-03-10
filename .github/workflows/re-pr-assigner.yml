@@ -15,7 +15,7 @@ jobs:
 
       - name: Try to assign reviewers
         run: |
-          ASSIGNEES=( $(yq eval '.assignees[]' ./.github/assigne-config.yml) )
+          ASSIGNEES=( $(yq eval '.assignees[]' ./.github/pr-assigner-config.yml) )
           ARGS=()
           for assignee in "${ASSIGNEES[@]}"; do
               ARGS+=(--add-assignee "$assignee")
