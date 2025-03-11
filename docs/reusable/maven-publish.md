@@ -26,8 +26,9 @@ This **Maven Publish** GitHub Workflow automates signing and deploying Maven art
 | `maven-username` | Username for Maven repository            | No       |
 | `maven-password` | Password for Maven repository            | No       |
 | `maven-token`    | Token for Maven repository               | Yes      |
-| `gpg-private-key` | GPG private key for signing artifacts   | No       |
+| `gpg-private-key`| GPG private key for signing artifacts    | No       |
 | `gpg-passphrase` | Passphrase for GPG private key           | No       |
+| `sonar-token`    | Token for SonarQube analysis             | No       |
 
 ## Usage Example
 
@@ -57,3 +58,4 @@ jobs:
       maven-token: ${{ secrets.MAVEN_TOKEN }}
       gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
       gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      sonar-token: ${{ secrets.SONAR_TOKEN }}
