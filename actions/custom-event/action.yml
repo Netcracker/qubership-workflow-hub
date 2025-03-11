@@ -22,4 +22,4 @@ outputs:
     description: "Status of the dispatch request"
 runs:
   using: "node16"
-  main: "index.js"
+  main: "dist/index.js"
