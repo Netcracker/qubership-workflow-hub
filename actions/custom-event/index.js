@@ -31,7 +31,6 @@ async function run() {
     const owner =  core.getInput('owner') || github.context.repo.owner;
     const repo =  core.getInput('repo') || github.context.repo.repo;
 
-    core.warning('before create dispath')
     const response = await octokit.rest.repos.createDispatchEvent({
       owner,
       repo,
@@ -39,7 +38,7 @@ async function run() {
       client_payload: clientPayload,
     });
 
-    core.warning('after create dispath')
+    core.warning('Remote event created')
 
     core.setOutput("status", response.status);
     core.info(
