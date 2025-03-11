@@ -40,7 +40,8 @@ on:
         required: false
       gpg-passphrase:
         required: false
-
+      sonar-token:
+        required: false
 
 jobs:
   mvn:
@@ -80,6 +81,7 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.maven-username }}
           MAVEN_PASSWORD: ${{ secrets.maven-token }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
+          SONAR_TOKEN: ${{ secrets.sonar-token }}
 
       - name: Upload all Maven target directories
         if: ${{ inputs.upload-artifact }}
