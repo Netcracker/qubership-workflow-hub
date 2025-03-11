@@ -39,7 +39,7 @@ async function run() {
       client_payload: clientPayload,
     });
 
-    core.warning('after before create dispath')
+    core.warning('after create dispath')
 
     core.setOutput("status", response.status);
     core.info(
