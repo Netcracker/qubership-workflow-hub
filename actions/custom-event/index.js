@@ -38,7 +38,7 @@ async function run() {
       client_payload: clientPayload,
     });
 
-    core.warning('Remote event created')
+    core.warning(`Remote event: ${eventType} rised on ${owner}/${repo}`);
 
     core.setOutput("status", response.status);
     core.info(
