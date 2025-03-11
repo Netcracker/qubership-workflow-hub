@@ -16,14 +16,14 @@ jobs:
       - name: Try to assign reviewers
         run: |
 
-          ASSIGNEES=( $(yq eval '.assignees[]' ./.github/pr-assigner-config.yml) )
+          ASSIGNEES=( $(yq eval -r '.assignees[]' ./.github/pr-assigner-config.yml) )
 
           if [ ${#ASSIGNEES[@]} -eq 0 ]; then
             echo "No assignees found in the configuration file"
             exit 0
           fi
 
-          COUNT=$(yq eval '.count' ./.github/pr-assigner-config.yml)
+          COUNT=$(yq eval -r '.count' ./.github/pr-assigner-config.yml)
           if [ -z "$COUNT" ]; then
             COUNT=1
           fi
