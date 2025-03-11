@@ -47,13 +47,19 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-## Assinee configuration
+## Assignee Configuration
 
-File have to be placed in `./.github/pr-assigner-config.yml`
+The configuration file should be placed in `./.github/pr-assigner-config.yml`:
+
 ```yaml
 assignees:
   - user1
   - user2
   - user3
+count: 2
 ```
 
+### Configuration Fields
+
+- `assignees`: A list of GitHub usernames to be assigned as reviewers. The workflow will randomly select reviewers from this list.
+- `count`: The number of reviewers to assign to each pull request. If not specified, the default value is `1`. This value will be chosen randomly by the workflow if specified.

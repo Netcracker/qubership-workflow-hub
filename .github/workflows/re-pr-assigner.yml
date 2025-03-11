@@ -15,12 +15,37 @@ jobs:
 
       - name: Try to assign reviewers
         run: |
+
           ASSIGNEES=( $(yq eval '.assignees[]' ./.github/pr-assigner-config.yml) )
+
+          if [ ${#ASSIGNEES[@]} -eq 0 ]; then
+            echo "No assignees found in the configuration file"
+            exit 0
+          fi
+
+          COUNT=$(yq eval '.count' ./.github/pr-assigner-config.yml)
+          if [ -z "$COUNT" ]; then
+            COUNT=1
+          fi
+
+          N=${#ASSIGNEES[@]}
+          for (( i=N-1; i>0; i-- )); do
+            j=$(( RANDOM % (i+1) ))
+            temp=${ASSIGNEES[i]}
+            ASSIGNEES[i]=${ASSIGNEES[j]}
+            ASSIGNEES[j]=$temp
+          done
+
+          echo "Mixed list= ${ASSIGNEES[@]}"
+
+          SELECTED=("${ASSIGNEES[@]:0:COUNT}")
           ARGS=()
-          for assignee in "${ASSIGNEES[@]}"; do
+          for assignee in "${SELECTED[@]}"; do
               ARGS+=(--add-assignee "$assignee")
           done
+
           PR_NUMBER="${{ github.event.pull_request.number }}"
           gh pr edit "$PR_NUMBER" "${ARGS[@]}"
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
