@@ -3,9 +3,9 @@ const github = require("@actions/github");
 
 async function run() {
   try {
-    const eventType = core.getInput("event_type", { required: true });
+    const eventType = core.getInput("event-type", { required: true });
     const clientPayloadInput =
-      core.getInput("client_payload", { required: false }) || "{}";
+      core.getInput("client-payload", { required: false }) || "{}";
 
     let clientPayload;
     try {
@@ -17,7 +17,8 @@ async function run() {
     core.info(`Event name: ${eventType}`);
     core.info(`Client Payload: ${JSON.stringify(clientPayload)}`);
 
-    const token = process.env.GITHUB_TOKEN;
+    const token = core.getInput("github-token", { required: true }) || process.env.GITHUB_TOKEN;
+
     if (!token) {
       throw new Error(
         "GitHub token is not provided. Make sure it is passed as an environment variable.",
