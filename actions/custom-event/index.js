@@ -1,51 +1,46 @@
 const core = require("@actions/core");
 const github = require("@actions/github");
 
+function parseClientPayload(input) {
+  try {
+    return JSON.parse(input);
+  } catch (error) {
+    throw new Error(`Invalid JSON for client_payload: ${input}`);
+  }
+}
+
 async function run() {
   try {
     const eventType = core.getInput("event-type", { required: true });
-    const clientPayloadInput =
-      core.getInput("client-payload", { required: false }) || "{}";
-
-    let clientPayload;
-    try {
-      clientPayload = JSON.parse(clientPayloadInput);
-    } catch (error) {
-      throw new Error(`Invalid JSON for client_payload: ${clientPayloadInput}`);
-    }
+    const clientPayloadInput = core.getInput("client-payload") || "{}";
+    const clientPayload = parseClientPayload(clientPayloadInput);
 
     core.info(`Event name: ${eventType}`);
     core.info(`Client Payload: ${JSON.stringify(clientPayload)}`);
 
-    const token = core.getInput("github-token", { required: true }) || process.env.GITHUB_TOKEN;
-
+    const token =
+      core.getInput("github-token", { required: true }) || process.env.GITHUB_TOKEN;
     if (!token) {
-      throw new Error(
-        "GitHub token is not provided. Make sure it is passed as an environment variable.",
-      );
+      throw new Error("GitHub token is not provided. Make sure it is passed.");
     }
 
     const octokit = github.getOctokit(token);
-    //const { owner, repo } = github.context.repo;
+    const { owner: defaultOwner, repo: defaultRepo } = github.context.repo;
+    const owner = core.getInput('owner') || defaultOwner;
+    const repo = core.getInput('repo') || defaultRepo;
 
-    const owner =  core.getInput('owner') || github.context.repo.owner;
-    const repo =  core.getInput('repo') || github.context.repo.repo;
-
-    const response = await octokit.rest.repos.createDispatchEvent({
+    const { status } = await octokit.rest.repos.createDispatchEvent({
       owner,
       repo,
       event_type: eventType,
       client_payload: clientPayload,
     });
 
-    core.warning(`Remote event: ${eventType} rised on ${owner}/${repo}`);
-
-    core.setOutput("status", response.status);
-    core.info(
-      `Custom event "${eventType}" triggered with status: ${response.status}`,
-    );
+    core.info(`Custom event "${eventType}" triggered with status: ${status}`);
+    core.setOutput("status", status);
   } catch (error) {
-    core.setFailed(error.message);
+    core.setFailed(`Action failed with error: ${error.message}`);
+    console.error(error);
   }
 }
 
