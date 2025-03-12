@@ -1,0 +1,35 @@
+name: Sync Dependabot Config
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dependabot.yml'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout central repo
+        uses: actions/checkout@v4
+      - name: Copy config to other repos
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          while IFS= read -r repo_name; do
+            repo=${repo_name//[$'\t\r\n ']}
+            gh repo clone $repo $repo
+            mkdir -p $repo/.github/
+            cp dependabot.yml $repo/.github/
+            pushd $repo
+            git add .github/dependabot.yml
+            branch="sync-$RANDOM"
+            git switch -c $branch
+            git commit -m "Update Dependabot config"
+            git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/$repo
+            git push --set-upstream origin $branch
+            gh pr create -B main -H $branch -f -R $repo
+            popd
+          done <<< "${{ vars.REPOSITORIES }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
