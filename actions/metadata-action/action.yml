@@ -1,22 +1,11 @@
-name: "Extractmeta Data"
+name: "Metadata Action"
 description: ""
 inputs:
-    ref:
-        description: "Current branch or tag ref."
-        required: false
-    default-template:
-        description: "Template to use."
-        required: false
-    config-file-path:
+    configuration-path:
         description: "Path to the configuration file."
         required: false
-    branch-template:
-        description: ''
-    dist-tags:
-        description: "Tags to use."
-        required: false
 outputs:
-    rendered-template:
+    result:
         description: "Current timestamp."
     ref:
         description: "Current branch or tag ref."
