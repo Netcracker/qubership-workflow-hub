@@ -22,7 +22,8 @@ on:
   push:
     branches:
       - 'main'
-
+permissions:
+  contents: read
 env:
   NO_CYCLONE_REPORT: ${{ github.event.inputs.no-cyclone-report || false }}
   FETCH_LICENSE: ${{ github.event.inputs.fetch-license || false }}
