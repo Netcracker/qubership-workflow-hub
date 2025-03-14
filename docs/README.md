@@ -45,13 +45,17 @@ This index provides a quick overview of the available workflow and action docume
 
 | Action Name                                            | Description                                                      |
 | ------------------------------------------------------ | ---------------------------------------------------------------- |
-| [commit-and-push](../actions/commit-and-push/README.md) | Automates committing and pushing changes to a remote repository. |
-| [pom-updater](../actions/pom-updater/README.md)         | Automatically updates the `pom.xml` file in Maven projects.      |
-| [tag-checker](../actions/tag-checker/README.md)         | Verifies the presence of specific tags in the repository.        |
-| [custom-event](../actions/custom-event/README.md)       | Triggers a custom `repository_dispatch` event in the repository. |
-| [pr-add-messages](../actions/pr-add-messages/README.md) | Adds commit messages to the pull request description.            |
+| [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Archives and uploads assets to a specified location. |
 | [cdxgen](../actions/cdxgen/README.md)                   | Generates SBOM file and CycloneDX vulnerability report.          |
+| [chart-version](../actions/chart-version/README.md)     | Manages and updates chart versions.                             |
+| [commit-and-push](../actions/commit-and-push/README.md) | Automates committing and pushing changes to a remote repository. |
+| [custom-event](../actions/custom-event/README.md)       | Triggers a custom `repository_dispatch` event in the repository. |
+| [metadata-action](../actions/metadata-action/README.md) | Automates the management of repository metadata, including meta info, dist-tag, github context, and semver information based on branch or tag references. |
 | [poetry-publisher](../actions/poetry-publisher/README.md) | Automates building, testing, and publishing Python packages using Poetry. |
+| [pom-updater](../actions/pom-updater/README.md)         | Automatically updates the `pom.xml` file in Maven projects.      |
+| [pr-add-messages](../actions/pr-add-messages/README.md) | Adds commit messages to the pull request description.            |
+| [tag-checker](../actions/tag-checker/README.md)         | Verifies the presence of specific tags in the repository.        |
+| [verify-json](../actions/verify-json/README.md)         | Verifies the structure and content of JSON files.                |
 
 ---
 
