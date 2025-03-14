@@ -10,14 +10,12 @@ on:
 permissions:
   pull-requests: write
   contents: read
+env:
+      REPOS_TO_IGNORE: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
+      GH_ACCESS_TOKEN: '${{ secrets.GH_ACCESS_TOKEN }}'
 jobs:
   replicate_common_workflows:
     runs-on: ubuntu-latest
-    env:
-      REPOS_TO_IGNORE: >-
-        qubership-workflow-hub, qubership-test-pipelines, KubeMarine,
-        k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan
-      GH_ACCESS_TOKEN: '${{ secrets.GH_ACCESS_TOKEN }}'
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -38,7 +36,9 @@ jobs:
         destination: .github/workflows
         repos_to_ignore: '${{ env.REPOS_TO_IGNORE }}'
         exclude_private: true
-        exclude_forked: false
+        exclude_forked: true
+        # broadcast-pilot: Temp topic for testing purposes
+        topics_to_include: broadcast-pilot
         branches: '.*-release,main'
         committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
@@ -57,6 +57,8 @@ jobs:
         repos_to_ignore: '${{ env.REPOS_TO_IGNORE }}'
         exclude_private: true
         exclude_forked: false
+        # broadcast-pilot: Temp topic for testing purposes
+        topics_to_include: broadcast-pilot
         committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update of gitattributes file'
@@ -75,7 +77,8 @@ jobs:
         repos_to_ignore: '${{ env.REPOS_TO_IGNORE }}'
         exclude_private: true
         exclude_forked: false
-        topics_to_include: core
+        # broadcast-pilot: Temp topic for testing purposes
+        topics_to_include: core,broadcast-pilot
         committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update cloud-core dependabot config file'
@@ -93,10 +96,12 @@ jobs:
         repos_to_ignore: '${{ env.REPOS_TO_IGNORE }}'
         exclude_private: true
         exclude_forked: false
+        # broadcast-pilot: Temp topic for testing purposes
+        topics_to_include: broadcast-pilot
         committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update of codestyle config files'
-  replicate_example_configs:
+  replicate_release_drafter_configs:
     name: Replicate example config files
     runs-on: ubuntu-latest
     steps:
@@ -111,6 +116,8 @@ jobs:
         repos_to_ignore: '${{ env.REPOS_TO_IGNORE }}'
         exclude_private: true
         exclude_forked: false
+        # broadcast-pilot: Temp topic for testing purposes
+        topics_to_include: broadcast-pilot
         committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update example config files'
