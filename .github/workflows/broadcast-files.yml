@@ -8,8 +8,8 @@ permissions:
   pull-requests: write
   contents: read
 env:
-    REPOS_TO_IGNORE: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
-    GH_ACCESS_TOKEN: '${{ secrets.GH_ACCESS_TOKEN }}'
+  REPOS_TO_IGNORE: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
+  GH_ACCESS_TOKEN: '${{ secrets.GH_ACCESS_TOKEN }}'
 jobs:
   replicate_common_workflows:
     runs-on: ubuntu-latest
