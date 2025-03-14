@@ -34,7 +34,7 @@ jobs:
         destination: .github/workflows
         repos_to_ignore: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
         exclude_private: true
-        exclude_forked: true
+        exclude_forked: false
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
         branches: 'main'
