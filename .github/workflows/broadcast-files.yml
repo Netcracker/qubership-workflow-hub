@@ -39,7 +39,7 @@ jobs:
         exclude_forked: true
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
-        branches: '.*-release,main'
+        branches: 'main'
         committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update of common workflows'
