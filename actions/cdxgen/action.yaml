@@ -42,6 +42,9 @@ runs:
           echo "Project type is not provided"
           echo "PROJECT_TYPE=" >> $GITHUB_ENV
         fi
+    - name: "Free some space"
+      run: rm -rf /opt/hostedtoolcache
+      shell: bash
 
     - name: "Generate BOM"
       run: |
