@@ -1,8 +1,5 @@
 name: Broadcast files to organization repositories
 on:
-  push:
-    branches:
-    - main
   workflow_call:
     secrets:
       GH_ACCESS_TOKEN:
