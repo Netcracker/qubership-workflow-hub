@@ -12,6 +12,14 @@ inputs:
   project_type:
     description: "Type of the project"
     required: false
+  no-cyclone-report:
+    description: "Do not generate CycloneDX report"
+    required: false
+    default: false
+  fetch-license:
+    description: "Fetch license information"
+    required: false
+    default: true
 outputs:
   page-url:
     description: "GitHub pages URL"
@@ -38,8 +46,8 @@ runs:
     - name: "Generate BOM"
       run: |
         cd ${GITHUB_WORKSPACE}
-        export FETCH_LICENSE=true
-        docker run --rm -e FETCH_LICENSE=true -v /tmp:/tmp -v $(pwd):/app:rw -t ghcr.io/cyclonedx/cdxgen:v8.6.0 -r /app -p -o /app/${{ github.event.repository.name }}_sbom.json "${{ env.PROJECT_TYPE }}"
+        export FETCH_LICENSE=${{ inputs.fetch-license }}
+        docker run --rm -e FETCH_LICENSE=${FETCH_LICENSE} -v /tmp:/tmp -v $(pwd):/app:rw -t ghcr.io/cyclonedx/cdxgen:v8.6.0 -r /app -p -o /app/${{ github.event.repository.name }}_sbom.json "${{ env.PROJECT_TYPE }}"
         docker rmi -f $(docker images -aq)
       shell: bash
 
@@ -51,14 +59,16 @@ runs:
         retention-days: 5
 
     - name: "Generate Depscan report"
+      if: ${{ inputs.no-cyclone-report != 'true' }}
       run: |
         cd ${GITHUB_WORKSPACE}
-        export FETCH_LICENSE=true
-        docker run --rm -e FETCH_LICENSE=true -v $PWD:/app ghcr.io/owasp-dep-scan/dep-scan --src /app \
+        export FETCH_LICENSE=${{ inputs.fetch-license }}
+        docker run --rm -e FETCH_LICENSE=${FETCH_LICENSE} -v $PWD:/app ghcr.io/owasp-dep-scan/dep-scan --src /app \
         --reports-dir /app/reports --bom /app/${{ github.event.repository.name }}_sbom.json
       shell: bash
 
     - name: "Create index.html"
+      if: ${{ inputs.no-cyclone-report != 'true' }}
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}
@@ -96,6 +106,7 @@ runs:
         sudo cp -rf ./reports/* ./output/cyclondx-report
 
     - name: "Upload Depscan report"
+      if: ${{ inputs.no-cyclone-report != 'true' }}
       uses: actions/upload-artifact@v4.6.0
       with:
         name: "DEPSCAN report"
@@ -103,12 +114,14 @@ runs:
         retention-days: 5
 
     - name: Upload static files as artifact
+      if: ${{ inputs.no-cyclone-report != 'true' }}
       id: upload
       uses: actions/upload-pages-artifact@v3
       with:
         path: ${{ github.workspace }}/output/
 
     - name: "Set output"
+      if: ${{ inputs.no-cyclone-report != 'true' }}
       shell: bash
       run: |
         echo "Uploaded page artifact-id: ${{ steps.upload.outputs.artifact_id }}" >> $GITHUB_STEP_SUMMARY
