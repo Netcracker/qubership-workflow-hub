@@ -8,17 +8,43 @@
 name: 'CDXGen'
 on:
   workflow_dispatch:
+    inputs:
+      no-cyclone-report:
+        description: "Do not generate CycloneDX report"
+        required: false
+        default: false
+        type: boolean
+      fetch-license:
+        description: "Fetch license information"
+        required: false
+        default: true
+        type: boolean
   push:
     branches:
       - 'main'
 
+env:
+  NO_CYCLONE_REPORT: ${{ github.event.inputs.no-cyclone-report || false }}
+  FETCH_LICENSE: ${{ github.event.inputs.fetch-license || false }}
+
 jobs:
   cdxgen:
+    outputs:
+      page-url: ${{ steps.cdxgen.outputs.page-url }}
     runs-on: ubuntu-latest
     steps:
+      - name: "Input parameters"
+        run: |
+          echo "NO_CYCLONE_REPORT=${NO_CYCLONE_REPORT}" >> $GITHUB_STEP_SUMMARY
+          echo "FETCH_LICENSE=${FETCH_LICENSE}" >> $GITHUB_STEP_SUMMARY
       - name: "cdxgen"
-        uses: netcracker/qubership-workflow-hub/actions/cdxgen@main
+        id: cdxgen
+        uses: netcracker/qubership-workflow-hub/actions/cdxgen@feature/cyclonedx
+        with:
+          no-cyclone-report: ${{ github.event.inputs.no-cyclone-report }}
+          fetch-license: ${{ github.event.inputs.fetch-license }}
   deploy-pages:
+    if: needs.cdxgen.outputs.page-url != ''
     permissions:
       id-token: write
       pages: write
