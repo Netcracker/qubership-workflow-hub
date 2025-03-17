@@ -38,7 +38,6 @@ jobs:
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
         branches: main
-        committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update of common workflows according to https://github.com/Netcracker/qubership-workflow-hub?tab=readme-ov-file#common-workflows'
   replicate_gitattributes_files:
@@ -58,7 +57,6 @@ jobs:
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
         branches: 'main'
-        committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update of gitattributes file according to https://github.com/gitattributes/gitattributes templates'
   replicate_editorconfig:
@@ -78,7 +76,6 @@ jobs:
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
         branches: 'main'
-        committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update of editorconfig file. If changes needed please contribute to https://github.com/Netcracker/.github/blob/main/.editorconfig'
   replicate_cloud_core_dependabot:
@@ -97,7 +94,6 @@ jobs:
         exclude_private: true
         exclude_forked: false
         topics_to_include: core
-        committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update cloud-core dependabot config file'
   replicate_superlinter_configs:
@@ -116,7 +112,6 @@ jobs:
         exclude_forked: false
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
-        committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update of superlinter config files'
   replicate_release_drafter_configs:
@@ -138,6 +133,5 @@ jobs:
         exclude_forked: false
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
-        committer_email: CorePaaSGroup@netcracker.com
         committer_username: NetcrackerCLPLCI
         commit_message: 'ci: update  config files'
