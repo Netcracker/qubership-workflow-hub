@@ -52,7 +52,7 @@ permissions:
   statuses: write
 jobs:
   broadcast_files:
-    uses: Dreams-corp/qubership-workflow-hub/.github/workflows/broadcast-files.yml@main
+    uses: Netcracker/qubership-workflow-hub/.github/workflows/broadcast-files.yml@main
     secrets:
       GH_ACCESS_TOKEN: '${{ secrets.GH_ACCESS_TOKEN }}'
 ```

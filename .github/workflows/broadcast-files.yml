@@ -127,8 +127,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        repository: Dreams-corp/qubership-workflow-hub
     - name: Replicating file
       uses: derberg/manage-files-in-multiple-repositories@v2
       with:
