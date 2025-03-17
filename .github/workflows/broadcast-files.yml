@@ -37,10 +37,10 @@ jobs:
         exclude_forked: false
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
-        branches: main
+        branches: 'main'
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
-        commit_message: 'ci: update of common workflows according to https://github.com/Netcracker/qubership-workflow-hub?tab=readme-ov-file#common-workflows'
+        commit_message: 'ci: update of common workflows'
   replicate_gitattributes_files:
     name: Replicate gitgitattributes file
     runs-on: ubuntu-latest
@@ -97,6 +97,7 @@ jobs:
         exclude_private: true
         exclude_forked: false
         topics_to_include: core
+        branches: 'main'
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update cloud-core dependabot config file'
@@ -116,6 +117,7 @@ jobs:
         exclude_forked: false
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
+        branches: 'main'
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update of superlinter config files'
@@ -138,6 +140,7 @@ jobs:
         exclude_forked: false
         # broadcast-pilot: Temp topic for testing purposes
         topics_to_include: broadcast-pilot
+        branches: 'main'
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update  config files'
