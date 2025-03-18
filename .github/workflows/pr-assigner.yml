@@ -5,11 +5,18 @@ on:
     types: [opened, reopened, synchronize]
     branches:
       - main
-
 permissions:
   pull-requests: write
   contents: read
 
 jobs:
   pr-auto-assign:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-pr-assigner.yml@main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nookyo/qubership-workflow-hub/actions/pr-assigner@main
+        with:
+          assignees-count: 2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

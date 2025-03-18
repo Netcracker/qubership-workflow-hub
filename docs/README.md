@@ -15,7 +15,6 @@ This index provides a quick overview of the available workflow and action docume
 | [python-publish](../docs/reusable/python-publish.md)              | Automates building, testing, and publishing Python packages.     |
 | [release-drafter](../docs/reusable/release-drafter.md)              | Drafts a new release based on merged pull requests.     |
 | [tag-creator](../docs/reusable//tag-creator.md)              | Creates a new tag in the repository.     |
-| [pr-auto-assigner](../docs/reusable/pr-auto-assigner.md) | Automatically assigns reviewers to pull requests.                |
 
 
 ## Template Flows
@@ -54,6 +53,7 @@ This index provides a quick overview of the available workflow and action docume
 | [poetry-publisher](../actions/poetry-publisher/README.md) | Automates building, testing, and publishing Python packages using Poetry. |
 | [pom-updater](../actions/pom-updater/README.md)         | Automatically updates the `pom.xml` file in Maven projects.      |
 | [pr-add-messages](../actions/pr-add-messages/README.md) | Adds commit messages to the pull request description.            |
+| [pr-assigner](../actions/pr-assigner/README.md)         | Automatically assigns reviewers to pull requests based on configuration or CODEOWNERS file. |
 | [tag-checker](../actions/tag-checker/README.md)         | Verifies the presence of specific tags in the repository.        |
 | [verify-json](../actions/verify-json/README.md)         | Verifies the structure and content of JSON files.                |
 
