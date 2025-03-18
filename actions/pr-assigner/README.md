@@ -5,7 +5,7 @@ This **PR Assigner** GitHub Action automatically assigns a pull request to users
 ## Features
 
 - Assigns pull requests to users specified in a configuration file or `CODEOWNERS` file.
-- Supports shuffling of assignees to distribute assignments evenly.
+- Supports shuffling of assignees to distribute assignments evenly with using the Fisher-Yates algorithm.
 
 ## 📌 Inputs
 
