@@ -49,9 +49,9 @@ The configuration file (pr-assigner-config.yml) can be define, by defaul locatio
 
 ```yaml
 assignees:
-  - user1
-  - user2
-  - user3
+  - borislavr
+  - nookyo
+  - rparf
 count: 2
 ```
 
@@ -63,6 +63,7 @@ count: 2
 - If the configuration file is not found, the action will attempt to use the CODEOWNERS file to determine the assignees.
 - If the CODEOWNERS file is not found or cannot be processed, the action will fail.
 - The action will look for a line starting with * in the CODEOWNERS file and use the users listed there as assignees.
+- The assignees array is shuffled using the Fisher-Yates algorithm to ensure even distribution of assignments.
 
 ### Configuration File Schema
 
