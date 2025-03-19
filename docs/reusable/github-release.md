@@ -31,8 +31,6 @@ on:
 
 permissions:
   contents: write
-  packages: write
-  pull-requests: write
 
 jobs:
   call-create-github-release:
