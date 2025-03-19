@@ -31,7 +31,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   call-release-drafter:
