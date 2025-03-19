@@ -42,6 +42,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   call-maven-publish:
     uses: netcracker/qubership-workflow-hub/.github/workflows/maven-publish.yml@main

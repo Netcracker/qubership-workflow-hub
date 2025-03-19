@@ -37,6 +37,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: write
+
+
 jobs:
   call-python-publish:
     uses: netcracker/qubership-workflow-hub/.github/workflows/python-publish.yml@main
