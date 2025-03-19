@@ -29,6 +29,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   call-create-github-release:
     uses: netcracker/qubership-workflow-hub/.github/workflows/create-github-release.yml@main

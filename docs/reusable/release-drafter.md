@@ -29,6 +29,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   call-release-drafter:
     uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main

@@ -48,6 +48,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   call-docker-publish:
     uses: netcracker/qubership-workflow-hub/.github/workflows/docker-publish.yml@main
