@@ -161,3 +161,22 @@ jobs:
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update auto labeler config'
+  replicate_qip_maven_central_snapshot:
+    name: Replicate qip maven central snapshot workflow
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: workflow-templates/maven-central-snapshot-deploy.yaml
+        destination: .github/workflows
+        exclude_private: true
+        exclude_forked: true
+        topics_to_include: qip
+        branches: main
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update qip maven central snapshot workflow'
