@@ -17,14 +17,13 @@ on:
   push:
     branches:
       - 'main'
-      - 'feature/*'
 
 jobs:
   cdxgen:
     runs-on: ubuntu-latest
     steps:
       - name: "cdxgen"
-        uses: netcracker/qubership-workflow-hub/actions/cdxgen@feature/cdxgen-refactoring
+        uses: netcracker/qubership-workflow-hub/actions/cdxgen@main
         with:
           generate_cdx_report: ${{ github.event.inputs.generate_cdx_report }}
   deploy-pages:
