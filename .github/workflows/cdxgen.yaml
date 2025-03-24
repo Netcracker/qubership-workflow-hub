@@ -12,7 +12,8 @@ on:
       generate_cdx_report:
         description: "Generate CycloneDX report"
         required: false
-        default: "false"
+        default: false
+        type: boolean
   push:
     branches:
       - 'main'
@@ -25,9 +26,9 @@ jobs:
       - name: "cdxgen"
         uses: netcracker/qubership-workflow-hub/actions/cdxgen@feature/cdxgen-refactoring
         with:
-          generate_cdx_report: ${{ github.event.inputs.generate_cdx_report || 'false' }}
+          generate_cdx_report: ${{ github.event.inputs.generate_cdx_report }}
   deploy-pages:
-    if: ${{ github.event.inputs.generate_cdx_report || 'false' }} == 'true'
+    if: ${{ github.event.inputs.generate_cdx_report }}
     permissions:
       id-token: write
       pages: write
