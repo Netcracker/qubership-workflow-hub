@@ -12,6 +12,10 @@ inputs:
   project_type:
     description: "Type of the project"
     required: false
+  generate_cdx_report:
+    description: "Generate CycloneDX report"
+    required: false
+    default: "false"
 outputs:
   page-url:
     description: "GitHub pages URL"
@@ -55,6 +59,7 @@ runs:
         retention-days: 5
 
     - name: "Generate Depscan report"
+      if: ${{ inputs.generate_cdx_report == 'true' }}
       run: |
         cd ${GITHUB_WORKSPACE}
         export FETCH_LICENSE=true
@@ -63,6 +68,7 @@ runs:
       shell: bash
 
     - name: "Create index.html"
+      if: ${{ inputs.generate_cdx_report == 'true' }}
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}
@@ -100,6 +106,7 @@ runs:
         sudo cp -rf ./reports/* ./output/cyclondx-report
 
     - name: "Upload Depscan report"
+      if: ${{ inputs.generate_cdx_report == 'true' }}
       uses: actions/upload-artifact@v4.6.0
       with:
         name: "DEPSCAN report"
@@ -107,12 +114,14 @@ runs:
         retention-days: 5
 
     - name: Upload static files as artifact
+      if: ${{ inputs.generate_cdx_report == 'true' }}
       id: upload
       uses: actions/upload-pages-artifact@v3
       with:
         path: ${{ github.workspace }}/output/
 
     - name: "Set output"
+      if: ${{ inputs.generate_cdx_report == 'true' }}
       shell: bash
       run: |
         echo "Uploaded page artifact-id: ${{ steps.upload.outputs.artifact_id }}" >> $GITHUB_STEP_SUMMARY
