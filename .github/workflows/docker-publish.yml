@@ -1,100 +1,119 @@
 ---
-name: Docker build and publish
-on:
-  workflow_call:
-    inputs:
-      ref:
-        description: "Branch name to create release from"
-        required: false
-        type: string
-      artifact-id:
-        default: ''
-        required: false
-        type: string
-      context:
-        default: "git"
-        required: false
-        type: string
-      dry-run:
-        default: false
-        required: false
-        type: boolean
-      download-artifact:
-        default: false
-        required: false
-        type: boolean
-      component:
-        default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
-        required: false
-        type: string
-      platforms:
-        default: "linux/amd64"
-        required: false
-        type: string
-
-jobs:
-  docker:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        component: ${{ fromJson(inputs.component) }}
-        # platform: ${{ inputs.platform }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref }}
-
-      - name: Debug
-        run: |
-          echo "artifact_id ${{ inputs.artifact-id }}"
-          echo "version ${{ github.event.inputs.version }}"
-          echo "ref ${{ inputs.ref }}"
-          echo "GITHUB_REPOSITORY ${{ github.repository }}"
-          echo "GITHUB_REF ${{ github.ref }}"
-
-      - name: Download artifact
-        if: ${{ inputs.download-artifact }}
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.artifact-id }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          context: ${{ inputs.context }}
-          images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-
-      - name: Check Dockerfile existence
-        run: ls -la
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: ${{ matrix.component.context }}
-          file: ${{ matrix.component.file }}
-          push: ${{ !inputs.dry-run }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ inputs.platforms }}
+  name: Docker build and publish
+  on:
+    workflow_call:
+      inputs:
+        ref:
+          description: "Branch name to create release from"
+          required: false
+          type: string
+        artifact-id:
+          default: ''
+          required: false
+          type: string
+        context:
+          default: "git"
+          required: false
+          type: string
+        dry-run:
+          default: false
+          required: false
+          type: boolean
+        download-artifact:
+          default: false
+          required: false
+          type: boolean
+        component:
+          default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
+          required: false
+          type: string
+        platforms:
+          default: "linux/amd64"
+          required: false
+          type: string
+        tags-override:
+          default: ''
+          required: false
+          type: string  
+  
+  jobs:
+    docker:
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+        matrix:
+          component: ${{ fromJson(inputs.component) }}
+          # platform: ${{ inputs.platform }}
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            ref: ${{ inputs.ref }}
+  
+        - name: Debug
+          run: |
+            echo "artifact_id ${{ inputs.artifact-id }}"
+            echo "version ${{ github.event.inputs.version }}"
+            echo "ref ${{ inputs.ref }}"
+            echo "GITHUB_REPOSITORY ${{ github.repository }}"
+            echo "GITHUB_REF ${{ github.ref }}"
+  
+        - name: Download artifact
+          if: ${{ inputs.download-artifact }}
+          uses: actions/download-artifact@v4
+          with:
+            name: ${{ inputs.artifact-id }}
+  
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v3
+  
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+  
+        - name: Log in to GitHub Container Registry
+          uses: docker/login-action@v2
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+  
+        - name: Debug URL
+          run: |
+            echo "URL  ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}"
+            echo "URL  ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}"
+  
+        - name: Extract Docker metadata
+          if: inputs.tags-override == ''
+          id: meta
+          uses: docker/metadata-action@v4
+          with:
+            context: ${{ inputs.context }}
+            images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}          
+            tags: |
+              type=ref,event=branch
+              type=semver,pattern={{version}}
+              type=semver,pattern={{major}}.{{minor}}
+              type=semver,pattern={{major}}
+  
+        - name: Prepeare tags
+          if: inputs.tags-override != ''
+          id: prepare-tags
+          run: 'echo tags=ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}:${{ inputs.tags-override }} >> $GITHUB_ENV'
+          
+  
+        - name: Check Dockerfile existence
+          run: |
+                 ls -la
+                 echo "tags ${{ steps.meta.outputs.tags }}"
+                 echo "labels ${{ steps.meta.outputs.labels }}"
+                 echo "repository ${{ github.repository }}"
+  
+        - name: Build and push Docker image
+          uses: docker/build-push-action@v4
+          with:
+            context: ${{ matrix.component.context }}
+            file: ${{ matrix.component.file }}
+            push: ${{ !inputs.dry-run }}
+            tags: ${{ env.tags || steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
+            platforms: ${{ inputs.platforms }}
