@@ -42730,8 +42730,14 @@ function extractSemverParts(versionString) {
 }
 
 
+// function matchesPattern(refName, pattern) {
+//   const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+//   return regex.test(refName);
+// }
+
 function matchesPattern(refName, pattern) {
-  const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+  const normalizedPattern = pattern.replace(/\//g, '-').replace(/\*/g, '.*');
+  const regex = new RegExp('^' + normalizedPattern + '$');
   return regex.test(refName);
 }
 
@@ -42772,7 +42778,7 @@ function findDistTag(ref, distTags) {
 }
 
 function fillTemplate(template, values) {
-  return template.replace(/{{\s*(\w+)\s*}}/g, (match, key) => {
+  return template.replace(/{{\s*([\w-]+)\s*}}/g, (match, key) => {
     return key in values ? values[key] : match;
   });
 }
@@ -42789,13 +42795,17 @@ async function run() {
   core.info(`🔹 Ref: ${JSON.stringify(ref)}`);
 
   const template = findTemplate(!ref.isTag ? ref.name : "tag", loader["branches-template"]);
+  if (!template) {
+    core.setFailed(`❗️ No template found for ref: ${ref.name}`);
+    return;
+  }
 
   // let fill =  fillTemplate(template, { ...ref, ...generateSnapshotVersionParts(), ...extractSemverParts(ref.name) });
 
   const parts = generateSnapshotVersionParts();
   const semverParts = extractSemverParts(ref.name);
   const distTag = findDistTag(ref, loader["dist-tags"]) || "default";
-  const values = { ...ref, ...semverParts, ...parts, ...github.context, distTag };
+  const values = { ...ref, "ref-name": ref.name, ...semverParts, ...parts, ...github.context, distTag };
 
   core.info(`🔹 time: ${JSON.stringify(parts)}`);
   core.info(`🔹 semver: ${JSON.stringify(semverParts)}`);
@@ -42804,6 +42814,9 @@ async function run() {
   let result = fillTemplate(template, values)
 
   core.info(`🔹 Template: ${template}`);
+
+  let t = ref.name;
+  core.info(`🔹 Name: ${{ t}}`)
   core.info(`💡 Rendered template: ${result}`);
 
   core.setOutput("result", result);
