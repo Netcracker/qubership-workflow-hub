@@ -34,9 +34,6 @@ jobs:
         repos_to_ignore: .github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan
         exclude_private: true
         exclude_forked: true
-        # broadcast-pilot: Temp topic for testing purposes
-        topics_to_include: broadcast-pilot
-        branches: main
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update of common workflows'
@@ -54,9 +51,6 @@ jobs:
         repos_to_ignore: .github, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan
         exclude_private: true
         exclude_forked: true
-        # broadcast-pilot: Temp topic for testing purposes
-        topics_to_include: broadcast-pilot
-        branches: main
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update of gitattributes file according to https://github.com/gitattributes/gitattributes templates'
@@ -74,9 +68,6 @@ jobs:
         repos_to_ignore: .github, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan
         exclude_private: true
         exclude_forked: true
-        # broadcast-pilot: Temp topic for testing purposes
-        topics_to_include: broadcast-pilot
-        branches: main
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update of editorconfig file. If changes needed please contribute to https://github.com/Netcracker/.github/blob/main/.editorconfig'
@@ -95,7 +86,6 @@ jobs:
         exclude_private: true
         exclude_forked: true
         topics_to_include: core
-        branches: main
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update cloud-core dependabot config file'
@@ -113,9 +103,6 @@ jobs:
         repos_to_ignore: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
         exclude_private: true
         exclude_forked: true
-        # broadcast-pilot: Temp topic for testing purposes
-        topics_to_include: broadcast-pilot
-        branches: main
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update of superlinter config files'
@@ -134,9 +121,6 @@ jobs:
         repos_to_ignore: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
         exclude_private: true
         exclude_forked: true
-        # broadcast-pilot: Temp topic for testing purposes
-        topics_to_include: broadcast-pilot
-        branches: main
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update release drafter config file'
@@ -155,9 +139,6 @@ jobs:
         repos_to_ignore: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
         exclude_private: true
         exclude_forked: true
-        # broadcast-pilot: Temp topic for testing purposes
-        topics_to_include: broadcast-pilot
-        branches: main
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update auto labeler config'
@@ -176,7 +157,6 @@ jobs:
         exclude_private: true
         exclude_forked: true
         topics_to_include: qip
-        branches: main
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
         commit_message: 'ci: update qip maven central snapshot workflow'
