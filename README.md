@@ -53,6 +53,10 @@ Below is the short description of how to implement common workflows in any Netcr
 
 There are several reusable workflows which should be added into every Netcracker repository, see the description below.
 
+**Important Consideration for Forking and Syncing**
+**If this repository is forked and synced via pull requests, some workflows (such as the auto-labeler) may not function properly due to insufficient token permissions.** 
+**Consider submitting pull requests to the target branch. [details here](./docs/pull-request-sequence.md)**
+
 ### CLA
 
 The action for [CLA](./CLA/cla.md) "signing" for contributors.
