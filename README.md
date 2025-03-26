@@ -9,7 +9,7 @@ Detailed description of existing workflows can be found here [Index of Workflow 
 - [qubership-workflow-hub](#qubership-workflow-hub)
   - [Common workflows](#common-workflows)
     - [CLA](#cla)
-    - [Lint codebase (Super-linter)](#lint-code-base-super-linter)
+    - [Lint codebase (Super-linter)](#lint-codebase-super-linter)
     - [Profanity filter](#profanity-filter)
     - [Automatic PR labels based on conventional commits](#automatic-pr-labels-based-on-conventional-commits)
       - [Step 1: Create workflow file](#step-1-create-workflow-file)
