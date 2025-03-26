@@ -35,7 +35,6 @@
           default: ''
           required: false
           type: string  
-  
   jobs:
     docker:
       runs-on: ubuntu-latest
@@ -43,7 +42,6 @@
         fail-fast: false
         matrix:
           component: ${{ fromJson(inputs.component) }}
-          # platform: ${{ inputs.platform }}
       steps:
         - name: Checkout repository
           uses: actions/checkout@v4
@@ -79,41 +77,48 @@
   
         - name: Debug URL
           run: |
-            echo "URL  ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}"
-            echo "URL  ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}"
+            echo "URL ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id || matrix.component.name }}"
   
         - name: Extract Docker metadata
           if: inputs.tags-override == ''
           id: meta
-          uses: docker/metadata-action@v5
+          uses: docker/metadata-action@v4
           with:
             context: ${{ inputs.context }}
-            images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id  || matrix.component.name }}          
+            images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id || matrix.component.name }}
             tags: |
               type=ref,event=branch
               type=semver,pattern={{version}}
               type=semver,pattern={{major}}.{{minor}}
               type=semver,pattern={{major}}
   
-        - name: Prepeare tags
+        - name: Prepare tags
           if: inputs.tags-override != ''
           id: prepare-tags
           run: |
-                owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-                echo "tags=ghcr.io/${owner}/${{ inputs.artifact-id  || matrix.component.name }}:${{ inputs.tags-override }}" >> $GITHUB_ENV
-          
+            IFS=',' read -ra TAGS <<< "${{ inputs.tags-override }}"
+            TAGS_OUTPUT=""
+            for TAG in "${TAGS[@]}"; do
+              TAG=$(echo "$TAG" | xargs) 
+              if [ -z "$TAGS_OUTPUT" ]; then
+                TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id || matrix.component.name }}:${TAG}"
+              else
+                TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id || matrix.component.name }}:${TAG}"
+              fi
+            done
+            TAGS_OUTPUT=${TAGS_OUTPUT,,}
+            echo "tags=${TAGS_OUTPUT}" >> $GITHUB_ENV
   
         - name: Check Dockerfile existence
           run: |
-                 ls -la
-                 echo "tags ${{ steps.meta.outputs.tags }}"
-                 echo "labels ${{ steps.meta.outputs.labels }}"
-                 echo "repository ${{ github.repository }}"
+            ls -la
+            echo "tags ${{ steps.meta.outputs.tags }}"
+            echo "labels ${{ steps.meta.outputs.labels }}"
+            echo "repository ${{ github.repository }}"
   
         - name: Build and push Docker image
           uses: docker/build-push-action@v4
           with:
-            provenance: false
             context: ${{ matrix.component.context }}
             file: ${{ matrix.component.file }}
             push: ${{ !inputs.dry-run }}
