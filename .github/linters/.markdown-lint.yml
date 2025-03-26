@@ -1,3 +1,4 @@
+
 # MD024/no-duplicate-heading : Multiple headings with the same content : https://github.com/DavidAnson/markdownlint/blob/v0.37.4/doc/md024.md
 MD024:
   # Only check sibling headings
@@ -21,4 +22,3 @@ MD013:
   strict: false
   # Stern length checking
   stern: false
-
