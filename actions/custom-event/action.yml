@@ -1,16 +1,22 @@
 name: "Custom Event Action"
 description: "Triggers a custom repository_dispatch event"
 inputs:
-  event_type:
+  event-type:
     description: "The type of the custom event"
     required: true
-  client_payload:
+  client-payload:
     description: "Payload to send with the event"
     required: false
     default: "{}"
   github-token:
     description: "GitHub Token"
     required: true
+  owner:
+    description: "Owner of the repository"
+    required: false
+  repo:
+    description: "Repository name"
+    required: false
 outputs:
   status:
     description: "Status of the dispatch request"

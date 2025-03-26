@@ -12,7 +12,10 @@ inputs:
   project_type:
     description: "Type of the project"
     required: false
-
+outputs:
+  page-url:
+    description: "GitHub pages URL"
+    value: ${{ steps.deployment.outputs.page_url }}
 runs:
   using: "composite"
   steps:
@@ -31,6 +34,10 @@ runs:
           echo "Project type is not provided"
           echo "PROJECT_TYPE=" >> $GITHUB_ENV
         fi
+
+    - name: "Free some space"
+      run: rm -rf /opt/hostedtoolcache
+      shell: bash
 
     - name: "Generate BOM"
       run: |
@@ -55,9 +62,57 @@ runs:
         --reports-dir /app/reports --bom /app/${{ github.event.repository.name }}_sbom.json
       shell: bash
 
+    - name: "Create index.html"
+      shell: bash
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sudo cp -f ${{ github.event.repository.name }}_sbom.json ./reports/${{ github.event.repository.name }}_sbom.json
+        cat > ./index.html <<EOL
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>DEPSCAN Report</title>
+        </head>
+        <body>
+            <div id="depscan-content">
+                <h1>DEPSCAN Analysis</h1>
+                <p>This is the DEPSCAN analysis report.</p>
+                <iframe src="./depscan.html"
+                height="500px" width="1000px">
+                </iframe>
+            </div>
+            <hr>
+            <h2>Related Files</h2>
+            <ul>
+                <li><a href="${{ github.event.repository.name }}_sbom.json" target="_blank">Download ${{ github.event.repository.name }}_sbom.json</a></li>
+                <li><a href="depscan.html" target="_blank">Download depscan.html</a></li>
+                <li><a href="depscan.pdf" target="_blank">Download depscan.pdf</a></li>
+                <li><a href="depscan-bom.json" target="_blank">Download depscan-bom.json</a></li>
+                <li><a href="license-bom.json" target="_blank">Download license-bom.json</a></li>
+            </ul>
+        </body>
+        </html>
+        EOL
+        sudo cp -f ./index.html ./reports/index.html
+        sudo mkdir -p ./output/cyclondx-report
+        sudo cp -rf ./reports/* ./output/cyclondx-report
+
     - name: "Upload Depscan report"
       uses: actions/upload-artifact@v4.6.0
       with:
         name: "DEPSCAN report"
-        path: ${{ github.workspace }}/**/reports/*
+        path: ${{ github.workspace }}/reports/*
         retention-days: 5
+
+    - name: Upload static files as artifact
+      id: upload
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ${{ github.workspace }}/output/
+
+    - name: "Set output"
+      shell: bash
+      run: |
+        echo "Uploaded page artifact-id: ${{ steps.upload.outputs.artifact_id }}" >> $GITHUB_STEP_SUMMARY

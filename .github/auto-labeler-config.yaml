@@ -13,7 +13,7 @@ conventional-commits:
     nouns: ["refactor", "Refactor"]
     labels: ["refactor"]
   - type: "documentation"
-    nouns: ["doc", "document", "documentation"]
+    nouns: ["doc", "docs", "document", "documentation"]
     labels: ["documentation"]
   - type: "build"
     nouns: ["build", "rebuild"]

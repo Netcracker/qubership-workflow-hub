@@ -1,0 +1,35 @@
+name: "Change Helm Chart.yaml"
+description: "Automatically updates the Helm Chart.yaml file."
+
+inputs:
+  new-chart-version:
+    description: "The version of the Helm chart."
+    required: true
+  chart-app-version:
+    description: "The version of the application."
+    required: false
+  chart-yaml-path:
+    description: "The path to the Chart.yaml file."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        shell: bash
+        run: |
+              wget -q https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O yq
+              chmod +x yq
+              sudo mv yq /usr/local/bin/yq
+
+      - name: Eval Chart.yaml
+        shell: bash
+        run: |
+                current_version=$(yq '.version' ${{ inputs.chart-yaml-path }})
+                echo "::warning:: 💡 Change: $current_version" to  ${{ inputs.new-chart-version }}
+                yq eval '.version = "${{ inputs.new-chart-version }}"' -i  ${{ inputs.chart-yaml-path }}
+                echo "::notice::✅ Successfully updated version!"
+

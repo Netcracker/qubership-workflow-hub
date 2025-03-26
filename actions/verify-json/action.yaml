@@ -1,0 +1,48 @@
+---
+
+# To access files from action use path snippet
+# ${GITHUB_WORKSPACE}/../../_actions/<action-owner>/<action-name>/<action-version>
+# Forcustom action:
+# ${GITHUB_WORKSPACE}/../../_actions/<repository-owner>/<repository-name>/<version>/<path-to-action>
+
+name: "Verify JSON file"
+description: "Verify JSON file against schema file"
+
+inputs:
+  json-file:
+    description: "Path to the JSON file"
+    required: true
+  schema-file:
+    description: "Path to the schema file"
+    required: true
+outputs:
+  is-valid:
+    description: "JSON file valid or not"
+    value: ${{ steps.validate.outputs.result }}
+runs:
+  using: "composite"
+  steps:
+    - name: "Checkout code"
+      uses: actions/checkout@v4
+
+    - name: "Install tools"
+      run: |
+        sudo apt install -y python3-jsonschema
+
+    - name: "Validate"
+      id: validate
+      run: |
+        set +e
+        validate_res=$(jsonschema -i ${{ inputs.json-file }} ${{ inputs.schema-file }} 2>&1)
+        validate=$?
+        echo "isvalid=${validate}" >> $GITHUB_OUTPUT
+        if [ "${validate} != "0" ]; then
+          echo "❗ JSON validation failed."
+          echo "❗ JSON validation failed." >> $GITHUB_STEP_SUMMARY
+          echo "❗ Error: ${validate}"
+          echo "❗ Error: ${validate}" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        else
+          echo "✅ JSON file is valid."
+          echo "✅ JSON file is valid." >> $GITHUB_STEP_SUMMARY
+        fi

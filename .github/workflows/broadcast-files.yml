@@ -1,0 +1,162 @@
+name: Broadcast files to organization repositories
+on:
+  workflow_call:
+    secrets:
+      GH_ACCESS_TOKEN:
+        required: true
+permissions:
+  pull-requests: write
+  contents: read
+env:
+  # REPOS_TO_IGNORE: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
+  GH_ACCESS_TOKEN: '${{ secrets.GH_ACCESS_TOKEN }}'
+jobs:
+  replicate_common_workflows:
+    name: Replicate common workflows
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating common workflows
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: >-
+          workflow-templates/cla.yaml,
+          workflow-templates/super-linter.yaml,
+          workflow-templates/profanity-filter.yaml,
+          workflow-templates/automatic-pr-labeler.yaml,
+          workflow-templates/pr-collect-commit-messages.yaml,
+          workflow-templates/pr-conventional-commits.yaml,
+          workflow-templates/pr-lint-title.yaml
+        patterns_to_ignore: 'CLA/netcracker-logo.png,CLA/netcracker-logo.svg'
+        destination: .github/workflows
+        repos_to_ignore: .github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan
+        exclude_private: true
+        exclude_forked: true
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update of common workflows'
+  replicate_gitattributes_files:
+    name: Replicate gitgitattributes file
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: '.gitattributes'
+        repos_to_ignore: .github, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan
+        exclude_private: true
+        exclude_forked: true
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update of gitattributes file according to https://github.com/gitattributes/gitattributes templates'
+  replicate_editorconfig:
+    name: Replicate editorconfig file
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: .editorconfig
+        repos_to_ignore: .github, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan
+        exclude_private: true
+        exclude_forked: true
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update of editorconfig file. If changes needed please contribute to https://github.com/Netcracker/.github/blob/main/.editorconfig'
+  replicate_cloud_core_dependabot:
+    name: Replicate dependabot config file for Cloud-Core repos
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: config/dependabot/cloud-core/dependabot.yml
+        destination: .github/
+        exclude_private: true
+        exclude_forked: true
+        topics_to_include: core
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update cloud-core dependabot config file'
+  replicate_superlinter_configs:
+    name: Replicate Super-Linter config files
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: '.github/super-linter.env,.github/linters'
+        repos_to_ignore: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
+        exclude_private: true
+        exclude_forked: true
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update of superlinter config files'
+  replicate_release_drafter_configs:
+    name: Replicate Release drafter config file
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: config/examples/release-drafter-config.yml
+        destination: .github/
+        repos_to_ignore: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
+        exclude_private: true
+        exclude_forked: true
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update release drafter config file'
+  replicate_auto_labeler_configs:
+    name: Replicate auto labeler config file
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: config/examples/auto-labeler-config.yaml
+        destination: .github/
+        repos_to_ignore: '.github, qubership-workflow-hub, qubership-test-pipelines, KubeMarine, k8s-conformance, gatekeeper-library, cassandra-exporter, pg_hint_plan'
+        exclude_private: true
+        exclude_forked: true
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update auto labeler config'
+  replicate_qip_maven_central_snapshot:
+    name: Replicate qip maven central snapshot workflow
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: workflow-templates/maven-central-snapshot-deploy.yaml
+        destination: .github/workflows
+        exclude_private: true
+        exclude_forked: true
+        topics_to_include: qip
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-bot
+        commit_message: 'ci: update qip maven central snapshot workflow'

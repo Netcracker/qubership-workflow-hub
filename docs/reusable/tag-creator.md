@@ -25,6 +25,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   call-tag-creator:
     uses: netcracker/qubership-workflow-hub/.github/workflows/tag-creator.yml@main

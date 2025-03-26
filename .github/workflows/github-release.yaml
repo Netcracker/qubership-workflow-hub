@@ -85,5 +85,4 @@ jobs:
     with:
       version: ${{ inputs.version }}
       publish: false
-      branch: "release/v${{ inputs.version }}"
       config-name: release-drafter-config.yml

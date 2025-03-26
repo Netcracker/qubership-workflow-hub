@@ -19,8 +19,8 @@ on:
         type: string
         default: './.github/auto-labeler-config.yaml'
 permissions:
-  contents: write
-  issues: write
+  contents: read
+  issues: read
   pull-requests: write
 
 jobs:

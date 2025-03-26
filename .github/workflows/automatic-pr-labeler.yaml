@@ -7,7 +7,10 @@ on:
     branches: [main]
     types:
       [opened, reopened]
-
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
 jobs:
   assign-labels:
     uses: Netcracker/qubership-workflow-hub/.github/workflows/auto-labeler.yaml@main

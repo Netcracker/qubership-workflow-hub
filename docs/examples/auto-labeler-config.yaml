@@ -13,11 +13,11 @@ conventional-commits:
     nouns: ["refactor", "Refactor"]
     labels: ["refactor"]
   - type: "documentation"
-    nouns: ["doc", "document", "documentation"]
+    nouns: ["docs", "doc", "document", "documentation"]
     labels: ["documentation"]
   - type: "build"
     nouns: ["build", "rebuild"]
     labels: ["build"]
   - type: "config"
-    nouns: ["config", "conf", "cofiguration", "configure"]
+    nouns: ["config", "conf", "configuration", "configure"]
     labels: ["config"]

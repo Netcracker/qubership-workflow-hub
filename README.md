@@ -9,7 +9,7 @@ Detailed description of existing workflows can be found here [Index of Workflow 
 - [qubership-workflow-hub](#qubership-workflow-hub)
   - [Common workflows](#common-workflows)
     - [CLA](#cla)
-    - [Prettier](#prettier)
+    - [Lint code base (Super-linter)](#lint-code-base-super-linter)
     - [Profanity filter](#profanity-filter)
     - [Automatic PR labels based on conventional commits](#automatic-pr-labels-based-on-conventional-commits)
       - [Step 1: Create workflow file](#step-1-create-workflow-file)
@@ -43,8 +43,8 @@ Below is the short description of how to implement common workflows in any Netcr
 
 | Name                          | Purpose                                                                              |
 | ----------------------------- | ------------------------------------------------------------------------------------ |
-| secrets.PERSONAL_ACCESS_TOKEN | Used by actions to access repositories data                                          |
-| secrets.MAVEN_USER            | Username to authenticate in Maven Central repository to publish released artifacts   |
+| secrets.CLA_ACCESS_TOKEN      | Used by CLA workflow to access cla storage                                           |
+| secrets.MAVEN_USER            | Username to authenticate in Maven Central repository to publish released artifacts  |
 | secrets.MAVEN_PASSWORD        | User token to authenticate in Maven Central repository to publish released artifacts |
 | secrets.MAVEN_GPG_PRIVATE_KEY | GPG private key to sign artefacts (jar, pom etc) to publish them into Maven Central  |
 | secrets.MAVEN_GPG_PASSPHRASE  | GPG private key passphrase                                                           |
@@ -61,15 +61,21 @@ The action for [CLA](./CLA/cla.md) "signing" for contributors.
 
 To add the CLA signing into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/cla.yaml) into `.github/workflows` directory of your repository.
 
-The `PERSONAL_ACCESS_TOKEN` used in the workflow is defined on organization level then you can use it in any Netcracker/\* repository.
+The `CLA_ACCESS_TOKEN` used in the workflow is defined on organization level then you can use it in any Netcracker/\* repository.
 
-### Prettier
+### Lint code base (Super-linter)
 
-The action to check style and syntax of several document types. It creates PR if found any issue.
+This workflow executes several linters on changed files based on languages used in your code base whenever you push a code or open a pull request.
+You can adjust the behavior by adding/modifying configuration files for super-linter itself and for individual linters.
 
-> More info about underlying GitHub action can be found here [prettier-fix](https://github.com/WorkOfStan/prettier-fix)
+For more information, see:
+[Super-linter](https://github.com/super-linter/super-linter)
 
-To add the prettier into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/prettier.yaml) into `.github/workflows` directory of your repository.
+Configuration file for super-linter example:
+[.github/super-linter.env](https://github.com/Netcracker/.github/blob/main/.github/super-linter.env)
+Configuration files for individual linters should be placed in .github/linters
+
+To add the super-linter workflow into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/super-linter.yaml) into `.github/workflows` directory of your repository.
 
 ### Profanity filter
 
@@ -103,7 +109,7 @@ The configuration file from [previous step](#step-2-add-configuration-file) defi
 | 'FEATURE', 'Feature', 'feature', 'FEAT', 'Feat', 'feat' | enhancement     |
 | 'BREAKING CHANGE', 'BREAKING', 'MAJOR'                  | breaking-change |
 | 'refactor','Refactor'                                   | refactor        |
-| 'doc','document','documentation'                        | documentation   |
+| 'doc','docs','document','documentation'                 | documentation   |
 | 'build','rebuild'                                       | build           |
 | 'config', 'conf', 'cofiguration', 'configure'           | config          |
 
