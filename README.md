@@ -54,7 +54,7 @@ Below is the short description of how to implement common workflows in any Netcr
 There are several reusable workflows which should be added into every Netcracker repository, see the description below.
 
 **Important Consideration for Fork and Sync**
-**If this repository is forked and synced via pull requests, some workflows (such as the auto-labeler) will not function properly due to missing token in fork repository.** 
+**If this repository is forked and synced via pull requests, some workflows (such as the auto-labeler) will not function properly due to missing token in fork repository.**
 **Consider submitting pull requests to the target branch. [details here](./docs/fork-sequence.md)**
 
 ### CLA
