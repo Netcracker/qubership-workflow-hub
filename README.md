@@ -39,7 +39,7 @@ Detailed description of existing workflows can be found here [Index of Workflow 
 
 Below is the short description of how to implement common workflows in any Netcracker repository. All necessery secrets and variables for common workflows are already present on organization level, no additional settings or configurations are required.
 
-<span id="secrets_table"></span>**The organization level secrets and vars used in actions**
+## The organization level secrets and vars used in actions
 
 | Name                          | Purpose                                                                              |
 | ----------------------------- | ------------------------------------------------------------------------------------ |
@@ -200,7 +200,7 @@ Upload [prepared configuration file](./docs/examples/release-drafter-config.yml)
 
 ### Step 4: Prepare actions secrets
 
-The workflow needs several secrets to be prepared to work properly. For `Netcracker` repositories all of them already prepared, configured and available for use. You can find them in table [The organization level secrets and vars used in actions](#secrets_table). Detailed instructions on how to generate a GPG key and set up secrets in a GitHub repository can be found in [this document](./docs/maven-publish-secrets_doc.md).
+The workflow needs several secrets to be prepared to work properly. For `Netcracker` repositories all of them already prepared, configured and available for use. You can find them in table [The organization level secrets and vars used in actions](#the-organization-level-secrets-and-vars-used-in-actions). Detailed instructions on how to generate a GPG key and set up secrets in a GitHub repository can be found in [this document](./docs/maven-publish-secrets_doc.md).
 
 ---
 
