@@ -9,7 +9,7 @@ Detailed description of existing workflows can be found here [Index of Workflow 
 - [qubership-workflow-hub](#qubership-workflow-hub)
   - [Common workflows](#common-workflows)
     - [CLA](#cla)
-    - [Lint code base (Super-linter)](#lint-code-base-super-linter)
+    - [Lint codebase (Super-linter)](#lint-code-base-super-linter)
     - [Profanity filter](#profanity-filter)
     - [Automatic PR labels based on conventional commits](#automatic-pr-labels-based-on-conventional-commits)
       - [Step 1: Create workflow file](#step-1-create-workflow-file)
@@ -53,19 +53,23 @@ Below is the short description of how to implement common workflows in any Netcr
 
 There are several reusable workflows which should be added into every Netcracker repository, see the description below.
 
+**Important Consideration for Fork and Sync**
+**If this repository is forked and synced via pull requests, some workflows (such as the auto-labeler) will not function properly due to missing token in fork repository.** 
+**Consider submitting pull requests to the target branch. [details here](./docs/fork-sequence.md)**
+
 ### CLA
 
 The action for [CLA](./CLA/cla.md) "signing" for contributors.
 
-> More info about underlying GitHub action can be found here [contributor-assistant](https://github.com/contributor-assistant/github-action)
+> More info about underlying GitHub Action can be found here [contributor-assistant](https://github.com/contributor-assistant/github-action)
 
 To add the CLA signing into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/cla.yaml) into `.github/workflows` directory of your repository.
 
 The `CLA_ACCESS_TOKEN` used in the workflow is defined on organization level then you can use it in any Netcracker/\* repository.
 
-### Lint code base (Super-linter)
+### Lint codebase (Super-linter)
 
-This workflow executes several linters on changed files based on languages used in your code base whenever you push a code or open a pull request.
+This workflow executes several linters on changed files based on languages used in your codebase whenever you push a code or open a pull request.
 You can adjust the behavior by adding/modifying configuration files for super-linter itself and for individual linters.
 
 For more information, see:
@@ -81,7 +85,7 @@ To add the super-linter workflow into your repository just copy the [prepared fi
 
 The action to check PRs/issues comments on profany words.
 
-> More info about underlying GitHub action can be found here [profanity-filter](https://github.com/IEvangelist/profanity-filter)
+> More info about underlying GitHub Action can be found here [profanity-filter](https://github.com/IEvangelist/profanity-filter)
 
 To add the profanity filter into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/profanity-filter.yaml) into `.github/workflows` directory of your repository.
 
@@ -127,7 +131,7 @@ To add commit messages in pull request description into your repository copy the
 
 The workflow will check commits in pull request if they follow [Conventional Commits](conventionalcommits.org) strategy.
 
-More info on underlying GitHub action can be found here [Conventional Commits GitHub Action](https://github.com/webiny/action-conventional-commits)
+More info on underlying GitHub Action can be found here [Conventional Commits GitHub Action](https://github.com/webiny/action-conventional-commits)
 
 ---
 
@@ -137,7 +141,7 @@ To add the workflow into your repository copy the [prepared file](https://github
 
 The workflow will check pull request title if it follows [Conventional Commits](conventionalcommits.org) strategy.
 
-More info on underlying GitHub action can be found here [Semantic Pull Request](https://github.com/amannn/action-semantic-pull-request).
+More info on underlying GitHub Action can be found here [Semantic Pull Request](https://github.com/amannn/action-semantic-pull-request).
 
 ---
 
@@ -214,7 +218,7 @@ This workflow is designed to be run manually. It has six input parameters on man
 
 - `Specify version (optional)` -- a string represents the version number (optional). If empty the version number will be cretad automatically.
 - `Python version to use` -- a string represents Python version to use to build artifacts (e.g., `3.11`)
-- `Poetry version bump` -- which part of semver version to bump (e.g., `patch`, `minor`, `major`)'
+- `Poetry version bump` -- which part of SemVer version to bump (e.g., `patch`, `minor`, `major`)'
 - `Additional poetry build parameters` -- additional poetry build parameters
 - `Run pytest` -- to run pytests or not (true/false).
 - `Parameters for pytest` -- additional parameters to pass into pytests. By default value is `--maxfail=3 -v`
