@@ -37,15 +37,37 @@ Add following entries under `project` section (see [maven central requirements](
 
 ### Distribution management
 
-Under `project` add a new section
+Under `project` add `distributionManagement` section
 
 ```xml
     <distributionManagement>
         <repository>
             <id>central</id>
             <name>Central Maven Repository</name>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </distributionManagement>
+```
+
+### Snapshots repository
+
+Under `project/repositories` add new `repository`
+
+```xml
+ <repositories>
+    <repository>
+      <id>oss.sonatype.org-snapshot</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 ```
 
 ### Build plugins
