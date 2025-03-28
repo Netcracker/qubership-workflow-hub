@@ -18,7 +18,7 @@ class ConfigLoader {
     console.log(`💡 Try to reading configuration ${configPath}`)
 
     if (!fs.existsSync(configPath)) {
-      core.warning(`❗️ File not found: ${configPath}`);
+      core.warning(`❗️ Configuration file not found: ${configPath}`);
       this.fileExist = false;
       return;
     }
