@@ -70,7 +70,10 @@ jobs:
         exclude_forked: true
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-bot
-        commit_message: 'ci: update of editorconfig file. If changes needed please contribute to https://github.com/Netcracker/.github/blob/main/.editorconfig'
+        commit_message: |
+          ci: update of editorconfig file
+
+          If changes needed please contribute to https://github.com/Netcracker/.github/blob/main/.editorconfig
   replicate_cloud_core_dependabot:
     name: Replicate dependabot config file for Cloud-Core repos
     runs-on: ubuntu-latest
