@@ -39926,7 +39926,7 @@ class ConfigLoader {
     console.log(`💡 Try to reading configuration ${configPath}`)
 
     if (!fs.existsSync(configPath)) {
-      core.setFailed(`❗️ File not found: ${configPath}`);
+      core.warning(`❗️ File not found: ${configPath}`);
       return;
     }
 
