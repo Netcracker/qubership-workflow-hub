@@ -42796,15 +42796,15 @@ async function run() {
   const ref = new RefExtractor().extract(name);
 
   const configurationPath = core.getInput('configuration-path') || "./.github/metadata-action-config.yml";
-  const loader = new ConfigLoader().load(configurationPath);
+  const loader = new ConfigLoader()
+  const config = loader.load(configurationPath);
 
   core.info(`🔹 Ref: ${JSON.stringify(ref)}`);
 
   let template = null;
 
-  core.info(`🔹 loader.fileExist: ${loader.fileExists}`);
-  if (loader.fileExists === true) {
-    template = findTemplate(!ref.isTag ? ref.name : "tag", loader["branches-template"]);
+  if (loader.fileExists) {
+    template = findTemplate(!ref.isTag ? ref.name : "tag", config["branches-template"]);
   }
 
   if (template === null) {
@@ -42815,7 +42815,7 @@ async function run() {
   // let fill =  fillTemplate(template, { ...ref, ...generateSnapshotVersionParts(), ...extractSemverParts(ref.name) });
   const parts = generateSnapshotVersionParts();
   const semverParts = extractSemverParts(ref.name);
-  const distTag = findDistTag(ref, loader["dist-tags"]);
+  const distTag = findDistTag(ref, config["dist-tags"]);
 
   if (distTag === null) {
     core.warning(`💡 No dist-tag found for ref: ${ref.name}, will be used default latest`);
