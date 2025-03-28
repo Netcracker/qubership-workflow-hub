@@ -94,25 +94,26 @@ async function run() {
   core.info(`🔹 Ref: ${JSON.stringify(ref)}`);
 
   let template = null;
+  let distTag = null;
 
   if (loader.fileExists) {
     template = findTemplate(!ref.isTag ? ref.name : "tag", config["branches-template"]);
+    distTag = findDistTag(ref, config["dist-tags"]);
   }
 
   if (template === null) {
-    core.warning(`💡 No template found for ref: ${ref.name}, will be used default {{ref-name}}-{{timestamp}}-{{runNumber}}`);
+    core.warning(`No template found for ref: ${ref.name}, will be used default {{ref-name}}-{{timestamp}}-{{runNumber}}`);
     template = `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
   }
-
-  // let fill =  fillTemplate(template, { ...ref, ...generateSnapshotVersionParts(), ...extractSemverParts(ref.name) });
-  const parts = generateSnapshotVersionParts();
-  const semverParts = extractSemverParts(ref.name);
-  const distTag = findDistTag(ref, config["dist-tags"]);
 
   if (distTag === null) {
     core.warning(`💡 No dist-tag found for ref: ${ref.name}, will be used default latest`);
     distTag = "latest";
   }
+
+  // let fill =  fillTemplate(template, { ...ref, ...generateSnapshotVersionParts(), ...extractSemverParts(ref.name) });
+  const parts = generateSnapshotVersionParts();
+  const semverParts = extractSemverParts(ref.name);
 
   const values = { ...ref, "ref-name": ref.name, ...semverParts, ...parts, ...github.context, distTag };
 
