@@ -42794,7 +42794,12 @@ async function run() {
 
   core.info(`🔹 Ref: ${JSON.stringify(ref)}`);
 
-  const template = findTemplate(!ref.isTag ? ref.name : "tag", loader["branches-template"]);
+  let template = null;
+
+  if (!loader) {
+    template = findTemplate(!ref.isTag ? ref.name : "tag", loader["branches-template"]);
+  }
+
   if (template === null) {
     core.warning(`💡 No template found for ref: ${ref.name}, will be used default {{ref-name}}-{{timestamp}}-{{runNumber}}`);
     template = `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
@@ -42805,7 +42810,7 @@ async function run() {
   const semverParts = extractSemverParts(ref.name);
   const distTag = findDistTag(ref, loader["dist-tags"]);
 
-  if(distTag === null) {
+  if (distTag === null) {
     core.warning(`💡 No dist-tag found for ref: ${ref.name}, will be used default latest`);
     distTag = "latest";
   }
@@ -42821,7 +42826,7 @@ async function run() {
   core.info(`🔹 Template: ${template}`);
 
   let t = ref.name;
-  core.info(`🔹 Name: ${{ t}}`)
+  core.info(`🔹 Name: ${{ t }}`)
   core.info(`💡 Rendered template: ${result}`);
 
   core.setOutput("result", result);
@@ -42835,7 +42840,7 @@ async function run() {
   core.setOutput("patch", semverParts.patch);
   core.setOutput("tag", distTag);
 
-   core.info('✅ Action completed successfully!');
+  core.info('✅ Action completed successfully!');
 }
 
 run();
