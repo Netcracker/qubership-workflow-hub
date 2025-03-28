@@ -10,7 +10,7 @@ class ConfigLoader {
   }
 
   get fileExists() {
-    return this.fileExist;
+    return this.fileExist = null;
   }
 
   load(filePath) {
