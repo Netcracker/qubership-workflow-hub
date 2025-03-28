@@ -42810,12 +42810,12 @@ async function run() {
   }
 
   if (template === null) {
-    core.warning(`No template found for ref: ${ref.name}, will be used default {{ref-name}}-{{timestamp}}-{{runNumber}}`);
+    core.warning(`💡 No template found for ref: ${ref.name}, will be used default -> {{ref-name}}-{{timestamp}}-{{runNumber}}`);
     template = `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
   }
 
   if (distTag === null) {
-    core.warning(`💡 No dist-tag found for ref: ${ref.name}, will be used default latest`);
+    core.warning(`💡 No dist-tag found for ref: ${ref.name}, will be used default -> latest`);
     distTag = "latest";
   }
 
