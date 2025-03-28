@@ -42802,6 +42802,7 @@ async function run() {
 
   let template = null;
 
+  core.info(`🔹 loader.fileExist: ${loader.fileExists}`);
   if (loader.fileExists === true) {
     template = findTemplate(!ref.isTag ? ref.name : "tag", loader["branches-template"]);
   }
