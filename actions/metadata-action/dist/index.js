@@ -39919,6 +39919,11 @@ const path = __nccwpck_require__(6928);
 
 class ConfigLoader {
   constructor() {
+    this.fileExist = true;
+  }
+
+  get fileExists() {
+    return this.fileExist;
   }
 
   load(filePath) {
@@ -39927,6 +39932,7 @@ class ConfigLoader {
 
     if (!fs.existsSync(configPath)) {
       core.warning(`❗️ File not found: ${configPath}`);
+      this.fileExist = false;
       return;
     }
 
@@ -42796,7 +42802,7 @@ async function run() {
 
   let template = null;
 
-  if (!loader) {
+  if (loader.fileExists) {
     template = findTemplate(!ref.isTag ? ref.name : "tag", loader["branches-template"]);
   }
 

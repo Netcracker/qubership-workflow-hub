@@ -6,6 +6,11 @@ const path = require("path");
 
 class ConfigLoader {
   constructor() {
+    this.fileExist = true;
+  }
+
+  get fileExists() {
+    return this.fileExist;
   }
 
   load(filePath) {
@@ -14,6 +19,7 @@ class ConfigLoader {
 
     if (!fs.existsSync(configPath)) {
       core.warning(`❗️ File not found: ${configPath}`);
+      this.fileExist = false;
       return;
     }
 
