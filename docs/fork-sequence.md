@@ -19,5 +19,6 @@ Below is a visual representation of the sequence:
 ![Fork Sequence](fork-sequence.jpg)
 
 #### Useful links
+
 1. [List actions and required permissions](https://docs.github.com/en/rest/authentication/permissions-required-for-github-apps?apiVersion=2022-11-28)
 2. [List of trigger events for workflows](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows)
