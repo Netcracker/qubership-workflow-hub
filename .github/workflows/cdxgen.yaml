@@ -8,6 +8,12 @@
 name: 'CDXGen'
 on:
   workflow_dispatch:
+    inputs:
+      generate_cdx_report:
+        description: "Generate CycloneDX report"
+        required: false
+        default: false
+        type: boolean
   push:
     branches:
       - 'main'
@@ -18,7 +24,10 @@ jobs:
     steps:
       - name: "cdxgen"
         uses: netcracker/qubership-workflow-hub/actions/cdxgen@main
+        with:
+          generate_cdx_report: ${{ github.event.inputs.generate_cdx_report }}
   deploy-pages:
+    if: ${{ github.event.inputs.generate_cdx_report }}
     permissions:
       id-token: write
       pages: write
