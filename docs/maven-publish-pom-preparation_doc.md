@@ -29,45 +29,110 @@ Add following entries under `project` section (see [maven central requirements](
         </developer>
     </developers>
     <scm>
-         <connection>scm:git:git://github.com/Netcracker/your-repository.git</connection>
-         <developerConnection>scm:git:ssh://github.com:Netcracker/your-repository.git</developerConnection>
-         <url>https://github.com/Netcracker/your-repository/tree/main</url>
+        <connection>https//github.com/Netcracker/your-repository.git</connection>
+        <developerConnection>https://github.com:Netcracker/your-repository.git</developerConnection>
+        <url>https://github.com/Netcracker/your-repository/tree/main</url>
     </scm>
 ```
 
 ### Distribution management
 
-Under `project` add `distributionManagement` section
+To have a possibility to deploy release and SNAPSHOT versions to Maven Central and GitHub packages add `profiles` under `project` section
 
 ```xml
-    <distributionManagement>
-        <repository>
+    <profiles>
+        <!-- Maven Central -->
+        <!-- mvn deploy -P central -->
+        <profile>
             <id>central</id>
-            <name>Central Maven Repository</name>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </distributionManagement>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.7.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <distributionManagement>
+                <repository>
+                    <id>central</id>
+                    <name>Central Maven Repository</name>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <!-- GitHub packages -->
+        <!-- mvn deploy -P github -->
+        <profile>
+            <id>github</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub Packages</name>
+                    <url>https://maven.pkg.github.com/Netcracker/REPOSITORY_NAME</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 ```
 
 ### Snapshots repository
 
-Under `project/repositories` add new `repository`
+Under `project/repositories` add new repositories
 
 ```xml
- <repositories>
-    <repository>
-      <id>oss.sonatype.org-snapshot</id>
-      <url>https://central.sonatype.com/repository/maven-snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
+    <repositories>
+        <!-- Maven Central repository for release versions -->
+        <repository>
+            <id>oss.sonatype.org</id>
+            <url>https://central.sonatype.com</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+        <!-- Maven Central repository for SNAPSHOT versions-->
+        <repository>
+           <id>oss.sonatype.org-snapshot</id>
+           <url>https://central.sonatype.com/repository/maven-snapshots</url>
+           <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+
+        <!-- GitHub packages repository for both release and SNAPSHOT versions -->
+        <repository>
+            <id>github-nc</id>
+            <url>https://maven.pkg.github.com/netcracker/*</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 ```
 
 ### Build plugins
@@ -75,17 +140,8 @@ Under `project/repositories` add new `repository`
 In a section `project.build.plugins` add next entries:
 
 ```xml
-            <plugin>
-                <groupId>org.sonatype.central</groupId>
-                <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.7.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <publishingServerId>central</publishingServerId>
-                    <autoPublish>true</autoPublish>
-                    <waitUntil>published</waitUntil>
-                </configuration>
-            </plugin>
+            <!-- Plugin for artifacts GPG signing. Mandatory for Maven Central deployment -->
+            <!-- Optional for GitHub packages. Can be skipped by mvn parameter -Dgpg.skip=true -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
@@ -101,6 +157,7 @@ In a section `project.build.plugins` add next entries:
                 </executions>
             </plugin>
 
+            <!-- Plugin for source code jar creation. Mandatory for Maven Central deployment -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -115,6 +172,7 @@ In a section `project.build.plugins` add next entries:
                 </executions>
             </plugin>
 
+            <!-- Plugin for javadoc generation. Mandatory for Maven Central deployment -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -127,5 +185,15 @@ In a section `project.build.plugins` add next entries:
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.1.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.18.0</version>
             </plugin>
 ```
