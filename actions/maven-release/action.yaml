@@ -137,6 +137,6 @@ runs:
         MVN_ARGS: ${{ inputs.maven-args }}
         DRY_RUN: ${{ inputs.dry-run }}
         GITHUB_TOKEN: ${{ inputs.token }}
-        MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
+        MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         PROFILE: ${{ inputs.profile }}
         # SONAR_TOKEN: ${{ secrets.sonar-token }}
