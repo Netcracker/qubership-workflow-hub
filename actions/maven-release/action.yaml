@@ -1,0 +1,142 @@
+---
+name: Build Maven Artifact
+description: Build Maven artifact
+
+inputs:
+  version-type:
+    description: 'Version type to release. Can be one of [major, minor, patch]'
+    required: true
+    default: 'patch'
+    type: string
+  module:
+    description: 'Module to build == Repository name.'
+    required: true
+    default: ''
+    type: string
+  maven-args:
+    description: 'Maven arguments to pass'
+    required: false
+    default: '-DskipTests=true -Dmaven.javadoc.skip=true -B'
+    type: string
+  server-id:
+    description: 'Maven server ID'
+    required: false
+    default: 'github'
+    type: string
+  java-version:
+    description: 'Java version to use'
+    required: false
+    default: '21'
+    type: string
+  dry-run:
+    description: 'Dry run flag'
+    required: false
+    default: 'true'
+    type: string
+  token:
+    description: 'GitHub token'
+    required: true
+    default: ''
+    type: string
+  gpg-private-key:
+    description: 'GPG private key'
+    required: true
+    default: ''
+    type: string
+  gpg-passphrase:
+    description: 'GPG passphrase'
+    required: true
+    default: ''
+    type: string
+  profile:
+    description: 'Maven profile to use'
+    required: false
+    default: ''
+    type: string
+  bumb-dependencies-after-release:
+    description: 'Bump dependencies versions to next snapshot'
+    required: false
+    default: 'false'
+    type: string
+outputs:
+  release-version:
+    description: 'Release version'
+    value: ${{ steps.release.outputs.RELEASE_VERSION }}
+runs:
+  using: "composite"
+  steps:
+    - name: "Check inputs"
+      run: |
+        . ${GITHUB_ACTION_PATH}/action-script.sh
+        check_version_type "${{ inputs.version-type }}"
+        check_module "${{ inputs.module }}"
+        check_token "${{ inputs.token }}"
+        # set_env_vars "${{ inputs.module }}" "${{ inputs.version-type }}"
+      shell: bash
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: 'temurin'
+        server-id: ${{ inputs.server-id }}
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ inputs.gpg-private-key }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        path: ${{ inputs.module }}
+        repository: ${{ github.repository_owner }}/${{ inputs.module }}
+        token: ${{ inputs.token }}
+    - name: "Release"
+      id: release
+      run: |
+        . ${GITHUB_ACTION_PATH}/action-script.sh
+        set_release_version
+        set_profile
+        bump_version_and_build
+      shell: bash
+      env:
+        MAVEN_USERNAME: ${{ github.actor }}
+        MAVEN_PASSWORD: ${{ inputs.token }}
+        MODULE: ${{ inputs.module }}
+        VERSION_TYPE: ${{ inputs.version-type }}
+        MVN_ARGS: ${{ inputs.maven-args }}
+        DRY_RUN: ${{ inputs.dry-run }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+        MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+        PROFILE: ${{ inputs.profile }}
+        # SONAR_TOKEN: ${{ secrets.sonar-token }}
+    - name: Cleanup
+      if: ${{ inputs.dry-run == 'false' && inputs.bumb-dependencies-after-release == 'true' }}
+      run: |
+        rm -rf ${GITHUB_WORKSPACE}/${{ inputs.module }}
+      shell: bash
+    - name: Checkout
+      if: ${{ inputs.dry-run == 'false' && inputs.bumb-dependencies-after-release == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        path: ${{ inputs.module }}
+        repository: ${{ github.repository_owner }}/${{ inputs.module }}
+        token: ${{ inputs.token }}
+    - name: "Bump dependencies versions to next snapshot"
+      if: ${{ inputs.dry-run == 'false' && inputs.bumb-dependencies-after-release == 'true' }}
+      run: |
+        . ${GITHUB_ACTION_PATH}/action-script.sh
+        bump_dependencies_versions
+      shell: bash
+      env:
+        MAVEN_USERNAME: ${{ github.actor }}
+        MAVEN_PASSWORD: ${{ inputs.token }}
+        MODULE: ${{ inputs.module }}
+        VERSION_TYPE: ${{ inputs.version-type }}
+        MVN_ARGS: ${{ inputs.maven-args }}
+        DRY_RUN: ${{ inputs.dry-run }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
+        PROFILE: ${{ inputs.profile }}
+        # SONAR_TOKEN: ${{ secrets.sonar-token }}
