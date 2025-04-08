@@ -1,6 +1,32 @@
 name: Broadcast files to organization repositories
 on:
   workflow_call:
+    inputs:
+      replicate-common-workflows:
+        description: 'Replicate common workflows'
+        required: false
+        default: true
+        type: boolean
+      replicate-common-files:
+        description: 'Replicate common files'
+        required: false
+        default: true
+        type: boolean
+      replicate-common-config-files:
+        description: 'Replicate common config files'
+        required: false
+        default: true
+        type: boolean
+      replicate-cloud-core-dependabot:
+        description: 'Replicate dependabot config file for Cloud-Core repos'
+        required: false
+        default: true
+        type: boolean
+      replicate-superlinter-configs:
+        description: 'Replicate superlinter config file'
+        required: false
+        default: true
+        type: boolean
     secrets:
       GH_ACCESS_TOKEN:
         required: true
