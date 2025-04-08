@@ -102,7 +102,7 @@ jobs:
         commit_message: 'ci: update cloud-core dependabot config file'
   replicate_superlinter_configs:
     name: Replicate Super-Linter config files
-    if: ${{ inputs.replicate-cloud-core-dependabot }}
+    if: ${{ inputs.replicate-superlinter-configs }}
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
