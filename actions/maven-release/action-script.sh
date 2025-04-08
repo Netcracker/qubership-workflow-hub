@@ -23,8 +23,8 @@ function check_token() {
 
 function set_release_version() {
     cd ${GITHUB_WORKSPACE}/${MODULE}
-    git config --global user.name "${GITHUB_ACTOR}"
-    git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+    git config --global user.name "qubership-actions[bot]"
+    git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
     echo "Bumping ${MODULE} version"
     if [ "${DRY_RUN}" != "false" ]; then
         echo "Dry run. Not bumping version."
@@ -56,8 +56,8 @@ function set_profile() {
 
 function bump_version_and_build() {
     cd ${GITHUB_WORKSPACE}/${MODULE}
-    git config --global user.name "${GITHUB_ACTOR}"
-    git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+    git config --global user.name "qubership-actions[bot]"
+    git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
     if [ "${DRY_RUN}" != "false" ]; then
         echo "::group::Buildin ${MODULE} current version."
         echo "Dry run. Not bumping version."
