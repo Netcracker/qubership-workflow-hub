@@ -71,7 +71,6 @@ runs:
         check_version_type "${{ inputs.version-type }}"
         check_module "${{ inputs.module }}"
         check_token "${{ inputs.token }}"
-        # set_env_vars "${{ inputs.module }}" "${{ inputs.version-type }}"
       shell: bash
 
     - name: Set up JDK
@@ -109,7 +108,6 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         PROFILE: ${{ inputs.profile }}
-        # SONAR_TOKEN: ${{ secrets.sonar-token }}
     - name: Cleanup
       if: ${{ inputs.dry-run == 'false' && inputs.bumb-dependencies-after-release == 'true' }}
       run: |
@@ -139,4 +137,3 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         PROFILE: ${{ inputs.profile }}
-        # SONAR_TOKEN: ${{ secrets.sonar-token }}
