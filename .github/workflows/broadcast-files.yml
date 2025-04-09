@@ -3,10 +3,10 @@ on:
   workflow_call:
     inputs:
       repo_name:
-         description: |
+        description: |
           Target repository name.
           If not provided, the action will be triggered for all repositories in the organization.
-         type: string
+        type: string
       replicate-common-workflows:
         description: 'Replicate common workflows'
         required: false
