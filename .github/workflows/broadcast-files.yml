@@ -2,6 +2,11 @@ name: Broadcast files to organization repositories
 on:
   workflow_call:
     inputs:
+      repo_name:
+         description: |
+          Target repository name.
+          If not provided, the action will be triggered for all repositories in the organization.
+         type: string
       replicate-common-workflows:
         description: 'Replicate common workflows'
         required: false
