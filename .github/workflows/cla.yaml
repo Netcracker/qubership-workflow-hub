@@ -53,7 +53,7 @@ jobs:
           path-to-document: 'https://github.com/Netcracker/qubership-github-workflows/blob/main/CLA/cla.md'
           # branch should not be protected
           branch: 'main'
-          allowlist: NetcrackerCLPLCI,bot*
+          allowlist: NetcrackerCLPLCI,web-flow,bot*
           remote-repository-name: cla-storage
           remote-organization-name: Netcracker
 
