@@ -13,6 +13,11 @@ inputs:
     required: true
     default: ''
     type: string
+  ref:
+    description: 'Branch name to create release from'
+    required: false
+    default: 'main'
+    type: string
   maven-args:
     description: 'Maven arguments to pass'
     required: false
@@ -86,7 +91,7 @@ runs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        ref: main
+        ref: ${{ inputs.ref }}
         path: ${{ inputs.module }}
         repository: ${{ github.repository_owner }}/${{ inputs.module }}
         token: ${{ inputs.token }}
