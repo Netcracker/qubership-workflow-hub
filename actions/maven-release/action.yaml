@@ -58,6 +58,16 @@ inputs:
     required: false
     default: ''
     type: string
+  maven-user:
+    description: 'Maven user'
+    required: false
+    default: ''
+    type: string
+  maven-password:
+    description: 'Maven password'
+    required: false
+    default: ''
+    type: string
   bumb-dependencies-after-release:
     description: 'Bump dependencies versions to next snapshot'
     required: false
@@ -104,8 +114,8 @@ runs:
         bump_version_and_build
       shell: bash
       env:
-        MAVEN_USERNAME: ${{ github.actor }}
-        MAVEN_PASSWORD: ${{ inputs.token }}
+        MAVEN_USERNAME: ${{ inputs.maven-user }}
+        MAVEN_PASSWORD: ${{ inputs.maven-password }}
         MODULE: ${{ inputs.module }}
         VERSION_TYPE: ${{ inputs.version-type }}
         MVN_ARGS: ${{ inputs.maven-args }}
@@ -133,8 +143,8 @@ runs:
         bump_dependencies_versions
       shell: bash
       env:
-        MAVEN_USERNAME: ${{ github.actor }}
-        MAVEN_PASSWORD: ${{ inputs.token }}
+        MAVEN_USERNAME: ${{ inputs.maven-user }}
+        MAVEN_PASSWORD: ${{ inputs.maven-password }}
         MODULE: ${{ inputs.module }}
         VERSION_TYPE: ${{ inputs.version-type }}
         MVN_ARGS: ${{ inputs.maven-args }}
