@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ConfigSchema",
+    "type": "object",
+    "properties": {
+        "thresholdDays": {
+            "type": "integer",
+            "description": "Days threshold for package cleanup. Packages older than this will be deleted."
+        },
+        "includedTags": {
+            "type": "string",
+            "description": "list of tags to include, separated by commas (e.g. main, release*)"
+        },
+        "excludedTags": {
+            "type": "string",
+            "description": "list of tags to exclude, separated by commas (e.g. main, release*)"
+        }
+    }
+}

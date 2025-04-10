@@ -1,0 +1,28 @@
+name: "Container Package Cleanup Action"
+description: "Cleans up old Docker images based on specified criteria."
+inputs:
+  threshold-days:
+    description: "The number of days to keep docker images."
+    default: "7"
+  included-tags:
+    description: "A comma-separated list of tags to include for deletion."
+    default: ""
+  excluded-tags:
+    description: "A comma-separated list of tags to exclude from deletion."
+    default: ""
+  config-file-path:
+    description: "The path to the config file."
+    default: ".github/package-cleanup.yml"
+  debug:
+    description: "Enable debug mode."
+    default: "true"
+  dry-run:
+    description: "Enable dry run mode."
+    default: "false"
+runs:
+  using: "node20"
+  main: "dist/index.js"
+
+branding:
+  icon: "edit"
+  color: "yellow"

@@ -114,8 +114,9 @@ async function run() {
   // let fill =  fillTemplate(template, { ...ref, ...generateSnapshotVersionParts(), ...extractSemverParts(ref.name) });
   const parts = generateSnapshotVersionParts();
   const semverParts = extractSemverParts(ref.name);
-
-  const values = { ...ref, "ref-name": ref.name, ...semverParts, ...parts, ...github.context, distTag };
+  const shortShaDeep = core.getInput("short-sha");
+  const shortSha = github.context.sha.slice(0, shortShaDeep);
+  const values = { ...ref, "ref-name": ref.name, "short-sha": shortSha, ...semverParts, ...parts, ...github.context, distTag };
 
   core.info(`🔹 time: ${JSON.stringify(parts)}`);
   core.info(`🔹 semver: ${JSON.stringify(semverParts)}`);
@@ -139,6 +140,7 @@ async function run() {
   core.setOutput("minor", semverParts.minor);
   core.setOutput("patch", semverParts.patch);
   core.setOutput("tag", distTag);
+  core.setOutput("short-sha", shortSha);
 
   core.info('✅ Action completed successfully!');
 }

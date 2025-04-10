@@ -56,6 +56,7 @@ This index provides a quick overview of the available workflow and action docume
 | [pr-assigner](../actions/pr-assigner/README.md)         | Automatically assigns reviewers to pull requests based on configuration or CODEOWNERS file. |
 | [tag-checker](../actions/tag-checker/README.md)         | Verifies the presence of specific tags in the repository.        |
 | [verify-json](../actions/verify-json/README.md)         | Verifies the structure and content of JSON files.                |
+| [container-package-cleanup](../actions/container-package-cleanup/README.md) | Cleans up unused container packages in the GitHub Container Registry. |
 
 ---
 

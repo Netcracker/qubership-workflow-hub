@@ -1,0 +1,32 @@
+name: "Store Input Params"
+description: "Store workflow input params as run's artifact"
+
+inputs:
+  input:
+    description: "JSON of input params to save"
+    required: false
+    default: "{}"
+  stored_file_name:
+    description: "Filename where parameters should be stored"
+    required: false
+    default: "input_params.json"
+  artifact_name:
+    description: "Resulting workflow artifact name"
+    required: false
+    default: "input_params"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Store Input Params to File
+      run: echo $INPUT_JSON > ${{ inputs.stored_file_name }}
+      shell: bash
+      env:
+        INPUT_JSON: ${{ inputs.input }}
+
+    - name: Upload artifact
+      id: upload-file
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ${{ inputs.stored_file_name }}
