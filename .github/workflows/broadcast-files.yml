@@ -41,33 +41,6 @@ permissions:
 env:
   GH_ACCESS_TOKEN: '${{ secrets.GH_ACCESS_TOKEN }}'
 jobs:
-  replicate_common_workflows:
-    if: ${{ inputs.replicate-common-workflows }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Replicating common workflows
-        uses: derberg/manage-files-in-multiple-repositories@v2
-        with:
-          github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
-          patterns_to_include: >
-            workflow-templates/cla.yaml,
-            workflow-templates/super-linter.yaml,
-            workflow-templates/profanity-filter.yaml,
-            workflow-templates/automatic-pr-labeler.yaml,
-            workflow-templates/pr-collect-commit-messages.yaml,
-            workflow-templates/pr-conventional-commits.yaml,
-            workflow-templates/pr-lint-title.yaml
-          destination: .github/workflows
-          repos_to_ignore: >
-            KubeMarine, k8s-conformance, gatekeeper-library,
-            cassandra-exporter, pg_hint_plan
-          exclude_private: true
-          exclude_forked: true
-          committer_username: NetcrackerCLPLCI
-          bot_branch_name: broadcast-workflows
-          commit_message: 'chore: [skip ci] update of common workflows'
   replicate_common_files:
     if: ${{ inputs.replicate-common-files }}
     runs-on: ubuntu-latest
@@ -102,7 +75,7 @@ jobs:
           exclude_private: true
           exclude_forked: true
           committer_username: NetcrackerCLPLCI
-          bot_branch_name: broadcast-common-config-files
+          bot_branch_name: broadcast-workflows
           patterns_to_include: >
             config/examples/auto-labeler-config.yaml,
             config/examples/release-drafter-config.yml
@@ -111,7 +84,51 @@ jobs:
             KubeMarine, k8s-conformance, gatekeeper-library,
             cassandra-exporter, pg_hint_plan
           commit_message: 'chore: [skip ci] update of common config files'
-
+  replicate_superlinter_configs:
+    name: Replicate Super-Linter config files
+    if: ${{ inputs.replicate-superlinter-configs }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Replicating file
+      uses: derberg/manage-files-in-multiple-repositories@v2
+      with:
+        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+        patterns_to_include: '.github/super-linter.env,.github/linters'
+        exclude_private: true
+        exclude_forked: true
+        committer_username: NetcrackerCLPLCI
+        bot_branch_name: broadcast-workflows
+        commit_message: 'chore: [skip ci] update of superlinter config files'
+  replicate_common_workflows:
+    if: ${{ inputs.replicate-common-workflows }}
+    runs-on: ubuntu-
+    needs: [replicate_common_config_files, replicate_superlinter_configs]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Replicating common workflows
+        uses: derberg/manage-files-in-multiple-repositories@v2
+        with:
+          github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+          patterns_to_include: >
+            workflow-templates/cla.yaml,
+            workflow-templates/super-linter.yaml,
+            workflow-templates/profanity-filter.yaml,
+            workflow-templates/automatic-pr-labeler.yaml,
+            workflow-templates/pr-collect-commit-messages.yaml,
+            workflow-templates/pr-conventional-commits.yaml,
+            workflow-templates/pr-lint-title.yaml
+          destination: .github/workflows
+          repos_to_ignore: >
+            KubeMarine, k8s-conformance, gatekeeper-library,
+            cassandra-exporter, pg_hint_plan
+          exclude_private: true
+          exclude_forked: true
+          committer_username: NetcrackerCLPLCI
+          bot_branch_name: broadcast-workflows
+          commit_message: 'chore: [skip ci] update of common workflows'
   replicate_cloud_core_dependabot:
     if: ${{ inputs.replicate-cloud-core-dependabot }}
     name: Replicate dependabot config file for Cloud-Core repos
@@ -131,20 +148,3 @@ jobs:
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-dependabot-configs
         commit_message: 'chore: [skip ci] update cloud-core dependabot config file'
-  replicate_superlinter_configs:
-    name: Replicate Super-Linter config files
-    if: ${{ inputs.replicate-superlinter-configs }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Replicating file
-      uses: derberg/manage-files-in-multiple-repositories@v2
-      with:
-        github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
-        patterns_to_include: '.github/super-linter.env,.github/linters'
-        exclude_private: true
-        exclude_forked: true
-        committer_username: NetcrackerCLPLCI
-        bot_branch_name: broadcast-superlinter-configs
-        commit_message: 'chore: [skip ci] update of superlinter config files'
