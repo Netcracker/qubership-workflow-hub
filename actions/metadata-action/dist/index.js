@@ -42792,7 +42792,10 @@ function fillTemplate(template, values) {
 async function run() {
   // const def_template = core.getInput("default-template");
 
-  const name = core.getInput('ref') || github.context.ref;
+  const name = core.getInput('ref') || github.context.ref || github.event.pull_request.head.ref;
+
+  core.info(`🔹 Ref: ${name}`);
+
   const ref = new RefExtractor().extract(name);
 
   const configurationPath = core.getInput('configuration-path') || "./.github/metadata-action-config.yml";
