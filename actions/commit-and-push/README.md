@@ -13,8 +13,8 @@ This Action automates the process of committing changes and pushing them to a re
 
 | Name             | Description                            | Required | Default                               |
 | ---------------- | -------------------------------------- | -------- | ------------------------------------- |
-| `author_name`    | The name of the commit author.         | No       | `qubership-actios[bot]`               |
-| `author_email`   | The email of the commit author.        | No       | `qubership-actios[bot]@qubership.com` |
+| `author_name`    | The name of the commit author.         | No       | `qubership-actions[bot]`               |
+| `author_email`   | The email of the commit author.        | No       | `qubership-actions[bot]@qubership.com` |
 | `commit_message` | The commit message for the new commit. | No       | `Automated commit`                    |
 
 
