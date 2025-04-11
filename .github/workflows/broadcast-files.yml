@@ -136,3 +136,22 @@ jobs:
         committer_username: NetcrackerCLPLCI
         bot_branch_name: broadcast-dependabot-configs
         commit_message: 'chore: [skip ci] update cloud-core dependabot config file'
+  obsoleted_workflow_cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Replicating common workflows
+        uses: derberg/manage-files-in-multiple-repositories@v2
+        with:
+          github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
+          patterns_to_remove: 'pr-collect-commit-messages.yaml'
+          destination: .github/workflows
+          repos_to_ignore: >
+            KubeMarine, k8s-conformance, gatekeeper-library,
+            cassandra-exporter, pg_hint_plan
+          exclude_private: true
+          exclude_forked: true
+          committer_username: NetcrackerCLPLCI
+          bot_branch_name: broadcast-workflows-cleanup
+          commit_message: 'chore: cleanup of obsoleted workflows'
