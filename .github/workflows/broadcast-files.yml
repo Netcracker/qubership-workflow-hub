@@ -103,7 +103,7 @@ jobs:
         commit_message: 'chore: [skip ci] update of superlinter config files'
   replicate_common_workflows:
     if: ${{ inputs.replicate-common-workflows }}
-    runs-on: ubuntu-
+    runs-on: ubuntu-latest
     needs: [replicate_common_config_files, replicate_superlinter_configs]
     steps:
       - name: Checkout repository
