@@ -43,17 +43,17 @@ runs:
   using: "composite"
   steps:
     - name: Parse Component JSON
-      id: parse_component
-      shell: bash
-      run: |
-        # Extract the first component from the input JSON
-        component=$(echo '${{ inputs.component }}' | jq '.[0]')
-        comp_name=$(echo "$component" | jq -r '.name')
-        comp_file=$(echo "$component" | jq -r '.file')
-        comp_ctx=$(echo "$component" | jq -r '.context')
-        echo "name=$comp_name" >> "$GITHUB_OUTPUT"
-        echo "file=$comp_file" >> "$GITHUB_OUTPUT"
-        echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
+    id: parse_component
+    shell: bash
+    run: |
+      # Parse the input JSON object directly
+      component='${{ inputs.component }}'
+      comp_name=$(echo "$component" | jq -r '.name')
+      comp_file=$(echo "$component" | jq -r '.file')
+      comp_ctx=$(echo "$component" | jq -r '.context')
+      echo "name=$comp_name" >> "$GITHUB_OUTPUT"
+      echo "file=$comp_file" >> "$GITHUB_OUTPUT"
+      echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
 
     - name: Checkout Repository
       uses: actions/checkout@v4
