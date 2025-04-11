@@ -10,7 +10,7 @@ inputs:
     required: false
     default: ""
   context:
-    description: "Docker build context."
+    description: "Pipeline context."
     required: false
     default: "git"
   dry-run:
