@@ -46,7 +46,7 @@ To have a possibility to deploy release and SNAPSHOT versions to Maven Central a
         <profile>
             <id>central</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <build>
                 <plugins>
@@ -78,7 +78,7 @@ To have a possibility to deploy release and SNAPSHOT versions to Maven Central a
         <profile>
             <id>github</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <distributionManagement>
                 <repository>
