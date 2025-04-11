@@ -145,7 +145,6 @@ jobs:
         with:
           github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
           patterns_to_remove: 'pr-collect-commit-messages.yaml'
-          destination: .github/workflows
           repos_to_ignore: >
             KubeMarine, k8s-conformance, gatekeeper-library,
             cassandra-exporter, pg_hint_plan
