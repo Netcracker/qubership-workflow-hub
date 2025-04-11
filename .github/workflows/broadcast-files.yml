@@ -17,18 +17,8 @@ on:
         required: false
         default: true
         type: boolean
-      replicate-common-config-files:
-        description: 'Replicate common config files'
-        required: false
-        default: true
-        type: boolean
       replicate-cloud-core-dependabot:
         description: 'Replicate dependabot config file for Cloud-Core repos'
-        required: false
-        default: true
-        type: boolean
-      replicate-superlinter-configs:
-        description: 'Replicate superlinter config file'
         required: false
         default: true
         type: boolean
@@ -63,7 +53,6 @@ jobs:
           destination: .
           commit_message: 'chore: [skip ci] update of common files'
   replicate_common_config_files:
-    if: ${{ inputs.replicate-common-config-files }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -86,7 +75,6 @@ jobs:
           commit_message: 'chore: [skip ci] update of common config files'
   replicate_superlinter_configs:
     name: Replicate Super-Linter config files
-    if: ${{ inputs.replicate-superlinter-configs }}
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -119,7 +107,7 @@ jobs:
             workflow-templates/automatic-pr-labeler.yaml,
             workflow-templates/pr-conventional-commits.yaml,
             workflow-templates/pr-lint-title.yaml
-          patterns_to_remove: '/pr-collect-commit-messages.yaml'
+          patterns_to_remove: 'pr-collect-commit-messages.yaml'
           destination: .github/workflows
           repos_to_ignore: >
             KubeMarine, k8s-conformance, gatekeeper-library,
