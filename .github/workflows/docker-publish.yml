@@ -35,6 +35,11 @@ on:
         default: ''
         required: false
         type: string
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+  actions: write
 jobs:
   docker:
     runs-on: ubuntu-latest
