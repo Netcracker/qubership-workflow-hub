@@ -140,7 +140,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Replicating common workflows
+      - name: Obsoleted workflow cleanup
         uses: derberg/manage-files-in-multiple-repositories@v2
         with:
           github_token: '${{ secrets.GH_ACCESS_TOKEN }}'
