@@ -22,9 +22,7 @@ inputs:
     required: false
     default: "false"
   component:
-    description: >
-      Component configuration in JSON format (an array with a single object).
-      For example: `[{"name": "default", "file": "./Dockerfile", "context": "."}]`
+    description: Component configuration in JSON format (an array with a single object).
     required: false
     default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
   platforms:
