@@ -64,7 +64,7 @@ function bump_version_and_build() {
         mvn --batch-mode deploy $MVN_ARGS ${PROFILE_ARG}
         if [ $? -ne 0 ]; then
             echo "Build failed. Exiting."
-            echo "❌ Dry-run: build ${MODULE} version ${RELEASE_VERSION} failsed." >> $GITHUB_STEP_SUMMARY
+            echo "❌ Dry-run: build ${MODULE} version ${RELEASE_VERSION} failed." >> $GITHUB_STEP_SUMMARY
             exit 1
         fi
         echo "::endgroup::"
