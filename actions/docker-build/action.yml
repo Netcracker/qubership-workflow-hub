@@ -138,7 +138,7 @@ runs:
         provenance: false
         context: ${{ steps.parse_component.outputs.ctx }}
         file: ${{ steps.parse_component.outputs.file }}
-        push: ${{ inputs.dry-run == 'false' ? 'true' : 'false' }}
+        push: ${{ inputs.dry-run == 'false' && 'true' || 'false' }}
         tags: ${{ inputs.tags != '' && steps.prepare-tags.outputs.prepared_tags || steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
