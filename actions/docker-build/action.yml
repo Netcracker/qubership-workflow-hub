@@ -85,7 +85,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ env.GITHUB_TOKEN }}
 
     - name: Display Image URL
       shell: bash
