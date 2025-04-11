@@ -42792,7 +42792,9 @@ function fillTemplate(template, values) {
 async function run() {
   // const def_template = core.getInput("default-template");
 
+  core.info(`pull_request head: ${github.context.payload.pull_request?.head?.ref}`);
   let name = core.getInput('ref');
+
   if (!name) {
     name = github.context.eventName === 'pull_request' ? github.context.payload.pull_request?.head?.ref : github.context.ref;
   }
