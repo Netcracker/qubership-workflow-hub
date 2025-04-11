@@ -98,7 +98,7 @@ runs:
       uses: docker/metadata-action@v4
       with:
         context: ${{ inputs.context }}
-        images: 'ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' && inputs.artifact-id || steps.parse_component.outputs.name }}'
+        images: ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' && inputs.artifact-id || steps.parse_component.outputs.name }}
         tags: |
           type=ref,event=branch
           type=semver,pattern={{version}}
