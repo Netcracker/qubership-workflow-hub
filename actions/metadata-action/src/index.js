@@ -85,7 +85,7 @@ async function run() {
   // const def_template = core.getInput("default-template");
 
   core.info(`pull_request head.ref: ${github.context.payload.pull_request?.head?.ref}`);
-  core.info(`pull_request head: ${github.context.payload.pull_request?.head}`);
+  core.info(`pull_request head: ${JSON.stringify(github.context.payload.pull_request?.head, null, 2)}`);
   let name = core.getInput('ref');
 
   if (!name) {
