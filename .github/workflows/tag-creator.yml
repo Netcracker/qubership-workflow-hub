@@ -29,8 +29,8 @@ jobs:
 
       - name: Create tag
         run: |
-          git config --global user.email "qubership-actios[bot]"
-          git config --global user.name "qubership-actios[bot]@qubership.com"
+          git config --global user.email "qubership-actions[bot]"
+          git config --global user.name "qubership-actions[bot]@qubership.com"
           git tag -a ${{ inputs.tag-name }} -m "Tag ${{ inputs.tag-name }}"
 
       - name: Push tag
