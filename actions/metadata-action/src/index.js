@@ -84,7 +84,10 @@ function fillTemplate(template, values) {
 async function run() {
   // const def_template = core.getInput("default-template");
 
-  const name = core.getInput('ref') || github.context.ref || github.event.pull_request.head.ref;
+  const name = core.getInput('ref');
+  if (!name) {
+    name = github.context.eventName === 'pull_request' && github.event.pull_request ? github.event.pull_request.head.ref : github.context.ref;
+  }
 
   core.info(`🔹 Ref: ${name}`);
 
