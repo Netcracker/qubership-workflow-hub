@@ -117,9 +117,9 @@ jobs:
             workflow-templates/super-linter.yaml,
             workflow-templates/profanity-filter.yaml,
             workflow-templates/automatic-pr-labeler.yaml,
-            workflow-templates/pr-collect-commit-messages.yaml,
             workflow-templates/pr-conventional-commits.yaml,
             workflow-templates/pr-lint-title.yaml
+          patterns_to_remove: '/pr-collect-commit-messages.yaml'
           destination: .github/workflows
           repos_to_ignore: >
             KubeMarine, k8s-conformance, gatekeeper-library,
@@ -128,7 +128,7 @@ jobs:
           exclude_forked: true
           committer_username: NetcrackerCLPLCI
           bot_branch_name: broadcast-workflows
-          commit_message: 'chore: [skip ci] update of common workflows'
+          commit_message: 'chore: update of common workflows'
   replicate_cloud_core_dependabot:
     if: ${{ inputs.replicate-cloud-core-dependabot }}
     name: Replicate dependabot config file for Cloud-Core repos
