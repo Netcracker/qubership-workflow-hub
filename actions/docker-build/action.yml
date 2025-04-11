@@ -142,12 +142,3 @@ runs:
         tags: ${{ inputs.tags != '' && steps.prepare-tags.outputs.prepared_tags || steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
-
-    - name: Set Output Image Tags
-      shell: bash
-      run: |
-        if [ "${{ inputs.tags }}" != "" ]; then
-          echo "image-tags=${{ steps.prepare-tags.outputs.prepared_tags }}" >> "$GITHUB_OUTPUT"
-        else
-          echo "image-tags=${{ steps.meta.outputs.tags }}" >> "$GITHUB_OUTPUT"
-        fi
