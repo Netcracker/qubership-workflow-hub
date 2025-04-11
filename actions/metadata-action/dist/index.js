@@ -42794,13 +42794,9 @@ async function run() {
 
   let name = core.getInput('ref');
   if (!name) {
-    name = github.context.event_name === 'pull_request' ? github.event.pull_request.head.ref : github.context.ref;
+    name = github.context.eventName === 'pull_request' ? github.context.payload.pull_request?.head?.ref : github.context.ref;
   }
 
-  core.info(`🔹 GITHUB_REF: ${github.context.ref}`);
-  core.info(`🔹 HEAD REF: ${github.head_ref}`);
-  core.info(`🔹 EVENT: ${github.context.eventName}`);
-  core.info(`🔹 VARIABLE: ${github.context.payload.pull_request?.head?.ref}`);
   core.info(`🔹 Ref: ${name}`);
 
   const ref = new RefExtractor().extract(name);
