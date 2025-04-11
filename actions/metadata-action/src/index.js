@@ -86,7 +86,7 @@ async function run() {
 
   const name = core.getInput('ref');
   if (!name) {
-    name = github.context.eventName === 'pull_request' ? github.event.pull_request.head.ref : github.context.ref;
+    name = github.context.event_name === 'pull_request' ? github.event.pull_request.head.ref : github.context.ref;
   }
 
   core.info(`🔹 Ref: ${name}`);
