@@ -54,6 +54,26 @@ runs:
         echo "file=$comp_file" >> "$GITHUB_OUTPUT"
         echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
 
+    - name: Prepare Image Name
+      shell: bash
+      id: prepare_image_name
+      run: |
+          CONTAINER_NAME_RESULT=""
+          MANUAL_IMAGE_NAME="${{ inputs.artifact-id }}"
+          COMPONENT_NAME="${{ steps.parse_component.outputs.name }}"
+
+          if [ -z "$MANUAL_IMAGE_NAME" ]; then
+              if [ -z "$COMPONENT_NAME" ]; then
+                  CONTAINER_NAME_RESULT="${{ github.repository }}"
+              else
+                  CONTAINER_NAME_RESULT="$COMPONENT_NAME"
+              fi
+          else
+              CONTAINER_NAME_RESULT="$MANUAL_IMAGE_NAME"
+          fi
+
+          echo "CONTAINER_NAME_RESULT=$CONTAINER_NAME_RESULT" >> "$GITHUB_OUTPUT"
+
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
@@ -63,6 +83,7 @@ runs:
       shell: bash
       run: |
         echo "artifact_id: ${{ inputs.artifact-id }}"
+        echo "prepared_image_name: ${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
