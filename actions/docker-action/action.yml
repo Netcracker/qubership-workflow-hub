@@ -5,7 +5,7 @@ inputs:
     description: "Branch to create a release from."
     required: false
     default: ""
-  image-name:
+  custom-image-name:
     description: "Name for ."
     required: false
     default: ""
@@ -33,10 +33,6 @@ inputs:
     description: "Docker image tags. If empty, tags will be generated automatically."
     required: false
     default: ""
-outputs:
-  image-tags:
-    description: "Docker image tags used."
-    value: ""
 runs:
   using: "composite"
   steps:
@@ -58,7 +54,7 @@ runs:
       shell: bash
       id: prepare_image_name
       run: |
-        if [ -z "${{ inputs.image-name }}" ]; then
+        if [ -z "${{ inputs.custom-image-name }}" ]; then
           if [ -z "${{ steps.parse_component.outputs.name }}" ] || [ "${{ steps.parse_component.outputs.name }}" == "default" ]; then
             IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
             CONTAINER_NAME_RESULT="$repo"
@@ -66,7 +62,7 @@ runs:
             CONTAINER_NAME_RESULT="${{ steps.parse_component.outputs.name }}"
           fi
         else
-          CONTAINER_NAME_RESULT="${{ inputs.image-name }}"
+          CONTAINER_NAME_RESULT="${{ inputs.custom-image-name }}"
         fi
         echo "CONTAINER_NAME_RESULT=$CONTAINER_NAME_RESULT" >> "$GITHUB_OUTPUT"
 
@@ -78,7 +74,7 @@ runs:
     - name: Display Debug Information
       shell: bash
       run: |
-        echo "artifact_id: ${{ inputs.image-name }}"
+        echo "artifact_id: ${{ inputs.custom-image-name }}"
         echo "prepared_image_name: ${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
@@ -88,7 +84,7 @@ runs:
       if: ${{ inputs.download-artifact == 'true' }}
       uses: actions/download-artifact@v4
       with:
-        name: ${{ inputs.image-name }}
+        name: ${{ inputs.custom-image-name }}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
