@@ -44,7 +44,7 @@ runs:
       shell: bash
       run: |
         git config --global user.email "github-actions[bot]@qubership.com"
-        git config --global user.name "GitHub Actions"
+        git config --global user.name "GitHub Actions [Bot]"
 
     - name: Delete tag
       if: ${{ inputs.delete-tag == 'true' }}
