@@ -61,12 +61,12 @@ The artifact name must match the value provided in the `custom-image-name` input
 
 The action uses the following logic to determine the final name of the Docker image (`CONTAINER_NAME_RESULT`):
 
-1. **Check if the `image-name` input is provided**:
-   - If the `image-name` input is specified by the user, it is directly used as the name of the Docker image.
+1. **Check if the `custom-image-name` input is provided**:
+   - If the `custom-image-name` input is specified by the user, it is directly used as the name of the Docker image.
 
 2. **Fallback to the component name**:
-   - If `image-name` is not provided, the action calculates the repository name (extracted from the `GITHUB_REPOSITORY` environment variable) and uses it as the Docker image name.
-   - If `image-name` is provided and a component file is defined, the names will be taken from the component configuration instead.
+   - If `custom-image-name` is not provided, the action calculates the repository name (extracted from the `GITHUB_REPOSITORY` environment variable) and uses it as the Docker image name.
+   - If `custom-image-name` is provided and a component file is defined, the names will be taken from the component configuration instead.
 
 ### Example Configuration
 
@@ -82,9 +82,8 @@ with:
         "context": "."
       }
     ]
-  image-name: ""
 ```
 
 In this configuration:
-- If `image-name` is left empty, the action will use the `name` field from the `component` configuration (`custom-image-name`) as the Docker image name.
+- If `custom-image-name` is left empty, the action will use the `name` field from the `component` configuration (`custom-image-name`) as the Docker image name.
 - If no `component` is provided, the repository name will be used as the fallback.
