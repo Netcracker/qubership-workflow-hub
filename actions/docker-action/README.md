@@ -23,10 +23,46 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 | `context`          | Pipeline context for the Docker build.                                     | No       | `git`                       |
 | `dry-run`          | Run without pushing (dry run).                                             | No       | `false`                     |
 | `download-artifact`| Flag to download the artifact.                                             | No       | `false`                     |
-| `component`        | Component configuration in JSON format (an array with a single object).    | No       | `[{"name": "default", "file": "integration-tests/Dockerfile", "context": "integration-tests"}]` |
+| `component`        | Component configuration in JSON format (an array with a single object).    | No       | `[{"name": "default", "file": "./Dockerfile", "context": "."}]` |
 | `platforms`        | Platforms for which the Docker image will be built.                       | No       | `linux/amd64`               |
 | `tags`             | Additional Docker image tags. If tags are provided, they will be added to the automatically generated tags. | No       | `""`                        |                     |
 
+---
+
+## Usage Example
+
+Below is an example of how to use this action in a GitHub Actions workflow:
+
+```yaml
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build and Publish Docker Image
+        uses: ./actions/docker-action
+        with:
+          ref: main
+          custom-image-name: my-custom-image
+          context: .
+          platforms: linux/amd64,linux/arm64
+          tags: latest,v1.0.0
+          dry-run: false
+          download-artifact: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
 ---
 
 ## Additional Information
@@ -59,6 +95,7 @@ The action uses the following logic to determine the final name of the Docker im
 2. **Fallback to the component name**:
    - If `custom-image-name` is not provided, the action calculates the repository name (extracted from the `GITHUB_REPOSITORY` environment variable) and uses it as the Docker image name.
    - If `custom-image-name` is provided and a component file is defined, the names will be taken from the component configuration instead.
+
 
 ### Example Configuration
 
