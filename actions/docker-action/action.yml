@@ -24,7 +24,7 @@ inputs:
   component:
     description: "Component configuration in JSON format (an array with a single object)."
     required: false
-    default: '[{"name": "default", "file": "integration-tests/Dockerfile", "context": "integration-tests"}]'
+    default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
   platforms:
     description: "Platforms for which the Docker image will be built."
     required: false
