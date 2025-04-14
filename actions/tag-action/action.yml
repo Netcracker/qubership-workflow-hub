@@ -1,0 +1,78 @@
+name: "Tag Composite Action"
+description: "Checkout code and create a tag in the specified branch."
+inputs:
+  ref:
+    description: "Branch to checkout before creating the tag."
+    required: true
+  tag-name:
+    description: "Tag name to create."
+    required: true
+  check-tag:
+    description: "Check if the tag already exists."
+    required: false
+    default: "false"
+  create-tag:
+    description: "Create a new tag."
+    required: false
+    default: "true"
+  delete-tag:
+    description: "Delete the specified tag."
+    required: false
+    default: "false"
+  dry-run:
+    description: "Run the action in dry-run mode (no changes will be pushed)."
+    required: false
+    default: "false"
+outputs:
+  created-tag:
+    description: "The tag that was created."
+    value: ${{ steps.create-tag.outputs.tag }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.ref }}
+
+    - name: Configure Git
+      shell: bash
+      run: |
+        git config --global user.email "github-actions[bot]@qubership.com"
+        git config --global user.name "GitHub Actions"
+
+    - name: Check if tag exists
+      if: ${{ inputs.check-tag == 'true' }}
+      shell: bash
+      run: |
+        if [ "$(git tag -l "${{ inputs.tag-name }}")" ]; then
+          echo "❗ Tag '${{ inputs.tag-name }}' already exists. Exiting..."
+          exit 1
+        fi
+
+    - name: Delete tag
+      if: ${{ inputs.delete-tag == 'true' }}
+      shell: bash
+      run: |
+        echo "💥 Deleting tag: '${{ inputs.tag-name }}'"
+        if [ "${{ inputs.dry-run }}" == "true" ]; then
+          echo "🧪 Dry run mode active. Skipping deletion push."
+        else
+          git tag -d "${{ inputs.tag-name }}"
+          git push origin --delete "${{ inputs.tag-name }}"
+        fi
+
+    - name: Create tag
+      id: create-tag
+      if: ${{ inputs.create-tag == 'true' && inputs.delete-tag != 'true' }}
+      shell: bash
+      run: |
+        echo "💡 Trying to create tag: '${{ inputs.tag-name }}'"
+        git tag "${{ inputs.tag-name }}" -m "Tag created by GitHub Actions"
+        if [ "${{ inputs.dry-run }}" == "true" ]; then
+          echo "🧪 Dry run mode active. Skipping push."
+        else
+          git push origin "${{ inputs.tag-name }}"
+          echo "✅ Tag '${{ inputs.tag-name }}' pushed."
+        fi
+        echo "created-tag=${{ inputs.tag-name }}" >> $GITHUB_OUTPUT
