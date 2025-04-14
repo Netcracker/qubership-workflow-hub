@@ -77,7 +77,7 @@ runs:
           git tag -d "${{ inputs.tag-name }}"
         fi
         echo "💡 Trying to create tag: '${{ inputs.tag-name }}'"
-        git tag -a "${{ inputs.tag-name }}" -m "${{ inputs.commit-message }}"
+        git tag -a "${{ inputs.tag-name }}"
         if [ "${{ inputs.dry-run }}" == "true" ]; then
           echo "🧪 Dry run mode active. Skipping push."
         else
