@@ -150,6 +150,7 @@ runs:
       uses: docker/build-push-action@v6
       with:
         provenance: false
+        component: ${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}
         context: ${{ steps.parse_component.outputs.ctx }}
         file: ${{ steps.parse_component.outputs.file }}
         push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
