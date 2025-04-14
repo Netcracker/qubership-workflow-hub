@@ -58,14 +58,14 @@ runs:
         if [ -z "${{ inputs.custom-image-name }}" ]; then
           if [ -z "${{ steps.parse_component.outputs.name }}" ] || [ "${{ steps.parse_component.outputs.name }}" == "default" ]; then
             IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
-            CONTAINER_NAME_RESULT="$repo"
+            CONTAINER_NAME="$repo"
           else
-            CONTAINER_NAME_RESULT="${{ steps.parse_component.outputs.name }}"
+            CONTAINER_NAME="${{ steps.parse_component.outputs.name }}"
           fi
         else
-          CONTAINER_NAME_RESULT="${{ inputs.custom-image-name }}"
+          CONTAINER_NAME="${{ inputs.custom-image-name }}"
         fi
-        echo "CONTAINER_NAME_RESULT=$CONTAINER_NAME_RESULT" >> "$GITHUB_OUTPUT"
+        echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
 
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -76,7 +76,7 @@ runs:
       shell: bash
       run: |
         echo "artifact_id: ${{ inputs.custom-image-name }}"
-        echo "prepare-image-name: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}"
+        echo "prepare-image-name: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
@@ -103,7 +103,7 @@ runs:
     - name: Display Image URL
       shell: bash
       run: |
-        echo "URL: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}"
+        echo "URL: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}"
 
     - name: Extract Docker Metadata
       if: ${{ inputs.tags == '' }}
@@ -111,7 +111,7 @@ runs:
       uses: docker/metadata-action@v4
       with:
         context: ${{ inputs.context }}
-        images: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}
+        images: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}
         tags: |
           type=ref,event=branch
           type=semver,pattern={{version}}
@@ -128,9 +128,9 @@ runs:
         for TAG in "${TAGS[@]}"; do
           TAG=$(echo "$TAG" | xargs)
           if [ -z "$TAGS_OUTPUT" ]; then
-            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
+            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}:${TAG}"
           else
-            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
+            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}:${TAG}"
           fi
         done
         # Convert tags to lowercase

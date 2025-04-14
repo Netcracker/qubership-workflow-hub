@@ -51,7 +51,7 @@ The artifact name must match the value provided in the `custom-image-name` input
 
 ### Logic for Determining the Docker Image Name
 
-The action uses the following logic to determine the final name of the Docker image (`CONTAINER_NAME_RESULT`):
+The action uses the following logic to determine the final name of the Docker image (`CONTAINER_NAME`):
 
 1. **Check if the `custom-image-name` input is provided**:
    - If the `custom-image-name` input is specified by the user, it is directly used as the name of the Docker image.
