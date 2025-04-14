@@ -114,9 +114,9 @@ runs:
         for TAG in "${TAGS[@]}"; do
           TAG=$(echo "$TAG" | xargs)
           if [ -z "$TAGS_OUTPUT" ]; then
-            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' && inputs.artifact-id || steps.parse_component.outputs.name }}:${TAG}"
+            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' ? inputs.artifact-id : steps.parse_component.outputs.name }}:${TAG}"
           else
-            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' && inputs.artifact-id || steps.parse_component.outputs.name }}:${TAG}"
+            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' ? inputs.artifact-id : steps.parse_component.outputs.name }}:${TAG}"
           fi
         done
         # Convert tags to lowercase
@@ -138,6 +138,6 @@ runs:
         context: ${{ steps.parse_component.outputs.ctx }}
         file: ${{ steps.parse_component.outputs.file }}
         push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
-        tags: ${{ inputs.tags != '' && steps.prepare-tags.outputs.prepared_tags || steps.meta.outputs.tags }}
+        tags: ${{ inputs.tags != '' ? steps.prepare-tags.outputs.prepared_tags : steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
