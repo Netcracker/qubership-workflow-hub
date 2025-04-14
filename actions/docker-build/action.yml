@@ -127,24 +127,24 @@ runs:
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
 
-    # - name: Prepare Tags
-    #   if: ${{ inputs.tags != '' }}
-    #   id: prepare-tags
-    #   shell: bash
-    #   run: |
-    #     IFS=',' read -ra TAGS <<< "${{ inputs.tags }}"
-    #     TAGS_OUTPUT=""
-    #     for TAG in "${TAGS[@]}"; do
-    #       TAG=$(echo "$TAG" | xargs)
-    #       if [ -z "$TAGS_OUTPUT" ]; then
-    #         TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' && inputs.artifact-id || steps.parse_component.outputs.name }}:${TAG}"
-    #       else
-    #         TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ inputs.artifact-id != '' && inputs.artifact-id || steps.parse_component.outputs.name }}:${TAG}"
-    #       fi
-    #     done
-    #     # Convert tags to lowercase
-    #     TAGS_OUTPUT=$(echo "$TAGS_OUTPUT" | tr '[:upper:]' '[:lower:]')
-    #     echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
+    - name: Prepare Tags
+      if: ${{ inputs.tags != '' }}
+      id: prepare-tags
+      shell: bash
+      run: |
+        IFS=',' read -ra TAGS <<< "${{ inputs.tags }}"
+        TAGS_OUTPUT=""
+        for TAG in "${TAGS[@]}"; do
+          TAG=$(echo "$TAG" | xargs)
+          if [ -z "$TAGS_OUTPUT" ]; then
+            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
+          else
+            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
+          fi
+        done
+        # Convert tags to lowercase
+        TAGS_OUTPUT=$(echo "$TAGS_OUTPUT" | tr '[:upper:]' '[:lower:]')
+        echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
 
     # - name: Verify Dockerfile Existence
     #   shell: bash
