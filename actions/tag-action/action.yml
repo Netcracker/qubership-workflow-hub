@@ -15,6 +15,10 @@ inputs:
     description: "Create a new tag."
     required: false
     default: "true"
+  force-create:
+    description: "Force create the tag even if it exists."
+    required: false
+    default: "false"
   delete-tag:
     description: "Delete the specified tag."
     required: false
@@ -23,6 +27,15 @@ inputs:
     description: "Run the action in dry-run mode (no changes will be pushed)."
     required: false
     default: "false"
+  commit-message:
+    description: "Commit message for the tag creation."
+    required: false
+    default: "Tag created by GitHub Actions"
+  delete-message:
+    description: "Commit message for the tag deletion."
+    required: false
+    default: "Tag deleted by GitHub Actions"
+
 outputs:
   created-tag:
     description: "The tag that was created."
