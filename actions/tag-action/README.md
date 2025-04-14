@@ -60,9 +60,6 @@ Below is an example of how to use this action in a GitHub Actions workflow:
 name: Manage Git Tags
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -71,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: main
 
