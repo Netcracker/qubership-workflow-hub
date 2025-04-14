@@ -52,7 +52,7 @@ runs:
 
     - name: Prepare Image Name
       shell: bash
-      id: prepare_image_name
+      id: prepare-image-name
       run: |
         if [ -z "${{ inputs.custom-image-name }}" ]; then
           if [ -z "${{ steps.parse_component.outputs.name }}" ] || [ "${{ steps.parse_component.outputs.name }}" == "default" ]; then
@@ -75,7 +75,7 @@ runs:
       shell: bash
       run: |
         echo "artifact_id: ${{ inputs.custom-image-name }}"
-        echo "prepared_image_name: ${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}"
+        echo "prepare-image-name: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
@@ -102,7 +102,7 @@ runs:
     - name: Display Image URL
       shell: bash
       run: |
-        echo "URL: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}"
+        echo "URL: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}"
 
     - name: Extract Docker Metadata
       if: ${{ inputs.tags == '' }}
@@ -110,7 +110,7 @@ runs:
       uses: docker/metadata-action@v4
       with:
         context: ${{ inputs.context }}
-        images: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}
+        images: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}
         tags: |
           type=ref,event=branch
           type=semver,pattern={{version}}
@@ -127,9 +127,9 @@ runs:
         for TAG in "${TAGS[@]}"; do
           TAG=$(echo "$TAG" | xargs)
           if [ -z "$TAGS_OUTPUT" ]; then
-            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
+            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
           else
-            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
+            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
           fi
         done
         # Convert tags to lowercase
