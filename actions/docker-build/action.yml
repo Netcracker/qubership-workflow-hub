@@ -46,14 +46,15 @@ runs:
       run: |
         # Parse the input JSON object directly
         component='${{ inputs.component }}'
-        comp_name=$(echo "$component" | jq -r '.name')
-        comp_file=$(echo "$component" | jq -r '.file')
-        comp_ctx=$(echo "$component" | jq -r '.context')
+        component_parsed=$(echo "$component" | jq 'if type=="array" then .[0] else . end')
+        comp_name=$(echo "$component_parsed" | jq -r '.name')
+        comp_file=$(echo "$component_parsed" | jq -r '.file')
+        comp_ctx=$(echo "$component_parsed" | jq -r '.context')
         echo "name=$comp_name" >> "$GITHUB_OUTPUT"
         echo "file=$comp_file" >> "$GITHUB_OUTPUT"
         echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
 
-    - name: Checkout Repository
+   - name: Checkout Repository
       uses: actions/checkout@v4
       with:
         ref: ${{ inputs.ref }}
