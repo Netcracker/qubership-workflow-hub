@@ -6,7 +6,7 @@ inputs:
     required: false
     default: ""
   custom-image-name:
-    description: "Name for ."
+    description: "Custom name for the Docker image."
     required: false
     default: ""
   context:
@@ -22,7 +22,7 @@ inputs:
     required: false
     default: "false"
   component:
-    description: Component configuration in JSON format (an array with a single object).
+    description: "Component configuration in JSON format (an array with a single object)."
     required: false
     default: '[{"name": "default", "file": "integration-tests/Dockerfile", "context": "integration-tests"}]'
   platforms:
@@ -33,6 +33,7 @@ inputs:
     description: "Docker image tags. If empty, tags will be generated automatically."
     required: false
     default: ""
+
 runs:
   using: "composite"
   steps:
@@ -51,8 +52,8 @@ runs:
         echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
 
     - name: Prepare Image Name
-      shell: bash
       id: prepare-image-name
+      shell: bash
       run: |
         if [ -z "${{ inputs.custom-image-name }}" ]; then
           if [ -z "${{ steps.parse_component.outputs.name }}" ] || [ "${{ steps.parse_component.outputs.name }}" == "default" ]; then
