@@ -58,22 +58,17 @@ runs:
       shell: bash
       id: prepare_image_name
       run: |
-          CONTAINER_NAME_RESULT=""
-          MANUAL_IMAGE_NAME="${{ inputs.image-name }}"
-          COMPONENT_NAME="${{ steps.parse_component.outputs.name }}"
-
-          if [ -z "$MANUAL_IMAGE_NAME" ]; then
-              if [ -z "$COMPONENT_NAME" ] || [ "$COMPONENT_NAME" == "default" ]; then
-                  IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
-                  CONTAINER_NAME_RESULT="$repo"
-              else
-                  CONTAINER_NAME_RESULT="$COMPONENT_NAME"
-              fi
+        if [ -z "${{ inputs.image-name }}" ]; then
+          if [ -z "${{ steps.parse_component.outputs.name }}" ] || [ "${{ steps.parse_component.outputs.name }}" == "default" ]; then
+            IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
+            CONTAINER_NAME_RESULT="$repo"
           else
-              CONTAINER_NAME_RESULT="$MANUAL_IMAGE_NAME"
+            CONTAINER_NAME_RESULT="${{ steps.parse_component.outputs.name }}"
           fi
-          echo "CONTAINER_NAME_RESULT=$CONTAINER_NAME_RESULT" >> "$GITHUB_OUTPUT"
-
+        else
+          CONTAINER_NAME_RESULT="${{ inputs.image-name }}"
+        fi
+        echo "CONTAINER_NAME_RESULT=$CONTAINER_NAME_RESULT" >> "$GITHUB_OUTPUT"
 
     - name: Checkout Repository
       uses: actions/checkout@v4
