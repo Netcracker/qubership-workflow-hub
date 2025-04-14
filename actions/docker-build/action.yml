@@ -54,7 +54,7 @@ runs:
         echo "file=$comp_file" >> "$GITHUB_OUTPUT"
         echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
 
-   - name: Checkout Repository
+    - name: Checkout Repository
       uses: actions/checkout@v4
       with:
         ref: ${{ inputs.ref }}
