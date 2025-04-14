@@ -29,14 +29,6 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 
 ---
 
-## 📌 Outputs
-
-| Name                     | Description                                      |
-| ------------------------ | ------------------------------------------------ |
-| `CONTAINER_NAME_RESULT`  | The final name of the Docker image.              |
-
----
-
 ## Additional Information
 
 ### Dry-Run Mode
