@@ -62,7 +62,7 @@ runs:
         if [ "${{ inputs.dry-run }}" == "true" ]; then
           echo "🧪 Dry run mode active. Skipping deletion push."
         else
-          git tag -d "${{ inputs.tag-name }} -m '${{ inputs.delete-message }}'"
+          git tag -d "${{ inputs.tag-name }}"
           git push origin --delete "${{ inputs.tag-name }}"
         fi
 
@@ -80,8 +80,12 @@ runs:
       if: ${{ inputs.create-tag == 'true' && inputs.delete-tag != 'true' }}
       shell: bash
       run: |
+        if [ "${{ inputs.force-create }}" == "true" ] && [ "$(git tag -l "${{ inputs.tag-name }}")" ]; then
+          echo "🔄 Force create enabled: Deleting existing tag '${{ inputs.tag-name }}'"
+          git tag -d "${{ inputs.tag-name }}"
+        fi
         echo "💡 Trying to create tag: '${{ inputs.tag-name }}'"
-        git tag "${{ inputs.tag-name }} -m '${{ inputs.commit-message }}'"
+        git tag -a "${{ inputs.tag-name }}" -m "${{ inputs.commit-message }}"
         if [ "${{ inputs.dry-run }}" == "true" ]; then
           echo "🧪 Dry run mode active. Skipping push."
         else
