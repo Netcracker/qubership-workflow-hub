@@ -81,7 +81,6 @@ jobs:
           ref: main
           tag-name: v1.0.0
           create-tag: true
-          commit-message: "Release v1.0.0"
 
       - name: Delete an Existing Tag
         uses: netcracker/qubership-workflow-hub/actions/tag-action@main
