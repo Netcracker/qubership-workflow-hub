@@ -51,6 +51,12 @@ The `platforms` input allows you to specify multiple platforms (e.g., `linux/amd
 
 If the `tags` input is empty, the action will automatically generate tags based on the branch name, semantic versioning, or other metadata.
 
+### Download Artifact
+
+When the `download-artifact` input is set to `true`, the action will attempt to download an artifact that was previously uploaded in the same workflow using the standard `actions/upload-artifact@v4` action.
+
+The artifact name must match the value provided in the `custom-image-name` input. This ensures that the correct artifact is downloaded and used during the Docker build process. If no artifact with the specified name exists, the action will fail.
+
 ### Logic for Determining the Docker Image Name
 
 The action uses the following logic to determine the final name of the Docker image (`CONTAINER_NAME_RESULT`):
