@@ -55,11 +55,9 @@ jobs:
         with:
           ref: main
           custom-image-name: my-custom-image
-          context: .
           platforms: linux/amd64,linux/arm64
-          tags: latest,v1.0.0
+          tags: latest, v1.0.0
           dry-run: false
-          download-artifact: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
