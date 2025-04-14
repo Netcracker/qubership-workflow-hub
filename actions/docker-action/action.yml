@@ -1,0 +1,148 @@
+name: "Docker Build and Publish Composite Action"
+description: "Composite action for building and publishing Docker images using Docker Buildx."
+inputs:
+  ref:
+    description: "Branch to create a release from."
+    required: false
+    default: ""
+  custom-image-name:
+    description: "Name for ."
+    required: false
+    default: ""
+  context:
+    description: "Pipeline context."
+    required: false
+    default: "git"
+  dry-run:
+    description: "Run without pushing (dry run)."
+    required: false
+    default: "false"
+  download-artifact:
+    description: "Flag to download the artifact."
+    required: false
+    default: "false"
+  component:
+    description: Component configuration in JSON format (an array with a single object).
+    required: false
+    default: '[{"name": "default", "file": "integration-tests/Dockerfile", "context": "integration-tests"}]'
+  platforms:
+    description: "Platforms for which the Docker image will be built."
+    required: false
+    default: "linux/amd64"
+  tags:
+    description: "Docker image tags. If empty, tags will be generated automatically."
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - name: Parse Component JSON
+      id: parse_component
+      shell: bash
+      run: |
+        # Parse the input JSON object directly
+        component='${{ inputs.component }}'
+        component_parsed=$(echo "$component" | jq 'if type=="array" then .[0] else . end')
+        comp_name=$(echo "$component_parsed" | jq -r '.name')
+        comp_file=$(echo "$component_parsed" | jq -r '.file')
+        comp_ctx=$(echo "$component_parsed" | jq -r '.context')
+        echo "name=$comp_name" >> "$GITHUB_OUTPUT"
+        echo "file=$comp_file" >> "$GITHUB_OUTPUT"
+        echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
+
+    - name: Prepare Image Name
+      shell: bash
+      id: prepare_image_name
+      run: |
+        if [ -z "${{ inputs.custom-image-name }}" ]; then
+          if [ -z "${{ steps.parse_component.outputs.name }}" ] || [ "${{ steps.parse_component.outputs.name }}" == "default" ]; then
+            IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
+            CONTAINER_NAME_RESULT="$repo"
+          else
+            CONTAINER_NAME_RESULT="${{ steps.parse_component.outputs.name }}"
+          fi
+        else
+          CONTAINER_NAME_RESULT="${{ inputs.custom-image-name }}"
+        fi
+        echo "CONTAINER_NAME_RESULT=$CONTAINER_NAME_RESULT" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+
+    - name: Display Debug Information
+      shell: bash
+      run: |
+        echo "artifact_id: ${{ inputs.custom-image-name }}"
+        echo "prepared_image_name: ${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}"
+        echo "ref: ${{ inputs.ref }}"
+        echo "GITHUB_REPOSITORY: ${{ github.repository }}"
+        echo "GITHUB_REF: ${{ github.ref }}"
+
+    - name: Download Artifact
+      if: ${{ inputs.download-artifact == 'true' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.custom-image-name }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ env.GITHUB_TOKEN }}
+
+    - name: Display Image URL
+      shell: bash
+      run: |
+        echo "URL: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}"
+
+    - name: Extract Docker Metadata
+      if: ${{ inputs.tags == '' }}
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        context: ${{ inputs.context }}
+        images: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+
+    - name: Prepare Tags
+      if: ${{ inputs.tags != '' }}
+      id: prepare-tags
+      shell: bash
+      run: |
+        IFS=',' read -ra TAGS <<< "${{ inputs.tags }}"
+        TAGS_OUTPUT=""
+        for TAG in "${TAGS[@]}"; do
+          TAG=$(echo "$TAG" | xargs)
+          if [ -z "$TAGS_OUTPUT" ]; then
+            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
+          else
+            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ steps.prepare_image_name.outputs.CONTAINER_NAME_RESULT }}:${TAG}"
+          fi
+        done
+        # Convert tags to lowercase
+        TAGS_OUTPUT=$(echo "$TAGS_OUTPUT" | tr '[:upper:]' '[:lower:]')
+        echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
+
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v6
+      with:
+        provenance: false
+        context: ${{ steps.parse_component.outputs.ctx }}
+        file: ${{ steps.parse_component.outputs.file }}
+        push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
+        tags: ${{ inputs.tags != '' && steps.prepare-tags.outputs.prepared_tags || steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        platforms: ${{ inputs.platforms }}
