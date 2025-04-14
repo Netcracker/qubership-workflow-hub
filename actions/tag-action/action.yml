@@ -41,15 +41,6 @@ runs:
         git config --global user.email "github-actions[bot]@qubership.com"
         git config --global user.name "GitHub Actions"
 
-    - name: Check if tag exists
-      if: ${{ inputs.check-tag == 'true' }}
-      shell: bash
-      run: |
-        if [ "$(git tag -l "${{ inputs.tag-name }}")" ]; then
-          echo "❗ Tag '${{ inputs.tag-name }}' already exists. Exiting..."
-          exit 1
-        fi
-
     - name: Delete tag
       if: ${{ inputs.delete-tag == 'true' }}
       shell: bash
@@ -60,6 +51,15 @@ runs:
         else
           git tag -d "${{ inputs.tag-name }}"
           git push origin --delete "${{ inputs.tag-name }}"
+        fi
+
+    - name: Check if tag exists
+      if: ${{ inputs.check-tag == 'true' }}
+      shell: bash
+      run: |
+        if [ "$(git tag -l "${{ inputs.tag-name }}")" ]; then
+          echo "❗ Tag '${{ inputs.tag-name }}' already exists. Exiting..."
+          exit 1
         fi
 
     - name: Create tag
