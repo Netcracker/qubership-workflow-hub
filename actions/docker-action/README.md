@@ -51,9 +51,7 @@ The `platforms` input allows you to specify multiple platforms (e.g., `linux/amd
 
 If the `tags` input is empty, the action will automatically generate tags based on the branch name, semantic versioning, or other metadata.
 
-Let me know if you need further clarification or updates!
-
-## 📌 Logic for Determining the Docker Image Name
+### Logic for Determining the Docker Image Name
 
 The action uses the following logic to determine the final name of the Docker image (`CONTAINER_NAME_RESULT`):
 
