@@ -80,6 +80,13 @@ runs:
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
 
+   - name: Debug Githubworkspace
+      shell: bash
+      run: |
+        echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+        echo "GITHUB_WORKSPACE: ${{ github.workspace }}"
+        ls -R ${{ github.workspace }}
+
     - name: Download Artifact
       if: ${{ inputs.download-artifact == 'true' }}
       uses: actions/download-artifact@v4
