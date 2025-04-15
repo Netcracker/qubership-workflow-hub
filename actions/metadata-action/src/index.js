@@ -125,7 +125,7 @@ async function run() {
   const semverParts = extractSemverParts(ref.name);
   const shortShaDeep = core.getInput("short-sha");
   const shortSha = github.context.sha.slice(0, shortShaDeep);
-  const values = { ...ref, "ref-name": ref.name, "short-sha": shortSha, ...semverParts, 
+  const values = { ...ref, "ref-name": ref.name, "short-sha": shortSha, ...semverParts,
                    ...parts, ...github.context, "dist-tag": distTag, "distTag": distTag, "runNumber": github.context.runId };
 
   core.info(`🔹 time: ${JSON.stringify(parts)}`);
