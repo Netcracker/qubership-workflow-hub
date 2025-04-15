@@ -83,7 +83,6 @@ runs:
    -  name: Debug Githubworkspace
       shell: bash
       run: |
-        echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
         echo "GITHUB_WORKSPACE: ${{ github.workspace }}"
         ls -R ${{ github.workspace }}
 
