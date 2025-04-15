@@ -42803,7 +42803,7 @@ async function run() {
   const shortSha = github.context.sha.slice(0, shortShaDeep);
   const values = {
     ...ref, "ref-name": ref.name, "short-sha": shortSha, ...semverParts,
-    ...parts, ...github.context, "distTag": distTag, "runNumber": github.context.runId
+    ...parts, ...github.context, "dist-tag": distTag, "runNumber": github.context.runId
   };
 
   core.info(`🔹 time: ${JSON.stringify(parts)}`);
