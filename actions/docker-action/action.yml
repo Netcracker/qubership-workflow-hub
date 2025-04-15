@@ -91,7 +91,6 @@ runs:
       shell: bash
       run: |
         ls -la
-        ls -la target
         ls -la ${{ inputs.custom-image-name }}
         ls -la ${{ inputs.custom-image-name }}/target
 
