@@ -19,7 +19,7 @@ function findFile(filename, startDir = process.cwd()) {
 
 function getUsersFromCodeowners(codeownersPath) {
     if (!codeownersPath) {
-        core.setFailed(`❗️ Can't find CODEOWNERS file.`)
+        core.setFailed(`❗️ Can't find CODEOWNERS file.`);
         return;
     }
     core.info(`🔍 CODEOWNERS file found on: ${codeownersPath}`);
@@ -37,13 +37,18 @@ function shuffleArray(array) {
     return array;
 }
 
-
 async function run() {
+
+    const pullRequest = github.context.payload.pull_request;
+    if (!pullRequest) {
+        core.setFailed("❗️ Action must run on a pull request.");
+        process.exit(1);
+    }
+
     const defaultConfigurationPath = ".github/pr-assigner-config.yml";
     const configurationPath = core.getInput("configuration-path") || defaultConfigurationPath;
 
     let count = core.getInput("assignees-count") || 1;
-
     let assignees = [];
 
     if (fs.existsSync(configurationPath)) {
@@ -51,26 +56,25 @@ async function run() {
         assignees = content['assignees'];
         count = content['count'] != null ? content['count'] : count;
 
-        core.info(`🔹 Count for suffle: ${count}`);
+        core.info(`🔹 Count for shuffle: ${count}`);
         core.info(`🔹 Assignees: ${assignees}`);
 
-        core.warning(`Use configuration file ${configurationPath}`)
-    }
-    else {
+        core.warning(`Using configuration file ${configurationPath}`);
+    } else {
         const codeownersPath = findFile('CODEOWNERS');
         assignees = getUsersFromCodeowners(codeownersPath);
         if (assignees == null) {
             core.setFailed(`❗️ Can't process CODEOWNERS file`);
             return;
         }
-        core.info(`🔹 Count for suffle: ${count}`);
+        core.info(`🔹 Count for shuffle: ${count}`);
         core.info(`🔹 Assignees: ${assignees}`);
-        core.warning(`Use CODEOWNERS file`)
+        core.warning(`Using CODEOWNERS file`);
     }
 
     const assigneesLength = assignees.length;
     if (count > assigneesLength) {
-        core.warning(`Assigners count ${count} more than array length ${assignees.length}. Will be use {array.length: ${assignees.length}}. Nice try 😉.`)
+        core.warning(`Assignees count ${count} exceeds number of available assignees ${assigneesLength}. Using available count (${assigneesLength}).`);
         count = assigneesLength;
     }
 
@@ -81,18 +85,16 @@ async function run() {
     assignees = assignees.slice(0, count);
 
     try {
-        const pullRequest = github.context.payload.pull_request;
-        if (!pullRequest) {
-            core.setFailed("❗️ Action have to run on pull request.");
-            process.exit(1);
-        }
 
-        const cmd = `gh pr edit ${pullRequest.number} --add-assignee ${assignees}`
+        const clearCmd = `gh pr edit ${pullRequest.number} --clear-assignees`;
+        core.info(`Clearing existing assignees with: ${clearCmd}`);
+        execSync(clearCmd, { stdio: 'inherit' });
 
-        execSync(cmd, { stdio: 'inherit' });
+        const addCmd = `gh pr edit ${pullRequest.number} --add-assignee ${assignees.join(' ')}`;
+        core.info(` Adding new assignees with: ${addCmd}`);
+        execSync(addCmd, { stdio: 'inherit' });
 
         core.info("✅ Action completed successfully!");
-
     } catch (error) {
         core.setFailed(`❗️ ${error.message}`);
     }
