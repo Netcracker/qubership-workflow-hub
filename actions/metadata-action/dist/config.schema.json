@@ -18,7 +18,7 @@
                 "additionalProperties": false
             }
         },
-        "dist-tags": {
+        "distribution-tag": {
             "type": "array",
             "minItems": 1,
             "items": {
@@ -35,8 +35,7 @@
         }
     },
     "required": [
-        "branches-template",
-        "dist-tags"
+        "branches-template"
     ],
     "additionalProperties": false
 }
