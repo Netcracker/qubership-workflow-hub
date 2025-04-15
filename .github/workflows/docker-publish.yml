@@ -68,12 +68,11 @@ jobs:
           name: ${{ inputs.artifact-id }}
 
       - name: Debug Artifact
-        if: ${{ inputs.download-artifact == 'true' }}
         shell: bash
         run: |
           ls -la
           ls -la ${{ inputs.download-artifact  }}
-          ls -la ${{ inputs.download-artifact  }}/target
+          ls -la target
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
