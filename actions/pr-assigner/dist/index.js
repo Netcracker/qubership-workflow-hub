@@ -42758,9 +42758,15 @@ async function run() {
 
     try {
 
-        const clearCmd = `gh pr edit ${pullRequest.number} --clear-assignees`;
-        core.info(`Clearing existing assignees with: ${clearCmd}`);
-        execSync(clearCmd, { stdio: 'inherit' });
+        const getAssigneesCmd = `gh pr view ${pullRequest.number} --json assignees --jq ".assignees | map(.login) | join(\\" \\" )"`;
+        let currentAssignees = execSync(getAssigneesCmd).toString().trim();
+        if (currentAssignees) {
+            const removeCmd = `gh pr edit ${pullRequest.number} --remove-assignee ${currentAssignees}`;
+            core.info(`ℹ️ Removing current assignees with: ${removeCmd}`);
+            execSync(removeCmd, { stdio: 'inherit' });
+        } else {
+            core.info("ℹ️ No assignees to remove.");
+        }
 
         const addCmd = `gh pr edit ${pullRequest.number} --add-assignee ${assignees.join(' ')}`;
         core.info(` Adding new assignees with: ${addCmd}`);
