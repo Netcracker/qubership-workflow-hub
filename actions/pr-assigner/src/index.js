@@ -90,10 +90,10 @@ async function run() {
         let currentAssignees = execSync(getAssigneesCmd).toString().trim();
         if (currentAssignees) {
             const removeCmd = `gh pr edit ${pullRequest.number} --remove-assignee ${currentAssignees}`;
-            core.info(`ℹ️ Removing current assignees with: ${removeCmd}`);
+            core.info(`🔍 Removing current assignees with: ${removeCmd}`);
             execSync(removeCmd, { stdio: 'inherit' });
         } else {
-            core.info("ℹ️ No assignees to remove.");
+            core.info("🔍 No assignees to remove.");
         }
 
         const addCmd = `gh pr edit ${pullRequest.number} --add-assignee ${assignees.join(' ')}`;
