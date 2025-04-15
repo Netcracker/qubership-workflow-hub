@@ -96,7 +96,7 @@ runs:
       if: ${{ inputs.download-artifact == 'true' }}
       shell: bash
       run: |
-        ls -R
+        ls -la
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
