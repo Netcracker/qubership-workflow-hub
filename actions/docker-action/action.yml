@@ -97,6 +97,9 @@ runs:
       shell: bash
       run: |
         ls -la
+        ls -la  qubership-colly
+        ls -la  qubership-colly/qubership-colly
+
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
