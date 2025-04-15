@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: netcracker/qubership-workflow-hub/actions/pr-assigner@main
+      - uses: nookyo/qubership-workflow-hub/actions/pr-assigner@main
         with:
           assignees-count: 2
         env:
