@@ -145,6 +145,7 @@ runs:
         echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
 
     - name: Build and Push Docker Image
+      if: ${{ inputs.dry-run != 'true' }}
       uses: docker/build-push-action@v6
       with:
         provenance: false
