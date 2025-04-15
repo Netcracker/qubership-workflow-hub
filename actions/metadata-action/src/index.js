@@ -93,7 +93,7 @@ async function run() {
   const shortSha = github.context.sha.slice(0, shortShaDeep);
   const values = {
     ...ref, "ref-name": ref.name, "short-sha": shortSha, ...semverParts,
-    ...parts, ...github.context, "dist-tag": distTag, "distTag": distTag, "runNumber": github.context.runId
+    ...parts, ...github.context, "dist-tag": distTag, "runNumber": github.context.runId
   };
 
   core.info(`🔹 time: ${JSON.stringify(parts)}`);
@@ -105,8 +105,7 @@ async function run() {
 
   core.info(`🔹 Template: ${template}`);
 
-  let t = ref.name;
-  core.info(`🔹 Name: ${{ t }}`)
+  core.info(`🔹 Name: ${ref.name}`)
   core.info(`💡 Rendered template: ${result}`);
 
   core.setOutput("result", result);
