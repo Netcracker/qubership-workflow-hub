@@ -94,7 +94,7 @@ async function run() {
             return;
         }
         const addCmd = `gh pr edit ${pullRequest.number} --add-assignee ${assignees.join(' ')}`;
-        core.info(` Adding new assignees with: ${addCmd}`);
+        core.info(`🟡 Adding new assignees with: ${addCmd}`);
         execSync(addCmd, { stdio: 'inherit' });
 
         core.info("✅ Action completed successfully!");
