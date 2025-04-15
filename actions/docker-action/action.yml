@@ -66,10 +66,10 @@ runs:
         fi
         echo "CONTAINER_NAME_RESULT=$CONTAINER_NAME_RESULT" >> "$GITHUB_OUTPUT"
 
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.ref }}
+    # - name: Checkout Repository
+    #   uses: actions/checkout@v4
+    #   with:
+    #     ref: ${{ inputs.ref }}
 
     - name: Display Debug Information
       shell: bash
