@@ -92,6 +92,8 @@ runs:
       run: |
         ls -la
         ls -la target
+        ls -la ${{ inputs.custom-image-name }}
+        ls -la ${{ inputs.custom-image-name }}/target
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
