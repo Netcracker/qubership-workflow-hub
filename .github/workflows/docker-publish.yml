@@ -71,7 +71,6 @@ jobs:
         shell: bash
         run: |
           ls -la
-          ls -la ${{ inputs.download-artifact  }}
           ls -la target
 
       - name: Set up QEMU
