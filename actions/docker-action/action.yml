@@ -98,7 +98,7 @@ runs:
       run: |
         ls -la
         ls -la  qubership-colly
-        ls -la  qubership-colly/qubership-colly
+        ls -la  qubership-colly/target
 
 
     - name: Set up QEMU
