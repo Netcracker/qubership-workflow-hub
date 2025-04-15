@@ -42761,7 +42761,7 @@ async function run() {
         const getAssigneesCmd = `gh pr view ${pullRequest.number} --json assignees --jq ".assignees | map(.login) | join(\\" \\" )"`;
         let currentAssignees = execSync(getAssigneesCmd).toString().trim();
 
-        if (!currentAssignees) {
+        if (currentAssignees == "") {
             core.info(`✅ PR has current assignees: ${currentAssignees}, skipping...`);
             return;
         }
