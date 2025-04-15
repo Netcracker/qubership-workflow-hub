@@ -131,6 +131,8 @@ async function run() {
   core.info(`🔹 semver: ${JSON.stringify(semverParts)}`);
   core.info(`🔹 dist-tag: ${JSON.stringify(distTag)}`);
 
+
+  core.info(`Values: ${JSON.stringify(values)}`);
   let result = fillTemplate(template, values)
 
   core.info(`🔹 Template: ${template}`);
