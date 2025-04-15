@@ -71,7 +71,6 @@ jobs:
         shell: bash
         run: |
           ls -la
-          ls -la target
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
