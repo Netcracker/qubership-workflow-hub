@@ -84,6 +84,7 @@ runs:
       shell: bash
       run: |
         echo "GITHUB_WORKSPACE: ${{ github.workspace }}"
+        pwd
 
     - name: Download Artifact
       if: ${{ inputs.download-artifact == 'true' }}
