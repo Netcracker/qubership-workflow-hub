@@ -80,7 +80,7 @@ runs:
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
 
-   - name: Debug Githubworkspace
+   -  name: Debug Githubworkspace
       shell: bash
       run: |
         echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
