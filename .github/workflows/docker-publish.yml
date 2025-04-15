@@ -129,6 +129,7 @@ jobs:
           echo "repository ${{ github.repository }}"
 
       - name: Build and push Docker image
+        if: inputs.dry-run != 'true'
         uses: docker/build-push-action@v6
         with:
           provenance: false
