@@ -86,7 +86,7 @@ runs:
       with:
         name: ${{ inputs.custom-image-name }}
 
-   - name: Debug Artifact
+    - name: Debug Artifact
       if: ${{ inputs.download-artifact == 'true' }}
       shell: bash
       run: |
