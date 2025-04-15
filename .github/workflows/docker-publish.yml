@@ -72,7 +72,6 @@ jobs:
         shell: bash
         run: |
           ls -la
-          ls -la target
           ls -la ${{ inputs.download-artifact  }}
           ls -la ${{ inputs.download-artifact  }}/target
 
