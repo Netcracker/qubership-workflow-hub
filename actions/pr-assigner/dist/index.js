@@ -42760,14 +42760,11 @@ async function run() {
 
         const getAssigneesCmd = `gh pr view ${pullRequest.number} --json assignees --jq ".assignees | map(.login) | join(\\" \\" )"`;
         let currentAssignees = execSync(getAssigneesCmd).toString().trim();
-        if (currentAssignees) {
-            const removeCmd = `gh pr edit ${pullRequest.number} --remove-assignee ${currentAssignees}`;
-            core.info(`🔍 Removing current assignees with: ${removeCmd}`);
-            execSync(removeCmd, { stdio: 'inherit' });
-        } else {
-            core.info("🔍 No assignees to remove.");
-        }
 
+        if (!currentAssignees) {
+            core.info(`✅ PR has current assignees: ${currentAssignees}, skipping...`);
+            return;
+        }
         const addCmd = `gh pr edit ${pullRequest.number} --add-assignee ${assignees.join(' ')}`;
         core.info(` Adding new assignees with: ${addCmd}`);
         execSync(addCmd, { stdio: 'inherit' });
