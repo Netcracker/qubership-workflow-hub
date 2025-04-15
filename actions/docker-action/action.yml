@@ -86,6 +86,13 @@ runs:
       with:
         name: ${{ inputs.custom-image-name }}
 
+   - name: Debug Artifact
+      if: ${{ inputs.download-artifact == 'true' }}
+      shell: bash
+      run: |
+        ls -la
+        ls -la target
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
