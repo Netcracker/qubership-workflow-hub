@@ -36,7 +36,7 @@
     },
     "required": [
         "branches-template",
-        "dist-tags"
+        "distribution-tag"
     ],
     "additionalProperties": false
 }
