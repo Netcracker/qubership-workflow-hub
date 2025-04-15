@@ -97,9 +97,9 @@ runs:
       if: ${{ inputs.download-artifact == 'true' }}
       shell: bash
       run: |
+        pwd
         ls -la
-        ls -la  qubership-colly
-        ls -la  qubership-colly/target
+        ls -la  target
 
 
     - name: Set up QEMU
