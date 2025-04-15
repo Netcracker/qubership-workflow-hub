@@ -120,7 +120,7 @@ async function run() {
   core.setOutput("tag", distTag);
   core.setOutput("short-sha", shortSha);
 
-  core.info('✅ Action completed successfully!');
+  core.info('✔️ Action completed successfully!');
 }
 
 run();
