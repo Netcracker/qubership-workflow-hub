@@ -42743,7 +42743,8 @@ async function run() {
     const defaultConfigurationPath = ".github/pr-assigner-config.yml";
     const configurationPath = core.getInput("configuration-path") || defaultConfigurationPath;
 
-    let count = core.getInput("suffle-count");
+    let count = core.getInput("shuffle");
+    core.info(`Input shuffle: ${count}`);
     let assignees = [];
 
     let sourceUsed = "CODEOWNERS file";

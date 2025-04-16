@@ -49,6 +49,7 @@ async function run() {
     const configurationPath = core.getInput("configuration-path") || defaultConfigurationPath;
 
     let count = core.getInput("shuffle");
+    core.info(`Input shuffle: ${count}`);
     let assignees = [];
 
     let sourceUsed = "CODEOWNERS file";
