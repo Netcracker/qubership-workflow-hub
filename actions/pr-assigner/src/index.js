@@ -93,7 +93,7 @@ async function run() {
             core.info(`💡✔️ PR has current assignees: ${currentAssignees}, skipping...`);
             return;
         }
-        const addCmd = `gh pr edit ${pullRequest.number} --add-assignee ${assignees.join(' ')}`;
+        const addCmd = `gh pr edit ${pullRequest.number} ${assignees.map(user => `--add-assignee ${user}`).join(' ')}`;
         core.info(`💡 Adding new assignees with: ${addCmd}`);
         execSync(addCmd, { stdio: 'inherit' });
 

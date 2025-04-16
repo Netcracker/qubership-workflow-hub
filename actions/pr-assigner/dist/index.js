@@ -42762,14 +42762,14 @@ async function run() {
         let currentAssignees = execSync(getAssigneesCmd).toString().trim();
 
         if (currentAssignees != "") {
-            core.info(`✅ PR has current assignees: ${currentAssignees}, skipping...`);
+            core.info(`💡✔️ PR has current assignees: ${currentAssignees}, skipping...`);
             return;
         }
-        const addCmd = `gh pr edit ${pullRequest.number} --add-assignee ${assignees.join(' ')}`;
-        core.info(`🟡 Adding new assignees with: ${addCmd}`);
+        const addCmd = `gh pr edit ${pullRequest.number} ${assignees.map(user => `--add-assignee ${user}`).join(' ')}`;
+        core.info(`💡 Adding new assignees with: ${addCmd}`);
         execSync(addCmd, { stdio: 'inherit' });
 
-        core.info("✅ Action completed successfully!");
+        core.info("✔️ Action completed successfully!");
     } catch (error) {
         core.setFailed(`❗️ ${error.message}`);
     }
