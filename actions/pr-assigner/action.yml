@@ -1,6 +1,12 @@
 name: "PR Assigner"
 description: "Assigns a PR to a user based on the PR configuration or CODEOWNERS."
 inputs:
+    assignees:
+        description: "List of assignees to assign the PR to."
+        required: false
+    suffle-count:
+        description: "Number of assignees to assign."
+        required: false
     configuration-path:
         description: "Path to the configuration file."
         required: false
