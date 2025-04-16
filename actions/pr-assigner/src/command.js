@@ -3,12 +3,12 @@ const { execSync } = require("child_process");
 class GhCommand {
     constructor() {
     }
-    async getAssigneesCommand(prNumber) {
+    getAssigneesCommand(prNumber) {
         let cmd = `gh pr view ${prNumber} --json assignees --jq ".assignees | map(.login) | join(\\" \\" )"`;
-        return execSync(cmd, { stdio: 'inherit' });
+        return execSync(cmd, { stdio: 'inherit' }).toString().trim();
     }
 
-    async addAssigneesCommand(prNumber, assignees) {
+    addAssigneesCommand(prNumber, assignees) {
         let cmd = `gh pr edit ${prNumber} ${assignees.map(user => `--add-assignee ${user}`).join(' ')}`;
         return  execSync(cmd, { stdio: 'inherit' });
     }

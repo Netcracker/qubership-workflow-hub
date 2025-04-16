@@ -87,7 +87,7 @@ async function run() {
 
     try {
         const ghCommand = new GhCommand();
-        let currentAssignees = await ghCommand.getAssigneesCommand(pullRequest.number);
+        let currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
         core.info(`🔍 Current assignees: ${currentAssignees}`);
         if (currentAssignees != null && currentAssignees != "" ) {
             core.info(`✔️ PR has current assignees: ${currentAssignees}, skipping...`);
@@ -95,7 +95,7 @@ async function run() {
         }
 
         core.info(`🟡 Adding new assignees with: ${assignees}`);
-        await ghCommand.addAssigneesCommand(pullRequest.number, assignees);
+        ghCommand.addAssigneesCommand(pullRequest.number, assignees);
 
         core.info("✔️ Action completed successfully!");
     } catch (error) {
