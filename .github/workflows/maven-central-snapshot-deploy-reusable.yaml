@@ -20,7 +20,7 @@ on:
         required: false
         default: ""
     secrets:
-      maven-username:
+      maven-user:
         required: false
       maven-token:
         required: true
@@ -64,7 +64,7 @@ jobs:
           java-version: ${{ inputs.java-version }}
           distribution: "temurin"
           server-id: central
-          server-username: MAVEN_USERNAME
+          server-username: MAVEN_USER
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.gpg-private-key }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
@@ -78,6 +78,6 @@ jobs:
         run: |
           mvn --batch-mode deploy ${{ inputs.additional-mvn-args }}
         env:
-          MAVEN_USERNAME: ${{ secrets.maven-username }}
+          MAVEN_USER: ${{ secrets.maven-user }}
           MAVEN_PASSWORD: ${{ secrets.maven-token }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}

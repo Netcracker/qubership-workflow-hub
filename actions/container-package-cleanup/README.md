@@ -84,7 +84,7 @@ jobs:
           debug: ${{ github.event.inputs.debug }}
           dry-run: ${{ github.event.inputs.dry-run }}
         env:
-          PACKAGE_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+          PACKAGE_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 ```
 
 ## Configuration File `NOT SUPPORTED AT THIS MOMENT`

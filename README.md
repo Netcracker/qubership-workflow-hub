@@ -43,12 +43,15 @@ Below is the short description of how to implement common workflows in any Netcr
 
 | Name                          | Purpose                                                                              |
 | ----------------------------- | ------------------------------------------------------------------------------------ |
+| secrets.GITHUB_TOKEN          | Automatic token authentication (see more [here](https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication#about-the-github_token-secret)) |
 | secrets.CLA_ACCESS_TOKEN      | Used by CLA workflow to access cla storage                                           |
 | secrets.MAVEN_USER            | Username to authenticate in Maven Central repository to publish released artifacts  |
 | secrets.MAVEN_PASSWORD        | User token to authenticate in Maven Central repository to publish released artifacts |
 | secrets.MAVEN_GPG_PRIVATE_KEY | GPG private key to sign artefacts (jar, pom etc) to publish them into Maven Central  |
 | secrets.MAVEN_GPG_PASSPHRASE  | GPG private key passphrase                                                           |
-
+| secrets.PYPI_API_TOKEN        | Token to publish packages to [PYPI](https://pypi.org/) registry                      |
+| secrets.GH_ACCESS_TOKEN       | Token for "tech user" with extended acess rights                                     |
+| secrets.SONAR_TOKEN           | Token to access [SonarQube](https://www.sonarsource.com/plans-and-pricing/sonarcloud/)|
 ## Common workflows
 
 There are several reusable workflows which should be added into every Netcracker repository, see the description below.
@@ -129,7 +132,7 @@ To add commit messages in pull request description into your repository copy the
 
 ### Conventional Commits PR Check
 
-The workflow will check commits in pull request if they follow [Conventional Commits](conventionalcommits.org) strategy.
+The workflow will check commits in pull request if they follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) strategy.
 
 More info on underlying GitHub Action can be found here [Conventional Commits GitHub Action](https://github.com/webiny/action-conventional-commits)
 
