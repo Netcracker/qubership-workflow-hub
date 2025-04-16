@@ -4,7 +4,7 @@ inputs:
     assignees:
         description: "List of assignees to assign the PR to."
         required: false
-    shuffle-count:
+    shuffle:
         description: "Number of assignees to assign."
         default: '1'
         required: false
