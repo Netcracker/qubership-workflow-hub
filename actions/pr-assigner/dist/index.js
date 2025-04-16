@@ -42781,7 +42781,7 @@ async function run() {
 
     try {
         const ghCommand = new GhCommand();
-        let currentAssignees = new ghCommand.getAssigneesCommand(pullRequest.number);
+        let currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
         core.info(`💡 Current assignees: ${currentAssignees}`);
 
         if (currentAssignees != "") {
