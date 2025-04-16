@@ -87,7 +87,7 @@ async function run() {
     try {
         const ghCommand = new GhCommand();
         let currentAssignees = await ghCommand.getAssigneesCommand(pullRequest.number);
-        core.info(`💡 Current assignees: ${currentAssignees}`);
+        core.info(`🔍 Current assignees: ${currentAssignees}`);
 
         if (!currentAssignees && currentAssignees != "" ) {
             core.info(`✔️ PR has current assignees: ${currentAssignees}, skipping...`);
