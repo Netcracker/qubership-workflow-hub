@@ -42785,7 +42785,7 @@ async function run() {
         core.info(`💡 Current assignees: ${currentAssignees}`);
 
         if (currentAssignees != "") {
-            core.info(`💡✔️ PR has current assignees: ${currentAssignees}, skipping...`);
+            core.info(`✔️ PR has current assignees: ${currentAssignees}, skipping...`);
             return;
         }
 
