@@ -15,6 +15,8 @@ class RefExtractor {
             name = ref.replace("refs/tags/", "").replace(/\//g, "-");
             core.info(`Run-on tag: ${name}`);
         } else {
+            isTag = false;
+            name = ref.replace(/\//g, "-");
             core.warning(`Cant detect type ref: ${ref}`);
         }
         return { name, isTag };

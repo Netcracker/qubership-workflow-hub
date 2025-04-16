@@ -121,7 +121,7 @@ The configuration file for this action must adhere to the schema defined [here](
                 "additionalProperties": false
             }
         },
-        "dist-tags": {
+        "distribution-tags": {
             "type": "array",
             "minItems": 1,
             "items": {
@@ -138,8 +138,7 @@ The configuration file for this action must adhere to the schema defined [here](
         }
     },
     "required": [
-        "branches-template",
-        "dist-tags"
+        "branches-template"
     ],
     "additionalProperties": false
 }

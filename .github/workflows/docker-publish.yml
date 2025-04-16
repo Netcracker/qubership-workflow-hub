@@ -1,5 +1,5 @@
 ---
-name: Docker build and publish
+name: Docker Build and Publish
 on:
   workflow_call:
     inputs:

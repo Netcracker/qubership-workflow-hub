@@ -4,6 +4,8 @@ const github = require("@actions/github");
 async function run() {
   try {
     // Get the input parameter: tag
+    core.warning("💥🚀 This action is deprecated. Will be removed.");
+
     const tag = core.getInput("tag", { required: true });
     core.info(`Checking for the presence of tag: ${tag}`);
 

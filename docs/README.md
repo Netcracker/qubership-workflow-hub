@@ -4,18 +4,26 @@ This index provides a quick overview of the available workflow and action docume
 
 ---
 
+## Deprecated
+
+| Name                                             | Description                                                      |
+| --------------------------------------------------------- | ---------------------------------------------------------------- |
+| [docker-publish](../docs/reusable/docker-publish.md)              | Automates building and publishing Docker images. **DEPRECATED** use [docker-action](../actions/docker-action/README.md)    |
+| [tag-creator](../docs/reusable//tag-creator.md)              | Creates a new tag in the repository. **DEPRECATED** use [tag-action](../actions/tag-action/README.md)     |
+| [tag-checker](../actions/tag-checker/README.md)         | Verifies the presence of specific tags in the repository. **DEPRECATED** use [tag-action](../actions/tag-action/README.md)       |
+| [commit-and-push](../actions/commit-and-push/README.md) | Automates committing and pushing changes to a remote repository. **DEPRECATED** use `git command` |
+| [pom-updater](../actions/pom-updater/README.md)         | Automatically updates the `pom.xml` file in Maven projects.  **DEPRECATED**    |
+
+---
+
 ## Reusable Flows
 
 | Name                                             | Description                                                      |
 | --------------------------------------------------------- | ---------------------------------------------------------------- |
 | [github-release](../docs/reusable/github-release.md) | Automates creating and tagging releases on GitHub.               |
-| [docker-publish](../docs/reusable/docker-publish.md)              | Automates building and publishing Docker images.     |
-| [github-release](../docs/reusable/github-release.md)              | Creates a GitHub release based on the specified version.     |
 | [maven-publish](../docs/reusable/maven-publish.md)              | Automates signing and deploying Maven artifacts to a repository.     |
 | [python-publish](../docs/reusable/python-publish.md)              | Automates building, testing, and publishing Python packages.     |
 | [release-drafter](../docs/reusable/release-drafter.md)              | Drafts a new release based on merged pull requests.     |
-| [tag-creator](../docs/reusable//tag-creator.md)              | Creates a new tag in the repository.     |
-
 
 ## Template Flows
 
@@ -47,16 +55,16 @@ This index provides a quick overview of the available workflow and action docume
 | [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Archives and uploads assets to a specified location. |
 | [cdxgen](../actions/cdxgen/README.md)                   | Generates SBOM file and CycloneDX vulnerability report.          |
 | [chart-version](../actions/chart-version/README.md)     | Manages and updates chart versions.                             |
-| [commit-and-push](../actions/commit-and-push/README.md) | Automates committing and pushing changes to a remote repository. |
 | [custom-event](../actions/custom-event/README.md)       | Triggers a custom `repository_dispatch` event in the repository. |
-| [metadata-action](../actions/metadata-action/README.md) | Automates the management of repository metadata, including meta info, dist-tag, github context, and semver information based on branch or tag references. |
+| [docker-action](../actions/docker-action/README.md)     | Builds and publishes Docker images using Docker Buildx.         |
+| [metadata-action](../actions/metadata-action/README.md) | Automates the management of repository metadata, including meta info, dist-tag, GitHub context, and semantic versioning. |
 | [poetry-publisher](../actions/poetry-publisher/README.md) | Automates building, testing, and publishing Python packages using Poetry. |
-| [pom-updater](../actions/pom-updater/README.md)         | Automatically updates the `pom.xml` file in Maven projects.      |
 | [pr-add-messages](../actions/pr-add-messages/README.md) | Adds commit messages to the pull request description.            |
 | [pr-assigner](../actions/pr-assigner/README.md)         | Automatically assigns reviewers to pull requests based on configuration or CODEOWNERS file. |
-| [tag-checker](../actions/tag-checker/README.md)         | Verifies the presence of specific tags in the repository.        |
+| [tag-action](../actions/tag-action/README.md)           | Manages Git tags, including creation, deletion, and validation.  |
 | [verify-json](../actions/verify-json/README.md)         | Verifies the structure and content of JSON files.                |
 | [container-package-cleanup](../actions/container-package-cleanup/README.md) | Cleans up unused container packages in the GitHub Container Registry. |
+
 
 ---
 

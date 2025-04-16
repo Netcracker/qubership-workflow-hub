@@ -1,5 +1,5 @@
 ---
-name: Create tag
+name: Create tag (Obsolete)
 on:
   workflow_call:
     inputs:
@@ -17,6 +17,9 @@ jobs:
   create-tag:
     runs-on: ubuntu-latest
     steps:
+      - name: Display deprecation warning
+        run: echo "::warning::💥🚀 This reusable workflow is deprecated. Will be removed soon."
+
       - name: Input parameters
         run: |
           echo "Tag version: ${{ inputs.tag-name }}" >> $GITHUB_STEP_SUMMARY

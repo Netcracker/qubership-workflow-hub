@@ -1,4 +1,4 @@
-# 🚀 Tag Checker Action
+# 🚀 Tag Checker Action (Obsolete -> do not support anymore)
 
 This **Tag Checker** GitHub Action checks whether a specified tag exists in a repository.
 
