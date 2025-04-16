@@ -42744,7 +42744,7 @@ async function run() {
     const configurationPath = core.getInput("configuration-path") || defaultConfigurationPath;
 
     let count = core.getInput("shuffle");
-    core.info(`Input shuffle: ${count}`);
+    // core.info(`Input shuffle: ${count}`);
     let assignees = [];
 
     let sourceUsed = "CODEOWNERS file";
@@ -42783,7 +42783,6 @@ async function run() {
     try {
         const ghCommand = new GhCommand();
         let currentAssignees = await ghCommand.getAssigneesCommand(pullRequest.number);
-        core.info(`🔍 Current assignees: ${currentAssignees}`);
 
         if (currentAssignees != null && currentAssignees != "" ) {
             core.info(`✔️ PR has current assignees: ${currentAssignees}, skipping...`);
