@@ -6,6 +6,7 @@ inputs:
         required: false
     suffle-count:
         description: "Number of assignees to assign."
+        default: '1'
         required: false
     configuration-path:
         description: "Path to the configuration file."
