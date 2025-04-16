@@ -39878,6 +39878,29 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 9299:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const { execSync } = __nccwpck_require__(5317);
+
+class GhCommand {
+    constructor() {
+    }
+    async getAssigneesCommand(prNumber) {
+        let cmd = `gh pr view ${pullRequest.number} --json assignees --jq ".assignees | map(.login) | join(\\" \\" )"`;
+        return execSync(cmd, { stdio: 'inherit' }).toString().trim();
+    }
+
+    async addAssigneesCommand(prNumber, assignees) {
+        let cmd = `gh pr edit ${prNumber} ${assignees.map(user => `--add-assignee ${user}`).join(' ')}`;
+        return  execSync(cmd, { stdio: 'inherit' }).toString().trim();
+    }
+}
+
+module.exports = GhCommand;
+
+/***/ }),
+
 /***/ 9027:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -42675,9 +42698,13 @@ const github = __nccwpck_require__(5355);
 const fs = __nccwpck_require__(9896);
 const path = __nccwpck_require__(6928);
 const ConfigLoader = __nccwpck_require__(9027);
-const { execSync } = __nccwpck_require__(5317);
+const GhCommand = __nccwpck_require__(9299);
 
 function findFile(filename, startDir = process.cwd()) {
+    if (!codeownersPath) {
+        core.setFailed(`❗️ Can't find CODEOWNERS file.`);
+        return;
+    }
     let dir = startDir;
     while (dir !== path.parse(dir).root) {
         const filePath = path.join(dir, filename);
@@ -42690,14 +42717,14 @@ function findFile(filename, startDir = process.cwd()) {
 }
 
 function getUsersFromCodeowners(codeownersPath) {
-    if (!codeownersPath) {
-        core.setFailed(`❗️ Can't find CODEOWNERS file.`);
-        return;
-    }
     core.info(`🔍 CODEOWNERS file found on: ${codeownersPath}`);
     const codeownersContent = fs.readFileSync(codeownersPath, 'utf8');
     const lines = codeownersContent.split('\n');
     const userLine = lines.find(line => line.trim().startsWith('*'));
+    if (!userLine) {
+        core.warning(`❗️ No user found in CODEOWNERS file`);
+        return null;
+    }
     return userLine.split(/\s+/).slice(1).filter(user => user.trim() !== '').map(user => user.replace('@', ''));
 }
 
@@ -42723,26 +42750,22 @@ async function run() {
     let count = core.getInput("assignees-count") || 1;
     let assignees = [];
 
+    let sourceUsed = "CODEOWNERS file";
     if (fs.existsSync(configurationPath)) {
         const content = new ConfigLoader().load(configurationPath);
         assignees = content['assignees'];
         count = content['count'] != null ? content['count'] : count;
+        sourceUsed = `configuration file: ${configurationPath}`;
 
-        core.info(`🔹 Count for shuffle: ${count}`);
-        core.info(`🔹 Assignees: ${assignees}`);
-
-        core.warning(`Using configuration file ${configurationPath}`);
     } else {
         const codeownersPath = findFile('CODEOWNERS');
         assignees = getUsersFromCodeowners(codeownersPath);
-        if (assignees == null) {
-            core.setFailed(`❗️ Can't process CODEOWNERS file`);
-            return;
-        }
-        core.info(`🔹 Count for shuffle: ${count}`);
-        core.info(`🔹 Assignees: ${assignees}`);
-        core.warning(`Using CODEOWNERS file`);
     }
+
+    core.info(`🔹 Count for shuffle: ${count}`);
+    core.info(`🔹 Assignees: ${assignees}`);
+    core.info(`💡 Source used: ${sourceUsed}`);
+
 
     const assigneesLength = assignees.length;
     if (count > assigneesLength) {
@@ -42757,17 +42780,17 @@ async function run() {
     assignees = assignees.slice(0, count);
 
     try {
-
-        const getAssigneesCmd = `gh pr view ${pullRequest.number} --json assignees --jq ".assignees | map(.login) | join(\\" \\" )"`;
-        let currentAssignees = execSync(getAssigneesCmd).toString().trim();
+        const ghCommand = new GhCommand();
+        let currentAssignees = new ghCommand.getAssigneesCommand(pullRequest.number);
+        core.info(`💡 Current assignees: ${currentAssignees}`);
 
         if (currentAssignees != "") {
             core.info(`💡✔️ PR has current assignees: ${currentAssignees}, skipping...`);
             return;
         }
-        const addCmd = `gh pr edit ${pullRequest.number} ${assignees.map(user => `--add-assignee ${user}`).join(' ')}`;
-        core.info(`💡 Adding new assignees with: ${addCmd}`);
-        execSync(addCmd, { stdio: 'inherit' });
+
+        core.info(`🟡 Adding new assignees with: ${addCmd}`);
+        ghCommand.addAssigneesCommand(pullRequest.number, assignees);
 
         core.info("✔️ Action completed successfully!");
     } catch (error) {
