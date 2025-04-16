@@ -94,7 +94,7 @@ async function run() {
             return;
         }
 
-        core.info(`🟡 Adding new assignees with: ${addCmd}`);
+        core.info(`🟡 Adding new assignees with: ${assignees}`);
         await ghCommand.addAssigneesCommand(pullRequest.number, assignees);
 
         core.info("✔️ Action completed successfully!");
