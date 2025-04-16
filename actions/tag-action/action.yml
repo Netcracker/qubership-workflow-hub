@@ -24,7 +24,7 @@ inputs:
     required: false
     default: "false"
   tag-message:
-    description: "Tag message."
+    description: "Tag creation message."
     required: false
     default: "Release tag"
   dry-run:
