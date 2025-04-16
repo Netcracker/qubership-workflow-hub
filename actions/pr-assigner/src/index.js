@@ -6,10 +6,6 @@ const ConfigLoader = require("./loader");
 const GhCommand = require("./command");
 
 function findFile(filename, startDir = process.cwd()) {
-    if (!codeownersPath) {
-        core.setFailed(`❗️ Can't find CODEOWNERS file.`);
-        return;
-    }
     let dir = startDir;
     while (dir !== path.parse(dir).root) {
         const filePath = path.join(dir, filename);
@@ -64,6 +60,10 @@ async function run() {
 
     } else {
         const codeownersPath = findFile('CODEOWNERS');
+        if (!codeownersPath) {
+            core.setFailed(`❗️ Can't find CODEOWNERS file.`);
+            return;
+        }
         assignees = getUsersFromCodeowners(codeownersPath);
     }
 

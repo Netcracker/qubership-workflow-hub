@@ -42701,10 +42701,6 @@ const ConfigLoader = __nccwpck_require__(9027);
 const GhCommand = __nccwpck_require__(9299);
 
 function findFile(filename, startDir = process.cwd()) {
-    if (!codeownersPath) {
-        core.setFailed(`❗️ Can't find CODEOWNERS file.`);
-        return;
-    }
     let dir = startDir;
     while (dir !== path.parse(dir).root) {
         const filePath = path.join(dir, filename);
@@ -42747,7 +42743,7 @@ async function run() {
     const defaultConfigurationPath = ".github/pr-assigner-config.yml";
     const configurationPath = core.getInput("configuration-path") || defaultConfigurationPath;
 
-    let count = core.getInput("assignees-count") || 1;
+    let count = core.getInput("suffle-count");
     let assignees = [];
 
     let sourceUsed = "CODEOWNERS file";
@@ -42759,6 +42755,10 @@ async function run() {
 
     } else {
         const codeownersPath = findFile('CODEOWNERS');
+        if (!codeownersPath) {
+            core.setFailed(`❗️ Can't find CODEOWNERS file.`);
+            return;
+        }
         assignees = getUsersFromCodeowners(codeownersPath);
     }
 
