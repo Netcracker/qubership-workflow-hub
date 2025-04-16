@@ -4,7 +4,7 @@ class GhCommand {
     constructor() {
     }
     async getAssigneesCommand(prNumber) {
-        let cmd = `gh pr view ${pullRequest.number} --json assignees --jq ".assignees | map(.login) | join(\\" \\" )"`;
+        let cmd = `gh pr view ${prNumber} --json assignees --jq ".assignees | map(.login) | join(\\" \\" )"`;
         return execSync(cmd, { stdio: 'inherit' }).toString().trim();
     }
 
