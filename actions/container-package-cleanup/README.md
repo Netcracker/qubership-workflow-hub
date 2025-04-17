@@ -35,7 +35,9 @@ This action does not produce any outputs. It performs cleanup operations directl
 | `PACKAGE_TOKEN` | GitHub token with permissions to manage packages | Yes      |
 
 > **Note:** The `PACKAGE_TOKEN` must have the following permissions:
+>
 > - **`read:packages`**: To list and retrieve package information.
+>
 > - **`delete:packages`**: To delete package versions.
 
 ## Usage Example
@@ -138,6 +140,7 @@ This mode is useful for previewing the cleanup results and ensuring the filterin
 ### Tag Matching Behavior
 
 - **Exact Match**: If a tag is specified without a wildcard (e.g., `release`), the action will look for an exact match. Only versions with the tag `release` will be included or excluded.
+
 - **Wildcard Match**: If a tag is specified with a wildcard (e.g., `release*`), the action will look for partial matches. For example, `release*` will match tags like `release`, `release-v1`, or `release-candidate`.
 
 This allows for flexible filtering based on your tagging strategy.

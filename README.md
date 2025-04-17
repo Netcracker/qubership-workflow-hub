@@ -52,6 +52,7 @@ Below is the short description of how to implement common workflows in any Netcr
 | secrets.PYPI_API_TOKEN        | Token to publish packages to [PYPI](https://pypi.org/) registry                      |
 | secrets.GH_ACCESS_TOKEN       | Token for "tech user" with extended acess rights                                     |
 | secrets.SONAR_TOKEN           | Token to access [SonarQube](https://www.sonarsource.com/plans-and-pricing/sonarcloud/)|
+
 ## Common workflows
 
 There are several reusable workflows which should be added into every Netcracker repository, see the description below.
