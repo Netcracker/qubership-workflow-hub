@@ -13,6 +13,10 @@
         "count": {
             "type": "integer",
             "minimum": 1
+        },
+        "shuffle": {
+            "type": "integer",
+            "minimum": 1
         }
     },
     "required": [

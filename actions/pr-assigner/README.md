@@ -12,7 +12,7 @@ This **PR Assigner** GitHub Action automatically assigns a pull request to users
 | Name                  | Description                                      | Required | Default                          |
 | --------------------- | ------------------------------------------------ | -------- | -------------------------------- |
 | `configuration-path`  | Path to the configuration file.                  | No       | `.github/pr-assigner-config.yml` |
-| `assignees-count`     | Number of assignees to assign.                   | No       | `1`                              |
+| `shuffle`             | Number of assignees to assign.                   | No       | `1`                              |
 
 ## Usage Example
 
@@ -40,7 +40,7 @@ jobs:
         uses: netcracker/qubership-workflow-hub/actions/pr-assigner@main
         with:
           configuration-path: ".github/pr-assigner-config.yml"
-          assignees-count: 2
+          shuffle: 2
 ```
 
 ## Configuration File

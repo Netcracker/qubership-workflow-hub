@@ -1,12 +1,19 @@
 name: "PR Assigner"
 description: "Assigns a PR to a user based on the PR configuration or CODEOWNERS."
 inputs:
+    assignees:
+        description: "List of assignees to assign the PR to."
+        required: false
+    shuffle:
+        description: "Number of assignees to assign."
+        default: '1'
+        required: false
     configuration-path:
         description: "Path to the configuration file."
         required: false
     assignees-count:
         description: "count"
-        requried: false    
+        required: false
 runs:
   using: "node20"
   main: "dist/index.js"
