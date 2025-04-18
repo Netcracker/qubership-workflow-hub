@@ -1,0 +1,67 @@
+---
+
+name: "Charts Release"
+description: "Update helm charts versions in values.yaml file and create a release draft"
+
+inputs:
+  release:
+    description: "Release version"
+    required: true
+    type: string
+  config-file:
+    description: "Path to the configuration file for updating versions in values.yaml"
+    required: true
+    type: string
+outputs:
+  image-version:
+    description: "Image version"
+    value: ${{ steps.update-chart-version.outputs.image-version }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: "Create release branch"
+      id: create-release-branch
+      run: |
+        git config --global user.name "qubership-actions[bot]"
+        git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
+        git checkout -b release-${{ inputs.release }}
+        git config pull.rebase false
+        git pull origin main
+        git push --set-upstream origin release-${{ inputs.release }}
+      shell: bash
+
+    - name: "Update chart version"
+      id: update-chart-version
+      run: |
+        import os
+        import yaml
+
+        with open('${{ inputs.config-file }}', 'r') as f:
+          data = yaml.safe_load(f)
+        for chart in data['charts']:
+          chart_file = chart['chart_file']
+          values_file = chart['values_file']
+          # Update chart version in Chart.yaml
+          release = "${{ inputs.release }}"
+          print(f"{chart['name']} Version: {release}")
+          os.system(f"sed -i 's|^version:.*|version: {release}|' {chart_file}")
+          # Update image version in values.yaml
+          image_ver = chart['version'].replace('${release}', f"{release}")
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+            print(f"image-version={image_ver}")
+            f.write(f"image-version={image_ver}\n")
+          for image in chart['image']:
+            print(f"Updating image version: {image} to {image_ver}")
+            search_str = image.replace('${version}', '')
+            os.system(f"sed -i 's|{search_str}.*|{search_str}{image_ver}|' {values_file}")
+      shell: python
+    - name: "Commit changed files"
+      run: |
+        git config --global user.name "qubership-actions[bot]"
+        git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Set chart and images versions to release [skip ci]"
+        git push
+      shell: bash
