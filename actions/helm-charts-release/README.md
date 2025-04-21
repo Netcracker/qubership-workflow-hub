@@ -17,6 +17,7 @@ The path to the configuration file that specifies the charts and their correspon
 ## Outputs
 
 ### `image-version`
+
 The updated image version after processing the charts.
 
 ## Example Usage
@@ -54,5 +55,5 @@ jobs:
   - `version`: Template for the image version (e.g., `my-image:${release}`).
   - `image`: List of image keys to update in `values.yaml`.
 
-> Example: [helm-charts-release-config.yaml](./helm-charts-release-config.yaml)
-- Ensure that the Python environment is set up to run the `yaml` module for processing the configuration file.
+> Example: [helm-charts-release-config.yaml](./helm-charts-release-config.yaml).
+Ensure that the Python environment is set up to run the `yaml` module for proessing the configuration file.
