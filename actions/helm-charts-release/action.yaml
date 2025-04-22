@@ -25,7 +25,7 @@ inputs:
     default: "parse"
     type: string
 outputs:
-  image-versions:
+  images-versions:
     description: "Image versions updated in the values.yaml file"
     value: ${{ steps.update-versions.outputs.image-versions }}
 runs:
