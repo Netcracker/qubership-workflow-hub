@@ -27,7 +27,7 @@ inputs:
 outputs:
   images-versions:
     description: "Image versions updated in the values.yaml file"
-    value: ${{ steps.update-versions.outputs.image-versions }}
+    value: ${{ steps.update-versions.outputs.images-versions }}
 runs:
   using: "composite"
   steps:
@@ -52,7 +52,7 @@ runs:
         ${GITHUB_ACTION_PATH}/image-versions-replace.py \
           --config-file ${{ inputs.config-file }} \
           --release-version ${{ inputs.release-version }} \
-          --version-replace-method ${{ inputs.version-replace-method }} \
+          --version-replace-method ${{ inputs.version-replace-method }}
       shell: bash
       # env: ${{ vars }}
     - name: "Commit changed files"
