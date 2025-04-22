@@ -61,8 +61,6 @@ runs:
           --config-file ${{ inputs.config-file }} \
           --release-version ${{ inputs.release-version }} \
           --version-replace-method ${{ inputs.version-replace-method }}
-      env:
-        ${{ insert }}: ${{ vars }}
     - name: "Commit changed files"
       if: ${{ inputs.create-release-branch == 'true' }}
       run: |
