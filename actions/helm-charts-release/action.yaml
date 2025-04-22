@@ -53,7 +53,7 @@ runs:
           --config-file ${{ inputs.config-file }} \
           --release-version ${{ inputs.release-version }} \
           --version-replace-method ${{ inputs.version-replace-method }} \
-      shell: python
+      shell: bash
     - name: "Commit changed files"
       if: ${{ inputs.create-release-branch == 'true' }}
       run: |
