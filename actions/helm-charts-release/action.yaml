@@ -48,7 +48,7 @@ runs:
     - name: "Update chart and images versions"
       id: update-versions
       run: |
-        chmod +x ${GITHUB_ACTION_PATH}/image-versions-replace.py
+        sudo chmod +x "${GITHUB_ACTION_PATH}/image-versions-replace.py"
         ${GITHUB_ACTION_PATH}/image-versions-replace.py \
           --config-file ${{ inputs.config-file }} \
           --release-version ${{ inputs.release-version }} \
