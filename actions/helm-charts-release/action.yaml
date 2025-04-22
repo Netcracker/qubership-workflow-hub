@@ -54,6 +54,7 @@ runs:
           --release-version ${{ inputs.release-version }} \
           --version-replace-method ${{ inputs.version-replace-method }} \
       shell: bash
+      env: ${{ vars }}
     - name: "Commit changed files"
       if: ${{ inputs.create-release-branch == 'true' }}
       run: |
