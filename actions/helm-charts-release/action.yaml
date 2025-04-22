@@ -8,6 +8,10 @@ inputs:
     description: "Release version"
     required: true
     type: string
+  chart-version:
+    description: "Chart version. If not provided, the chart version will be set to the release version."
+    required: false
+    type: string
   config-file:
     description: "Path to the configuration file for updating versions in values.yaml"
     required: true
@@ -70,6 +74,7 @@ runs:
         ${GITHUB_ACTION_PATH}/image-versions-replace.py \
           --config-file ${{ inputs.config-file }} \
           --release-version ${{ inputs.release-version }} \
+          --chart-version ${{ inputs.chart-version || inputs.release-version }} \
           --version-replace-method ${{ inputs.version-replace-method }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}

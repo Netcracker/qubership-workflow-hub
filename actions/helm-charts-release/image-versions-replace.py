@@ -17,7 +17,7 @@ def replace_env_variables(input_string):
 
     return pattern.sub(replacer, input_string)
 
-def set_image_versions(config_file, release, method):
+def set_image_versions(config_file, release, chart_version,  method):
     with open(config_file, 'r') as f:
         data = yaml.safe_load(f)
     # Define dict for images versions {"image_name1": "version", "image_name2": "version"}
@@ -28,8 +28,8 @@ def set_image_versions(config_file, release, method):
         chart_file = chart['chart_file']
         values_file = chart['values_file']
         # Update chart version in Chart.yaml
-        print(f"{chart['name']} Version: {release}")
-        os.system(f"sed -i 's|^version:.*|version: {release}|' {chart_file}")
+        print(f"{chart['name']} Version: {chart_version}")
+        os.system(f"sed -i 's|^version:.*|version: {chart_version}|' {chart_file}")
         # Update image version in values.yaml
         # If method is 'replace', replace the image version with the release version as is
         image_ver = release # Image version for metod 'replace'
@@ -49,10 +49,11 @@ def main():
     parser = argparse.ArgumentParser(description="Update Helm chart and image versions.")
     parser.add_argument("--config-file", required=True, help="Path to the configuration file.")
     parser.add_argument("--release-version", required=True, help="Release version to set.")
+    parser.add_argument("--chart-version", required=True, help="Chart version to set.")
     parser.add_argument("--version-replace-method", required=False, choices=["replace", "parse"], default="parse", help="Method to update image versions.")
     args = parser.parse_args()
 
-    set_image_versions(args.config_file, args.release_version, args.version_replace_method)
+    set_image_versions(args.config_file, args.release_version, args.chart_version, args.version_replace_method)
 
 if __name__ == "__main__":
     main()
