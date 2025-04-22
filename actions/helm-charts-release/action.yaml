@@ -24,12 +24,21 @@ inputs:
     required: false
     default: "parse"
     type: string
+  working-directory:
+    description: "Working directory for the action"
+    required: false
+    default: "."
+    type: string
 outputs:
   images-versions:
     description: "Image versions updated in the values.yaml file"
     value: ${{ steps.update-versions.outputs.images-versions }}
 runs:
   using: "composite"
+  defaults:
+    run:
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
   steps:
     # - name: Checkout code
     #   uses: actions/checkout@v4
@@ -43,7 +52,6 @@ runs:
         git config pull.rebase false
         git pull origin main
         git push --set-upstream origin release-${{ inputs.release-version }}
-      shell: bash
 
     - name: "Update chart and images versions"
       id: update-versions
@@ -53,7 +61,6 @@ runs:
           --config-file ${{ inputs.config-file }} \
           --release-version ${{ inputs.release-version }} \
           --version-replace-method ${{ inputs.version-replace-method }}
-      shell: bash
       env:
         ${{ insert }}: ${{ vars }}
     - name: "Commit changed files"
@@ -62,6 +69,5 @@ runs:
         git config --global user.name "qubership-actions[bot]"
         git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
         git add .
-        git commit -m "Set chart and images versions to release [skip ci]"
+        git commit -m "release: Set chart and images versions to release ${{ inputs.release-version }}. [skip ci]"
         git push
-      shell: bash
