@@ -35,13 +35,7 @@ outputs:
     value: ${{ steps.update-versions.outputs.images-versions }}
 runs:
   using: "composite"
-  defaults:
-    run:
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
   steps:
-    # - name: Checkout code
-    #   uses: actions/checkout@v4
     - name: "Create release branch"
       if: ${{ inputs.create-release-branch == 'true' }}
       id: create-release-branch
@@ -52,6 +46,8 @@ runs:
         git config pull.rebase false
         git pull origin main
         git push --set-upstream origin release-${{ inputs.release-version }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
 
     - name: "Update chart and images versions"
       id: update-versions
@@ -61,6 +57,9 @@ runs:
           --config-file ${{ inputs.config-file }} \
           --release-version ${{ inputs.release-version }} \
           --version-replace-method ${{ inputs.version-replace-method }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+
     - name: "Commit changed files"
       if: ${{ inputs.create-release-branch == 'true' }}
       run: |
@@ -69,3 +68,5 @@ runs:
         git add .
         git commit -m "release: Set chart and images versions to release ${{ inputs.release-version }}. [skip ci]"
         git push
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
