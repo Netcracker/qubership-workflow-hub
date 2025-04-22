@@ -38,8 +38,8 @@ def set_image_versions(config_file, release, method):
             if method == 'parse':
                 image_ver = replace_env_variables(image.split(':')[1].replace('${release}', release))
             print(f"Updating {search_str} version to {image_ver}")
-            os.system(f"sed -i 's|{search_str}.*|{search_str}:{image_ver}|' {values_file}")
-            # Add to dictionary for later use
+            os.system(f"sed -i 's|{search_str}:[a-zA-Z0-9._-]*|{search_str}:{image_ver}|' {values_file}")
+            # Add to dictionary for action output
             images_versions[search_str.split('/')[-1]] = image_ver
     # Write the updated images versions to GITHUB_OUTPUT as a JSON string
     with open(os.environ['GITHUB_OUTPUT'], 'a') as f:

@@ -36,6 +36,20 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: "Check release-version is valid Docker image tag"
+      id: check-release-version
+      run: |
+        tag="${{ inputs.release-version }}"
+        # Docker tag regex: must be alphanumeric, '.', '_', or '-', and up to 128 characters
+        if [[ "$tag" =~ ^[a-zA-Z0-9._-]{1,128}$ ]]; then
+            echo "Valid Docker tag"
+        else
+            echo "❌ Provided release-version: '${{ inputs.release-version }}' isn't a valid Docker tag." >> $GITHUB_STEP_SUMMARY
+            echo "Valid Docker tag must be alphanumeric, '.', '_', or '-', and up to 128 characters" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the release-version and try again." >> $GITHUB_STEP_SUMMARY
+            exit 1
+        fi
+      shell: bash
     - name: "Create release branch"
       if: ${{ inputs.create-release-branch == 'true' }}
       id: create-release-branch
@@ -68,5 +82,16 @@ runs:
         git add .
         git commit -m "release: Set chart and images versions to release ${{ inputs.release-version }}. [skip ci]"
         git push
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: "Summary"
+      run: |
+        echo "## Release version" >> $GITHUB_STEP_SUMMARY
+        echo "${{ inputs.release-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "## Images versions" >> $GITHUB_STEP_SUMMARY
+        echo """
+        ${{ toJSON(fromJSON(steps.update-versions.outputs.images-versions)) }}
+        """ >> $GITHUB_STEP_SUMMARY
       shell: bash
       working-directory: ${{ inputs.working-directory }}
