@@ -68,6 +68,7 @@ function bump_version_and_build() {
         echo "Dry run. Not bumping version."
         # shellcheck disable=2086
         mvn --batch-mode deploy $MVN_ARGS ${PROFILE_ARG}
+        # shellcheck disable=2181
         if [ $? -ne 0 ]; then
             echo "Build failed. Exiting."
             echo "❌ Dry-run: build ${MODULE} version ${RELEASE_VERSION} failed." >> "$GITHUB_STEP_SUMMARY"
@@ -82,6 +83,7 @@ function bump_version_and_build() {
         mvn --batch-mode versions:use-releases -DgenerateBackupPoms=false
         # shellcheck disable=2086
         mvn --batch-mode release:prepare -DautoVersionSubmodules=true -DpushChanges=true -DtagNameFormat="v@{project.version}" ${RELEASE_VERSION_ARG} ${PROFILE_ARG}
+        # shellcheck disable=2181
         if [ $? -ne 0 ]; then
             echo "Release preparation failed. Exiting."
             echo "❌ Release: preparation of ${MODULE} version ${RELEASE_VERSION} release failed." >> "$GITHUB_STEP_SUMMARY"
@@ -102,6 +104,7 @@ function bump_version_and_build() {
     echo "::group::Releasing ${MODULE} version ${RELEASE_VERSION}"
     # shellcheck disable=2086
     mvn --batch-mode release:perform -DpushChanges=true ${PROFILE_ARG}
+    # shellcheck disable=2181
     if [ $? -ne 0 ]; then
         echo "Release perform failed. Exiting."
         echo "❌ Release: ${MODULE} version ${RELEASE_VERSION} releas failed." >> "$GITHUB_STEP_SUMMARY"
@@ -124,6 +127,7 @@ function bump_dependencies_versions() {
     echo "::group::Building ${MODULE} version ${VERSION}"
     # shellcheck disable=2086
     mvn --batch-mode deploy -DskipTests=true $MVN_ARGS ${PROFILE_ARG}
+    # shellcheck disable=2181
     if [ $? -ne 0 ]; then
         echo "Build failed. Exiting."
         echo "❌ Build: ${MODULE} version ${VERSION} failed." >> "$GITHUB_STEP_SUMMARY"
@@ -133,6 +137,7 @@ function bump_dependencies_versions() {
     echo "✅ Build: ${MODULE} version ${VERSION} built successfully." >> "$GITHUB_STEP_SUMMARY"
     echo "::group::Updating ${MODULE} dependencies versions to next-snapshot"
     mvn --batch-mode versions:use-next-snapshots -DgenerateBackupPoms=false -Dincludes="org.qubership.cloud*:*,org.qubership.core*:*"
+    # shellcheck disable=2181
     if [ $? -ne 0 ]; then
         echo "Update dependencies failed. Exiting."
         echo "❌ Update: ${MODULE} dependencies versions to next-snapshot failed." >> "$GITHUB_STEP_SUMMARY"
@@ -152,6 +157,7 @@ function bump_dependencies_versions() {
         git add .
         git commit -m "Bump dependencies versions to next-snapshot [skip ci]"
         git push
+        # shellcheck disable=2181
         if [ $? -ne 0 ]; then
             echo "Commit failed. Exiting."
             echo "❌ Commit: ${MODULE} pom.xml with next-snapshot version failed." >> "$GITHUB_STEP_SUMMARY"
