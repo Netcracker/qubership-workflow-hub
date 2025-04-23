@@ -66,6 +66,7 @@ function bump_version_and_build() {
     if [ "${DRY_RUN}" != "false" ]; then
         echo "::group::Building ${MODULE} current version."
         echo "Dry run. Not bumping version."
+        # shellcheck disable=2086
         mvn --batch-mode deploy $MVN_ARGS ${PROFILE_ARG}
         if [ $? -ne 0 ]; then
             echo "Build failed. Exiting."
@@ -121,6 +122,7 @@ function bump_dependencies_versions() {
     VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
     export VERSION
     echo "::group::Building ${MODULE} version ${VERSION}"
+    # shellcheck disable=2086
     mvn --batch-mode deploy -DskipTests=true $MVN_ARGS ${PROFILE_ARG}
     if [ $? -ne 0 ]; then
         echo "Build failed. Exiting."
