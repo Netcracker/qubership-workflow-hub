@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import os
-import yaml
-import re
 import argparse
 import json
+import os
+import re
+import yaml
 
 def replace_env_variables(input_string):
     # Match patterns like ${variable_name}
