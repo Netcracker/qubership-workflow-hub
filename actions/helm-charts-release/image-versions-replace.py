@@ -17,6 +17,16 @@ def replace_env_variables(input_string):
 
     return pattern.sub(replacer, input_string)
 
+def create_summary(images_versions):
+    # Create a summary of the images versions
+    summary = "## Image Versions Updated\n"
+    for image, version in images_versions.items():
+        summary += f"- **{image}**: `{version}`\n"
+    # Write the summary to a file
+    with open('summary.md', 'w') as f:
+        f.write(summary)
+    print("Summary created in summary.md")
+
 def set_image_versions(config_file, release, chart_version,  method):
     with open(config_file, 'r') as f:
         data = yaml.safe_load(f)
@@ -44,6 +54,7 @@ def set_image_versions(config_file, release, chart_version,  method):
     # Write the updated images versions to GITHUB_OUTPUT as a JSON string
     with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
         f.write(f"images-versions={json.dumps(images_versions)}\n")
+    create_summary(images_versions)
 
 def main():
     parser = argparse.ArgumentParser(description="Update Helm chart and image versions.")

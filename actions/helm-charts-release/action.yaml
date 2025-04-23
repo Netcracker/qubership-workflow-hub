@@ -79,6 +79,17 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
 
+    - name: "Summary"
+      run: |
+        echo "## Release version ${{ inputs.release-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "Chart version ${{ inputs.chart-version || inputs.release-version }}" >> $GITHUB_STEP_SUMMARY
+        if [[ -f summary.md ]]; then
+          cat summary.md >> $GITHUB_STEP_SUMMARY
+          rm -f summary.md
+        fi
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+
     - name: "Commit changed files"
       if: ${{ inputs.create-release-branch == 'true' }}
       run: |
@@ -87,16 +98,5 @@ runs:
         git add .
         git commit -m "release: Set chart and images versions to release ${{ inputs.release-version }}. [skip ci]"
         git push
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-
-    - name: "Summary"
-      run: |
-        echo "## Release version" >> $GITHUB_STEP_SUMMARY
-        echo "${{ inputs.release-version }}" >> $GITHUB_STEP_SUMMARY
-        echo "## Images versions" >> $GITHUB_STEP_SUMMARY
-        echo """
-        ${{ toJSON(fromJSON(steps.update-versions.outputs.images-versions)) }}
-        """ >> $GITHUB_STEP_SUMMARY
       shell: bash
       working-directory: ${{ inputs.working-directory }}
