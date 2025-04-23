@@ -17,7 +17,6 @@ This Action automates the process of committing changes and pushing them to a re
 | `author_email`   | The email of the commit author.        | No       | `qubership-actions[bot]@qubership.com` |
 | `commit_message` | The commit message for the new commit. | No       | `Automated commit`                    |
 
-
 ## Usage Example
 
 Below is an example of how to use this action in a GitHub Actions workflow:
