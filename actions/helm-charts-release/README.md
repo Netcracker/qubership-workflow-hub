@@ -27,7 +27,9 @@ Whether to create a release branch. Defaults to `true`. If set to `false`, then 
 ### `version-replace-method`
 
 **Optional**  
-The method to replace the version in `values.yaml`. Can be `replace` or `parse`. Defaults to `parse`. If set to `replace` the action will just replace the versions of docker images with `release-version` value. If set to `parse` the action read provided `config-file` and substitute any environment variables provided in the version part. For example if you have some 3-rd party image in `values.yaml` file and want to manage it's version, you can add repository level variable and use it in the config file: `some-thirg-party-image:${THIRD_PARTY_VERSION}`.
+The method to replace the version in `values.yaml`.
+Can be `replace` or `parse`. Defaults to `parse`.
+If set to `replace` the action will just replace the versions of docker images with `release-version` value. If set to `parse` the action read provided `config-file` and substitute any environment variables provided in the version part. For example if you have some 3-rd party image in `values.yaml` file and want to manage it's version, you can add repository level variable and use it in the config file: `some-thirg-party-image:${THIRD_PARTY_VERSION}`.
 
 ### `working-directory`
 
