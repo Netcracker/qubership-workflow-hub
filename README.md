@@ -51,6 +51,7 @@ Below is the short description of how to implement common workflows in any Netcr
 | secrets.MAVEN_GPG_PASSPHRASE  | GPG private key passphrase                                                           |
 | secrets.PYPI_API_TOKEN        | Token to publish packages to [PYPI](https://pypi.org/) registry                      |
 | secrets.GH_ACCESS_TOKEN       | Token for "tech user" with extended acess rights                                     |
+| secrets.WORKFLOWS_TOKEN       | Classic Token with workflow scope |
 | secrets.SONAR_TOKEN           | Token to access [SonarQube](https://www.sonarsource.com/plans-and-pricing/sonarcloud/)|
 
 ## Common workflows
