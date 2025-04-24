@@ -28,7 +28,8 @@ on:
         required: false
       gpg-passphrase:
         required: false
-
+permissions:
+  contents: write
 jobs:
   mvn-deploy:
     runs-on: ubuntu-latest
