@@ -43,6 +43,7 @@ runs:
       uses: actions/checkout@v4
       with:
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Configure Git
       shell: bash
