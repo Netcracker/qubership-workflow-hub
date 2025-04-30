@@ -108,7 +108,6 @@ The configuration file must adhere to the following JSON schema:
   "properties": {
     "archives": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "type": "object",
         "properties": {
@@ -151,21 +150,6 @@ The configuration file must adhere to the following JSON schema:
 
 ---
 
-## Key Notes
+### Note
 
-1. **Validation**:
-   - The configuration file is validated against the JSON schema. If the file is invalid, the action will fail with a detailed error message.
-
-2. **Archiving**:
-   - Supported archive formats are `zip`, `tar`, and `tar.gz`. The archive type must be specified in the configuration file.
-
-3. **File Copying**:
-   - Individual files can be copied to the destination folder with custom names.
-
-5. **Dry-Run Mode**:
-   - When `dry-run` is enabled, the action will simulate the archiving and uploading process without making any changes.
-
-6. **Error Handling**:
-   - The action provides detailed error messages for missing files, invalid configurations, and failed uploads.
-
----
+In the current implementation, it is mandatory to declare a configuration file. The action will not work without it. Ensure that the configuration file is properly defined and adheres to the schema.
