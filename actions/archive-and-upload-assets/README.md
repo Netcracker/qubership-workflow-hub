@@ -11,7 +11,7 @@ This GitHub Action automates the process of archiving specified folders and file
 - Supports copying individual files with custom names.
 - Uploads the archived files and copied files as release assets.
 - Supports dry-run mode for testing without uploading files.
-- **Preserves file extensions** for all uploaded files.
+- Preserves file extensions for all uploaded files.
 ---
 
 ## 📌 Inputs
@@ -68,8 +68,8 @@ jobs:
 ## Configuration File
 
 The configuration file specifies the folders and files to archive or copy. It must follow the JSON schema provided in the repository. The configuration file supports two main sections:
-1. **`archives`**: Specifies folders to archive.
-2. **`files`**: Specifies individual files to copy.
+1. `archives`: Specifies folders to archive.
+2. `files`: Specifies individual files to copy.
 
 #### Example Configuration File
 
