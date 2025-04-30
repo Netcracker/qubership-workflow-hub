@@ -12,6 +12,7 @@ This GitHub Action automates the process of archiving specified folders and file
 - Uploads the archived files and copied files as release assets.
 - Supports dry-run mode for testing without uploading files.
 - Preserves file extensions for all uploaded files.
+
 ---
 
 ## 📌 Inputs
