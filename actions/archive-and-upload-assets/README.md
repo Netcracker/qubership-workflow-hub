@@ -69,8 +69,8 @@ jobs:
 ## Configuration File
 
 The configuration file specifies the folders and files to archive or copy. It must follow the JSON schema provided in the repository. The configuration file supports two main sections:
-1. `archives`: Specifies folders to archive.
-2. `files`: Specifies individual files to copy.
+1. **`archives`**: Specifies folders to archive.
+2. **`files`**: Specifies individual files to copy.
 
 ### Example Configuration File
 
