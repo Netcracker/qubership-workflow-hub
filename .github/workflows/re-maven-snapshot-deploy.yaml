@@ -90,6 +90,7 @@ jobs:
             for arg in ${{ inputs.additional-mvn-args }}
             do
               ADDITIONAL_MVN_ARGS="${ADDITIONAL_MVN_ARGS} \"${arg}\""
+            done
             echo "✅ Additional mvn args provided: ${ADDITIONAL_MVN_ARGS}" >> $GITHUB_STEP_SUMMARY
             echo "✅ Additional mvn args provided: ${ADDITIONAL_MVN_ARGS}"
           fi
