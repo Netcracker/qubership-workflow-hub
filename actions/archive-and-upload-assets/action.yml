@@ -4,19 +4,29 @@ description: "Work with assets in a repository."
 inputs:
   config-path:
     description: "The path to the asset configuration file."
+    default: "./.github/assets-config.yml"
     required: true
   ref:
     description: "The tag for Release to upload assets."
-    required: true
+    required: false
   dist-path:
     description: "The path to upload archive."
     required: false
     default: "dist"
   upload:
     default: 'false'
-    description: "Upload assets to a repository."
+    description: "DEPRIVCATED. Upload assets to a repository."
     required: false
-
+  dry-run:
+    default: 'false'
+    description: "Dry run mode. No files will upload to assets."
+    required: false
+  files:
+    description: "The files to upload."
+    required: false
+  folders:
+    description: "The folders to upload."
+    required: false
 
 runs:
  using: "node16"

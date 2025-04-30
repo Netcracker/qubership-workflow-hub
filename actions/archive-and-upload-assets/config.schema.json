@@ -23,8 +23,23 @@
         "required": ["source", "outputName", "archiveType"],
         "additionalProperties": false
       }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "outputName": {
+            "type": "string"
+          }
+        },
+        "required": ["source", "outputName"],
+        "additionalProperties": false
+      }
     }
   },
-  "required": ["archives"],
   "additionalProperties": false
 }
