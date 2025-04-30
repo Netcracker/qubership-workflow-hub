@@ -72,7 +72,7 @@ The configuration file specifies the folders and files to archive or copy. It mu
 1. `archives`: Specifies folders to archive.
 2. `files`: Specifies individual files to copy.
 
-#### Example Configuration File
+### Example Configuration File
 
 ```yaml
 archives:
