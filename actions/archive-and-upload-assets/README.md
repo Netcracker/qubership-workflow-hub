@@ -42,9 +42,6 @@ Below is an example of how to use this action in a GitHub Actions workflow:
 name: Archive and Upload Assets
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
