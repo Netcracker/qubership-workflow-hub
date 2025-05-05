@@ -48,6 +48,7 @@ runs:
   using: "composite"
   steps:
     - name: "Setup xmlstarlet"
+      shell: bash
       run: |
         sudo apt install -y xmlstarlet
     - name: "Check that version is SNAPSHOT"
@@ -85,6 +86,7 @@ runs:
 
     - name: "Additional setup for GitHub packages"
       if: ${{ inputs.target-store == 'github' }}
+      shell: bash
       run: |
         echo "Disableing the central-publishing-maven-plugin"
         xmlstarlet ed -L -d "/_:project/_:build/_:plugins/_:plugin[./_:artifactId='central-publishing-maven-plugin']" ./pom.xml
@@ -92,6 +94,7 @@ runs:
         echo "MAVEN_ALT_REPOSITORY_ARG=-DaltDeploymentRepository=github::https://maven.pkg.github.com/${{ github.repository }}" >> $GITHUB_ENV
 
     - name: "Deploy to ${{ inputs.target-store }}"
+      shell: bash
       run: |
         mvn --batch-mode ${{ env.MVN_COMMAND }} ${MAVEN_ALT_REPOSITORY_ARG} ${{ inputs.additional-mvn-args }}
       env:
