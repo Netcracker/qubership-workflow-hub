@@ -21,7 +21,7 @@ inputs:
     type: string
     description: "Target store for the artifact"
     required: false
-    default: "maven-central"
+    default: "central"
   additional-mvn-args:
     type: string
     description: "Additional mvn cmd-line params (e.g. '-Dskip.tests=true')"
@@ -72,51 +72,29 @@ runs:
           echo "MVN_COMMAND=deploy" >> $GITHUB_ENV
         fi
 
-  # ================= Maven Central deployment part
-    - name: "Set up JDK for Maven Central deployment"
-      if: ${{ inputs.target-store == 'maven-central' }}
+    - name: "Set up JDK"
       uses: actions/setup-java@v4
       with:
         java-version: ${{ inputs.java-version }}
         distribution: "temurin"
-        server-id: central
+        server-id: ${{ inputs.target-store }}
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ inputs.gpg-private-key }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-    - name: "Deploy to Maven Central"
-      if: ${{ inputs.target-store == 'maven-central' }}
+    - name: "Additional setup for GitHub packages"
+      if: ${{ inputs.target-store == 'github' }}
       run: |
-        mvn --batch-mode ${{ env.MVN_COMMAND }} ${{ inputs.additional-mvn-args }}
+        echo "Disableing the central-publishing-maven-plugin"
+        xmlstarlet ed -L -d "/_:project/_:build/_:plugins/_:plugin[./_:artifactId='central-publishing-maven-plugin']" ./pom.xml
+        echo "Set alternative deployment repository"
+        echo "MAVEN_ALT_REPOSITORY_ARG=-DaltDeploymentRepository=github::https://maven.pkg.github.com/${{ github.repository }}" >> $GITHUB_ENV
+
+    - name: "Deploy to ${{ inputs.target-store }}"
+      run: |
+        mvn --batch-mode ${{ env.MVN_COMMAND }} ${MAVEN_ALT_REPOSITORY_ARG} ${{ inputs.additional-mvn-args }}
       env:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
-
-  # ================= GitHub Packages deployment part
-    - name: "Set up JDK"
-      if: ${{ inputs.target-store == 'github-packages' }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ inputs.java-version }}
-        distribution: "temurin"
-        server-id: github
-        server-username: GITHUB_USER
-        server-password: GITHUB_TOKEN
-        gpg-private-key: ${{ inputs.gpg-private-key }}
-        gpg-passphrase: MAVEN_GPG_PASSPHRASE
-
-    - name: "Disable Maven Central Deploy"
-      if: ${{ inputs.target-store == 'github-packages' }}
-      run: |
-        xmlstarlet ed -L -d "/_:project/_:build/_:plugins/_:plugin[./_:artifactId='central-publishing-maven-plugin']" ./pom.xml
-
-    - name: "Maven deploy"
-      if: ${{ inputs.target-store == 'github-packages' }}
-      run: |
-        mvn --batch-mode ${{ env.MVN_COMMAND }} -DaltDeploymentRepository=github::https://maven.pkg.github.com/${{ github.repository }} ${{ inputs.additional-mvn-args }}
-      env:
-        GITHUB_TOKEN: ${{ inputs.maven-token }}
-        GITHUB_USER: ${{ github.actor }}
-        MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
