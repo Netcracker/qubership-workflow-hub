@@ -11,21 +11,25 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 - Allows custom image names and tags.
 - Provides dry-run mode for testing without pushing images.
 - Supports metadata extraction for automatic tagging.
+- Supports downloading artifacts with flexible configuration.
 
 ---
 
 ## 📌 Inputs
 
-| Name               | Description                                                                 | Required | Default                     |
-| ------------------ | --------------------------------------------------------------------------- | -------- | --------------------------- |
-| `ref`              | Branch to create a release from.                                           | No       | `""`                        |
-| `custom-image-name`| Custom name for the Docker image. If not provided, it will be auto-generated. | No       | `""`                        |
-| `context`          | Pipeline context for the Docker build.                                     | No       | `git`                       |
-| `dry-run`          | Run without pushing (dry run).                                             | No       | `false`                     |
-| `download-artifact`| Flag to download the artifact.                                             | No       | `false`                     |
-| `component`        | Component configuration in JSON format (an array with a single object).    | No       | `[{"name": "default", "file": "./Dockerfile", "context": "."}]` |
-| `platforms`        | Platforms for which the Docker image will be built.                       | No       | `linux/amd64`               |
-| `tags`             | Additional Docker image tags. If tags are provided, they will be added to the automatically generated tags. | No       | `""`                        |                     |
+| Name                        | Description                                                                 | Required | Default                     |
+| --------------------------- | --------------------------------------------------------------------------- | -------- | --------------------------- |
+| `ref`                       | Branch to create a release from.                                           | No       | `""`                        |
+| `custom-image-name`         | Custom name for the Docker image. If not provided, it will be auto-generated. | No       | `""`                        |
+| `context`                   | Pipeline context for the Docker build.                                     | No       | `git`                       |
+| `dry-run`                   | Run without pushing (dry run).                                             | No       | `false`                     |
+| `download-artifact`         | Flag to download the artifact.                                             | No       | `false`                     |
+| `component`                 | Component configuration in JSON format (an array with a single object).    | No       | `[{"name": "default", "file": "./Dockerfile", "context": "."}]` |
+| `platforms`                 | Platforms for which the Docker image will be built.                       | No       | `linux/amd64`               |
+| `tags`                      | Additional Docker image tags. If tags are provided, they will be added to the automatically generated tags. | No       | `""`                        |
+| `download-artifact-path`    | Destination path for downloaded artifacts. Supports basic tilde expansion. | No       | `$GITHUB_WORKSPACE`         |
+| `download-artifact-ids`     | IDs of the artifacts to download, comma-separated. Either this or `name` can be used, but not both. (In Design)| No       | `""`                        |
+| `download-artifact-pattern` | A glob pattern for selecting artifacts to download. Ignored if `name` is specified. (In Design)| No       | `""`                        |
 
 ---
 
@@ -58,9 +62,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: latest, v1.0.0
           dry-run: false
+          download-artifact: true
+          download-artifact-path: ./artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
 ---
 
 ## Additional Information
@@ -81,7 +88,11 @@ If the `tags` input is empty, the action will automatically generate tags based 
 
 When the `download-artifact` input is set to `true`, the action will attempt to download an artifact that was previously uploaded in the same workflow using the standard `actions/upload-artifact@v4` action.
 
-The artifact name must match the value provided in the `custom-image-name` input. This ensures that the correct artifact is downloaded and used during the Docker build process. If no artifact with the specified name exists, the action will fail.
+#### Additional Download Options
+
+- **`download-artifact-path`**: Define the destination path for downloaded artifacts. Defaults to `$GITHUB_WORKSPACE`.
+- **`download-artifact-artifact-ids`**: Specify artifact IDs to download, separated by commas. **`In Desing`**
+- **`download-artifact-pattern`**: Use a glob pattern to filter artifacts for download. Ignored if `name` is specified. **`In Desing`**
 
 ### Logic for Determining the Docker Image Name
 
@@ -94,8 +105,9 @@ The action uses the following logic to determine the final name of the Docker im
    - If `custom-image-name` is not provided, the action calculates the repository name (extracted from the `GITHUB_REPOSITORY` environment variable) and uses it as the Docker image name.
    - If `custom-image-name` is provided and a component file is defined, the names will be taken from the component configuration instead.
 
+---
 
-### Example Configuration
+## Example Configuration
 
 Below is an example of how to configure the action to use a component file for determining the image name:
 
