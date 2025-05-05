@@ -121,12 +121,25 @@ This mode is useful for previewing the cleanup results and ensuring the filterin
 
 ### Priority of Tag Filtering
 
+The action filters tags in the following order of priority:
+
 1. **Excluded Tags**:
-   - Versions with tags matching `excluded-tags` are **always skipped**, even if they match `included-tags`.
+   - Versions with tags matching `excluded-tags` are **always skipped**, even if they also match `included-tags`.
+   - This ensures that excluded tags take precedence over any other filtering criteria.
+
 2. **Included Tags**:
-   - If specified, only versions with tags matching `included-tags` are considered for deletion.
+   - If `included-tags` is specified, only versions with tags matching `included-tags` are considered for deletion.
+   - Tags that do not match `included-tags` are ignored, unless they are explicitly excluded.
+
 3. **Default Behavior**:
-   - If `included-tags` is empty, all versions (except those excluded) are considered for deletion.
+   - If `included-tags` is empty, all versions are considered for deletion, except those explicitly excluded by `excluded-tags`.
+
+#### Filtering Process
+
+The filtering process works as follows:
+1. **Step 1**: Exclude versions with tags matching `excluded-tags`.
+2. **Step 2**: From the remaining versions, include only those matching `included-tags` (if specified).
+3. **Step 3**: If `included-tags` is not specified, all remaining versions are considered for deletion.
 
 ---
 
@@ -150,5 +163,3 @@ The action supports flexible tag matching using exact matches and wildcard patte
 | `*release`    | `v1-release`, `candidate-release`| `release-v1`         |
 | `*release*`   | `v1-release-candidate`, `release-v1` | `v1-candidate`    |
 | `release*v1`  | `release-v1`, `release-candidate-v1` | `release-v2`     |
-
-This compact explanation provides a clear overview of the supported patterns, helping users configure their tag filtering effectively.
