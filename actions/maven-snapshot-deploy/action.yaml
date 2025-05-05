@@ -55,23 +55,48 @@ runs:
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}
-        IS_SNAPSHOT=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:properties/x:revision[contains(., '-SNAPSHOT')]" ./pom.xml || echo "")
+        VERSION_CHECK=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:version[contains(., '{revision}')]" ./pom.xml || echo "")
+        # If project/version is not a reference to project/properties/revision, then check project/version if it contains '-SNAPSHOT'
+        # Else check project/properties/revision if it contains '-SNAPSHOT'
+        if [[ "${VERSION_CHECK}" == "" ]]
+        then
+          IS_SNAPSHOT=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:version[contains(., '-SNAPSHOT')]" ./pom.xml || echo "")
+        else
+          IS_SNAPSHOT=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:properties/x:revision[contains(., '-SNAPSHOT')]" ./pom.xml || echo "")
+        fi
         if [[ "${IS_SNAPSHOT}" == "" ]]
         then
-          echo "❗ The project/properties/revision in the pom.xml has no '-SNAPSHOT' postfix." >> $GITHUB_STEP_SUMMARY
-          echo "❗ Workflow will not deploy any artifacts. It will execute 'mvn install' command." >> $GITHUB_STEP_SUMMARY
-          echo "❗ The project/properties/revision in the pom.xml has no '-SNAPSHOT' postfix."
-          echo "❗ Workflow will not deploy any artifacts. It will execute 'mvn install' command."
+          echo "ℹ️ The project's version in the pom.xml has no '-SNAPSHOT' postfix." >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ Workflow will not deploy any artifacts. It will execute 'mvn install' command." >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ The project's version in the pom.xml has no '-SNAPSHOT' postfix."
+          echo "ℹ️ Workflow will not deploy any artifacts. It will execute 'mvn install' command."
           echo "IS_SNAPSHOT=false" >> $GITHUB_ENV
           echo "MVN_COMMAND=install" >> $GITHUB_ENV
         else
-          echo "✅ The project/properties/revision in the pom.xml has '-SNAPSHOT' postfix" >> $GITHUB_STEP_SUMMARY
+          echo "✅ The project's version in the pom.xml has '-SNAPSHOT' postfix" >> $GITHUB_STEP_SUMMARY
           echo "✅ Workflow will deploy SNAPSHOT artifact" >> $GITHUB_STEP_SUMMARY
-          echo "✅ The project/properties/revision in the pom.xml has '-SNAPSHOT' postfix."
+          echo "✅ The project's version in the pom.xml has '-SNAPSHOT' postfix."
           echo "✅ Workflow will deploy SNAPSHOT artifact"
           echo "IS_SNAPSHOT=true" >> $GITHUB_ENV
           echo "MVN_COMMAND=deploy" >> $GITHUB_ENV
         fi
+    - name: "Setup mvn additional args"
+      shell: bash
+      run: |
+        if [[ "${{ inputs.additional-mvn-args }}" == "" ]]
+        then
+          echo "ℹ️ No additional mvn args provided. Using default ones." >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ No additional mvn args provided. Using default ones."
+        else
+          ADDITIONAL_MVN_ARGS=""
+          for arg in ${{ inputs.additional-mvn-args }}
+          do
+            ADDITIONAL_MVN_ARGS="${ADDITIONAL_MVN_ARGS} \"${arg}\""
+          done
+          echo "✅ Additional mvn args provided: ${ADDITIONAL_MVN_ARGS}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Additional mvn args provided: ${ADDITIONAL_MVN_ARGS}"
+        fi
+        echo "ADDITIONAL_MVN_ARGS=${ADDITIONAL_MVN_ARGS}" >> $GITHUB_ENV
 
     - name: "Set up JDK"
       uses: actions/setup-java@v4
@@ -96,7 +121,7 @@ runs:
     - name: "Deploy to ${{ inputs.target-store }}"
       shell: bash
       run: |
-        mvn --batch-mode ${{ env.MVN_COMMAND }} ${MAVEN_ALT_REPOSITORY_ARG} ${{ inputs.additional-mvn-args }}
+        mvn --batch-mode ${{ env.MVN_COMMAND }} ${MAVEN_ALT_REPOSITORY_ARG} ${ADDITIONAL_MVN_ARGS}
       env:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-token }}
