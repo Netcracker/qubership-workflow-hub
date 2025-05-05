@@ -1,0 +1,122 @@
+---
+# The workflow to deploy snapshot artifact versions to Maven Central or GitHub Packages
+# Inputs:
+#   java-version: JDK version (e.g. '21')
+#   target-store: Target store for the artifact ('maven-central' or 'github-packages')
+#   additional-mvn-args: Additional mvn cmd-line params (e.g. '-Dskip.tests=true')
+#   maven-username: Maven username
+#   maven-token: Maven token
+#   gpg-private-key: GPG private key
+#   gpg-passphrase: GPG passphrase
+
+name: "Maven Snapshot Deploy"
+description: "Builds and deploys a Maven project to either Maven Central or GitHub Packages. It checks if the version is a SNAPSHOT version and deploys accordingly. If not, it runs 'mvn install' instead."
+inputs:
+  java-version:
+    type: string
+    description: "JDK version (e.g. '21')"
+    required: false
+    default: "21"
+  target-store:
+    type: string
+    description: "Target store for the artifact"
+    required: false
+    default: "maven-central"
+  additional-mvn-args:
+    type: string
+    description: "Additional mvn cmd-line params (e.g. '-Dskip.tests=true')"
+    required: false
+    default: ""
+  maven-username:
+    type: string
+    description: "Maven username"
+    required: false
+  maven-token:
+    type: string
+    description: "Maven token"
+    required: true
+  gpg-private-key:
+    type: string
+    description: "GPG private key"
+    required: false
+  gpg-passphrase:
+    type: string
+    description: "GPG passphrase"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Setup xmlstarlet"
+      run: |
+        sudo apt install -y xmlstarlet
+    - name: "Check that version is SNAPSHOT"
+      shell: bash
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        IS_SNAPSHOT=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:properties/x:revision[contains(., '-SNAPSHOT')]" ./pom.xml || echo "")
+        if [[ "${IS_SNAPSHOT}" == "" ]]
+        then
+          echo "❗ The project/properties/revision in the pom.xml has no '-SNAPSHOT' postfix." >> $GITHUB_STEP_SUMMARY
+          echo "❗ Workflow will not deploy any artifacts. It will execute 'mvn install' command." >> $GITHUB_STEP_SUMMARY
+          echo "❗ The project/properties/revision in the pom.xml has no '-SNAPSHOT' postfix."
+          echo "❗ Workflow will not deploy any artifacts. It will execute 'mvn install' command."
+          echo "IS_SNAPSHOT=false" >> $GITHUB_ENV
+          echo "MVN_COMMAND=install" >> $GITHUB_ENV
+        else
+          echo "✅ The project/properties/revision in the pom.xml has '-SNAPSHOT' postfix" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Workflow will deploy SNAPSHOT artifact" >> $GITHUB_STEP_SUMMARY
+          echo "✅ The project/properties/revision in the pom.xml has '-SNAPSHOT' postfix."
+          echo "✅ Workflow will deploy SNAPSHOT artifact"
+          echo "IS_SNAPSHOT=true" >> $GITHUB_ENV
+          echo "MVN_COMMAND=deploy" >> $GITHUB_ENV
+        fi
+
+  # ================= Maven Central deployment part
+    - name: "Set up JDK for Maven Central deployment"
+      if: ${{ inputs.target-store == 'maven-central' }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: "temurin"
+        server-id: central
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ inputs.gpg-private-key }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+    - name: "Deploy to Maven Central"
+      if: ${{ inputs.target-store == 'maven-central' }}
+      run: |
+        mvn --batch-mode ${{ env.MVN_COMMAND }} ${{ inputs.additional-mvn-args }}
+      env:
+        MAVEN_USERNAME: ${{ inputs.maven-username }}
+        MAVEN_PASSWORD: ${{ inputs.maven-token }}
+        MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+
+  # ================= GitHub Packages deployment part
+    - name: "Set up JDK"
+      if: ${{ inputs.target-store == 'github-packages' }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: "temurin"
+        server-id: github
+        server-username: GITHUB_USER
+        server-password: GITHUB_TOKEN
+        gpg-private-key: ${{ inputs.gpg-private-key }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+    - name: "Disable Maven Central Deploy"
+      if: ${{ inputs.target-store == 'github-packages' }}
+      run: |
+        xmlstarlet ed -L -d "/_:project/_:build/_:plugins/_:plugin[./_:artifactId='central-publishing-maven-plugin']" ./pom.xml
+
+    - name: "Maven deploy"
+      if: ${{ inputs.target-store == 'github-packages' }}
+      run: |
+        mvn --batch-mode ${{ env.MVN_COMMAND }} -DaltDeploymentRepository=github::https://maven.pkg.github.com/${{ github.repository }} ${{ inputs.additional-mvn-args }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.maven-token }}
+        GITHUB_USER: ${{ github.actor }}
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
