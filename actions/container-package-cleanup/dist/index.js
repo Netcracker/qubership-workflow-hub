@@ -29919,13 +29919,15 @@ function wrappy (fn, cb) {
 
 const core = __nccwpck_require__(8335);
 class Report {
-    async writeSummary(filteredPackagesWithVersionsForDelete) {
+    async writeSummary(filteredPackagesWithVersionsForDelete, dryRun = false) {
         if (!filteredPackagesWithVersionsForDelete || filteredPackagesWithVersionsForDelete.length === 0) {
             core.info("❗️No packages or versions to delete.");
             return;
         }
 
         // Calculate summary statistics.
+
+        const dryRunText = dryRun ? "(Dry Run)" : "";
         const totalPackages = filteredPackagesWithVersionsForDelete.length;
         const totalDeletedVersions = filteredPackagesWithVersionsForDelete.reduce((total, item) => total + item.versions.length, 0);
 
@@ -29947,7 +29949,7 @@ class Report {
             tableData.push([pkgInfo, versionsInfo]);
         });
 
-        core.summary.addRaw(`## 🎯 Container Package Cleanup Summary\n\n`);
+        core.summary.addRaw(`## 🎯 Container Package Cleanup Summary ${dryRunText}\n\n`);
         core.summary.addRaw(`**Total Packages Processed:** ${totalPackages}
                              **Total Deleted Versions:** ${totalDeletedVersions}\n\n`);
         core.summary.addRaw(`---\n\n`);
@@ -30000,7 +30002,7 @@ class OctokitWrapper {
    * @returns {Promise<Array>} - A list of packages.
    */
   async listPackages(owner, package_type, type) {
-    return type ? await this.listPackagesForOrganization(owner, package_type) : this.listPackagesForUser(owner, package_type);
+    return type ? this.listPackagesForOrganization(owner, package_type) : this.listPackagesForUser(owner, package_type);
   }
 
   /**
@@ -30023,13 +30025,8 @@ class OctokitWrapper {
    */
   async listPackagesForOrganization(org, package_type) {
     try {
-      return await this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
-        {
-          org: org,
-          package_type: 'container',
-          per_page: 200,      // максимум 100 пакетов за запрос
-        }
-      );
+      const response = await this.octokit.rest.packages.listPackagesForOrganization({ org, package_type });
+      return response.data;
     } catch (error) {
       console.error(`Error fetching packages for organization ${org}:`, error);
       throw error;
@@ -30044,14 +30041,8 @@ class OctokitWrapper {
    */
   async listPackagesForUser(username, package_type) {
     try {
-      return await this.octokit.paginate(this.octokit.rest.packages.listPackagesForUser,
-        {
-          username,
-          package_type,
-          per_page: 100,      // максимум 100 пакетов за запрос
-        }
-      );
-
+      const response = await this.octokit.rest.packages.listPackagesForUser({ username, package_type });
+      return response.data;
     } catch (error) {
       console.error(`Error fetching packages for user ${username}:`, error);
       throw error;
@@ -30067,13 +30058,12 @@ class OctokitWrapper {
    */
   async getPackageVersionsForUser(owner, package_type, package_name) {
     try {
-      return await this.octokit.paginate(this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser,
-        {
-          package_type,
-          package_name,
-          username: owner,
-          per_page: 100,
-        });
+      const response = await this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
+        package_type,
+        package_name,
+        username: owner,
+      });
+      return response.data;
     } catch (error) {
       console.error(`Error fetching package versions for ${owner}/${package_name}:`, error);
       throw error;
@@ -30089,14 +30079,12 @@ class OctokitWrapper {
    */
   async getPackageVersionsForOrganization(org, package_type, package_name) {
     try {
-      return await this.octokit.paginate(this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByOrg,
-        {
-          package_type,
-          package_name,
-          org,
-          per_page: 100,
-        });
-
+      const response = await this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
+        package_type,
+        package_name,
+        org,
+      });
+      return response.data;
     } catch (error) {
       console.error(`Error fetching package versions for ${org}/${package_name}:`, error);
       throw error;
@@ -32073,8 +32061,8 @@ async function run() {
 
   const isDebug = core.getInput("debug").toLowerCase() === "true";
   const dryRun = core.getInput("dry-run").toLowerCase() === "true";
-  core.info(`🔹 isDebug: ${isDebug}`);
-  core.info(`🔹 dryRun: ${dryRun}`);
+  core.info(`🔹isDebug: ${isDebug}`);
+  core.info(`🔹dryRun: ${dryRun}`);
 
   const thresholdDays = parseInt(core.getInput('threshold-days'), 10) || 7;
 
@@ -32098,16 +32086,12 @@ async function run() {
   const wrapper = new OctokitWrapper(process.env.PACKAGE_TOKEN);
 
   const isOrganization = await wrapper.isOrganization(owner);
-  core.info(`🔹 Organization marker: ${isOrganization}`);
+  core.info(`🔹Organization marker: ${isOrganization}`);
 
   let packages = await wrapper.listPackages(owner, 'container', isOrganization);
-  // core.info(`🔹Packages ${JSON.stringify(packages, null, 2)}`);
-
-  let filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  // core.info(`🔹Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
+  let filteredPackages = packages.filter((pkg) => pkg.repository.name === repo);
 
   let packagesNames = filteredPackages.map((pkg) => pkg.name);
-  // core.info(`🔹Packages names: ${JSON.stringify(packagesNames, null, 2)}`);
 
   const packagesWithVersions = await Promise.all(
     filteredPackages.map(async (pkg) => {
@@ -32162,7 +32146,8 @@ async function run() {
 
   if (dryRun) {
     core.warning("Dry run mode enabled. No versions will be deleted.");
-    return;
+    await showReport(filteredPackagesWithVersionsForDelete, true);
+    return; 
   }
 
   for (const { package: pkg, versions } of filteredPackagesWithVersionsForDelete) {
@@ -32172,18 +32157,50 @@ async function run() {
     }
   }
 
-  await new Report().writeSummary(filteredPackagesWithVersionsForDelete);
-  core.info("✅ All specified versions have been deleted successfully.");
-
+  await showReport(filteredPackagesWithVersionsForDelete);
 }
 
+// function wildcardMatch(tag, pattern) {
+//   if (!pattern.includes('*')) {
+//     return tag.toLowerCase() === pattern.toLowerCase();
+//   }
+//   const escapedPattern = pattern.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&');
+//   const regex = new RegExp(escapedPattern.replace(/\*/g, '.*'), 'i');
+//   return regex.test(tag);
+// }
+
+
 function wildcardMatch(tag, pattern) {
-  if (!pattern.includes('*')) {
-    return tag.toLowerCase() === pattern.toLowerCase();
+  const t = tag.toLowerCase();
+  const p = pattern.toLowerCase();
+
+  if (!p.includes('*')) {
+    return t === p;
   }
-  const escapedPattern = pattern.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&');
-  const regex = new RegExp(escapedPattern.replace(/\*/g, '.*'), 'i');
-  return regex.test(tag);
+
+  if (p.endsWith('*') && !p.startsWith('*')) {
+    const prefix = p.slice(0, -1);
+    return t.startsWith(prefix);
+  }
+
+  if (p.startsWith('*') && !p.endsWith('*')) {
+    const suffix = p.slice(1);
+    return t.endsWith(suffix);
+  }
+
+  if (p.startsWith('*') && p.endsWith('*')) {
+    const substr = p.slice(1, -1);
+    return t.includes(substr);
+  }
+
+  const escaped = p.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&').replace(/\*/g, '.*');
+  const re = new RegExp(`^${escaped}$`, 'i');
+  return re.test(tag);
+}
+
+async function showReport(packagesWithVersionsForDelete, dryRun = false) {
+  await new Report().writeSummary(packagesWithVersionsForDelete, dryRun);
+  core.info("✅ All specified versions have been deleted successfully.");
 }
 
 run();
