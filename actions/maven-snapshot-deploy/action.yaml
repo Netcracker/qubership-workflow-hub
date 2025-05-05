@@ -50,6 +50,12 @@ runs:
     - name: "Setup xmlstarlet"
       shell: bash
       run: |
+        # Skip installing pacakge docs {makes the man-db trigger much faster)
+        sudo tee /etc/dpkg/dpkg.cfg.d/01_nodoc > /dev/null << 'EOF'
+        path-exclude /usr/share/doc/*
+        path-exclude /usr/share/man/*
+        path-exclude /usr/share/info/*
+        EOF
         sudo apt install -y xmlstarlet
     - name: "Check that version is SNAPSHOT"
       shell: bash
