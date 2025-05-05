@@ -98,58 +98,6 @@ jobs:
 
 ## Additional Information
 
-### Wildcard Matching Behavior
-
-The `wildcardMatch` function is used to match tags against patterns with wildcards (`*`). This allows for flexible filtering of tags during the cleanup process.
-
-#### Supported Wildcard Patterns
-
-1. **Exact Match**:
-   - If the pattern does not contain a `*`, the function checks for an exact match.
-   - Example:
-     - Tag: `release`
-     - Pattern: `release`
-     - Result: Match
-
-2. **Prefix Match**:
-   - If the pattern ends with `*`, the function checks if the tag starts with the prefix.
-   - Example:
-     - Tag: `release-v1`
-     - Pattern: `release*`
-     - Result: Match
-
-3. **Suffix Match**:
-   - If the pattern starts with `*`, the function checks if the tag ends with the suffix.
-   - Example:
-     - Tag: `v1-release`
-     - Pattern: `*release`
-     - Result: Match
-
-4. **Substring Match**:
-   - If the pattern starts and ends with `*`, the function checks if the tag contains the substring.
-   - Example:
-     - Tag: `v1-release-candidate`
-     - Pattern: `*release*`
-     - Result: Match
-
-5. **Regex-like Match**:
-   - If the pattern contains `*` in the middle, the function treats it as a wildcard for any characters.
-   - Example:
-     - Tag: `release-v1`
-     - Pattern: `release*v1`
-     - Result: Match
-
-#### Example Usage of `wildcardMatch`
-
-```javascript
-wildcardMatch("release-v1", "release*"); // true
-wildcardMatch("v1-release", "*release"); // true
-wildcardMatch("v1-release-candidate", "*release*"); // true
-wildcardMatch("release-v1", "release-v2"); // false
-```
-
----
-
 ### Debug Mode
 
 When `debug` is set to `true`, the action logs detailed information, including:
@@ -184,7 +132,23 @@ This mode is useful for previewing the cleanup results and ensuring the filterin
 
 ### Tag Matching Behavior
 
-- **Exact Match**: If a tag is specified without a wildcard (e.g., `release`), the action will look for an exact match. Only versions with the tag `release` will be included or excluded.
-- **Wildcard Match**: If a tag is specified with a wildcard (e.g., `release*`), the action will look for partial matches. For example, `release*` will match tags like `release`, `release-v1`, or `release-candidate`.
+The action supports flexible tag matching using exact matches and wildcard patterns. This allows you to define which tags should be included or excluded during the cleanup process.
 
-This allows for flexible filtering based on your tagging strategy.
+#### Supported Patterns
+
+1. **Exact Match**: Matches tags exactly as specified (e.g., `release` matches only `release`).
+2. **Prefix Match**: Patterns ending with `*` match tags starting with the prefix (e.g., `release*` matches `release-v1`).
+3. **Suffix Match**: Patterns starting with `*` match tags ending with the suffix (e.g., `*release` matches `v1-release`).
+4. **Substring Match**: Patterns with `*` at both ends match tags containing the substring (e.g., `*release*` matches `v1-release-candidate`).
+5. **Wildcard in the Middle**: Patterns with `*` in the middle match tags with any characters in place of `*` (e.g., `release*v1` matches `release-v1`).
+
+#### Examples
+
+| Pattern       | Matches                          | Does Not Match       |
+|---------------|----------------------------------|----------------------|
+| `release*`    | `release`, `release-v1`          | `v1-release`         |
+| `*release`    | `v1-release`, `candidate-release`| `release-v1`         |
+| `*release*`   | `v1-release-candidate`, `release-v1` | `v1-candidate`    |
+| `release*v1`  | `release-v1`, `release-candidate-v1` | `release-v2`     |
+
+This compact explanation provides a clear overview of the supported patterns, helping users configure their tag filtering effectively.
