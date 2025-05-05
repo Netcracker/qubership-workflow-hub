@@ -7,6 +7,7 @@ Detailed description of existing workflows can be found here [Index of Workflow 
 ---
 
 - [qubership-workflow-hub](#qubership-workflow-hub)
+  - [The organization level secrets and vars used in actions](#the-organization-level-secrets-and-vars-used-in-actions)
   - [Common workflows](#common-workflows)
     - [CLA](#cla)
     - [Lint codebase (Super-linter)](#lint-codebase-super-linter)
@@ -53,7 +54,7 @@ Below is the short description of how to implement common workflows in any Netcr
 | secrets.GH_ACCESS_TOKEN       | Token for "tech user" with extended acess rights                                     |
 | secrets.WORKFLOWS_TOKEN       | Classic Token with workflow scope |
 | secrets.SONAR_TOKEN           | Token to access [SonarQube](https://www.sonarsource.com/plans-and-pricing/sonarcloud/)|
-| secrets.GH_ARTIFACTS_RW_TOKEN | Token with access to [GitHub packages](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages#granular-permissions-for-userorganization-scoped-packages)  |
+| secrets.GH_RWD_PACKAGE_TOKEN  | Token with access to [GitHub packages](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages#granular-permissions-for-userorganization-scoped-packages)  |
 
 ## Common workflows
 
