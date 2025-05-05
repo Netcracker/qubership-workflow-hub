@@ -45,7 +45,7 @@ This action does not produce any outputs. It performs cleanup operations directl
 
 ---
 
-## 📌 Usage Example
+## Usage Example
 
 Below is an example of how to use this action in a GitHub Actions workflow:
 
