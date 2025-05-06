@@ -64,8 +64,8 @@ jobs:
           java-version: '17'
           target-store: 'github'
           additional-mvn-args: '-Dskip.tests=true'
-          maven-username: ${{ github.actor }} # For maven central repository it would be ${{ secrets.MAVEN_USER }}
-          maven-token: ${{ github.token }} # For maven central repository it would be ${{ secrets.MAVEN_PASSWORD}}
+          maven-username: ${{ github.actor }} # For maven central repository it would be ${{ secrets.MAVEN_USER }}. Already set for Netcracker.
+          maven-token: ${{ github.token }} # For maven central repository it would be ${{ secrets.MAVEN_PASSWORD}}. Already set for Netcracker.
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Organization level secret. Already set for Netcracker.
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }} # Organization level secret. Already set for Netcracker.
 ```
