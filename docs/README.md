@@ -57,6 +57,7 @@ This index provides a quick overview of the available workflow and action docume
 | [chart-version](../actions/chart-version/README.md)     | Manages and updates chart versions.                             |
 | [custom-event](../actions/custom-event/README.md)       | Triggers a custom `repository_dispatch` event in the repository. |
 | [docker-action](../actions/docker-action/README.md)     | Builds and publishes Docker images using Docker Buildx.         |
+| [maven-snapshot-deploy](../actions/maven-snapshot-deploy/README.md) | Builds and publishes maven snapshot artifacts into Maven Central or GitHub packages |
 | [metadata-action](../actions/metadata-action/README.md) | Automates the management of repository metadata, including meta info, dist-tag, GitHub context, and semantic versioning. |
 | [poetry-publisher](../actions/poetry-publisher/README.md) | Automates building, testing, and publishing Python packages using Poetry. |
 | [pr-add-messages](../actions/pr-add-messages/README.md) | Adds commit messages to the pull request description.            |
