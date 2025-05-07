@@ -81,7 +81,8 @@ jobs:
 
 ### Additional Information
 - Custom Tags: If tags-override is provided, the workflow will use these tags instead of the default tagging strategy.
-- Default Tagging Strategy: If tags-override is not provided, the workflow uses the docker/metadata-action to generate tags based on the following strategy branch/tags (semver based):
+- Default Tagging Strategy: If tags-override is not provided, the workflow uses the docker/metadata-action to generate tags based on the following strategy branch/tags (SemVer based):
+
 ```yaml
 tags: |
   type=ref,event=branch
@@ -89,5 +90,6 @@ tags: |
   type=semver,pattern={{major}}.{{minor}}
   type=semver,pattern={{major}}
 ```
+
 - Metadata Extraction: The workflow uses the docker/metadata-action to extract metadata such as tags and labels based on the GitHub context.
 - Multi-Platform Support: The workflow supports building images for multiple platforms using docker/setup-buildx-action.

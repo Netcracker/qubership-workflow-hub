@@ -42,3 +42,4 @@ jobs:
       config-name: "release-drafter-config.yml"
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```

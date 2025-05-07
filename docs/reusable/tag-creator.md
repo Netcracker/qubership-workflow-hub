@@ -36,3 +36,4 @@ jobs:
       ref: "main"
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```

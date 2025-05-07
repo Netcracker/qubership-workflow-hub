@@ -62,3 +62,4 @@ jobs:
       gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
       gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
       sonar-token: ${{ secrets.SONAR_TOKEN }}
+```

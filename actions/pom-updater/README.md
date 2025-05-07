@@ -51,3 +51,4 @@ jobs:
 
       - name: Output artifact ID
         run: echo "Artifact ID ${{ steps.update-pom.outputs.artifact_id }}"
+```

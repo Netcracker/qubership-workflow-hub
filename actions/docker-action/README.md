@@ -25,7 +25,7 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 | `download-artifact`| Flag to download the artifact.                                             | No       | `false`                     |
 | `component`        | Component configuration in JSON format (an array with a single object).    | No       | `[{"name": "default", "file": "./Dockerfile", "context": "."}]` |
 | `platforms`        | Platforms for which the Docker image will be built.                       | No       | `linux/amd64`               |
-| `tags`             | Additional Docker image tags. If tags are provided, they will be added to the automatically generated tags. | No       | `""`                        |                     |
+| `tags`         | Additional Docker image tags. If tags are provided, they will be added to the automatically generated tags. | No       | `""`                      |                   |
 
 ---
 
@@ -61,6 +61,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
 ---
 
 ## Additional Information
@@ -94,7 +95,6 @@ The action uses the following logic to determine the final name of the Docker im
    - If `custom-image-name` is not provided, the action calculates the repository name (extracted from the `GITHUB_REPOSITORY` environment variable) and uses it as the Docker image name.
    - If `custom-image-name` is provided and a component file is defined, the names will be taken from the component configuration instead.
 
-
 ### Example Configuration
 
 Below is an example of how to configure the action to use a component file for determining the image name:
@@ -112,5 +112,6 @@ with:
 ```
 
 In this configuration:
+
 - If `custom-image-name` is left empty, the action will use the `name` field from the `component` configuration (`custom-image-name`) as the Docker image name.
 - If no `component` is provided, the repository name will be used as the fallback.

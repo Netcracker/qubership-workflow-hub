@@ -1,3 +1,5 @@
+# Preparing Java project for Maven Central
+
 ## Preparing GPG Key to Sign Java Artifacts
 
 To publish Java artifacts to Maven Central, you need to sign them with a GPG key. Follow these steps to prepare your GPG key:

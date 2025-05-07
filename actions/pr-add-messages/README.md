@@ -34,3 +34,4 @@ jobs:
 
       - name: Update PR body
         uses: netcracker/qubership-workflow-hub/actions/pr-add-messages@v1.0.1
+```

@@ -5,7 +5,7 @@ This **Create GitHub Release** GitHub Workflow automates creating and tagging re
 ## Features
 
 - Automates creating and tagging releases on GitHub.
-- Supports draft and pre-release options.
+- Supports draft and prerelease options.
 - Allows adding custom release information.
 
 ## 📌 Inputs
@@ -14,7 +14,7 @@ This **Create GitHub Release** GitHub Workflow automates creating and tagging re
 | ------------- | ---------------------------------------- | -------- | ------- |
 | `revision`    | The version of the release               | Yes      | None    |
 | `draft`       | Whether the release is a draft           | No       | `false` |
-| `prerelease`  | Whether the release is a pre-release     | No       | `false` |
+| `prerelease`  | Whether the release is a prerelease     | No       | `false` |
 | `release_info`| Additional information for the release   | No       | None    |
 
 ## Usage Example
@@ -42,3 +42,4 @@ jobs:
       release_info: "Initial release"
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```

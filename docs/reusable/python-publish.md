@@ -52,3 +52,4 @@ jobs:
       pytest_params: "--maxfail=1 --disable-warnings"
     secrets:
       PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+```

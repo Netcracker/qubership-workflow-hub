@@ -49,3 +49,4 @@ jobs:
 
       - name: Output result
         run: echo "Tag exists: ${{ steps.check-tag.outputs.exists }}"
+```

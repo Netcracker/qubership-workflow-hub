@@ -1,7 +1,7 @@
 # 🚀 Broadcast files Workflow
 
-This **Broadcast files** GitHub Workflow automates propagation of common files across github organization.
-This workflow usually dont needs to be added to component repo. It should be operated via [.github repository](https://github.com/Netcracker/.github).
+This **Broadcast files** GitHub Workflow automates propagation of common files across GitHub organization.
+This workflow usually dont needs to be added to component repository. It should be operated via [.github repository](https://github.com/Netcracker/.github).
 
 If new functionality needed please create the [issue](https://github.com/Netcracker/qubership-workflow-hub/issues)
 
@@ -17,11 +17,9 @@ If new functionality needed please create the [issue](https://github.com/Netcrac
 | ----------------- | --------------------------------------------------------------------------- | -------- | ------- |
 | `repo_name`       | The name of target repository to propagate.                                 | No       | None    |
 
-
 ### Detailed Description of Variables
 
 - `repo_name`: The name of target repository to propagate. If not set files will be propagated to all repos in organization except the REPOS_TO_IGNORE list
-
 
 ## Usage Example
 

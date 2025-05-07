@@ -10,7 +10,8 @@ This **GitHub Metadata** GitHub Action extracts metadata from the current GitHub
 
 ### Action Result
 
-The primary output of this action is a generated version string. This string is determined by the branch or tag on which the action was executed, and it is created by applying the corresponding template defined in the configuration file. For example, if the action is triggered on the `v1.2.3` tag, the output might follow the `v{{major}}.{{minor}}.{{patch}}-{{date}}` template, resulting in a string such as `v1.2.3-20250312`. Or triggered on the `release/1.2.3` branch, resulting  `release-1.2.3-20250312`, `feature/some-feature` resulting `feature-some-feature-20250312`.
+The primary output of this action is a generated version string. This string is determined by the branch or tag on which the action was executed, and it is created by applying the corresponding template defined in the configuration file. 
+For example, if the action is triggered on the `v1.2.3` tag, the output might follow the `v{{major}}.{{minor}}.{{patch}}-{{date}}` template, resulting in a string such as `v1.2.3-20250312`. Or triggered on the `release/1.2.3` branch, resulting  `release-1.2.3-20250312`, `feature/some-feature` resulting `feature-some-feature-20250312`.
 
 ## 📌 Inputs
 
@@ -90,7 +91,6 @@ In this example:
 
 The GitHub context is available, allowing you to access properties such as the current branch, tag, and other metadata. This context can be used within the action to dynamically generate version strings and tailor behavior based on the repository state.
 More information [here](https://docs.github.com/ru/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs).
-
 
 ### Semantic Version Parsing Contract
 
