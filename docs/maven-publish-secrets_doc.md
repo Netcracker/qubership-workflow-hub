@@ -6,7 +6,7 @@ To publish Java artifacts to Maven Central, you need to sign them with a GPG key
 
 ### Step 1: Install GPG
 
-Ensure you have GPG installed on your system. You can download and install it from [GnuPG's official website](https://gnupg.org/download/).
+Ensure you have GPG installed on your system. You can download and install it from [GnuPG's official site](https://gnupg.org/download/).
 
 ### Step 2: Generate a New GPG Key
 
