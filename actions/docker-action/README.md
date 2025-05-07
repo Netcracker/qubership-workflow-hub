@@ -25,7 +25,7 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 | `download-artifact`| Flag to download the artifact.                                             | No       | `false`                     |
 | `component`        | Component configuration in JSON format (an array with a single object).    | No       | `[{"name": "default", "file": "./Dockerfile", "context": "."}]` |
 | `platforms`        | Platforms for which the Docker image will be built.                       | No       | `linux/amd64`               |
-| `tags`         | Additional Docker image tags. If tags are provided, they will be added to the automatically generated tags. | No       | `""`|   |
+| `tags`         | Additional Docker image tags. If tags are provided, they will be added to the automatically generated tags. | No       | `""`|
 
 ---
 
