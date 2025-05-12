@@ -17,6 +17,11 @@ inputs:
     description: "JDK version (e.g. '21')"
     required: false
     default: "21"
+  maven-version:
+    type: string
+    description: "maven version"
+    required: false
+    default: ""
   target-store:
     type: string
     description: "Target store for the artifact"
@@ -103,7 +108,11 @@ runs:
           echo "✅ Additional mvn args provided: ${ADDITIONAL_MVN_ARGS}"
         fi
         echo "ADDITIONAL_MVN_ARGS=${ADDITIONAL_MVN_ARGS}" >> $GITHUB_ENV
-
+    - name: Set up Maven
+      if: ${{ inputs.maven-version != '' }}
+      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
+      with:
+        maven-version: ${{ inputs.maven-version }}
     - name: Cache local Maven repository
       uses: actions/cache@v4
       with:
