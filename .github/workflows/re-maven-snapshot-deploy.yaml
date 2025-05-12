@@ -48,6 +48,12 @@ jobs:
         uses: actions/checkout@v4
       - name: "Setup xmlstarlet"
         run: |
+          # Skip installing pacakge docs {makes the man-db trigger much faster)
+          sudo tee /etc/dpkg/dpkg.cfg.d/01_nodoc > /dev/null << 'EOF'
+          path-exclude /usr/share/doc/*
+          path-exclude /usr/share/man/*
+          path-exclude /usr/share/info/*
+          EOF
           sudo apt install -y xmlstarlet
       - name: "Check that version is SNAPSHOT"
         shell: bash
@@ -95,6 +101,13 @@ jobs:
             echo "✅ Additional mvn args provided: ${ADDITIONAL_MVN_ARGS}"
           fi
           echo "ADDITIONAL_MVN_ARGS=${ADDITIONAL_MVN_ARGS}" >> $GITHUB_ENV
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}
+          restore-keys: |
+            maven-${{ runner.os }}
     # ================= Maven Central deployment part
       - name: "Set up JDK for Maven Central deployment"
         if: ${{ inputs.target-store == 'maven-central' }}
