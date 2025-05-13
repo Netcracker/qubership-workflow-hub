@@ -17,7 +17,7 @@ class RefExtractor {
         } else {
             isTag = false;
             name = ref.replace(/\//g, "-");
-            core.warning(`Cant detect type ref: ${ref}`);
+            core.warning(`🔸 Cant detect type ref: ${ref}`);
         }
         return { name, isTag };
     }

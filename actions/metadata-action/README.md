@@ -2,45 +2,50 @@
 
 This **GitHub Metadata** GitHub Action extracts metadata from the current GitHub context and generates a version string based on templates and tags.
 
----
-
 ## Features
 
 - Extracts metadata from the current GitHub context.
 - Generates a version string based on templates and tags.
 - Supports custom templates and configuration files.
-- Provides semantic version parsing for branches and tags.
-- Dynamically determines distribution tags based on branch or tag patterns.
+- Provides detailed logging for debugging.
+- Dynamically adapts to branches, tags, and pull requests.
+- Supports additional tags and merging options.
 
----
+### Action Result
+
+The primary output of this action is a generated version string. This string is determined by the branch or tag on which the action was executed, and it is created by applying the corresponding template defined in the configuration file. For example, if the action is triggered on the `v1.2.3` tag, the output might follow the `v{{major}}.{{minor}}.{{patch}}-{{date}}` template, resulting in a string such as `v1.2.3-20250312`. Or triggered on the `release/1.2.3` branch, resulting  `release-1.2.3-20250312`, `feature/some-feature` resulting `feature-some-feature-20250312`.
 
 ## 📌 Inputs
 
-| Name                  | Description                                                                 | Required | Default                                |
-| --------------------- | --------------------------------------------------------------------------- | -------- | -------------------------------------- |
-| `ref`                 | Branch or tag ref. If not provided, it defaults to the current GitHub ref. | No       | `github.context.ref`                  |
-| `configuration-path`  | Path to the configuration file.                                             | No       | `./.github/metadata-action-config.yml` |
-| `default-template`    | Default template to use if no matching template is found in the config.     | No       | `{{ref-name}}-{{timestamp}}-{{runNumber}}` |
-| `default-distribution-tag` | Default distribution tag to use if no matching tag is found in the config. | No       | `latest`                               |
-| `short-sha`           | Length of the short SHA to include in the output.                          | No       | `7`                                    |
+| Name                 | Description                                    | Required | Default                                    |
+| -------------------- | ---------------------------------------------- | -------- | ------------------------------------------ |
+| `ref`                | Branch or tag ref.                             | No       | `github.context.ref`                       |
+| `configuration-path` | Path to the configuration file.                | No       | `./.github/metadata-action-config.yml`     |
+| `short-sha`          | Depth of the short SHA.                        | No       | `7`                                        |
+| `default-template`   | Default template for version generation.       | No       | `{{ref-name}}-{{timestamp}}-{{runNumber}}` |
+| `default-tag`        | Default distribution tag.                      | No       | `latest`                                   |
+| `extra-tags`         | Additional tags to append to the result.       | No       | `""`                                       |
+| `merge-tags`         | Whether to merge `extra-tags` with the result. | No       | `false`                                    |
+| `debug`              | Enable debug mode for detailed logging.        | No       | `false`                                    |
+| `show-report`        | Whether to display a summary report.           | No       | `true`                                     |
 
 ---
 
 ## 📌 Outputs
 
-| Name        | Description                                                                                     | Example                     |
-| ----------- | ----------------------------------------------------------------------------------------------- | --------------------------- |
-| `result`    | Rendered template with metadata based on template rules.                                        | `v1.2.3-20250313`           |
-| `ref`       | The full GitHub ref (e.g., `refs/heads/main`).                                                  | `refs/heads/main`           |
-| `ref-name`  | The name of the current branch or tag.                                                          | `main`                      |
-| `date`      | Current date in `YYYYMMDD` format.                                                              | `20250313`                  |
-| `time`      | Current time in `HHMMSS` format.                                                                | `235959`                    |
-| `timestamp` | Combined date and time in `YYYYMMDDHHMMSS` format.                                              | `20250313235959`            |
-| `dist-tag`  | Distribution tag based on the branch or tag (e.g., `latest` for main, `beta` for feature branches). | `latest`                    |
-| `major`     | Major version number extracted from semantic versioning.                                        | `1`                         |
-| `minor`     | Minor version number extracted from semantic versioning.                                        | `2`                         |
-| `patch`     | Patch version number extracted from semantic versioning.                                        | `3`                         |
-| `short-sha` | Shortened commit SHA based on the specified length.                                             | `abc1234`                   |
+| Name        | Description                                                                                                                         | Example         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `result`    | Rendered template with metadata based on template rules (e.g. using `v{{major}}.{{minor}}.{{patch}}-{{date}}` for the main branch). | v1.2.3-20250313 |
+| `ref`       | The current branch or tag reference (e.g. `refs/heads/main`).                                                                       | refs/heads/main |
+| `ref-name`  | The name of the current branch or tag.                                                                                              | main            |
+| `date`      | Current date in `YYYYMMDD` format.                                                                                                  | 20250313        |
+| `time`      | Current time in `HHMMSS` format.                                                                                                    | 235959          |
+| `timestamp` | Combined date and time in `YYYYMMDDHHMMSS` format.                                                                                  | 20250313235959  |
+| `dist-tag`  | Distribution tag based on the branch or tag (e.g. `latest` for main, `beta` for feature branches).                                  | latest          |
+| `major`     | Major version number extracted from semantic versioning.                                                                            | 1               |
+| `minor`     | Minor version number extracted from semantic versioning.                                                                            | 2               |
+| `patch`     | Patch version number extracted from semantic versioning.                                                                            | 3               |
+| `short-sha` | Shortened SHA of the current commit.                                                                                                | abc1234         |
 
 ---
 
@@ -63,20 +68,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract Metadata
-        uses: Netcracker/qubership-workflow-hub/actions/metadata-action@main
+      - name: Metadata
+        uses: netcracker/qubership-workflow-hub/actions/metadata-action@main
         with:
           configuration-path: './.github/metadata-action-config.yml'
-          default-template: '{{ref-name}}-{{timestamp}}'
-          default-distribution-tag: 'latest'
-          short-sha: 8
+          default-template: '{{ref-name}}-{{timestamp}}-{{runNumber}}'
+          default-tag: 'latest'
+          short-sha: '7'
+          extra-tags: 'tag1,tag2'
+          merge-tags: 'true'
+          debug: 'true'
+          show-report: 'true'
 ```
 
 ---
 
 ## Configuration File
 
-The configuration file (`metadata-action-config.yml`) defines templates and distribution tags for branches and tags. Below is an example configuration:
+The configuration file (metadata-action-config.yml) should define the templates and distribution tags used by the action. Here is an example configuration:
 
 ```yaml
 branches-template:
@@ -85,21 +94,22 @@ branches-template:
   - "release/*": "release-{{ref-name}}-{{timestamp}}.{{dist-tag}}"
   - tag: "v{{major}}.{{minor}}.{{patch}}"
 
-distribution-tags:
+dist-tags:
   - main: "latest"
   - "release/*": "next"
   - "feature/*": "beta"
   - tag: "stable"
+
+default-template: "{{ref-name}}-{{timestamp}}-{{runNumber}}"
+default-tag: "latest"
 ```
 
-### Explanation:
+In this example:
 
 - **Main branch template:** generates a version string in the format `vMAJOR.MINOR.PATCH-DATE` (e.g. `v1.2.3-20250313`).
-- **Feature branch template:** generates a version string in the format `feature-BRANCH_NAME-TIMESTAMP.DIST-TAG` (e.g. `feature-my-feature.20250313235959.beta`).
-- **Release branch template:** generates a version string in the format `release-BRANCH_NAME-TIMESTAMP.DIST-TAG` (e.g. `release-v1.2.3-20250313235959.next`).
+- **Feature/* branch template:** generates a version string in the format `feature-BRANCH_NAME-TIMESTAMP.DIST-TAG` (e.g. `feature-my-feature.20250313235959.beta`).
+- **Release/* branch template:** generates a version string in the format `release-BRANCH_NAME-TIMESTAMP.DIST-TAG` (e.g. `release-v1.2.3-20250313235959.next`).
 - **Tag template:** generates a version string in the format `vMAJOR.MINOR.PATCH` (e.g. `v1.2.3`).
-
----
 
 ## Additional Information
 
@@ -107,6 +117,7 @@ distribution-tags:
 
 The GitHub context is available, allowing you to access properties such as the current branch, tag, and other metadata. This context can be used within the action to dynamically generate version strings and tailor behavior based on the repository state.
 More information [here](https://docs.github.com/ru/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs).
+
 
 ### Semantic Version Parsing Contract
 
@@ -137,7 +148,7 @@ The configuration file for this action must adhere to the schema defined [here](
                 "additionalProperties": false
             }
         },
-        "distribution-tags": {
+        "dist-tags": {
             "type": "array",
             "minItems": 1,
             "items": {
@@ -151,11 +162,14 @@ The configuration file for this action must adhere to the schema defined [here](
                 },
                 "additionalProperties": false
             }
+        },
+        "default-template": {
+            "type": "string"
+        },
+        "default-tag": {
+            "type": "string"
         }
     },
-    "required": [
-        "branches-template"
-    ],
     "additionalProperties": false
 }
 ```

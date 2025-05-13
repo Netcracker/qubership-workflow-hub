@@ -8,6 +8,9 @@ const github = require("@actions/github");
 
 const ConfigLoader = require("./loader");
 const RefExtractor = require("./extractor");
+const { default: def } = require("ajv/dist/vocabularies/discriminator");
+
+const Report = require("./report");
 
 function generateSnapshotVersionParts() {
   const now = new Date();
@@ -20,7 +23,7 @@ function generateSnapshotVersionParts() {
 function extractSemverParts(versionString) {
   const normalized = versionString.replace(/^v/i, "");
   if (!/^\d+\.\d+\.\d+$/.test(normalized)) {
-    core.warning(`Not a valid semver string (skip): ${versionString}`);
+    core.info(`💡 Not a valid semver string (skip): ${versionString}`);
     return { major: "", minor: "", patch: "" };
   }
   const [major, minor, patch] = normalized.split(".");
@@ -59,54 +62,75 @@ async function run() {
     name = github.context.eventName === 'pull_request' ? github.context.payload.pull_request?.head?.ref : github.context.ref;
   }
 
-  core.info(`🔹 Ref Original: ${name}`);
+  core.info(`🔹 Ref: ${name}`);
+
+  const debug = core.getInput('debug') === "true";
+  const dryRun = core.getInput('dry-run') === "true";
+  const isDebug = debug === 'true' || debug === '1' || debug === 'yes' || debug === 'on';
+
+  core.info(`🔹 Debug: ${isDebug}`);
+
   const ref = new RefExtractor().extract(name);
 
-  core.info(`🔹 Ref: ${JSON.stringify(ref)}`);
+  const configurationPath = core.getInput('configuration-path') || "./.github/metadata-action-config.yml";
+  const loader = new ConfigLoader()
+  const config = loader.load(configurationPath, debug);
 
-  let defaultTemplate = core.getInput('default-template');
-  let defaultDistributionTag = core.getInput('default-distribution-tag');
+  const defaultTemplate = core.getInput('default-template') || config["default-template"] || `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
+  const defaultTag = core.getInput('default-tag') || config["default-tag"] || "latest";
 
-  let template;
-  let distributionTag;
+  //const defaultTemplate = core.getInput('default-template'); // || config["default-template"] || `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
+  //const defaultTag = core.getInput('defaut-tag'); //|| config["default-tag"] || "latest";
 
-  if (!defaultTemplate || defaultTemplate.trim() === "") {
-    const path = core.getInput('configuration-path') || "./.github/metadata-action-config.yml";
-    const loader = new ConfigLoader();
-    if (loader.fileExists()) {
-      const config = loader.load(path);
-      template = findTemplate(ref.name, config["branches-template"]);
-      distributionTag = findTemplate(ref.name, config["distribution-tags"]);
-    }
+  const extraTags = core.getInput('extra-tags');
+  const mergeTags = core.getInput('merge-tags');
+
+  core.info(`🔸 defaultTemplate: ${defaultTemplate}`);
+  core.info(`🔸 defaultTag: ${defaultTag}`);
+
+  // core.info(`🔹 Ref: ${JSON.stringify(ref)}`);
+
+  let template = null;
+  let distTag = null;
+
+  if (loader.fileExists) {
+    template = findTemplate(!ref.isTag ? ref.name : "tag", config["branches-template"]);
+    distTag = findTemplate(ref.name, config["distribution-tag"]);
   }
-  if (!template || template.trim() === "") {
-    core.warning(`💡 No template found for ref: ${ref.name}, using default -> {{ref-name}}-{{timestamp}}-{{runNumber}}`);
-    template = `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
+
+  if (template === null) {
+    core.warning(`💡 No template found for ref: ${ref.name}, will be used default -> ${defaultTemplate}`);
+    template = defaultTemplate;
   }
-  if (!distributionTag || distributionTag.trim() === "") {
-    core.warning(`💡 No dist-tag found for ref: ${ref.name}, using default -> latest`);
-    distributionTag = defaultDistributionTag || "latest";
+
+  if (distTag === null) {
+    core.warning(`💡 No dist-tag found for ref: ${ref.name}, will be used default -> ${defaultTag}`);
+    distTag = defaultTag;
   }
-  
+
   const parts = generateSnapshotVersionParts();
   const semverParts = extractSemverParts(ref.name);
   const shortShaDeep = core.getInput("short-sha");
   const shortSha = github.context.sha.slice(0, shortShaDeep);
   const values = {
     ...ref, "ref-name": ref.name, "short-sha": shortSha, ...semverParts,
-    ...parts, ...github.context, "dist-tag": distributionTag, "runNumber": github.context.runId
+    ...parts, ...github.context, "dist-tag": distTag, "distTag": distTag, "runNumber": github.context.runId
   };
 
   core.info(`🔹 time: ${JSON.stringify(parts)}`);
   core.info(`🔹 semver: ${JSON.stringify(semverParts)}`);
-  core.info(`🔹 dist-tag: ${JSON.stringify(distributionTag)}`);
+  core.info(`🔹 dist-tag: ${JSON.stringify(distTag)}`);
 
   // core.info(`Values: ${JSON.stringify(values)}`); //debug values
   let result = fillTemplate(template, values)
 
   core.info(`🔹 Template: ${template}`);
 
-  core.info(`🔹 Name: ${ref.name}`)
+  if (extraTags != '' && mergeTags == 'true') {
+    core.info(`🔹 Merging extra tags: ${extraTags}`);
+    result = result + ", " + extraTags;
+  }
+
   core.info(`💡 Rendered template: ${result}`);
 
   core.setOutput("result", result);
@@ -118,10 +142,24 @@ async function run() {
   core.setOutput("major", semverParts.major);
   core.setOutput("minor", semverParts.minor);
   core.setOutput("patch", semverParts.patch);
-  core.setOutput("tag", distributionTag);
+  core.setOutput("tag", distTag);
   core.setOutput("short-sha", shortSha);
 
-  core.info('✔️ Action completed successfully!');
+  if (core.getInput('show-report') == 'true') {
+    const reportItem = {
+      "ref": ref.name,
+      "sha": github.context.sha,
+      "shortSha": shortSha,
+      "semver": `${semverParts.major}.${semverParts.minor}.${semverParts.patch}`,
+      "timestamp": parts.timestamp,
+      "template": template,
+      "distTag": distTag,
+      "extraTags": extraTags,
+      "renderResult": result
+    };
+    await new Report().writeSummary(reportItem, dryRun);
+  }
+  core.info('✅ Action completed successfully!');
 }
 
 run();
