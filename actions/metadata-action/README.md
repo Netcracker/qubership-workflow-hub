@@ -10,6 +10,7 @@ This **GitHub Metadata** GitHub Action extracts metadata from the current GitHub
 - Provides detailed logging for debugging.
 - Dynamically adapts to branches, tags, and pull requests.
 - Supports additional tags and merging options.
+- Includes dry-run mode for testing without making changes.
 
 ### Action Result
 
@@ -28,6 +29,8 @@ The primary output of this action is a generated version string. This string is 
 | `merge-tags`         | Whether to merge `extra-tags` with the result. | No       | `false`                                    |
 | `debug`              | Enable debug mode for detailed logging.        | No       | `false`                                    |
 | `show-report`        | Whether to display a summary report.           | No       | `true`                                     |
+| `dry-run`            | Enable dry-run mode to simulate the action.    | No       | `false`                                    |
+
 
 ---
 
