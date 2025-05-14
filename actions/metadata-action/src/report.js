@@ -12,7 +12,7 @@ class Report {
             ["SHA", reportItem.sha],
             ["Short SHA", reportItem.shortSha],
             ["Semver", reportItem.semver],
-            // ["Timestamp", reportItem.timestamp],
+            ["Timestamp", reportItem.timestamp],
             ["Distribution tag", reportItem.distTag],
             ["Extra tags", reportItem.extraTags],
             ["Template", reportItem.template],
