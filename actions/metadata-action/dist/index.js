@@ -42812,6 +42812,17 @@ function fillTemplate(template, values) {
   });
 }
 
+// Objects
+const selectedTemplateAndTag = {
+  template: '',
+  distTag: '',
+  toString() {
+    return `Template: ${this.template}, DistTag: ${this.distTag}`;
+  }
+};
+
+
+
 async function run() {
 
   core.info(`pull_request head.ref: ${github.context.payload.pull_request?.head?.ref}`);
@@ -42822,13 +42833,13 @@ async function run() {
     name = github.context.eventName === 'pull_request' ? github.context.payload.pull_request?.head?.ref : github.context.ref;
   }
 
-  core.info(`🔹 Ref: ${name}`);
+  core.info(`Ref: ${name}`);
 
   const debug = core.getInput('debug') === "true";
   const dryRun = core.getInput('dry-run') === "true";
   const isDebug = debug === 'true' || debug === '1' || debug === 'yes' || debug === 'on';
 
-  core.info(`🔹 Debug: ${isDebug}`);
+  core.info(`Debug: ${isDebug}`);
 
   const ref = new RefExtractor().extract(name);
 
@@ -42854,18 +42865,18 @@ async function run() {
   let distTag = null;
 
   if (loader.fileExists) {
-    template = findTemplate(!ref.isTag ? ref.name : "tag", config["branches-template"]);
-    distTag = findTemplate(ref.name, config["distribution-tag"]);
+    selectedTemplateAndTag.template = findTemplate(!ref.isTag ? ref.name : "tag", config["branches-template"]);
+    selectedTemplateAndTag.distTag = findTemplate(ref.name, config["distribution-tag"]);
   }
 
   if (template === null) {
-    core.warning(`💡 No template found for ref: ${ref.name}, will be used default -> ${defaultTemplate}`);
-    template = defaultTemplate;
+    core.info(`⚠️ No template found for ref: ${ref.name}, will be used default -> ${defaultTemplate}`);
+    selectedTemplateAndTag.template = defaultTemplate;
   }
 
   if (distTag === null) {
-    core.warning(`💡 No dist-tag found for ref: ${ref.name}, will be used default -> ${defaultTag}`);
-    distTag = defaultTag;
+    core.info(`⚠️ No dist-tag found for ref: ${ref.name}, will be used default -> ${defaultTag}`);
+    selectedTemplateAndTag.distTag = defaultTag;
   }
 
   const parts = generateSnapshotVersionParts();
@@ -42882,9 +42893,9 @@ async function run() {
   core.info(`🔹 dist-tag: ${JSON.stringify(distTag)}`);
 
   // core.info(`Values: ${JSON.stringify(values)}`); //debug values
-  let result = fillTemplate(template, values)
+  let result = fillTemplate(selectedTemplateAndTag.template, values)
 
-  core.info(`🔹 Template: ${template}`);
+  core.info(`🔹 Template: ${selectedTemplateAndTag.template}`);
 
   if (extraTags != '' && mergeTags == 'true') {
     core.info(`🔹 Merging extra tags: ${extraTags}`);
@@ -42902,7 +42913,7 @@ async function run() {
   core.setOutput("major", semverParts.major);
   core.setOutput("minor", semverParts.minor);
   core.setOutput("patch", semverParts.patch);
-  core.setOutput("tag", distTag);
+  core.setOutput("tag", selectedTemplateAndTag.distTag);
   core.setOutput("short-sha", shortSha);
 
   if (core.getInput('show-report') == 'true') {
@@ -42912,8 +42923,8 @@ async function run() {
       "shortSha": shortSha,
       "semver": `${semverParts.major}.${semverParts.minor}.${semverParts.patch}`,
       "timestamp": parts.timestamp,
-      "template": template,
-      "distTag": distTag,
+      "template": selectedTemplateAndTag.template,
+      "distTag": selectedTemplateAndTag.distTag,
       "extraTags": extraTags,
       "renderResult": result
     };
