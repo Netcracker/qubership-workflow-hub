@@ -97,7 +97,7 @@ branches-template:
   - "release/*": "release-{{ref-name}}-{{timestamp}}.{{dist-tag}}"
   - tag: "v{{major}}.{{minor}}.{{patch}}"
 
-dist-tags:
+distribution-tag:
   - main: "latest"
   - "release/*": "next"
   - "feature/*": "beta"
@@ -151,7 +151,7 @@ The configuration file for this action must adhere to the schema defined [here](
                 "additionalProperties": false
             }
         },
-        "dist-tags": {
+        "distribution-tag": {
             "type": "array",
             "minItems": 1,
             "items": {
