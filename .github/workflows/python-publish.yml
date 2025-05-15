@@ -23,9 +23,13 @@ on:
       pytest_params:
         required: false
         type: string
-
+      gh_app_id:
+        required: true
+        type: string
     secrets:
       PYPI_API_TOKEN:
+        required: true
+      GH_APP_KEY:
         required: true
 
 jobs:
@@ -48,8 +52,8 @@ jobs:
         uses: actions/create-github-app-token@v1
         id: app-token
         with:
-          app-id: ${{ vars.GH_BUMP_VERSION_APP_ID }}
-          private-key: ${{ secrets.GH_BUMP_VERSION_APP_KEY }}
+          app-id: ${{ inputs.gh_app_id }}
+          private-key: ${{ secrets.GH_APP_KEY }}
 
       - name: Checkout
         uses: actions/checkout@v4
