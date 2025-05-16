@@ -107,6 +107,6 @@ runs:
       id: get-version
       shell: bash
       run: |
-        published_version=$(poetry version | cut -d' ' -f2)
+        published_version=$(poetry version --short)
         echo "published-version=${published_version}" >> $GITHUB_OUTPUT
         echo "## Published version: ${published_version}" >> $GITHUB_STEP_SUMMARY
