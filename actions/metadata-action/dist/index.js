@@ -42807,15 +42807,27 @@ function findTemplate(refName, templates) {
 }
 
 function fillTemplate(template, values) {
-  return template.replace(/{{\s*([\w-]+)\s*}}/g, (match, key) => {
+  return template.replace(/{{\s*([\w\.-]+)\s*}}/g, (match, key) => {
     return key in values ? values[key] : match;
   });
 }
 
+function flattenObject(obj, prefix = '') {
+  return Object.entries(obj).reduce((acc, [key, val]) => {
+    const name = prefix ? `${prefix}.${key}` : key;
+    if (val !== null && typeof val === 'object') {
+      Object.assign(acc, flattenObject(val, name));
+    } else {
+      acc[name] = val;
+    }
+    return acc;
+  }, {});
+}
+
 // Objects
 const selectedTemplateAndTag = {
-  template: '',
-  distTag: '',
+  template: null,
+  distTag: null,
   toString() {
     return `Template: ${this.template}, DistTag: ${this.distTag}`;
   }
@@ -42876,14 +42888,18 @@ async function run() {
 
   const parts = generateSnapshotVersionParts();
   const semverParts = extractSemverParts(ref.name);
-  const shortShaDeep = core.getInput("short-sha");
+
+  const shortShaDeep = +core.getInput("short-sha");
+  if (!(shortShaDeep > 0)) {
+    core.info(`⚠️ Invalid short-sha value: ${shortShaDeep}, will be used default -> 7`);
+  }
   const shortSha = github.context.sha.slice(0, shortShaDeep);
+
   const values = {
-    ...ref, "ref-name": ref.name, "short-sha": shortSha, 
-    ...semverParts, ...parts, 
-    "dist-tag": selectedTemplateAndTag.distTag, 
-    "distTag": selectedTemplateAndTag.distTag,
-    ...github, ...github.context, 'run-number': github.context.runNumber
+    ...ref, "ref-name": ref.name, "short-sha": shortSha,
+    ...semverParts, ...parts,
+    "dist-tag": selectedTemplateAndTag.distTag,
+    ...flattenObject({ github }, '')
   };
 
   core.info(`🔹 time: ${JSON.stringify(parts)}`);
