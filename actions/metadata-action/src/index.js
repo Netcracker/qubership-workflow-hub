@@ -73,8 +73,6 @@ const selectedTemplateAndTag = {
   }
 };
 
-
-
 async function run() {
 
   core.info(`pull_request head.ref: ${github.context.payload.pull_request?.head?.ref}`);
