@@ -132,20 +132,14 @@ runs:
         gpg-private-key: ${{ inputs.gpg-private-key }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-    - name: "Additional setup for GitHub packages"
-      if: ${{ inputs.target-store == 'github' }}
-      shell: bash
-      run: |
-        echo "Disableing the central-publishing-maven-plugin"
-        xmlstarlet ed -L -d "/_:project/_:build/_:plugins/_:plugin[./_:artifactId='central-publishing-maven-plugin']" ./pom.xml
-        echo "Set alternative deployment repository"
-        echo "MAVEN_ALT_REPOSITORY_ARG=-DaltDeploymentRepository=github::https://maven.pkg.github.com/${{ github.repository }}" >> $GITHUB_ENV
-
     - name: "Deploy to ${{ inputs.target-store }}"
       shell: bash
       run: |
-        mvn --batch-mode ${{ env.MVN_COMMAND }} ${MAVEN_ALT_REPOSITORY_ARG} ${ADDITIONAL_MVN_ARGS}
+        mvn --batch-mode ${{ env.MVN_COMMAND }} -P${{ inputs.target-store }} ${ADDITIONAL_MVN_ARGS}
       env:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
