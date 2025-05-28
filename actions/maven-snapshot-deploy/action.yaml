@@ -131,6 +131,21 @@ runs:
         server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ inputs.gpg-private-key }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
+    - name: "Additional GitHub repository configuration"
+      shell: bash
+      run: |
+        if [ -n "$(xmlstarlet sel -N x="http://maven.apache.org/SETTINGS/1.0.0" -t -v "/x:settings/x:servers/x:server[x:id='github']" ~/.m2/settings.xml)" ]; then
+          echo "ℹ️ GitHub server configuration already exists in ~/.m2/settings.xml"
+        else
+          echo "✅ Adding GitHub server configuration to ~/.m2/settings.xml"
+          xmlstarlet ed -L -N x="http://maven.apache.org/SETTINGS/1.0.0" -s "/x:settings/x:servers" -t elem -n "serverNew" -v '' \
+          -s "//serverNew" -t elem -n "id" -v "github" \
+          -s "//serverNew" -t elem -n "username" -v '${env.GITHUB_ACTOR}' \
+          -s "//serverNew" -t elem -n "password" -v '${env.GITHUB_TOKEN}' \
+          -r "//serverNew" -v "server" \
+          ~/.m2/settings.xml
+         fi
+         cat ~/.m2/settings.xml
 
     - name: "Deploy to ${{ inputs.target-store }}"
       shell: bash
