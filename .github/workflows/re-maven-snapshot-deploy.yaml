@@ -118,7 +118,7 @@ jobs:
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
         with:
           maven-version: ${{ inputs.maven-version }}
-    # ================= Maven Central deployment part
+    # ================= Maven Central configuration
       - name: "Set up JDK for Maven Central deployment"
         if: ${{ inputs.target-store == 'maven-central' }}
         uses: actions/setup-java@v4
@@ -130,17 +130,7 @@ jobs:
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.gpg-private-key }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-
-      - name: "Deploy to Maven Central"
-        if: ${{ inputs.target-store == 'maven-central' }}
-        run: |
-          mvn --batch-mode ${{ env.MVN_COMMAND }} ${ADDITIONAL_MVN_ARGS}
-        env:
-          MAVEN_USERNAME: ${{ secrets.maven-username }}
-          MAVEN_PASSWORD: ${{ secrets.maven-token }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
-
-    # ================= GitHub Packages deployment part
+    # ================= GitHub Packages configuration
       - name: "Set up JDK for GitHub Packages deployment"
         if: ${{ inputs.target-store == 'github-packages' }}
         uses: actions/setup-java@v4
@@ -152,6 +142,19 @@ jobs:
           server-password: GITHUB_TOKEN
           gpg-private-key: ${{ secrets.gpg-private-key }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          overwrite-settings: false
+
+    # ================= Maven Central deployment part
+      - name: "Deploy to Maven Central"
+        if: ${{ inputs.target-store == 'maven-central' }}
+        run: |
+          mvn --batch-mode ${{ env.MVN_COMMAND }} ${ADDITIONAL_MVN_ARGS}
+        env:
+          MAVEN_USERNAME: ${{ secrets.maven-username }}
+          MAVEN_PASSWORD: ${{ secrets.maven-token }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
+
+    # ================= GitHub Packages deployment part
 
       - name: "Disable Maven Central Deploy"
         if: ${{ inputs.target-store == 'github-packages' }}
