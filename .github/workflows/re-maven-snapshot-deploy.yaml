@@ -148,7 +148,7 @@ jobs:
       - name: "Deploy to Maven Central"
         if: ${{ inputs.target-store == 'maven-central' }}
         run: |
-          mvn --batch-mode ${{ env.MVN_COMMAND }} ${ADDITIONAL_MVN_ARGS}
+          mvn --batch-mode ${{ env.MVN_COMMAND }} -Pcentral ${ADDITIONAL_MVN_ARGS}
         env:
           MAVEN_USERNAME: ${{ secrets.maven-username }}
           MAVEN_PASSWORD: ${{ secrets.maven-token }}
@@ -156,15 +156,16 @@ jobs:
 
     # ================= GitHub Packages deployment part
 
-      - name: "Disable Maven Central Deploy"
-        if: ${{ inputs.target-store == 'github-packages' }}
-        run: |
-          xmlstarlet ed -L -d "/_:project/_:build/_:plugins/_:plugin[./_:artifactId='central-publishing-maven-plugin']" ./pom.xml
+#      - name: "Disable Maven Central Deploy"
+#        if: ${{ inputs.target-store == 'github-packages' }}
+#        run: |
+#          xmlstarlet ed -L -d "/_:project/_:build/_:plugins/_:plugin[./_:artifactId='central-publishing-maven-plugin']" ./pom.xml
 
       - name: "Deploy to GitHub packages"
         if: ${{ inputs.target-store == 'github-packages' }}
         run: |
-          mvn --batch-mode ${{ env.MVN_COMMAND }} -DaltDeploymentRepository=github::https://maven.pkg.github.com/${{ github.repository }} ${ADDITIONAL_MVN_ARGS}
+          # mvn --batch-mode ${{ env.MVN_COMMAND }} -DaltDeploymentRepository=github::https://maven.pkg.github.com/${{ github.repository }} ${ADDITIONAL_MVN_ARGS}
+          mvn --batch-mode ${{ env.MVN_COMMAND }} -Pgithub ${ADDITIONAL_MVN_ARGS}
         env:
           GITHUB_TOKEN: ${{ secrets.maven-token }}
           GITHUB_USER: ${{ github.actor }}
