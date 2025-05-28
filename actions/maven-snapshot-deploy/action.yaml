@@ -141,5 +141,4 @@ runs:
         MAVEN_PASSWORD: ${{ inputs.maven-token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         GITHUB_ACTOR: ${{ github.actor }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+        GITHUB_TOKEN: ${{ github.token }}
