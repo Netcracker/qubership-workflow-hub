@@ -145,7 +145,7 @@ jobs:
           overwrite-settings: false
       - name: Debug
         run: |
-          cut ~./.m2/settings.xml
+          cat ~./.m2/settings.xml
     # ================= Maven Central deployment part
       - name: "Deploy to Maven Central"
         if: ${{ inputs.target-store == 'maven-central' }}
