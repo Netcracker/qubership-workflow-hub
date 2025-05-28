@@ -153,6 +153,8 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.maven-username }}
           MAVEN_PASSWORD: ${{ secrets.maven-token }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_USER: ${{ github.actor }}
 
     # ================= GitHub Packages deployment part
 
@@ -167,6 +169,6 @@ jobs:
           # mvn --batch-mode ${{ env.MVN_COMMAND }} -DaltDeploymentRepository=github::https://maven.pkg.github.com/${{ github.repository }} ${ADDITIONAL_MVN_ARGS}
           mvn --batch-mode ${{ env.MVN_COMMAND }} -Pgithub ${ADDITIONAL_MVN_ARGS}
         env:
-          GITHUB_TOKEN: ${{ secrets.maven-token }}
+          GITHUB_TOKEN: ${{ github.token }}
           GITHUB_USER: ${{ github.actor }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
