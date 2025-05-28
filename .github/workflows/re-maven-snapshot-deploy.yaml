@@ -120,7 +120,7 @@ jobs:
           maven-version: ${{ inputs.maven-version }}
     # ================= Maven Central configuration
       - name: "Set up JDK for Maven Central deployment"
-        if: ${{ inputs.target-store == 'maven-central' }}
+        # if: ${{ inputs.target-store == 'maven-central' }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ inputs.java-version }}
@@ -132,7 +132,7 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
     # ================= GitHub Packages configuration
       - name: "Set up JDK for GitHub Packages deployment"
-        if: ${{ inputs.target-store == 'github-packages' }}
+        # if: ${{ inputs.target-store == 'github-packages' }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ inputs.java-version }}
