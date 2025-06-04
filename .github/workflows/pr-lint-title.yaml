@@ -1,12 +1,9 @@
 ---
 
-# This workflow will run the semantic pull request action on the PR title
-# It will check if the PR title follows the Conventional Commits specification
-
-name: "Lint PR"
+name: "Lint PR Title"
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - edited
