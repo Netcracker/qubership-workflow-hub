@@ -67,6 +67,8 @@ function bump_version_and_build() {
         echo "::group::Building ${MODULE} current version."
         echo "Dry run. Not bumping version."
         # shellcheck disable=2086
+        echo "ℹ️ Dry run mvn command:"
+        echo "mvn --batch-mode deploy $MVN_ARGS ${PROFILE_ARG}"
         mvn --batch-mode deploy $MVN_ARGS ${PROFILE_ARG}
         # shellcheck disable=2181
         if [ $? -ne 0 ]; then
@@ -80,8 +82,12 @@ function bump_version_and_build() {
         echo "✔️ Dry-run: Successfully built ${MODULE} version ${RELEASE_VERSION}" >> "$GITHUB_STEP_SUMMARY"
     else
         echo "::group::Preparing ${MODULE} release."
+        echo "ℹ️ Versions plugin mvn command:"
+        echo "mvn --batch-mode versions:use-releases -DgenerateBackupPoms=false"
         mvn --batch-mode versions:use-releases -DgenerateBackupPoms=false
         # shellcheck disable=2086
+        echo "ℹ️ Release preparation mvn command:"
+        echo "mvn --batch-mode release:prepare -DautoVersionSubmodules=true -DpushChanges=true -DtagNameFormat=\"v@{project.version}\" ${RELEASE_VERSION_ARG} ${PROFILE_ARG} ${MVN_ARGS}"
         mvn --batch-mode release:prepare -DautoVersionSubmodules=true -DpushChanges=true -DtagNameFormat="v@{project.version}" ${RELEASE_VERSION_ARG} ${PROFILE_ARG} ${MVN_ARGS}
         # shellcheck disable=2181
         if [ $? -ne 0 ]; then
@@ -103,6 +109,8 @@ function bump_version_and_build() {
     fi
     echo "::group::Releasing ${MODULE} version ${RELEASE_VERSION}"
     # shellcheck disable=2086
+    echo "ℹ️ Release perform mvn command:"
+    echo "mvn --batch-mode release:perform -DpushChanges=true ${PROFILE_ARG} ${MVN_ARGS}"
     mvn --batch-mode release:perform -DpushChanges=true ${PROFILE_ARG} ${MVN_ARGS}
     # shellcheck disable=2181
     if [ $? -ne 0 ]; then
