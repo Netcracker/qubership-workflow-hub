@@ -108,6 +108,13 @@ runs:
       uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
       with:
         maven-version: ${{ inputs.maven-version }}
+    - name: Cache local Maven repository
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: maven-${{ runner.os }}
+        restore-keys: |
+          maven-${{ runner.os }}
     - name: Checkout
       uses: actions/checkout@v4
       with:
