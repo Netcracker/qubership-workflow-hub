@@ -82,7 +82,7 @@ function bump_version_and_build() {
         echo "::group::Preparing ${MODULE} release."
         mvn --batch-mode versions:use-releases -DgenerateBackupPoms=false
         # shellcheck disable=2086
-        mvn --batch-mode release:prepare -DautoVersionSubmodules=true -DpushChanges=true -DtagNameFormat="v@{project.version}" ${RELEASE_VERSION_ARG} ${PROFILE_ARG}
+        mvn --batch-mode release:prepare -DautoVersionSubmodules=true -DpushChanges=true -DtagNameFormat="v@{project.version}" ${RELEASE_VERSION_ARG} ${PROFILE_ARG} ${MVN_ARGS}
         # shellcheck disable=2181
         if [ $? -ne 0 ]; then
             echo "Release preparation failed. Exiting."
@@ -103,7 +103,7 @@ function bump_version_and_build() {
     fi
     echo "::group::Releasing ${MODULE} version ${RELEASE_VERSION}"
     # shellcheck disable=2086
-    mvn --batch-mode release:perform -DpushChanges=true ${PROFILE_ARG}
+    mvn --batch-mode release:perform -DpushChanges=true ${PROFILE_ARG} ${MVN_ARGS}
     # shellcheck disable=2181
     if [ $? -ne 0 ]; then
         echo "Release perform failed. Exiting."
