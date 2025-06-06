@@ -19,7 +19,8 @@ async function getInput() {
     retries: parseInt(core.getInput("retries"), 10) || 3,
     delay: parseInt(core.getInput("retry-delay-ms"), 10) || 1000,
     factor: parseFloat(core.getInput("factor")) || 1,
-    dryRun: core.getInput("dry-run") === "true"
+    dryRun: core.getInput("dry-run") === "true",
+    compressionLevel: parseInt(core.getInput("compression-level"), 10) || 9
   };
 }
 
@@ -108,7 +109,7 @@ async function run() {
 
       if (fs.statSync(itemPath).isDirectory()) {
         try {
-          archivePath = await addToArchive(itemPath, input.archiveType);
+          archivePath = await addToArchive(itemPath, input.archiveType, input.compressionLevel);
 
         } catch (archiveErr) {
           core.error(`Error packaging ${itemPath}: ${archiveErr.message}`);

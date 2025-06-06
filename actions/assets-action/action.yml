@@ -11,6 +11,10 @@ inputs:
     description: "Type of archive to create (zip, tar, etc.)"
     required: false
     default: "zip"
+  compression-level:
+    description: "Compression level for the archive (0-9)"
+    required: false
+    default: "9"
   retries:
     description: "How many times to retry upload on failure"
     required: false

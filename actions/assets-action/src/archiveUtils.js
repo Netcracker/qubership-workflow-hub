@@ -4,7 +4,7 @@ const path = require("path");
 const archiver = require("archiver");
 
 
-async function addToArchive(itemPath, archiveType) {
+async function addToArchive(itemPath, archiveType, compressionLevel) {
 
     const stat = await fs.promises.stat(itemPath);
     if (!stat.isDirectory()) {
@@ -15,7 +15,7 @@ async function addToArchive(itemPath, archiveType) {
     const archivePath = path.join(path.dirname(itemPath), archiveName);
 
     const output = fs.createWriteStream(archivePath);
-    const archive = archiver(archiveType, { zlib: { level: 9 } });
+    const archive = archiver(archiveType, { zlib: { level: compressionLevel } });
 
     const archiveClosed = new Promise((resolve, reject) => {
         output.on("close", () => {
