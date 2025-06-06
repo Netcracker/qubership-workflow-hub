@@ -61871,7 +61871,7 @@ const path = __nccwpck_require__(6928);
 const archiver = __nccwpck_require__(1291);
 
 
-async function addToArchive(itemPath, archiveType) {
+async function addToArchive(itemPath, archiveType, compressionLevel) {
 
     const stat = await fs.promises.stat(itemPath);
     if (!stat.isDirectory()) {
@@ -61882,7 +61882,7 @@ async function addToArchive(itemPath, archiveType) {
     const archivePath = path.join(path.dirname(itemPath), archiveName);
 
     const output = fs.createWriteStream(archivePath);
-    const archive = archiver(archiveType, { zlib: { level: 9 } });
+    const archive = archiver(archiveType, { zlib: { level: compressionLevel } });
 
     const archiveClosed = new Promise((resolve, reject) => {
         output.on("close", () => {
@@ -72257,7 +72257,8 @@ async function getInput() {
     retries: parseInt(core.getInput("retries"), 10) || 3,
     delay: parseInt(core.getInput("retry-delay-ms"), 10) || 1000,
     factor: parseFloat(core.getInput("factor")) || 1,
-    dryRun: core.getInput("dry-run") === "true"
+    dryRun: core.getInput("dry-run") === "true",
+    compressionLevel: parseInt(core.getInput("compression-level"), 10) || 9
   };
 }
 
@@ -72346,7 +72347,7 @@ async function run() {
 
       if (fs.statSync(itemPath).isDirectory()) {
         try {
-          archivePath = await addToArchive(itemPath, input.archiveType);
+          archivePath = await addToArchive(itemPath, input.archiveType, input.compressionLevel);
 
         } catch (archiveErr) {
           core.error(`Error packaging ${itemPath}: ${archiveErr.message}`);
