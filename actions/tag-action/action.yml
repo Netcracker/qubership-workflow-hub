@@ -23,6 +23,10 @@ inputs:
     description: "Delete the specified tag."
     required: false
     default: "false"
+  switch-to-tag:
+    description: "Switch to the created tag after creation."
+    required: false
+    default: "true"
   tag-message:
     description: "Tag creation message."
     required: false
@@ -102,17 +106,25 @@ runs:
       if: ${{ inputs.tag-name !== '' && inputs.create-release == 'true' && inputs.dry-run != 'true' }}
       shell: bash
       run: |
-          TAG_NAME="${{ inputs.tag }}"
-          RELEASE_TITLE="Release $TAG_NAME"
-          RELEASE_BODY="Automatically generated release for tag $TAG_NAME."
+        TAG_NAME="${{ inputs.tag }}"
+        RELEASE_TITLE="$TAG_NAME"
+        RELEASE_BODY="Automatically generated release for tag $TAG_NAME."
 
-          echo "Checking if release $TAG_NAME exists..."
+        echo "Checking if release $TAG_NAME exists..."
 
-          if gh release view "$TAG_NAME" &>/dev/null; then
-            echo "🔁 echo Release $TAG_NAME already exists. Updating it..."
-            gh release edit "$TAG_NAME"  --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"
-          else
-            echo "🚀 Release $TAG_NAME does not exist. Creating it..."
-            gh release create "$TAG_NAME" --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"
-          fi
-          echo "✅ Release $TAG_NAME has been created or updated successfully.
+        if gh release view "$TAG_NAME" &>/dev/null; then
+          echo "🔁 echo Release $TAG_NAME already exists. Updating it..."
+          gh release edit "$TAG_NAME"  --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"
+        else
+          echo "🚀 Release $TAG_NAME does not exist. Creating it..."
+          gh release create "$TAG_NAME" --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"
+        fi
+        echo "✅ Release $TAG_NAME has been created or updated successfully.
+
+    - name: Switch to tag
+      if: ${{ inputs.switch-to-tag == 'true' &&  inputs.create-tag == 'true' && inputs.dry-run != 'true' }}
+      shell: bash
+      run: |
+        git fetch --tags
+        git checkout tags/${{ inputs.tag }}
+        echo "Switched to tag '${{ inputs.tag-name }}'"
