@@ -78,8 +78,11 @@ runs:
       shell: bash
       run: |
         if [ "${{ inputs.force-create }}" == "true" ] && [ "$(git tag -l "${{ inputs.tag-name }}")" ]; then
-          echo "🔄 Force create enabled: Deleting existing tag '${{ inputs.tag-name }}'"
+          echo "🔄 Force create enabled: Deleting existing tag '${{ inputs.tag-name }}' locally and remotely"
           git tag -d "${{ inputs.tag-name }}"
+          if [ "${{ inputs.dry-run }}" != "true" ]; then
+            git push origin --delete "${{ inputs.tag-name }}"
+          fi
         fi
         echo "💡 Trying to create tag: '${{ inputs.tag-name }}'"
         git tag -a "${{ inputs.tag-name }}" -m "${{ inputs.tag-message }}"
