@@ -117,7 +117,7 @@ runs:
           gh release edit "$TAG_NAME"  --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"
         else
           echo "🚀 Release $TAG_NAME does not exist. Creating it..."
-          gh release create "$TAG_NAME" --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"
+          gh release create "$TAG_NAME" --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"  --draft=false --latest
         fi
         echo "✅ Release $TAG_NAME has been created or updated successfully."
 
