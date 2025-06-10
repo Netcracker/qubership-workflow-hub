@@ -25,6 +25,9 @@ This **Tag Composite Action** automates the process of managing Git tags in a re
 | `force-create`     | Force create the tag even if it already exists. If enabled, the existing tag will be deleted before creating a new one. | No       | `false`                     |
 | `delete-tag`       | Delete the specified tag. If enabled, the action will delete the tag with the name provided in the `tag-name` input from both the local and remote repositories. | No       | `false`                     |
 | `dry-run`          | Run the action in dry-run mode. No changes will be pushed to the repository. Useful for testing workflows. | No       | `false`                     |
+| `switch-to-tag`    | Switch to the created tag after creation.                                   | No       | `false`                     |
+| `tag-message`      | Tag creation message.                                                       | No       | `Release tag`               |
+| `create-release`   | Create a GitHub release for the tag.                                        | No       | `false`                     |
 
 ---
 
@@ -49,6 +52,18 @@ If `force-create` is set to `true`, the action will overwrite an existing tag wi
 ### Delete Tag
 
 When `delete-tag` is set to `true`, the action will delete the specified tag from both the local repository and the remote repository. The `delete-message` input can be used to customize the commit message for the deletion.
+
+### Switch to Tag
+
+If `switch-to-tag` is set to `true`, the workflow will check out the newly created tag after it is pushed. This can be useful for running further steps against the tagged state.
+
+### Tag Message
+
+You can customize the tag message using the `tag-message` input. By default, it is set to "Release tag".
+
+### Create Release
+
+If `create-release` is set to `true`, the action will create or update a GitHub Release for the specified tag using the GitHub CLI (`gh`). The release will have a default title and body, which you can later edit as needed.
 
 ---
 
@@ -78,14 +93,29 @@ jobs:
           ref: main
           tag-name: v1.0.0
           create-tag: true
+          tag-message: "Release v1.0.0"
+          check-tag: true
+          force-create: false
+          dry-run: false
+          create-release: true
+          switch-to-tag: false
 
-      - name: Delete an Existing Tag
+      - name: Delete an Existing Tag (Dry Run)
         uses: netcracker/qubership-workflow-hub/actions/tag-action@main
         with:
           ref: main
           tag-name: v1.0.0
           delete-tag: true
           dry-run: true
+
+      - name: Force Create Tag and Switch
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@main
+        with:
+          ref: main
+          tag-name: v1.0.1
+          create-tag: true
+          force-create: true
+          switch-to-tag: true
 ```
 
 ---
