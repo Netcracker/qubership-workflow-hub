@@ -23,10 +23,18 @@ inputs:
     description: "Delete the specified tag."
     required: false
     default: "false"
+  switch-to-tag:
+    description: "Switch to the created tag after creation."
+    required: false
+    default: "false"
   tag-message:
     description: "Tag creation message."
     required: false
     default: "Release tag"
+  create-release:
+    description: "Create a GitHub release for the tag."
+    required: false
+    default: "false"
   dry-run:
     description: "Run the action in dry-run mode (no changes will be pushed)."
     required: false
@@ -94,3 +102,29 @@ runs:
         fi
         echo "created-tag=${{ inputs.tag-name }}" >> $GITHUB_OUTPUT
 
+    - name: Check if tag was create
+      if: ${{ inputs.tag-name != '' && inputs.create-release == 'true' && inputs.dry-run != 'true' }}
+      shell: bash
+      run: |
+        TAG_NAME="${{ inputs.tag-name }}"
+        RELEASE_TITLE="$TAG_NAME"
+        RELEASE_BODY="Automatically generated release for tag $TAG_NAME."
+
+        echo "Checking if release $TAG_NAME exists..."
+
+        if gh release view "$TAG_NAME" &>/dev/null; then
+          echo "🔁 echo Release $TAG_NAME already exists. Updating it..."
+          gh release edit "$TAG_NAME"  --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"
+        else
+          echo "🚀 Release $TAG_NAME does not exist. Creating it..."
+          gh release create "$TAG_NAME" --title "$RELEASE_TITLE" --notes "$RELEASE_BODY"  --draft=false --latest
+        fi
+        echo "✅ Release $TAG_NAME has been created or updated successfully."
+
+    - name: Switch to tag
+      if: ${{ inputs.switch-to-tag == 'true' &&  inputs.create-tag == 'true' && inputs.dry-run != 'true' }}
+      shell: bash
+      run: |
+        git fetch --tags
+        git checkout tags/${{ inputs.tag-name }}
+        echo "💡 Switched to tag ${{ inputs.tag-name }}"
