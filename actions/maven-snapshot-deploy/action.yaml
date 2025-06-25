@@ -107,7 +107,22 @@ runs:
         else
           echo "MVN_COMMAND=${{ inputs.maven-command }}" >> $GITHUB_ENV
         fi
-
+    - name: "Check if ${{ inputs.target-store }} profile exists in pom.xml"
+      shell: bash
+      run: |
+        echo "ℹ️ Checking if the '${{ inputs.target-store }}' profile exists in pom.xml" >> $GITHUB_STEP_SUMMARY
+        PROFILE_CHECK=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:profiles/x:profile[x:id='${{ inputs.target-store }}']" ./pom.xml || echo "")
+        if [[ "${PROFILE_CHECK}" == "" ]]
+        then
+          echo "ℹ️ The '${{ inputs.target-store }}' profile does not exist in pom.xml. Please create it if you plan to deploy artifacts." >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ The detailed instruction: https://github.com/Netcracker/qubership-workflow-hub/blob/main/docs/maven-publish-pom-preparation_doc.md" >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ The '${{ inputs.target-store }}' profile does not exist in pom.xml. Please create it if you plan to deploy artifacts."
+          echo "MVN_PROFILE=''" >> $GITHUB_ENV
+        else
+          echo "✅ The '${{ inputs.target-store }}' profile exists in pom.xml" >> $GITHUB_STEP_SUMMARY
+          echo "✅ The '${{ inputs.target-store }}' profile exists in pom.xml"
+          echo "MVN_PROFILE=-P${{ inputs.target-store }}" >> $GITHUB_ENV
+        fi
     - name: "Setup mvn additional args"
       shell: bash
       run: |
@@ -145,7 +160,7 @@ runs:
         server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ inputs.gpg-private-key }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
-    - name: "Set up JDK for install"
+    - name: "Set up JDK for any other Maven command"
       if: ${{ inputs.maven-command != 'deploy' }}
       uses: actions/setup-java@v4
       with:
@@ -170,8 +185,8 @@ runs:
     - name: "Execute Maven command"
       shell: bash
       run: |
-        echo "ℹ️ Executing Maven command: mvn --batch-mode ${{ env.MVN_COMMAND }} -P${{ inputs.target-store }} ${ADDITIONAL_MVN_ARGS}" >> $GITHUB_STEP_SUMMARY
-        mvn --batch-mode ${{ env.MVN_COMMAND }} -P${{ inputs.target-store }} ${ADDITIONAL_MVN_ARGS}
+        echo "ℹ️ Executing Maven command: mvn --batch-mode ${{ env.MVN_COMMAND }} ${{ env.MVN_PROFILE }} ${{ env.ADDITIONAL_MVN_ARGS }}" >> $GITHUB_STEP_SUMMARY
+        mvn --batch-mode ${{ env.MVN_COMMAND }} ${{ env.MVN_PROFILE }} ${{ env.ADDITIONAL_MVN_ARGS }}
       env:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-token }}
