@@ -70,10 +70,11 @@ runs:
     - name: "Check that version is SNAPSHOT"
       shell: bash
       run: |
+        echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}'." >> $GITHUB_STEP_SUMMARY
+        echo "ℹ️ The target store is '${{ inputs.target-store }}'. Relevant only for 'deploy' command." >> $GITHUB_STEP_SUMMARY
         if [[ "${{ inputs.maven-command }}" == "deploy" ]]; then
           echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}'. It will deploy SNAPSHOT artifact." >> $GITHUB_STEP_SUMMARY
           echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}'. It will deploy SNAPSHOT artifact."
-          echo "ℹ️ The target store is '${{ inputs.target-store }}'." >> $GITHUB_STEP_SUMMARY
           echo "ℹ️ The target store is '${{ inputs.target-store }}'."
           echo "ℹ️ Checking if the project version is a SNAPSHOT version."
 
@@ -104,8 +105,6 @@ runs:
             echo "MVN_COMMAND=deploy" >> $GITHUB_ENV
           fi
         else
-          echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}" >> $GITHUB_STEP_SUMMARY
-          echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}"
           echo "MVN_COMMAND=${{ inputs.maven-command }}" >> $GITHUB_ENV
         fi
 
