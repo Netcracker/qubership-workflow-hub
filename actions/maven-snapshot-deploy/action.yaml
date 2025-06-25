@@ -104,6 +104,7 @@ runs:
             echo "MVN_COMMAND=deploy" >> $GITHUB_ENV
           fi
         else
+          echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}" >> $GITHUB_STEP_SUMMARY
           echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}"
           echo "MVN_COMMAND=${{ inputs.maven-command }}" >> $GITHUB_ENV
         fi
@@ -170,6 +171,7 @@ runs:
     - name: "Execute Maven command"
       shell: bash
       run: |
+        echo "ℹ️ Executing Maven command: mvn --batch-mode ${{ env.MVN_COMMAND }} -P${{ inputs.target-store }} ${ADDITIONAL_MVN_ARGS}" >> $GITHUB_STEP_SUMMARY
         mvn --batch-mode ${{ env.MVN_COMMAND }} -P${{ inputs.target-store }} ${ADDITIONAL_MVN_ARGS}
       env:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
