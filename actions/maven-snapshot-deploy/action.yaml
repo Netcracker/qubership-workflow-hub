@@ -117,7 +117,7 @@ runs:
           echo "ℹ️ The '${{ inputs.target-store }}' profile does not exist in pom.xml. Please create it if you plan to deploy artifacts." >> $GITHUB_STEP_SUMMARY
           echo "ℹ️ The detailed instruction: https://github.com/Netcracker/qubership-workflow-hub/blob/main/docs/maven-publish-pom-preparation_doc.md" >> $GITHUB_STEP_SUMMARY
           echo "ℹ️ The '${{ inputs.target-store }}' profile does not exist in pom.xml. Please create it if you plan to deploy artifacts."
-          echo "MVN_PROFILE=''" >> $GITHUB_ENV
+          echo "MVN_PROFILE=" >> $GITHUB_ENV
         else
           echo "✅ The '${{ inputs.target-store }}' profile exists in pom.xml" >> $GITHUB_STEP_SUMMARY
           echo "✅ The '${{ inputs.target-store }}' profile exists in pom.xml"
