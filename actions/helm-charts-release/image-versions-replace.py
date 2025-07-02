@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import yaml
 
 def replace_env_variables(input_string):
@@ -16,6 +17,20 @@ def replace_env_variables(input_string):
         return os.environ.get(var_name, f"${{{var_name}}}")  # Keep the original if not found
 
     return pattern.sub(replacer, input_string)
+
+def replace_tag_regexp(image_str, tag_re):
+    # Try to find the requested tag for given image_str
+    if tag_re.startswith("#"):
+        try:
+            os.system(f"skopeo login -u $GITHUB_ACTOR -p GITHUB_TOKEN ghcr.io")
+            result_tag = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[] | select(test(\"^{tag_re[1:]}\"))' | sort -V | tail -n 1", shell=True, text=True, check=True, capture_output=True).stdout
+            return(result_tag)
+            #os.system(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[] | select(test("^{tag_re[1:]}"))' | sort -V | tail -n 1")
+        except Exception as e:
+          print(f"Error: {e}")
+
+    else:
+        return tag_re
 
 def create_summary(images_versions):
     # Create a summary of the images versions
@@ -47,6 +62,7 @@ def set_image_versions(config_file, release, chart_version,  method):
             search_str = image.split(':')[0]
             if method == 'parse':
                 image_ver = replace_env_variables(image.split(':')[1].replace('${release}', release))
+                image_ver = replace_tag_regexp(search_str, image_ver)
             print(f"Updating {search_str} version to {image_ver}")
             os.system(f"sed -i 's|{search_str}:[a-zA-Z0-9._-]*|{search_str}:{image_ver}|' {values_file}")
             # Add to dictionary for action output

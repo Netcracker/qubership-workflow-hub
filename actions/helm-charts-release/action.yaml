@@ -70,6 +70,8 @@ runs:
     - name: "Update chart and images versions"
       id: update-versions
       run: |
+        sudo apt-get update
+        sudo apt-get install -y skopeo
         sudo chmod +x "${GITHUB_ACTION_PATH}/image-versions-replace.py"
         ${GITHUB_ACTION_PATH}/image-versions-replace.py \
           --config-file ${{ inputs.config-file }} \
