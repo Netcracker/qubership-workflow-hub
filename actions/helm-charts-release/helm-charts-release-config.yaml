@@ -10,8 +10,6 @@ charts:
     chart_file: charts/helm/module1/Chart.yaml
     values_file: charts/helm/module1/values.yaml
     image:
-      - ghcr.io/netcracker/module1:${release}
-      - ghcr.io/netcracker/module1-service1:${release}
-      - ghcr.io/netcracker/module1-service2:${release}
-      - ghcr.io/netcracker/module1-service3:${release}
-      - ghcr.io/netcracker/module1-service4:${release}
+      - ghcr.io/netcracker/module1:${release} # This will replace the image version with the release version
+      - ghcr.io/netcracker/module1-service1:${release}-${THIRD_PARTY_VERSION} # This will replace the image version with the release version and append the THIRD_PARTY_VERSION variable
+      - ghcr.io/netcracker/module1-service2:#5.*.* # This will select the latest tag matching the regexp

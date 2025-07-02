@@ -30,11 +30,24 @@ Whether to create a release branch. Defaults to `true`. If set to `false`, then 
 The method to replace the version in `values.yaml`.
 Can be `replace` or `parse`. Defaults to `parse`.
 If set to `replace` the action will just replace the versions of docker images with `release-version` value. If set to `parse` the action read provided `config-file` and substitute any environment variables provided in the version part. For example if you have some 3-rd party image in `values.yaml` file and want to manage it's version, you can add repository level variable and use it in the config file: `some-thirg-party-image:${THIRD_PARTY_VERSION}`.
+Also if you want the action to find the latest version of some image (supplimentary service for instance), you can set it to something like `#4.*.*`. In that case the action will find the latest 4th version of an image. The regex of a version must start with `#` symbol.
 
 ### `working-directory`
 
 **Optional**  
 The working directory for the action. Defaults to `.`. Used in specific cases, in testing CI workflows mostly.
+
+## Environment
+
+### `GITHUB_TOKEN`
+
+**Required**  
+The GitHub token to authenticate in `ghcr.io` registry.
+
+### `GITHUB_ACTOR`
+
+**Required**  
+The GitHub login to authenticate in `ghcr.io` registry.
 
 ## Outputs
 
@@ -73,6 +86,10 @@ jobs:
           create-release-branch: 'true'
           version-replace-method: 'parse'
           working-directory: './charts'
+        env:
+          ${{ insert }}: ${{ vars }} # This will insert all repository variables into env context
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
 ```
 
 ## How It Works
@@ -93,4 +110,3 @@ jobs:
   - `image`: List of image keys to update in `values.yaml`.
 
 > Example: [helm-charts-release-config.yaml](./helm-charts-release-config.yaml).
-Ensure that the Python environment is set up to run the `yaml` module for processing the configuration file.
