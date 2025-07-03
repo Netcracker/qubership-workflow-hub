@@ -23,9 +23,11 @@ def replace_tag_regexp(image_str, tag_re):
     if tag_re.startswith("#"):
         try:
             os.system(f"skopeo login -u $GITHUB_ACTOR -p $GITHUB_TOKEN ghcr.io")
-            result_tag = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[] | select(test(\"^{tag_re[1:]}\"))' | sort -V | tail -n 1", shell=True, text=True, check=True, capture_output=True).stdout.rstrip()
+            if tag_re[1:] == 'latest':
+                result_tag = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[]' | grep -e \"^[0-9]*\.[0-9]*\.[0-9]*\" | sort -V | tail -n 1", shell=True, text=True, check=True, capture_output=True).stdout.rstrip()
+            else:
+                result_tag = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[] | select(test(\"^{tag_re[1:]}\"))' | sort -V | tail -n 1", shell=True, text=True, check=True, capture_output=True).stdout.rstrip()
             return(result_tag)
-            #os.system(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[] | select(test("^{tag_re[1:]}"))' | sort -V | tail -n 1")
         except Exception as e:
           print(f"Error: {e}")
 
