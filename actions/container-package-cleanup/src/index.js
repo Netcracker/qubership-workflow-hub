@@ -4,8 +4,10 @@
 // Flying like an eagle to my destiny
 
 const core = require("@actions/core");
-const OctokitWrapper = require("./wrapper");
-const Report = require("./report");
+const OctokitWrapper = require("./utils/wrapper");
+const ContainerReport = require("./reports/containerReport");
+const MavenReport = require("./reports/mavenReport");
+const { getStrategy } = require("./strategy/strategyRegistry");
 
 async function run() {
 
@@ -18,41 +20,61 @@ async function run() {
 
   const isDebug = core.getInput("debug").toLowerCase() === "true";
   const dryRun = core.getInput("dry-run").toLowerCase() === "true";
-  core.info(`🔹isDebug: ${isDebug}`);
-  core.info(`🔹dryRun: ${dryRun}`);
 
-  const thresholdDays = parseInt(core.getInput('threshold-days'), 10) || 7;
+  const package_type = core.getInput("package-type").toLowerCase();
 
-  const rawIncludedTags = core.getInput('included-tags');
-  const includedTags = rawIncludedTags ? rawIncludedTags.split(",") : [];
+  core.info(`Is debug? -> ${isDebug}`);
+  core.info(`Dry run? -> ${dryRun}`);
 
-  const rawExcludedTags = core.getInput('excluded-tags');
-  const excludedTags = rawExcludedTags ? rawExcludedTags.split(",") : [];
+  const thresholdDays = parseInt(core.getInput('threshold-days'), 10);
+
+  let excludedTags = [];
+  let includedTags = [];
+
+  if (package_type === "container") {
+    const rawIncludedTags = core.getInput('included-tags');
+    includedTags = rawIncludedTags ? rawIncludedTags.split(",") : [];
+
+    const rawExcludedTags = core.getInput('excluded-tags');
+    excludedTags = rawExcludedTags ? rawExcludedTags.split(",") : [];
+  }
+
+  if (package_type === "maven") includedTags = ['*SNAPSHOT*', ...includedTags];
 
   const now = new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1000);
 
-  // core.info(`🔹Configuration Path: ${configurationPath}`);
-  core.info(`🔹 Threshold Days: ${thresholdDays}`);
-  core.info(`🔹 Threshold Date: ${thresholdDate}`);
-  core.info(`🔹 Excluded Tags: ${excludedTags}`);
-  core.info(`🔹 Included Tags: ${includedTags}`);
+  // core.info(`Configuration Path: ${configurationPath}`);
+  core.info(`Threshold Days: ${thresholdDays}`);
+  core.info(`Threshold Date: ${thresholdDate}`);
+
+  excludedTags.length && core.info(`Excluded Tags: ${excludedTags}`);
+  includedTags.length && core.info(`Included Tags: ${includedTags}`);
 
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
   const wrapper = new OctokitWrapper(process.env.PACKAGE_TOKEN);
 
   const isOrganization = await wrapper.isOrganization(owner);
-  core.info(`🔹Organization marker: ${isOrganization}`);
+  core.info(`Is Organization? -> ${isOrganization}`);
 
-  let packages = await wrapper.listPackages(owner, 'container', isOrganization);
-  // core.info(`🔹Packages ${JSON.stringify(packages, null, 2)}`);
+  // strategy will start  here for different types of packages
+  core.info(`Package type: ${package_type}, owner: ${owner}, repo: ${repo}`);
+
+  // let packages = await wrapper.listPackages(owner, 'container', isOrganization);
+
+  let packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   let filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  // core.info(`🔹Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
+  // core.info(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
 
-  let packagesNames = filteredPackages.map((pkg) => pkg.name);
-  // core.info(`🔹Packages names: ${JSON.stringify(packagesNames, null, 2)}`);
+
+  core.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
+
+  if (packages.length === 0) {
+    core.info("❗️ No packages found.");
+    return;
+  }
 
   const packagesWithVersions = await Promise.all(
     filteredPackages.map(async (pkg) => {
@@ -61,107 +83,99 @@ async function run() {
     })
   );
 
-  let filteredPackagesWithVersionsForDelete = packagesWithVersions.map(({ package: pkg, versions }) => {
 
-    const verisonWithOutExclude = versions.filter((version) => {
-      const createdAt = new Date(version.created_at);
-      const isOldEnough = createdAt <= thresholdDate;
+  // // 3) Для каждого пакета группируем тэг → его manifest digest’ы → архитектурные слои
+  // for (const { package: pkg, versions } of packagesWithVersions) {
+  //   // оставляем только версии с тегами
+  //   const tagged = versions.filter(v => (v.metadata.container.tags || []).length > 0);
+  //   if (tagged.length === 0) {
+  //     core.info(`→ ${pkg.name}: нет версий с тегами`);
+  //     continue;
+  //   }
 
-      if (!isOldEnough) return false;
-      if (!version.metadata || !version.metadata.container || !Array.isArray(version.metadata.container.tags)) return false;
-      const tags = version.metadata.container.tags;
+  //   for (const tagVer of tagged) {
+  //     // возьмём, например, первый тег
+  //     const tag = tagVer.metadata.container.tags[0];
+  //     core.info(`\nПакет ${pkg.name} — версия id=${tagVer.id}, tag=${tag}`);
 
-      if (excludedTags.length > 0 && tags.some(tag => excludedTags.some(pattern => wildcardMatch(tag, pattern)))) {
-        return false;
-      }
-      return true;
-    });
+  //     // получаем через docker manifest digest’ы всех платформ
+  //     const digests = await wrapper.getManifestDigests(owner, pkg.name, tag);
+  //     core.info(` → manifest-list digests:\n   ${digests.join("\n   ")}`);
 
-    const versionsToDelete = includedTags.length > 0 ? verisonWithOutExclude.filter((version) => {
-      if (!version.metadata || !version.metadata.container || !Array.isArray(version.metadata.container.tags)) return false;
-      const tags = version.metadata.container.tags;
-      return tags.some(tag => includedTags.some(pattern => wildcardMatch(tag, pattern)));
-    }) : verisonWithOutExclude;
+  //     // сопоставляем с sha-версиями из GH Packages
+  //     const archLayers = versions.filter(v => digests.includes(v.name));
+  //     if (archLayers.length) {
+  //       core.info(` → связанные архитектурные слои:`);
+  //       archLayers.forEach(v =>
+  //         core.info(`    • id=${v.id}, name=${v.name}`)
+  //       );
+  //     } else {
+  //       core.info(` → архитектурные слои не найдены.`);
+  //     }
+  //   }
+  // }
 
-    const customPackage = {
-      id: pkg.id,
-      name: pkg.name,
-      type: pkg.package_type
-    };
 
-    return { package: customPackage, versions: versionsToDelete };
+  //core.info(JSON.stringify(packagesWithVersions, null, 2));
 
-  }).filter(item => item !== null && item.versions.length > 0);
+  const strategyContext = {
+    packagesWithVersions: packagesWithVersions,
+    excludedPatterns: excludedTags,
+    includedPatterns: includedTags,
+    thresholdDate,
+    wrapper,
+    owner,
+    isOrganization,
+    debug: isDebug
+  };
 
-  if (filteredPackagesWithVersionsForDelete.length === 0) {
-    core.info("❗️ No versions to delete.");
-    return;
-  }
+
+  let strategy = getStrategy(package_type);
+  // // let strategy = package_type === 'container' ? new ContainerStrategy() : new MavenStrategy();
+
+  console.log(`Using strategy -> ${await strategy.toString()}`);
+
+  let filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
+  // core.info(`Filtered Packages with Versions for Delete: ${JSON.stringify(filteredPackagesWithVersionsForDelete, null, 2)}`);
 
   if (isDebug) {
-    core.info(`💡 Packages name: ${JSON.stringify(packagesNames, null, 2)}`);
+
     core.info(`::group::Delete versions Log.`);
     core.info(`💡 Package with version for delete: ${JSON.stringify(filteredPackagesWithVersionsForDelete, null, 2)}`);
     core.info(`::endgroup::`);
   }
 
+  let reportContext = {
+    filteredPackagesWithVersionsForDelete,
+    thresholdDays,
+    thresholdDate,
+    dryRun,
+    includedTags,
+    excludedTags
+  };
+
   if (dryRun) {
     core.warning("Dry run mode enabled. No versions will be deleted.");
-    await showReport(filteredPackagesWithVersionsForDelete, true);
-    return; 
+    await showReport(reportContext, package_type,);
+    return;
   }
 
   for (const { package: pkg, versions } of filteredPackagesWithVersionsForDelete) {
     for (const version of versions) {
-      core.info(`🔹 Package: ${pkg.name} (${pkg.type}) deleting version: ${version.id} (${version.metadata.container.tags.join(", ")})`);
-      await wrapper.deletePackageVersion(owner, 'container', pkg.name, version.id, isOrganization);
+      let detail = pkg.type === 'maven' ? version.name : (version.metadata?.container?.tags ?? []).join(', ');
+      core.info(`Package: ${pkg.name} (${pkg.type}) — deleting version: ${version.id} (${detail})`);
+      await wrapper.deletePackageVersion(owner, pkg.type, pkg.name, version.id, isOrganization);
     }
   }
 
   await showReport(filteredPackagesWithVersionsForDelete);
-}
-
-// function wildcardMatch(tag, pattern) {
-//   if (!pattern.includes('*')) {
-//     return tag.toLowerCase() === pattern.toLowerCase();
-//   }
-//   const escapedPattern = pattern.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&');
-//   const regex = new RegExp(escapedPattern.replace(/\*/g, '.*'), 'i');
-//   return regex.test(tag);
-// }
-
-
-function wildcardMatch(tag, pattern) {
-  const t = tag.toLowerCase();
-  const p = pattern.toLowerCase();
-
-  if (!p.includes('*')) {
-    return t === p;
-  }
-
-  if (p.endsWith('*') && !p.startsWith('*')) {
-    const prefix = p.slice(0, -1);
-    return t.startsWith(prefix);
-  }
-
-  if (p.startsWith('*') && !p.endsWith('*')) {
-    const suffix = p.slice(1);
-    return t.endsWith(suffix);
-  }
-
-  if (p.startsWith('*') && p.endsWith('*')) {
-    const substr = p.slice(1, -1);
-    return t.includes(substr);
-  }
-
-  const escaped = p.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&').replace(/\*/g, '.*');
-  const re = new RegExp(`^${escaped}$`, 'i');
-  return re.test(tag);
-}
-
-async function showReport(packagesWithVersionsForDelete, dryRun = false) {
-  await new Report().writeSummary(packagesWithVersionsForDelete, dryRun);
   core.info("✅ All specified versions have been deleted successfully.");
+}
+
+async function showReport(context, type = 'container') {
+  let report = type === 'container' ? new ContainerReport() : new MavenReport();
+  await report.writeSummary(context);
+
 }
 
 run();

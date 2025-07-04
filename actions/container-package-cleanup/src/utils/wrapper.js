@@ -1,4 +1,7 @@
 const github = require("@actions/github");
+const { exec } = require("child_process");
+const util = require("util");
+const execPromise = util.promisify(exec);
 
 class OctokitWrapper {
 
@@ -17,6 +20,7 @@ class OctokitWrapper {
    */
   async isOrganization(username) {
     try {
+      console.log(`Checking if ${username} is an organization...`);
       const response = await this.octokit.rest.users.getByUsername({ username });
       return response.data.type !== 'User' ? true : false;
     } catch (error) {
@@ -100,6 +104,7 @@ class OctokitWrapper {
    */
   async getPackageVersionsForUser(owner, package_type, package_name) {
     try {
+      console.log(`Owner: ${owner}, Package Type: ${package_type}, Package Name: ${package_name}`);
       return await this.octokit.paginate(this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser,
         {
           package_type,
@@ -166,6 +171,23 @@ class OctokitWrapper {
       console.error(`Error deleting package version ${package_version_id} for ${owner}/${package_name}:`, error);
       throw error;
     }
+  }
+
+  /**
+ * Возвращает массив digest’ов из manifest-list для заданного тега.
+ *
+ * @param {string} owner — организация или пользователь
+ * @param {string} packageName — имя контейнерного пакета
+ * @param {string} tag — тег образа
+ * @returns {Promise<string[]>} — список digest’ов для всех платформ
+ */
+  async getManifestDigests(owner, packageName, tag) {
+    const ref = `ghcr.io/${owner}/${packageName}:${tag}`;
+    // запуским docker manifest inspect и распарсим JSON
+    const { stdout } = await execPromise(`docker manifest inspect ${ref}`);
+    const manifest = JSON.parse(stdout);
+    // вернём digest из каждого entry в manifests
+    return manifest.manifests.map(m => m.digest);
   }
 
 }
