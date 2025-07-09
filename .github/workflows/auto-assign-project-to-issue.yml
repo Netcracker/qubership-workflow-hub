@@ -13,7 +13,7 @@ jobs:
         uses: actions/add-to-project@v1.0.2
         with:
           project-url: https://github.com/orgs/Netcracker/projects/${{ vars.PROJECT }}?type=beta
-          github-token: ${{ secrets.ADD_PROJECT_TO_ISSUE_PAT }}
+          github-token: ${{ secrets.GH_ACCESS_TOKEN }}
 
       - name: Log info
         run: |
