@@ -1,19 +1,65 @@
-# NPM Publish Workflow
+# 🚀 NPM Publish Workflow
 
-## Overview
-
-The **Reusable NPM Publish** workflow is a GitHub Actions workflow designed to automate the process of building, testing, and publishing NPM packages. It supports both single packages and Lerna monorepos, with automatic version management and dependency updates.
+This **NPM Publish** GitHub Workflow automates building, testing, and publishing NPM packages to a registry.
 
 ## Features
 
-- ✅ **Automatic version management** for both NPM and Lerna projects
-- ✅ **Dependency updates** for NetCracker packages
-- ✅ **Build automation** with support for `prepublishOnly` and `build` scripts
-- ✅ **Testing integration** with automatic test execution
-- ✅ **GitHub Packages integration** with configurable registry
-- ✅ **Lerna monorepo support** with automatic detection
-- ✅ **Customizable NPM scope** and distribution tags
-- ✅ **Automatic commit and push** of version changes
+- Automates building, testing, and publishing NPM packages to a registry.
+- Supports both single packages and Lerna monorepos.
+- Allows for automatic version management and dependency updates.
+- Integrates with GitHub Packages by default.
+
+## 📌 Inputs
+
+| Name                  | Description                              | Required | Default                  |
+| --------------------- | ---------------------------------------- | -------- | ------------------------ |
+| `version`             | Version to publish                       | Yes      | -                        |
+| `scope`               | NPM package scope                        | No       | `@netcracker`            |
+| `node-version`        | Node.js version to use                   | No       | `22.x`                   |
+| `registry-url`        | NPM registry URL                         | No       | `https://npm.pkg.github.com` |
+| `update-nc-dependency`| Update NetCracker dependencies           | No       | `false`                  |
+| `dist-tag`            | NPM distribution tag                     | No       | `next`                   |
+| `branch_name`         | Branch name to commit changes to         | No       | `main`                   |
+
+## 📌 Secrets
+
+| Name             | Description                              | Required |
+| ---------------- | ---------------------------------------- | -------- |
+| `GITHUB_TOKEN`   | GitHub token for authentication          | Yes      |
+
+## Usage Example
+
+Below is an example of how to use this reusable workflow in a GitHub Actions workflow:
+
+```yaml
+name: NPM Publish Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  call-npm-publish:
+    uses: netcracker/qubership-workflow-hub/.github/workflows/npm-publish.yml@main
+    with:
+      version: ${{ github.event.inputs.version }}
+      scope: "@netcracker"
+      node-version: "22.x"
+      registry-url: "https://npm.pkg.github.com"
+      update-nc-dependency: false
+      dist-tag: "latest"
+      branch_name: "main"
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
 
 ## Prerequisites
 
@@ -29,100 +75,6 @@ The **Reusable NPM Publish** workflow is a GitHub Actions workflow designed to a
 - **Lerna configuration** (`lerna.json`) for monorepo projects
 - **Build scripts** (`prepublishOnly` or `build`) in package.json
 - **Test scripts** (`test`) in package.json
-
-## Input Parameters
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `version` | string | ✅ Yes | - | The version to publish (e.g., "1.0.0", "2.1.0-beta.1") |
-| `scope` | string | ❌ No | "@netcracker" | NPM package scope for organization |
-| `node-version` | string | ❌ No | "22.x" | Node.js version to use |
-| `registry-url` | string | ❌ No | "https://npm.pkg.github.com" | NPM registry URL |
-| `update-nc-dependency` | boolean | ❌ No | false | Update NetCracker dependencies |
-| `dist-tag` | string | ❌ No | "next" | NPM distribution tag |
-| `branch_name` | string | ❌ No | "main" | Target branch for commits |
-
-## Usage
-
-### Manual Trigger
-
-1. Go to your GitHub repository
-2. Navigate to **Actions** tab
-3. Select **Reusable NPM Publish** workflow
-4. Click **Run workflow**
-5. Fill in the required parameters:
-   - **Version**: Enter the version you want to publish
-   - **Scope**: Leave as "@netcracker" or change as needed
-   - **Node version**: Use default "22.x" or specify another version
-   - **Registry URL**: Use default for GitHub Packages or specify custom registry
-   - **Update NC dependency**: Check if you want to update NetCracker dependencies
-   - **Dist tag**: Use "next" for pre-releases or "latest" for stable releases
-   - **Branch name**: Specify target branch (default: "main")
-
-### Example Usage
-
-#### Publishing a Stable Release
-```
-Version: 1.2.0
-Scope: @netcracker
-Dist tag: latest
-Update NC dependency: false
-```
-
-#### Publishing a Beta Release
-```
-Version: 1.2.0-beta.1
-Scope: @netcracker
-Dist tag: next
-Update NC dependency: true
-```
-
-## Workflow Steps
-
-### 1. Repository Checkout
-- Checks out the specified branch
-- Displays the current branch name
-
-### 2. Node.js Setup
-- Installs the specified Node.js version
-- Configures NPM registry and scope
-- Sets up authentication using `GITHUB_TOKEN`
-
-### 3. Dependency Installation
-- Installs project dependencies using `npm ci --legacy-peer-deps`
-- Ensures consistent dependency resolution
-
-### 4. Lerna Detection
-- Automatically detects if the project is a Lerna monorepo
-- Sets environment variable `IS_LERNA` accordingly
-
-### 5. Dependency Updates (Optional)
-- Updates NetCracker dependencies if `update-nc-dependency` is true
-- Uses `jq` to parse and update `@netcracker` scoped packages
-
-### 6. Version Management
-- **For Lerna projects**: Updates version in `lerna.json` and all `package.json` files
-- **For NPM projects**: Updates version in root `package.json`
-- Creates a `changes.txt` file with version differences
-
-### 7. Build Process
-- Runs `prepublishOnly` script if available
-- Falls back to `build` script if `prepublishOnly` doesn't exist
-- Skips build step if neither script is found
-
-### 8. Testing
-- Runs `npm test` if the script exists in `package.json`
-- Continues workflow regardless of test results
-
-### 9. Commit and Push
-- Uses the custom `commit-and-push` action
-- Commits version changes to the specified branch
-- Pushes changes to the repository
-
-### 10. Package Publishing
-- **For Lerna projects**: Uses `lerna publish from-package`
-- **For NPM projects**: Uses `npm publish`
-- Publishes with the specified distribution tag
 
 ## Configuration Examples
 
@@ -172,20 +124,6 @@ Update NC dependency: true
 4. **Lerna Issues**
    - Verify `lerna.json` configuration is correct
    - Check if all packages in monorepo have valid `package.json` files
-
-### Debug Information
-
-The workflow provides detailed logging for each step:
-- Version changes are saved to `changes.txt`
-- Registry configuration is displayed before publishing
-- Branch information is shown at the start
-
-## Security Considerations
-
-- Uses `GITHUB_TOKEN` for authentication (automatically provided)
-- Requires explicit `packages:write` permission
-- Supports custom registries with proper authentication
-- Validates package versions before publishing
 
 ## Best Practices
 
