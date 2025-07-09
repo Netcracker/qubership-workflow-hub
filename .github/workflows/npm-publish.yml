@@ -1,7 +1,7 @@
 name: Reusable NPM Publish
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       version:
         required: true
