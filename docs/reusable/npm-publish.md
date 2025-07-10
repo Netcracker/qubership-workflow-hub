@@ -1,10 +1,10 @@
-# 🚀 NPM Publish Workflow
+# 🚀 npm Publish Workflow
 
-This **NPM Publish** GitHub Workflow automates building, testing, and publishing NPM packages to a registry.
+This **npm Publish** GitHub Workflow automates building, testing, and publishing npm packages to a registry.
 
 ## Features
 
-- Automates building, testing, and publishing NPM packages to a registry.
+- Automates building, testing, and publishing npm packages to a registry.
 - Supports both single packages and Lerna monorepos.
 - Allows for automatic version management and dependency updates.
 - Integrates with GitHub Packages by default.
@@ -79,6 +79,7 @@ jobs:
 ## Configuration Examples
 
 ### Single Package (package.json)
+
 ```json
 {
   "name": "@netcracker/my-package",
@@ -92,6 +93,7 @@ jobs:
 ```
 
 ### Lerna Monorepo (lerna.json)
+
 ```json
 {
   "version": "1.0.0",
@@ -129,11 +131,11 @@ jobs:
 
 1. **Version Management**
    - Use semantic versioning (e.g., 1.0.0, 1.1.0, 2.0.0)
-   - Use pre-release tags for beta/alpha versions (e.g., 1.0.0-beta.1)
+   - Use prerelease tags for beta/alpha versions (e.g., 1.0.0-beta.1)
 
 2. **Distribution Tags**
    - Use `latest` for stable releases
-   - Use `next` for pre-releases
+   - Use `next` for prereleases
    - Use custom tags for specific channels
 
 3. **Testing**
