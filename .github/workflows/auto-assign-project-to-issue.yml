@@ -1,0 +1,28 @@
+name: Auto-Assign Project to Issue
+run-name: Issue ${{ github.event.issue.number }} -> Project ${{ vars.PROJECT }}
+permissions:
+  contents: read
+  issues: write
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add issue to project
+        id: add_project
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/orgs/Netcracker/projects/${{ vars.PROJECT }}?type=beta
+          github-token: ${{ secrets.GH_ACCESS_TOKEN }}
+
+      - name: Log info
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          PROJECT: ${{ vars.PROJECT }}
+        run: |
+          echo "▶ Triggered by issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          echo "▶ Added to Project #$PROJECT (beta)"
