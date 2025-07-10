@@ -151,4 +151,5 @@ jobs:
 - [GitHub Packages Documentation](https://docs.github.com/en/packages)
 - [npm Publishing Guide](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry)
 - [Lerna Documentation](https://lerna.js.org/)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions) 
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+
