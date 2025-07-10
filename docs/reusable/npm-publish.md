@@ -14,11 +14,11 @@ This **npm Publish** GitHub Workflow automates building, testing, and publishing
 | Name                  | Description                              | Required | Default                  |
 | --------------------- | ---------------------------------------- | -------- | ------------------------ |
 | `version`             | Version to publish                       | Yes      | -                        |
-| `scope`               | NPM package scope                        | No       | `@netcracker`            |
+| `scope`               | npm package scope                        | No       | `@netcracker`            |
 | `node-version`        | Node.js version to use                   | No       | `22.x`                   |
-| `registry-url`        | NPM registry URL                         | No       | `https://npm.pkg.github.com` |
+| `registry-url`        | npm registry URL                         | No       | `https://npm.pkg.github.com` |
 | `update-nc-dependency`| Update NetCracker dependencies           | No       | `false`                  |
-| `dist-tag`            | NPM distribution tag                     | No       | `next`                   |
+| `dist-tag`            | npm distribution tag                     | No       | `next`                   |
 | `branch_name`         | Branch name to commit changes to         | No       | `main`                   |
 
 ## 📌 Secrets
@@ -32,7 +32,7 @@ This **npm Publish** GitHub Workflow automates building, testing, and publishing
 Below is an example of how to use this reusable workflow in a GitHub Actions workflow:
 
 ```yaml
-name: NPM Publish Workflow
+name: npm Publish Workflow
 
 on:
   workflow_dispatch:
@@ -149,6 +149,6 @@ jobs:
 ## Related Documentation
 
 - [GitHub Packages Documentation](https://docs.github.com/en/packages)
-- [NPM Publishing Guide](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry)
+- [npm Publishing Guide](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry)
 - [Lerna Documentation](https://lerna.js.org/)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions) 
