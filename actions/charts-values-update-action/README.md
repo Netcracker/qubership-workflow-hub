@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Release Helm Charts
-        uses: netcracker/qubership-workflow-hub/actions/helm-charts-release@main
+        uses: netcracker/qubership-workflow-hub/actions/charts-values-update-action@main
         with:
           release-version: '1.0.0'
           chart-version: '1.0.0'
@@ -113,4 +113,4 @@ jobs:
   - `version`: Template for the image version (e.g., `my-image:${release}`).
   - `image`: List of image keys to update in `values.yaml`.
 
-> Example: [helm-charts-release-config.yaml](./helm-charts-release-config.yaml).
+> Example: [charts-values-update-config.yaml](./charts-values-update-config.yaml).
