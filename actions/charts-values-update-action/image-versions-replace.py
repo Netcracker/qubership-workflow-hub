@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import argparse
 import json
-import logging
 import os
 from packaging import version
 import re
@@ -40,11 +39,11 @@ def get_latest_stable_version(versions):
 
 def get_latest_version_by_regex(versions, pattern_str):
     try:
-        logging.debug(f"Using regex pattern: {pattern_str}")
+        print(f"Using regex pattern: {pattern_str}")
         pattern = r'' + pattern_str
         compiled_pattern = re.compile(pattern)
     except re.error as e:
-        logging.warning(f"Invalid regular expression '{pattern}': {str(e)}")
+        print(f"Invalid regular expression '{pattern}': {str(e)}")
         raise ValueError(f"Incorrect regular expression: {str(e)}") from None
 
     matched_versions = []
