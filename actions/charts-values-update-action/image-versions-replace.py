@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 import argparse
 import json
+import logging
 import os
+from packaging import version
 import re
 import subprocess
 import yaml
@@ -18,15 +20,58 @@ def replace_env_variables(input_string):
 
     return pattern.sub(replacer, input_string)
 
+def get_latest_stable_version(versions):
+    stable_versions = []
+
+    for v in versions:
+        try:
+            ver = version.parse(v)
+            # Check that version is stable
+            if not ver.is_prerelease:
+                stable_versions.append((v, ver))
+        except version.InvalidVersion:
+            continue
+
+    if not stable_versions:
+        return None
+
+    latest = sorted(stable_versions, key=lambda x: x[1])[-1][0]
+    return latest
+
+def get_latest_version_by_regex(versions, pattern_str):
+    try:
+        pattern = r'' + pattern_str
+        compiled_pattern = re.compile(pattern)
+    except re.error as e:
+        logging.warning(f"Invalid regular expression '{pattern}': {str(e)}")
+        raise ValueError(f"Incorrect regular expression: {str(e)}") from None
+
+    matched_versions = []
+
+    for v in versions:
+        try:
+            if compiled_pattern.fullmatch(v):
+                ver = version.parse(v)
+                if not ver.is_prerelease:
+                    matched_versions.append((v, ver))
+        except version.InvalidVersion:
+            continue
+
+    if not matched_versions:
+        return None
+
+    return sorted(matched_versions, key=lambda x: x[1])[-1][0]
+
 def replace_tag_regexp(image_str, tag_re):
     # Try to find the requested tag for given image_str
     if tag_re.startswith("#"):
         try:
             os.system(f"skopeo login -u $GITHUB_ACTOR -p $GITHUB_TOKEN ghcr.io")
+            tags = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[]'", shell=True, text=True, check=True, capture_output=True).stdout.split()
             if tag_re[1:] == 'latest':
-                result_tag = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[]' | grep -e \"^[0-9]*\.[0-9]*\.[0-9]*\" | sort -V | tail -n 1", shell=True, text=True, check=True, capture_output=True).stdout.rstrip()
+                result_tag = get_latest_stable_version(tags)
             else:
-                result_tag = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[] | select(test(\"^{tag_re[1:]}\"))' | sort -V | tail -n 1", shell=True, text=True, check=True, capture_output=True).stdout.rstrip()
+                result_tag = get_latest_version_by_regex(tags, tag_re[1:])
             return(result_tag)
         except Exception as e:
           print(f"Error: {e}")
