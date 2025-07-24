@@ -72,6 +72,8 @@ def replace_tag_regexp(image_str, tag_re):
                 result_tag = get_latest_stable_version(tags)
             else:
                 result_tag = get_latest_version_by_regex(tags, tag_re[1:])
+            if not result_tag:
+                raise ValueError(f"No matching tag found for {image_str} with pattern {tag_re}")
             return(result_tag)
         except Exception as e:
           print(f"Error: {e}")
