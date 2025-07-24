@@ -12,5 +12,5 @@ charts:
     image:
       - ghcr.io/netcracker/module1:${release} # This will replace the image version with the release version
       - ghcr.io/netcracker/module1-service1:${release}-${THIRD_PARTY_VERSION} # This will replace the image version with the release version and append the THIRD_PARTY_VERSION variable
-      - ghcr.io/netcracker/module1-service2:#5.*.* # This will select the latest tag matching the jq regular expression
+      - ghcr.io/netcracker/module1-service2:#5\.\d+\.\d+ # This will select the latest tag matching the jq regular expression
       - ghcr.io/netcracker/module1-service2:#latest # This will select the latest SemVer tag
