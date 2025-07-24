@@ -6,6 +6,7 @@ import os
 from packaging import version
 import re
 import subprocess
+import sys
 import yaml
 
 def replace_env_variables(input_string):
@@ -44,7 +45,8 @@ def get_latest_version_by_regex(versions, pattern_str):
         compiled_pattern = re.compile(pattern)
     except re.error as e:
         print(f"Invalid regular expression '{pattern}': {str(e)}")
-        raise ValueError(f"Incorrect regular expression: {str(e)}") from None
+        sys.exit(1)
+        #raise ValueError(f"Incorrect regular expression: {str(e)}") from None
 
     matched_versions = []
 
@@ -73,7 +75,9 @@ def replace_tag_regexp(image_str, tag_re):
             else:
                 result_tag = get_latest_version_by_regex(tags, tag_re[1:])
             if not result_tag:
-                raise ValueError(f"No matching tag found for {image_str} with pattern {tag_re}")
+                print(f"No matching tag found for {image_str} with pattern {tag_re}")
+                #raise ValueError(f"No matching tag found for {image_str} with pattern {tag_re}")
+                sys.exit(1)
             return(result_tag)
         except Exception as e:
           print(f"Error: {e}")
