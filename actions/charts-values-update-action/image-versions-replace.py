@@ -40,6 +40,7 @@ def get_latest_stable_version(versions):
 
 def get_latest_version_by_regex(versions, pattern_str):
     try:
+        logging.debug(f"Using regex pattern: {pattern_str}")
         pattern = r'' + pattern_str
         compiled_pattern = re.compile(pattern)
     except re.error as e:
