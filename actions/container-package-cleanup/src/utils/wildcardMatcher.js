@@ -1,3 +1,5 @@
+const escapeStringRegexp = require('escape-string-regexp');
+
 class WildcardMatcher {
   constructor() {
     this.name = 'WildcardMatcher';
@@ -6,7 +8,13 @@ class WildcardMatcher {
   match(tag, pattern) {
     const t = tag.toLowerCase();
     const p = pattern.toLowerCase();
-
+    // Специальный кейс для 'semver' -- ищем строки вида '1.2.3', 'v1.2.3', '1.2.3-alpha', 'v1.2.3-fix'
+    let regexPattern;
+    if (p === 'semver') {
+      regexPattern = '^[v]?\\d+\\.\\d+\\.\\d+[-]?.*';
+      const re = new RegExp(regexPattern, 'i');
+      return re.test(t);
+    }
     // специальный кейс для '?*' — только буквы+цифры и хотя бы одна цифра
     if (p === '?*') {
       // /^[a-z0-9]+$/ соответствует только алфа‑цифре
@@ -35,12 +43,10 @@ class WildcardMatcher {
     }
 
     // общий вариант: билдим RegExp, эскейпим спецсимволы, затем *→.* и ?→.
-    const escaped = p
-      // эскейпим всё, кроме * и ?
-      .replace(/[-[\]{}()+\\^$|#\s.]/g, '\\$&')
+    const escaped = '^' + escapeStringRegexp(p)
       // превращаем джокеры в RegExp
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.');
+      .replace(/\\\*/g, '.*')
+      .replace(/\\\?/g, '.');
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
