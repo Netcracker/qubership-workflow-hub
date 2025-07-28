@@ -48,8 +48,8 @@ class WildcardMatcher {
     console.log(`Transformed pattern: ${p.replace(/\\*/g, '.*').replace(/\\?/g, '.')}`);
     const escaped = '^' + escapeStringRegexp(p)
       // превращаем джокеры в RegExp
-      .replace(/\\*/g, '.*')
-      .replace(/\\?/g, '.');
+      .replace(/\\\*/g, '.*')
+      .replace(/\\\?/g, '.');
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
