@@ -30448,6 +30448,7 @@ class WildcardMatcher {
     // общий вариант: билдим RegExp, эскейпим спецсимволы, затем *→.* и ?→.
     console.log(`Matching tag "${t}" against pattern "${p}"`);
     console.log(`Escaped pattern: ${escapeStringRegexp(p)}`);
+    console.log(`Transformed pattern: ${p.replace(/\\*/g, '.*').replace(/\\?/g, '.')}`);
     const escaped = '^' + escapeStringRegexp(p)
       // превращаем джокеры в RegExp
       .replace(/\\*/g, '.*')
