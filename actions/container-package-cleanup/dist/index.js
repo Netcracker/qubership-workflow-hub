@@ -30431,19 +30431,19 @@ class WildcardMatcher {
     }
 
     // чистый префикс: xxx*
-    if (p.endsWith('*') && !p.startsWith('*') && !p.includes('?')) {
-      return t.startsWith(escapeStringRegexp(p.slice(0, -1)));
-    }
+    //if (p.endsWith('*') && !p.startsWith('*') && !p.includes('?')) {
+    //  return t.startsWith(escapeStringRegexp(p.slice(0, -1)));
+    //}
 
     // чистый суффикс: *xxx
-    if (p.startsWith('*') && !p.endsWith('*') && !p.includes('?')) {
-      return t.endsWith(escapeStringRegexp(p.slice(1)));
-    }
+    //if (p.startsWith('*') && !p.endsWith('*') && !p.includes('?')) {
+    //  return t.endsWith(escapeStringRegexp(p.slice(1)));
+    //}
 
     // contains: *xxx*
-    if (p.startsWith('*') && p.endsWith('*') && !p.includes('?')) {
-      return t.includes(escapeStringRegexp(p.slice(1, -1)));
-    }
+    //if (p.startsWith('*') && p.endsWith('*') && !p.includes('?')) {
+    //  return t.includes(escapeStringRegexp(p.slice(1, -1)));
+    //}
 
     // общий вариант: билдим RegExp, эскейпим спецсимволы, затем *→.* и ?→.
     console.log(`Matching tag "${t}" against pattern "${p}"`);
