@@ -45,8 +45,8 @@ class WildcardMatcher {
     // общий вариант: билдим RegExp, эскейпим спецсимволы, затем *→.* и ?→.
     const escaped = '^' + escapeStringRegexp(p)
       // превращаем джокеры в RegExp
-      .replace(/\\\*/g, '.*')
-      .replace(/\\\?/g, '.');
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.');
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
