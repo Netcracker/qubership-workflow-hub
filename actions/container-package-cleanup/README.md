@@ -190,7 +190,9 @@ Supported patterns for tags/versions:
 | `*release`    | `v1-release`, `candidate-release`| `release-v1`         |
 | `*release*`   | `v1-release-candidate`, `release-v1` | `v1-candidate`    |
 | `release*v1`  | `release-v1`, `release-candidate-v1` | `release-v2`     |
-
+| **Special wildcards** | | |
+| `?*` | alphanum string: `SHA2430957234628737465`, `SHANGRILLA2` | `1.2.3`, `SHANGRILLA-2` |
+| `semver` | SemVer: `1.2.3`, `v1.2.3`, `v1.2.3-1`, `1.2.3-megafix` | `alpha-1.2.3`, `dependabot-1.2.3-update` |
 ---
 
 ## Debug & Dry-Run Modes
