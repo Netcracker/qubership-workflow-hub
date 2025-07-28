@@ -482,7 +482,7 @@ class WildcardMatcher {
     // Специальный кейс для 'semver' -- ищем строки вида '1.2.3', 'v1.2.3', '1.2.3-alpha', 'v1.2.3-fix'
     let regexPattern;
     if (p === 'semver') {
-      regexPattern = '^[v]?\d+\.\d+\.\d+-.*';
+      regexPattern = '^[v]?\d+\.\d+\.\d+[-]?.*';
       const re = new RegExp(regexPattern, 'i');
       return re.test(t);
     }
