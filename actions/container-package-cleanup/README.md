@@ -153,7 +153,7 @@ jobs:
 - Filtering by `included-patterns` and `excluded-patterns` works on Maven version names.
 - **If you do not specify `included-patterns`, the action will automatically add `*SNAPSHOT*` to the list of included patterns for Maven packages.**
   This means that by default, only SNAPSHOT versions will be deleted for Maven, unless you specify other include patterns.
-- Wildcards (`*`) are supported for flexible version matching.
+- Wildcards (`*`and `?`) are supported for flexible version matching.
 - All Maven versions older than `threshold-days` and matching the filters will be deleted (unless `dry-run` is enabled).
 
 ---
@@ -188,8 +188,9 @@ Supported patterns for tags/versions:
 |---------------|----------------------------------|----------------------|
 | `release*`    | `release`, `release-v1`          | `v1-release`         |
 | `*release`    | `v1-release`, `candidate-release`| `release-v1`         |
-| `*release*`   | `v1-release-candidate`, `release-v1` | `v1-candidate`    |
+| `*release*`   | `v1-release-candidate`, `release-v1` | `v1-candidate`   |
 | `release*v1`  | `release-v1`, `release-candidate-v1` | `release-v2`     |
+| `release*v?`  | `release-v1`, `release_v1`, `releasev1` | `release-v21` |
 | **Special wildcards** | | |
 | `?*` | alphanum string: `SHA2430957234628737465`, `SHANGRILLA2` | `1.2.3`, `SHANGRILLA-2` |
 | `semver` | SemVer: `1.2.3`, `v1.2.3`, `v1.2.3-1`, `1.2.3-megafix` | `alpha-1.2.3`, `dependabot-1.2.3-update` |
