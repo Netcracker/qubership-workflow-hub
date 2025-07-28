@@ -30447,12 +30447,12 @@ class WildcardMatcher {
 
     // общий вариант: билдим RegExp, эскейпим спецсимволы, затем *→.* и ?→.
     console.log(`Matching tag "${t}" against pattern "${p}"`);
-    console.log(`Escaped pattern: ${escapeStringRegexp(p)}`);
-    console.log(`Transformed pattern: ${p.replace(/\\\*/g, '.*').replace(/\\\?/g, '.')}`);
-    const escaped = '^' + escapeStringRegexp(p)
-      // превращаем джокеры в RegExp
-      .replace(/\\\*/g, '.*')
-      .replace(/\\\?/g, '.');
+    // Сначала заменяем * и ? на уникальные маркеры, затем экранируем, затем возвращаем их как .*
+    const wildcardPattern = p.replace(/\*/g, '__WILDCARD_STAR__').replace(/\?/g, '__WILDCARD_QM__');
+    const escaped = escapeStringRegexp(wildcardPattern)
+      .replace(/__WILDCARD_STAR__/g, '.*')
+      .replace(/__WILDCARD_QM__/g, '.');
+    console.log(`Transformed pattern: ${escaped}`);
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
