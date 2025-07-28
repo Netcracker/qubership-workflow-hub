@@ -34,12 +34,12 @@ class MavenStrategy extends AbstractPackageStrategy {
 
             if (versionForDelete.length === 0) {
 
-                debug && core.info(`No versions found for package: ${pkg.name} that match the criteria.`);
+                debug && core.info(`No versions found for package: ${pcdkg.name} that match the criteria.`);
                 return null;
             }
 
             // Sort versions by creation date in descending order
-            versionForDelete.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            versionForDelete.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             // Remove the most recent version (the first one after sorting)
             if (versionForDelete.length > 1) {

@@ -63,7 +63,7 @@ class OctokitWrapper {
       return await this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
         {
           org: org,
-          package_type: 'container',
+          package_type,
           per_page: 100,      // максимум 100 пакетов за запрос
         }
       );
@@ -127,6 +127,7 @@ class OctokitWrapper {
    */
   async getPackageVersionsForOrganization(org, package_type, package_name) {
     try {
+       console.log(`Owner: ${org}, Package Type: ${package_type}, Package Name: ${package_name}`);
       return await this.octokit.paginate(this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByOrg,
         {
           package_type,
