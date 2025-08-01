@@ -54,7 +54,7 @@ inputs:
     required: false
     default: ""
 outputs:
-  image_name:
+  image-name:
     description: "The name of the built Docker image."
     value: "${{ steps.output_result.outputs.image_name }}"
 runs:
