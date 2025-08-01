@@ -175,5 +175,5 @@ runs:
     - name: Output result
       shell: bash
       run: |
-
-        echo "image_name=$(echo '${{ steps.dockerbuild.outputs.metadata }}' | jq -r '.["image.name"]')" >> $GITHUB_OUTPUT
+        IMAGE_NAME=$(echo '${{ steps.dockerbuild.outputs.metadata }}' | jq -r '.["image.name"]' | cut -d',' -f1)
+        echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
