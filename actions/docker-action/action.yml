@@ -160,6 +160,7 @@ runs:
 
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v6
+      id: dockerbuild
       with:
         provenance: false
         sbom: ${{ inputs.sbom == 'true' && 'true' || 'false' }}
@@ -170,3 +171,8 @@ runs:
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
         build-args: ${{ inputs.build-args != ''}}
+
+    - name: Output result
+      shell: bash
+      run: |
+        echo "image_name=${{ fromJson(steps.dockerbuild.outputs.metadata).'image.name' }}" >> $GITHUB_OUTPUT
