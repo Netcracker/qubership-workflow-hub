@@ -47,7 +47,7 @@ jobs:
 
       - name: Set up authentication
         env:
-          GITHUB_TOKEN: ${{ secrets.WORKFLOWS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
