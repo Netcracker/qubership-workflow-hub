@@ -81,7 +81,7 @@ The action for [CLA](./CLA/cla.md) "signing" for contributors.
 
 > More info about underlying GitHub Action can be found here [contributor-assistant](https://github.com/contributor-assistant/github-action)
 
-To add the CLA signing into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/cla.yaml) into `.github/workflows` directory of your repository.
+**To add the CLA signing into your repository** just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/cla.yaml) into `.github/workflows` directory of your repository.
 
 The `CLA_ACCESS_TOKEN` used in the workflow is defined on organization level then you can use it in any Netcracker/\* repository.
 
@@ -97,7 +97,11 @@ Configuration file for super-linter example:
 [.github/super-linter.env](https://github.com/Netcracker/.github/blob/main/.github/super-linter.env)
 Configuration files for individual linters should be placed in .github/linters
 
-To add the super-linter workflow into your repository just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/super-linter.yaml) into `.github/workflows` directory of your repository.
+**To add the super-linter workflow into your repository** just copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/super-linter.yaml) into `.github/workflows` directory of your repository.
+
+> Super-linter workflow uses the centralized configuration from the [Netcracker/.github](https://github.com/Netcracker/.github/tree/main/config/linters) repository.
+> One can override/add any linter configuration and super-linter environment by adding corresponding file into target repository.
+> For exaple to override super-linter environment, just add `.github/super-linter.env` file to your repostory and set the env you need. The same for individual linter configuration.
 
 ### Profanity filter
 
@@ -110,8 +114,6 @@ To add the profanity filter into your repository just copy the [prepared file](h
 ### Automatic PR labels based on conventional commits
 
 The workflow automatically label PR on it's open/reopen events. It checks all the commit messages for certain words and apply corresponding labels to PR. Those labels used by [Maven project release workflow](#maven-project-release-workflow) to generate release notes.
-
----
 
 #### Step 1: Create workflow file
 
@@ -145,9 +147,7 @@ The workflow will check commits in pull request if they follow [Conventional Com
 
 More info on underlying GitHub Action can be found here [Conventional Commits GitHub Action](https://github.com/webiny/action-conventional-commits)
 
----
-
-To add the workflow into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-conventional-commits.yaml) into `.github/workflows` directory of your repository.
+**To add the workflow into your repository** copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-conventional-commits.yaml) into `.github/workflows` directory of your repository.
 
 ### Lint PR Title
 
@@ -155,9 +155,7 @@ The workflow will check pull request title if it follows [Conventional Commits](
 
 More info on underlying GitHub Action can be found here [Semantic Pull Request](https://github.com/amannn/action-semantic-pull-request).
 
----
-
-To add the workflow into your repository copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-lint-title.yaml) into `.github/workflows` directory of your repository.
+**To add the workflow into your repository** copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/pr-lint-title.yaml) into `.github/workflows` directory of your repository.
 
 ---
 
@@ -172,8 +170,6 @@ The workflow consists of several sequential jobs:
 4. Builds and deploys the project using Maven (maven-release-plugin).
 5. Builds and publishes a Docker image if there is Dockerfile.
 6. [Create GitHub release](./docs/reusable/github-release.md)
-
----
 
 To make it use one need to do several preparations in the project.
 
@@ -205,8 +201,6 @@ The workflow needs several secrets to be prepared to work properly. For `Netcrac
 ## Python Project Release Workflow
 
 Python project release workflow is used to make a GitHub release and publish released artifacts into PyPi.
-
----
 
 ### Step 1: Python release workflow
 
@@ -241,8 +235,6 @@ The workflow consists of several sequential jobs:
 3. [Builds and publishes a Docker image](./docs/reusable/docker-publish.md).
 4. Create GitHub release <!-- TODO: Will be added -->
 
----
-
 ### Step 1: Docker release workflow
 
 Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflow-templates/docker-release.yaml) into `.github/workflows` directory of your repository.
@@ -275,8 +267,6 @@ If the default case isn't your's -- please read [the detailed description](./doc
 The workflow will check licenses of all dependencies if they are in scope of allowlist.
 
 > More info about used tool can be found here [wwhrd](https://github.com/frapposelli/wwhrd)
-
----
 
 ### Step 1: Create GO Project Check Modules License workflow
 
