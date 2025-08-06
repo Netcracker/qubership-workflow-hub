@@ -53,6 +53,18 @@ inputs:
     description: "Build arguments for the Docker image, in JSON format."
     required: false
     default: ""
+  security-scan:
+    description: "Flag to enable security scanning of the Docker image."
+    required: false
+    default: "false"
+  docker-io-user:
+    description: "Docker Hub username for security scanning."
+    required: false
+    default: ""
+  docker-io-password:
+    description: "Docker Hub password for security scanning."
+    required: false
+    default: ""
 outputs:
   image-name:
     description: "The name of the built Docker image."
@@ -181,3 +193,24 @@ runs:
       run: |
         IMAGE_NAME=$(echo '${{ steps.dockerbuild.outputs.metadata }}' | jq -r '.["image.name"]' | cut -d',' -f1)
         echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+    - name: Analyze for critical and high CVEs
+      id: docker-scout-cves
+      if: ${{ inputs.security-scan == "true" && github.event_name != 'pull_request_target' }}
+      uses: docker/scout-action@v1
+      continue-on-error: true
+      with:
+        command: cves,recommendations
+        image: ${{ steps.output_result.outputs.image_name }}
+        sarif-file: sarif.output.json
+        summary: true
+        ignore-base: false
+        dockerhub-user: ${{ inputs.docker-io-user }}
+        dockerhub-password: ${{ inputs.docker-io-password }}
+
+    - name: Upload SARIF result
+      id: upload-sarif
+      if: ${{ inputs.security-scan == "true" && github.event_name != 'pull_request_target' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: sarif.output.json

@@ -30,7 +30,11 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 | `download-artifact-ids`   | IDs of the artifacts to download, comma-separated. Either inputs `artifact-ids` or `name` can be used, but not both. Optional      | No       | `""`                                                         |
 | `download-artifact-path`  | Destination path. Supports basic tilde expansion. Optional. Default is `$GITHUB_WORKSPACE`                                         | No       | `""`                                                         |
 | `download-artifact-pattern`| A glob pattern to the artifacts that should be downloaded. Ignored if name is specified. Optional.                                | No       | `false`                                                         |
-| `sbom`                    | Flag to enable SBoM generation.
+| `sbom`                    | Flag to enable SBoM generation. | No | `false` |
+| `build-args`              | List of build-time variables, newline-delimited string. | No | `""` |
+| `security-scan`           | Perform security scan of the built image by docker-scout. | No | `false` |
+| `docker-io-user`          | Docker Hub username for security scanning. Required if `security-scan` is `"true"`| No | `""` |
+| `docker-io-password`      | Docker Hub user password for security scanning. Required if `security-scan` is `"true"`| No | `""` |
 
 ---
 
