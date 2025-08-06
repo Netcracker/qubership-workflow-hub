@@ -129,5 +129,6 @@ with:
 ```
 
 In this configuration:
+
 - If `custom-image-name` is left empty, the action will use the `name` field from the `component` configuration (`custom-image-name`) as the Docker image name.
 - If no `component` is provided, the repository name will be used as the fallback.
