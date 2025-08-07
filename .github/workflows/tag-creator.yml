@@ -1,5 +1,5 @@
 ---
-name: Create tag (Obsolete)
+name: Reusable Create tag (Obsolete)
 on:
   workflow_call:
     inputs:

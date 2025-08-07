@@ -1,4 +1,4 @@
-name: Python build
+name: Reusable Python build
 
 on:
   workflow_call:

@@ -10,7 +10,7 @@
 #   gpg-private-key: GPG private key
 #   gpg-passphrase: GPG passphrase
 
-name: Maven deploy
+name: Reusable Maven deploy
 
 on:
   workflow_call:

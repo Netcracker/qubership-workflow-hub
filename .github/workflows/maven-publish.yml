@@ -1,4 +1,4 @@
-name: Deploy to Maven Repository
+name: Reusable Deploy to Maven Repository
 
 on:
   workflow_call:
