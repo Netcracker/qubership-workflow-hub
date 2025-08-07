@@ -4,7 +4,7 @@
 # The workflow will trigger on pushes into branches different from main and release
 # Please make sure that the version in the pom.xml file has the SNAPSHOT postfix
 
-name: Maven deploy
+name: Reusable Maven deploy
 
 on:
   workflow_call:

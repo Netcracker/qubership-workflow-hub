@@ -1,6 +1,6 @@
 ---
 
-name: license-check
+name: Reusable license-check
 on:
   workflow_call:
 
