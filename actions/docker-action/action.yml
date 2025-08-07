@@ -207,6 +207,7 @@ runs:
         ignore-base: false
         dockerhub-user: ${{ inputs.docker-io-user }}
         dockerhub-password: ${{ inputs.docker-io-password }}
+        github-token: ${{ env.GITHUB_TOKEN }}
 
     - name: Upload SARIF result
       id: upload-sarif

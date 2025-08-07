@@ -38,6 +38,15 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 
 ---
 
+## Permisions
+
+- Minimum permissions level `contents: read` in dry-run mode.
+- In normal mode it is required to set `packages: write`.
+- If `security-scan: 'true'` then need to set `security-events: write`.
+- If action used in workflow which triggered by `pool_request` and `security-scan: true`, then need to set `pull-requests: write` permission. The summary of seurity scan will be added to pull request as a comment.
+
+---
+
 ## Usage Example
 
 Below is an example of how to use this action in a GitHub Actions workflow:
@@ -49,10 +58,18 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
-
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: {}
+permissions: {}
 jobs:
   build-and-push:
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      pull-requests: write
     runs-on: ubuntu-latest
 
     steps:
@@ -69,6 +86,9 @@ jobs:
           dry-run: false
           download-artifact: true
           download-artifact-path: ./artifacts
+          security-scan: true
+          docker-io-user: ${{ secrets.DOCKERHUB_USER }}
+          docker-io-password: ${{ secrets.DOCKERHUB_RW_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
