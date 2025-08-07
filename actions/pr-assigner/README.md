@@ -45,7 +45,7 @@ jobs:
 
 ## Configuration File
 
-The configuration file (pr-assigner-config.yml) can be define, by defaul location file `.github/pr-assigner-config.yml`. Here is an example configuration:
+The configuration file (pr-assigner-config.yml) can be define, by default location file `.github/pr-assigner-config.yml`. Here is an example configuration:
 
 ```yaml
 assignees:
@@ -56,7 +56,7 @@ count: 2
 ```
 
 - assignees: List of GitHub usernames to assign to the pull request.
-- count: Number of assignees to assign. If not specified, the default value is 1. (need for suffle)
+- count: Number of assignees to assign. If not specified, the default value is 1. (need for shuffle)
 
 ## Additional Information
 

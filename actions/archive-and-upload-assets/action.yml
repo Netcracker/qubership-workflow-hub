@@ -15,7 +15,7 @@ inputs:
     default: "dist"
   upload:
     default: 'false'
-    description: "DEPRIVCATED. Upload assets to a repository."
+    description: "DEPRECATED. Upload assets to a repository."
     required: false
   dry-run:
     default: 'false'

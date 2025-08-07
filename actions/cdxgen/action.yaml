@@ -24,7 +24,7 @@ runs:
   using: "composite"
   steps:
 
-    - name: "Checout code"
+    - name: "Checkout code"
       uses: actions/checkout@v4
 
     - name: "Check input"

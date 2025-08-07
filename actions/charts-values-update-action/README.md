@@ -31,8 +31,8 @@ The method to replace the version in `values.yaml`.
 Can be `replace` or `parse`. Defaults to `parse`.
 If set to `replace` the action will just replace the versions of docker images with `release-version` value.
 If set to `parse` the action read provided `config-file` and substitute any environment variables provided in the version part.
-For example if you have some 3-rd party image in `values.yaml` file and want to manage it's version, you can add repository level variable and use it in the config file: `some-thirg-party-image:${THIRD_PARTY_VERSION}`.
-Also if you want the action to find the latest version of some image (supplimentary service for instance), you can set it to something like `#4\.\d+\.\d+` or `#latest`.
+For example if you have some 3-rd party image in `values.yaml` file and want to manage it's version, you can add repository level variable and use it in the config file: `some-third-party-image:${THIRD_PARTY_VERSION}`.
+Also if you want the action to find the latest version of some image (supplementary service for instance), you can set it to something like `#4\.\d+\.\d+` or `#latest`.
 In that case the action will find the latest tag of an image which satisfy the regular expression. The regular expression of a tag must start with `#` symbol and follow the Python `re` syntax.
 **Special word `#latest` will result the latest SemVer tag of the image ('2.1.0','v4.3.2', etc.), not the one which marked with `latest` tag.**
 

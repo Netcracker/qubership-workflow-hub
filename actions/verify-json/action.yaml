@@ -2,7 +2,7 @@
 
 # To access files from action use path snippet
 # ${GITHUB_WORKSPACE}/../../_actions/<action-owner>/<action-name>/<action-version>
-# Forcustom action:
+# For custom action:
 # ${GITHUB_WORKSPACE}/../../_actions/<repository-owner>/<repository-name>/<version>/<path-to-action>
 
 name: "Verify JSON file"

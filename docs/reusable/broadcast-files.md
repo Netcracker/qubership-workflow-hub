@@ -7,7 +7,7 @@ If new functionality needed please create the [issue](https://github.com/Netcrac
 
 ## Features
 
-- Propagates commmon workflows to all qubership repos.
+- Propagates common workflows to all qubership repos.
 - Propagates .gitattributes to all qubership repos.
 - Propagates Cloud-Core specific dependabot config to Core repos.
 

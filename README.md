@@ -38,7 +38,7 @@ Detailed description of existing workflows can be found here [Index of Workflow 
 
 ---
 
-Below is the short description of how to implement common workflows in any Netcracker repository. All necessery secrets and variables for common workflows are already present on organization level, no additional settings or configurations are required.
+Below is the short description of how to implement common workflows in any Netcracker repository. All necessary secrets and variables for common workflows are already present on organization level, no additional settings or configurations are required.
 
 ## The organization level secrets and vars used in actions
 
@@ -51,7 +51,7 @@ Below is the short description of how to implement common workflows in any Netcr
 | secrets.MAVEN_GPG_PRIVATE_KEY | GPG private key to sign artefacts (jar, pom etc) to publish them into Maven Central  |
 | secrets.MAVEN_GPG_PASSPHRASE  | GPG private key passphrase                                                           |
 | secrets.PYPI_API_TOKEN        | Token to publish packages to [PYPI](https://pypi.org/) registry                      |
-| secrets.GH_ACCESS_TOKEN       | Token for "tech user" with extended acess rights                                     |
+| secrets.GH_ACCESS_TOKEN       | Token for "tech user" with extended access rights                                     |
 | secrets.WORKFLOWS_TOKEN       | Classic Token with workflow scope |
 | secrets.SONAR_TOKEN           | Token to access [SonarQube](https://www.sonarsource.com/plans-and-pricing/sonarcloud/)|
 | secrets.GH_RWD_PACKAGE_TOKEN  | Token with access to [GitHub packages](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages#granular-permissions-for-userorganization-scoped-packages)  |
@@ -101,7 +101,7 @@ Configuration files for individual linters should be placed in .github/linters
 
 > Super-linter workflow uses the centralized configuration from the [Netcracker/.github](https://github.com/Netcracker/.github/tree/main/config/linters) repository.
 > One can override/add any linter configuration and super-linter environment by adding corresponding file into target repository.
-> For exaple to override super-linter environment, just add `.github/super-linter.env` file to your repostory and set the env you need. The same for individual linter configuration.
+> For example to override super-linter environment, just add `.github/super-linter.env` file to your repostory and set the env you need. The same for individual linter configuration.
 
 ### Profanity filter
 
@@ -135,7 +135,7 @@ The configuration file from [previous step](#step-2-add-configuration-file) defi
 | 'refactor','Refactor'                                   | refactor        |
 | 'doc','docs','document','documentation'                 | documentation   |
 | 'build','rebuild'                                       | build           |
-| 'config', 'conf', 'cofiguration', 'configure'           | config          |
+| 'config', 'conf', 'configuration', 'configure'          | config          |
 
 Labels on PRs used to generate release notes for GitHub releases. You can edit labels configuration and [release notes generation template](#step-3-add-configuration-file-for-github-release) to extend or improve the default ones.
 
@@ -208,7 +208,7 @@ Copy the [prepared file](https://github.com/Netcracker/.github/blob/main/workflo
 
 This workflow is designed to be run manually. It has six input parameters on manual execution:
 
-- `Specify version (optional)` -- a string represents the version number (optional). If empty the version number will be cretad automatically.
+- `Specify version (optional)` -- a string represents the version number (optional). If empty the version number will be created automatically.
 - `Python version to use` -- a string represents Python version to use to build artifacts (e.g., `3.11`)
 - `Poetry version bump` -- which part of SemVer version to bump (e.g., `patch`, `minor`, `major`)'
 - `Additional poetry build parameters` -- additional poetry build parameters
@@ -231,7 +231,7 @@ Docker project release workflow is used to make a GitHub release and publish rel
 The workflow consists of several sequential jobs:
 
 1. Checks if the tag already exists.
-2. Ceates a new tag with name "v${version}.
+2. Creates a new tag with name "v${version}.
 3. [Builds and publishes a Docker image](./docs/reusable/docker-publish.md).
 4. Create GitHub release <!-- TODO: Will be added -->
 
@@ -250,7 +250,7 @@ The step exactly the same as [Step 3: Add configuration file for GitHub release]
 
 ### Some more info on input parameters
 
-The [underlying reusable workflow](./.github/workflows/docker-publish.yml) accepts more input parameters then the release workflow. For simplicity the template forkflow provides reasonable defaults which are sutable in most cases. The default usage scenario assumes the following conditions:
+The [underlying reusable workflow](./.github/workflows/docker-publish.yml) accepts more input parameters then the release workflow. For simplicity the template workflow provides reasonable defaults which are suitable in most cases. The default usage scenario assumes the following conditions:
 
 - The resulting artifact name is the same as repository name
 - Artifact built from tag name equal to `v${version}`

@@ -110,7 +110,7 @@ def set_image_versions(config_file, release, chart_version,  method):
         os.system(f"sed -i 's|^version:.*|version: {chart_version}|' {chart_file}")
         # Update image version in values.yaml
         # If method is 'replace', replace the image version with the release version as is
-        image_ver = release # Image version for metod 'replace'
+        image_ver = release # Image version for method 'replace'
         for image in chart['image']:
             search_str = image.split(':')[0]
             if method == 'parse':

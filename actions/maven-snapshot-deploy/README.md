@@ -49,7 +49,7 @@ on:
     branches:
       - develop
 permissions:
-  packages: write # Required for GitHub packages deployment. For maven central deployment it can be ommited
+  packages: write # Required for GitHub packages deployment. For maven central deployment it can be omitted
   contents: read
 jobs:
   deploy:

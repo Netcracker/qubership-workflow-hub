@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v4
       - name: "Setup xmlstarlet"
         run: |
-          # Skip installing pacakge docs {makes the man-db trigger much faster)
+          # Skip installing package docs {makes the man-db trigger much faster)
           sudo tee /etc/dpkg/dpkg.cfg.d/01_nodoc > /dev/null << 'EOF'
           path-exclude /usr/share/doc/*
           path-exclude /usr/share/man/*
