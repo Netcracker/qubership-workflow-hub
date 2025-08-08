@@ -53,9 +53,8 @@ def get_latest_version_by_regex(versions, pattern_str):
     for v in versions:
         try:
             if compiled_pattern.fullmatch(v):
-                ver = version.parse(v)
-                if not ver.is_prerelease:
-                    matched_versions.append((v, ver))
+                ver = v
+                matched_versions.append((v, ver))
         except version.InvalidVersion:
             continue
 
