@@ -104,8 +104,11 @@ def set_image_versions(config_file, release, chart_version,  method):
     for chart in data['charts']:
         chart_file = chart['chart_file']
         values_file = chart['values_file']
+        chart_name = chart['name']
         # Update chart version in Chart.yaml
-        print(f"{chart['name']} Version: {chart_version}")
+        print(f"{chart_name} Version: {chart_version}")
+        print(f"Chart file: {chart_file}"
+        print(f"Values file: {values_file}"
         os.system(f"sed -i 's|^version:.*|version: {chart_version}|' {chart_file}")
         # Update image version in values.yaml
         # If method is 'replace', replace the image version with the release version as is
@@ -115,7 +118,7 @@ def set_image_versions(config_file, release, chart_version,  method):
             if method == 'parse':
                 image_ver = replace_env_variables(image.split(':')[1].replace('${release}', release))
                 image_ver = replace_tag_regexp(search_str, image_ver)
-            print(f"Updating {search_str} version to {image_ver}")
+            print(f"{values_file}: Updating {search_str} version to {image_ver}")
             os.system(f"sed -i 's|{search_str}:[a-zA-Z0-9._-]*|{search_str}:{image_ver}|' {values_file}")
             # Add to dictionary for action output
             images_versions[search_str.split('/')[-1]] = image_ver
