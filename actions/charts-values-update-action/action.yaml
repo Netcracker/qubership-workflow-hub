@@ -48,12 +48,25 @@ runs:
         if [[ "$tag" =~ ^[a-zA-Z0-9._-]{1,128}$ ]]; then
             echo "Valid Docker tag"
         else
-            echo "❌ Provided release-version: '${{ inputs.release-version }}' isn't a valid Docker tag." >> $GITHUB_STEP_SUMMARY
+            echo "::error::Provided release-version: '${{ inputs.release-version }}' isn't a valid Docker tag." >> $GITHUB_STEP_SUMMARY
             echo "Valid Docker tag must be alphanumeric, '.', '_', or '-', and up to 128 characters" >> $GITHUB_STEP_SUMMARY
             echo "Please check the release-version and try again." >> $GITHUB_STEP_SUMMARY
             exit 1
         fi
       shell: bash
+    - name: Check configuration
+      shell: bash
+      run: |
+        charts=$(grep "chart_file: " ${{ inputs.config-file }} | sed "s#^\s*chart_file:\s*##")
+        values=$(grep "values_file: " ${{ inputs.config-file }} | sed "s#^\s*values_file:\s*##")
+        for f in ${charts} ${values}; do
+          if [[ ! -f ${f} ]]; then
+            echo "::error::File $f does not exist!"
+            echo "Please check configuration in ${{ inputs.config-file }}"
+            exit 1
+          fi
+        done
+       
     - name: "Create release branch"
       if: ${{ inputs.create-release-branch == 'true' }}
       id: create-release-branch
