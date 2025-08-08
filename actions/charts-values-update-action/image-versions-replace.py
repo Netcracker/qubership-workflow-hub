@@ -107,8 +107,8 @@ def set_image_versions(config_file, release, chart_version,  method):
         chart_name = chart['name']
         # Update chart version in Chart.yaml
         print(f"{chart_name} Version: {chart_version}")
-        print(f"Chart file: {chart_file}"
-        print(f"Values file: {values_file}"
+        print(f"Chart file: {chart_file}")
+        print(f"Values file: {values_file}")
         os.system(f"sed -i 's|^version:.*|version: {chart_version}|' {chart_file}")
         # Update image version in values.yaml
         # If method is 'replace', replace the image version with the release version as is
