@@ -44,7 +44,7 @@ def get_latest_version_by_regex(versions, pattern_str):
         pattern = r'' + pattern_str
         compiled_pattern = re.compile(pattern)
     except re.error as e:
-        print(f"Invalid regular expression '{pattern}': {str(e)}")
+        print(f"::error::Invalid regular expression '{pattern}': {str(e)}")
         sys.exit(1)
         #raise ValueError(f"Incorrect regular expression: {str(e)}") from None
 
@@ -74,7 +74,7 @@ def replace_tag_regexp(image_str, tag_re):
             else:
                 result_tag = get_latest_version_by_regex(tags, tag_re[1:])
             if not result_tag:
-                print(f"No matching tag found for {image_str} with pattern {tag_re}")
+                print(f"::error::No matching tag found for {image_str} with pattern {tag_re}")
                 #raise ValueError(f"No matching tag found for {image_str} with pattern {tag_re}")
                 sys.exit(1)
             return(result_tag)
