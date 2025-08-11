@@ -8,6 +8,7 @@ const OctokitWrapper = require("./utils/wrapper");
 const ContainerReport = require("./reports/containerReport");
 const MavenReport = require("./reports/mavenReport");
 const { getStrategy } = require("./strategy/strategyRegistry");
+const { deletePackageVersion } = require('./utils/deleteAction');
 
 async function run() {
 
@@ -66,7 +67,7 @@ async function run() {
   let packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   let filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  // core.info(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
+  core.info(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
 
 
   core.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
@@ -79,11 +80,14 @@ async function run() {
   const packagesWithVersions = await Promise.all(
     filteredPackages.map(async (pkg) => {
       const versionsForPkg = await wrapper.listVersionsForPackage(owner, pkg.package_type, pkg.name, isOrganization);
+      core.info(`Found ${versionsForPkg.length} versions for package: ${pkg.name}`);
+      // core.info(JSON.stringify(versionsForPkg, null, 2));
       return { package: pkg, versions: versionsForPkg };
     })
   );
 
-  //core.info(JSON.stringify(packagesWithVersions, null, 2));
+
+  // core.info(JSON.stringify(packagesWithVersions, null, 2));
 
   const strategyContext = {
     packagesWithVersions: packagesWithVersions,
@@ -127,20 +131,13 @@ async function run() {
     return;
   }
 
-  for (const { package: pkg, versions } of filteredPackagesWithVersionsForDelete) {
-    for (const version of versions) {
-      try {
-        let detail = pkg.type === 'maven' ? version.name : (version.metadata?.container?.tags ?? []).join(', ');
-        core.info(`Package: ${pkg.name} (${pkg.type}) — deleting version: ${version.id} (${detail})`);
-        await wrapper.deletePackageVersion(owner, pkg.type, pkg.name, version.id, isOrganization);
-      } catch (error) {
-        if (error.message.includes("Publicly visible package versions with more than 5000 downloads cannot be deleted")) {
-          core.warning(`Skipping version: ${version.id} (${version.metadata?.container?.tags?.join(', ')}) due to high download count.`);
-        } else {
-          core.error(`Failed to delete version: ${version.id} (${version.metadata?.container?.tags?.join(', ')}) — ${error.message}`);
-        }
-      }
+  try {
+    if (!dryRun && filteredPackagesWithVersionsForDelete.length > 0) {
+      await deletePackageVersion(filteredPackagesWithVersionsForDelete, { wrapper, owner, isOrganization });
     }
+
+  } catch (error) {
+    core.setFailed(err.message || String(err));
   }
 
   await showReport(reportContext, package_type);
