@@ -50,7 +50,7 @@ inputs:
     required: false
     default: "false"
   build-args:
-    description: "Build arguments for the Docker image."
+    description: "Build arguments for the Docker image, in List format."
     required: false
     default: ""
   security-scan:
