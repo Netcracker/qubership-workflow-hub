@@ -50,7 +50,7 @@ inputs:
     required: false
     default: "false"
   build-args:
-    description: "Build arguments for the Docker image, in JSON format."
+    description: "Build arguments for the Docker image."
     required: false
     default: ""
   security-scan:
@@ -185,7 +185,7 @@ runs:
         tags: ${{ inputs.tags != '' && steps.prepare-tags.outputs.prepared_tags || steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
-        build-args: ${{ inputs.build-args != ''}}
+        build-args: ${{ inputs.build-args }}
 
     - name: Output result
       shell: bash
