@@ -48,7 +48,7 @@ body:
     id: criteria
     attributes:
       label: Acceptance Criteria
-      description: ""
+      description: "Acceptance Criteria"
       placeholder: |
         - [ ] Criterion 1
         - [ ] Criterion 2
@@ -58,7 +58,7 @@ body:
     id: alternatives
     attributes:
       label: Alternatives Considered
-      description: ""
+      description: "Alternatives Considered"
       placeholder: |
         - Option A – why rejected
         - Option B – why rejected
@@ -68,7 +68,7 @@ body:
     id: risks
     attributes:
       label: Risks / Considerations
-      description: ""
+      description: "Risks / Considerations"
       placeholder: |
         <compatibility, security, performance>
     validations:
@@ -76,8 +76,8 @@ body:
   - type: textarea
     id: followup
     attributes:
-      label: Follow-up / Future (Optional)
-      description: ""
+      label: Follow-up / Future
+      description: "Followup items"
       placeholder: |
         <items deliberately deferred>
     validations:
