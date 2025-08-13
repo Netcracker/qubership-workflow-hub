@@ -128,7 +128,7 @@ The variables `major`, `minor`, and `patch` are parsed only from a branch or tag
 
 ### Configuration File Schema
 
-The configuration file for this action must adhere to the schema defined [here](https://github.com/nookyo/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json). This ensures that all templates, distribution tags, and other configuration options follow the required structure for correct parsing and execution.
+The configuration file for this action must adhere to the schema defined [here](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json). This ensures that all templates, distribution tags, and other configuration options follow the required structure for correct parsing and execution.
 
 ```json
 {

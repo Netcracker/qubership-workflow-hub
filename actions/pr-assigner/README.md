@@ -51,7 +51,6 @@ The configuration file (pr-assigner-config.yml) can be define, by default locati
 assignees:
   - borislavr
   - nookyo
-  - rparf
 count: 2
 ```
 

@@ -41,7 +41,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/nookyo/qubership-workflow-hub.git
+   git clone https://github.com/netcracker/qubership-workflow-hub.git
    cd qubership-workflow-hub
    ```
 
@@ -58,7 +58,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
        steps:
          - uses: actions/checkout@v3
          - name: Create a Git Tag
-           uses: nookyo/qubership-workflow-hub/actions/tag-action@main
+           uses: netcracker/qubership-workflow-hub/actions/tag-action@main
            with:
              tag-prefix: "v"
              tag-message: "Release {{version}}"
@@ -69,7 +69,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
    ```yaml
    jobs:
      release:
-       uses: nookyo/qubership-workflow-hub/docs/reusable/release-drafter.md@main
+       uses: netcracker/qubership-workflow-hub/docs/reusable/release-drafter.md@main
        with:
          config-file: ".github/release-drafter.yml"
    ```
