@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create tag
-        uses: nookyo/qubership-workflow-hub/actions/tag-action@v1
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@v1
         with:
           tag-name: v1.2.3
 ```
@@ -45,11 +45,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compute metadata
         id: meta
-        uses: nookyo/qubership-workflow-hub/actions/metadata-action@v1
+        uses: netcracker/qubership-workflow-hub/actions/metadata-action@v1
         with:
           version-strategy: auto
       - name: Tag
-        uses: nookyo/qubership-workflow-hub/actions/tag-action@v1
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@v1
         with:
           tag-name: "v${{ steps.meta.outputs.version }}"
 ```
@@ -63,7 +63,7 @@ on:
 
 jobs:
   draft:
-    uses: nookyo/qubership-workflow-hub/.github/workflows/release-drafter.yaml@v1
+    uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yaml@v1
     with:
       config-file: .github/release-drafter.yml
 ```

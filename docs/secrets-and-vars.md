@@ -31,5 +31,6 @@ Organization-level secrets and variables referenced across actions and reusable 
 5. Remove any temporary debugging output.
 
 ## Related Docs
-- Conventions: [docs/conventions.md](docs/conventions.md)
-- Reusable Workflows: [docs/reusable/](docs/reusable/)
+- Standards & Change Policy: [standards-and-change-policy.md](standards-and-change-policy.md)
+- Actions & Workflows Catalog: [actions-workflows-catalog.md](actions-workflows-catalog.md)
+- Reusable Workflows: [reusable/](reusable/)
