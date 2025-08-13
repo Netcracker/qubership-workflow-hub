@@ -38,7 +38,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [commit-and-push](../actions/commit-and-push/README.md) | Use native git steps |
 | [pom-updater](../actions/pom-updater/README.md) | Prefer metadata-action + build tooling |
 | [tag-checker](../actions/tag-checker/README.md) | Functionality superseded by tag-action |
-| [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Archive build output and optionally upload as release assets |
+| [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Superseded by assets-action (consolidated implementation) |
 
 
 ---
@@ -59,10 +59,10 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 |----------|--------------------|
 | [docker-publish](reusable/docker-publish.md) | Use docker-action (action) + custom workflow |
 | [pom-updater](reusable/pom-updater.md) | Superseded by metadata-action + build tooling |
-| [maven-central-snapshot-deploy](reusable/maven-central-snapshot-deploy-reusable.md) | |
-| [maven-publish.yml](reusable/maven-publish.md) ||
-| [prettier.yaml & prettierFix.yam]() ||
-| [re-maven-snapshot-deploy.yaml]() ||
+| [maven-central-snapshot-deploy](reusable/maven-central-snapshot-deploy-reusable.md) | Consolidated into maven-publish & maven-snapshot-deploy actions/workflows |
+| [maven-publish.yml](reusable/maven-publish.md) | Replaced by standardized maven-publish reusable workflow (current above) |
+| prettier.yaml & prettierFix.yaml | Removed; rely on local prettier + CI lint job template (no standalone workflow) |
+| re-maven-snapshot-deploy.yaml | Legacy name; use maven-snapshot-deploy action/workflow |
 
 
 ---
