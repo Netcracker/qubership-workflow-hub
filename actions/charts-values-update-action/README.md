@@ -1,4 +1,4 @@
-# Helm Charts Release Action
+# Helm Charts values update Action
 
 This GitHub Action automates the process of updating docker images versions in `values.yaml` files. It ensures that the chart and image versions are updated consistently and commits the changes to a release branch.
 

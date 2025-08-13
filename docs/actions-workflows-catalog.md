@@ -16,8 +16,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 |--------|-------------|
 | [assets-action](../actions/assets-action/README.md) | Alternative asset archiving / upload path (legacy alias) |
 | [cdxgen](../actions/cdxgen/README.md) | Generate SBOM and CycloneDX vulnerability report |
-| [chart-release](../actions/chart-release/README.md) | Publish/update Helm chart (docs WIP) |
-| [chart-release-action](../actions/chart-release-action/README.md) | TS-based Helm chart release logic (docs WIP) |
+| [charts-values-update-action](../actions/charts-values-update-action/README.md) | Updates images versions in values files |
 | [chart-version](../actions/chart-version/README.md) | Bump/patch Helm Chart.yaml version fields |
 | [container-package-cleanup](../actions/container-package-cleanup/README.md) | Remove stale container or Maven package versions |
 | [custom-event](../actions/custom-event/README.md) | Emit repository_dispatch custom event with payload |
