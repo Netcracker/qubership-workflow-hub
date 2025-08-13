@@ -10,8 +10,8 @@ A comprehensive collection of reusable GitHub Actions and Workflows, designed to
 - Conventions: [docs/conventions.md](docs/conventions.md)
 - Getting Started: [docs/getting-started.md](docs/getting-started.md)
 - Issue Guidelines: [docs/issue-guidelines.md](docs/issue-guidelines.md)
-- PR Conduct: [docs/code-of-conduct-prs.md](docs/code-of-conduct-prs.md)
-- Fork / Contribution Flow: [docs/fork-sequence.md](docs/fork-sequence.md)
+- PR Conduct: [docs/code-of-conduct-prs.md](code-of-conduct-prs.md)
+- Fork / Contribution Flow: [docs/fork-sequence.md](fork-sequence.md)
 
 ---
 
