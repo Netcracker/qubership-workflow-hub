@@ -81,7 +81,7 @@ Need to contribute? Read the fork workflow: [Fork Sequence Guide](docs/fork-sequ
 
 ## 🔄 Catalog: Actions & Reusable Workflows
 
-Full, always up-to-date list (active + deprecated) with short descriptions moved to a dedicated page: [Actions & Workflows Catalog](docs/actions-workflows-catalog.md). For a lighter curated view use the [Navigation Index](docs/navigation.md).
+Full, always up-to-date list (active + deprecated) with short descriptions moved to a dedicated page: [Actions & Workflows Catalog](docs/actions-workflows-catalog.md).
 
 Quick starts:
 * Need a specific capability? Open the catalog and search in-page.
