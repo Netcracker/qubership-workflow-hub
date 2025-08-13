@@ -1,0 +1,96 @@
+name: Bug report
+description: Create a report to help us improve
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: |
+        A clear and concise description of what the bug is.
+      placeholder: |
+        A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: Expected Behaviour
+      description: |
+        A clear and concise description of what you expected to happen.
+      placeholder: |
+        I expected `expected result`.
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behaviour
+    attributes:
+      label: Actual Behaviour (What actually happened)
+      description: |
+        A clear and concise description of what actually happened.
+      placeholder: |
+        I got `actual result`.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction Steps
+      description: |
+        A clear and concise description of how to reproduce the bug.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Minimal Example / Logs
+      description: |
+        A trimmed logs, command, workflow snippet.
+      placeholder: |
+        <trimmed logs, command, workflow snippet>
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Action / workflow version(s), Runner OS / architecture, relevant inputs.
+      placeholder: |
+        Action / workflow version(s), Runner OS / architecture, relevant inputs.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact / Severity
+      description: |
+        <e.g. blocks release / minor annoyance / data risk>
+      placeholder: |
+        <e.g. blocks release / minor annoyance / data risk>
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Hypothesis (Optional)
+      description: |
+        <what you think is wrong>
+      placeholder: |
+        <what you think is wrong>
+    validations:
+      required: false
+  - type: textarea
+    id: fix
+    attributes:
+      label: Proposed Fix (Optional)
+      description: |
+        <idea if you have one>
+      placeholder: |
+        <idea if you have one>
+    validations:
+      required: false

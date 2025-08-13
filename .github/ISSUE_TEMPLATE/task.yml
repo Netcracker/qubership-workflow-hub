@@ -1,0 +1,53 @@
+name: Task
+description: Create a task
+labels: [task]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: |
+        A clear and concise description of what the task is.
+      placeholder: |
+        <one sentence capability>
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: |
+        A clear and concise description of why the task is needed.
+      placeholder: |
+        <why this is needed (tech debt, speed, reliability)>
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / Boundaries (Optional)
+      description: ""
+      placeholder: |
+        In scope: ...
+        Out of scope: ... (explicitly NOT changing behaviour)
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: ""
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks / Considerations
+      description: ""
+      placeholder: |
+        <regression risk, rollout plan>
+    validations:
+      required: true

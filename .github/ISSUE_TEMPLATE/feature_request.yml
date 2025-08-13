@@ -1,0 +1,84 @@
+name: Feature request
+description: Suggest an idea for this project
+labels: [enhancement,feature]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: |
+        A clear and concise description of what the feature is.
+      placeholder: |
+        <one sentence capability>
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      description: |
+        A clear and concise description of what the problem is.
+      placeholder: |
+        <why current state is insufficient>
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: |
+        A clear and concise description of what the solution is.
+      placeholder: |
+        <high-level behaviour; avoid deep implementation details>
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / Boundaries
+      description: |
+        In scope: ...
+        Out of scope: ...
+      placeholder: |
+        In scope: ...
+        Out of scope: ...
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance Criteria
+      description: ""
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: ""
+      placeholder: |
+        - Option A – why rejected
+        - Option B – why rejected
+    validations:
+      required: false
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks / Considerations
+      description: ""
+      placeholder: |
+        <compatibility, security, performance>
+    validations:
+      required: true
+  - type: textarea
+    id: followup
+    attributes:
+      label: Follow-up / Future (Optional)
+      description: ""
+      placeholder: |
+        <items deliberately deferred>
+    validations:
+      required: false
