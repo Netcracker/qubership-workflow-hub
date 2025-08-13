@@ -20,7 +20,7 @@ To extend: add action folder + README, update index, tag `v1`, adjust convention
 
 ---
 
-## 📄 Report a bug, request a feature
+## 📄 Report a Bug, Task or Request a Feature
 
 - **Need to report a bug, request a feature, or file a maintenance task?** Use the <u>[Issue Guidelines](docs/issue-guidelines.md)</u> (bug / feature / task templates).
 - **Opening a Pull Request?** Follow the <u>[Contribution & PR Conduct](docs/code-of-conduct-prs.md)</u> (title format, required fields, labels, review flow).
