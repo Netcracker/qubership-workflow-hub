@@ -2,15 +2,6 @@
 
 A comprehensive collection of reusable GitHub Actions and Workflows, designed to streamline your CI/CD pipelines and development processes.
 
-## 🔗 Quick Navigation
-- Overview (below)
-- Getting Started: [docs/getting-started.md](docs/getting-started.md)
-- Issue Guidelines: [docs/issue-guidelines.md](docs/issue-guidelines.md)
-- PR Conduct: [docs/code-of-conduct-prs.md](docs/code-of-conduct-prs.md)
-- Conventions: [docs/conventions.md](docs/conventions.md)
-- Secrets & Variables: [docs/secrets-and-vars.md](docs/secrets-and-vars.md)
-- Fork Sequence: [docs/fork-sequence.md](docs/fork-sequence.md)
-
 ---
 
 ## 🔍 Overview
