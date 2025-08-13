@@ -14,7 +14,6 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 ## 🔄 Actions
 | Action | Description |
 |--------|-------------|
-| [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Archive build output and optionally upload as release assets |
 | [assets-action](../actions/assets-action/README.md) | Alternative asset archiving / upload path (legacy alias) |
 | [cdxgen](../actions/cdxgen/README.md) | Generate SBOM and CycloneDX vulnerability report |
 | [chart-release](../actions/chart-release/README.md) | Publish/update Helm chart (docs WIP) |
@@ -40,6 +39,8 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [commit-and-push](../actions/commit-and-push/README.md) | Use native git steps |
 | [pom-updater](../actions/pom-updater/README.md) | Prefer metadata-action + build tooling |
 | [tag-checker](../actions/tag-checker/README.md) | Functionality superseded by tag-action |
+| [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Archive build output and optionally upload as release assets |
+
 
 ---
 
@@ -59,7 +60,11 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 |----------|--------------------|
 | [docker-publish](reusable/docker-publish.md) | Use docker-action (action) + custom workflow |
 | [pom-updater](reusable/pom-updater.md) | Superseded by metadata-action + build tooling |
-| [tag-creator](reusable/tag-creator.md) | Use tag-action directly |
+| [maven-central-snapshot-deploy](reusable/maven-central-snapshot-deploy-reusable.md) | |
+| [maven-publish.yml](reusable/maven-publish.md) ||
+| [prettier.yaml & prettierFix.yam]() ||
+| [re-maven-snapshot-deploy.yaml]() ||
+
 
 ---
 
