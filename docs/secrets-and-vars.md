@@ -31,6 +31,5 @@ Organization-level secrets and variables referenced across actions and reusable 
 5. Remove any temporary debugging output.
 
 ## Related Docs
-- Conventions: `docs/conventions.md`
-- Reusable workflows: `docs/reusable/`
-- Tag & release automation: `actions/tag-action/`
+- Conventions: [docs/conventions.md](docs/conventions.md)
+- Reusable Workflows: [docs/reusable/](docs/reusable/)
