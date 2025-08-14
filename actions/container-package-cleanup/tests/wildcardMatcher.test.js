@@ -10,8 +10,8 @@ describe('WildcardMatcher — tag exclusion logic', () => {
       'latest',
       'main',
       'release*',
-      '*.*.*',     // трёхкомпонентные версии типа 1.2.3
-      '*.*.*-*',   // с суффиксом типа 1.2.3-beta
+      '*.*.*',     // Three-component versions of the type 1.2.3
+      '*.*.*-*',   // with a suffix like 1.2.3-beta
       'v*',
       '0.*',
       '1.*'
@@ -19,7 +19,7 @@ describe('WildcardMatcher — tag exclusion logic', () => {
   });
 
   const exclusionCases = [
-    // должны быть исключены
+    // should be excluded
     { tag: '0.23',                          expected: true },
     { tag: '0.23.0',                        expected: true },
     { tag: '1.62.0-3',                      expected: true },
@@ -32,7 +32,7 @@ describe('WildcardMatcher — tag exclusion logic', () => {
     { tag: 'v2.0.0',                        expected: true },
     { tag: 'v2.0.0-beta',                   expected: true },
 
-    // не должны быть исключены
+    // should not be excluded
     { tag: 'dependabot-pip-integration-tests-certifi-2025.6.15',            expected: false },
     { tag: 'dependabot-pip-integration-tests-certifi-2025.6.15-94e641fa9a1', expected: false },
     { tag: '94e641fa9a1',                     expected: false },
@@ -57,15 +57,15 @@ describe('WildcardMatcher — tag inclusion logic', () => {
   beforeEach(() => {
     matcher = new WildcardMatcher();
     includePatterns = [
-      'dependabot-*',       // все теги dependabot
-      'sha256:*',           // образы по sha256:
-      '?*',                 // один символ + что угодно (короткие хэши)
-      '*-tests-*',          // ветки с "-tests-"
+      'dependabot-*',       // all dependabot tags
+      'sha256:*',           // images with sha256:
+      '?*',                 // one symbol + anything (short hashes)
+      '*-tests-*',          // branches with "-tests-" in their names
     ];
   });
 
   const inclusionCases = [
-    // должны включаться
+    // should be included
     { tag: 'dependabot-pip-integration-tests-certifi-2025.6.15',            expected: true },
     { tag: 'dependabot-pip-integration-tests-certifi-2025.6.15-94e641fa9a1', expected: true },
     { tag: 'sha256:abc123def456',                                           expected: true },
@@ -73,7 +73,7 @@ describe('WildcardMatcher — tag inclusion logic', () => {
     { tag: 'f1234567890',                                                    expected: true },
     { tag: 'feature-tests-xyz',                                              expected: true },
 
-    // не должны включаться
+    // should not be included
     { tag: 'latest',                          expected: false },
     { tag: 'main',                            expected: false },
     { tag: '0.23.0',                          expected: false },

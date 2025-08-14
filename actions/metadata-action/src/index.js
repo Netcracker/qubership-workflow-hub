@@ -41,7 +41,7 @@ function findTemplate(refName, templates) {
   for (let item of templates) {
     let pattern = Object.keys(item)[0];
     if (matchesPattern(refName, pattern)) {
-      return item[pattern]; // возвращаем значение из объекта item, а не templates
+      return item[pattern]; // return value from object item, not templates
     }
   }
   return null;

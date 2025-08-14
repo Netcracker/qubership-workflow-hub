@@ -5,9 +5,9 @@ class MavenReport {
     /**
    * @param {Array<{package: {id, name, type}, versions: Array<{name, created_at}>}>} filteredPackagesWithVersionsForDelete
    * @param {boolean} dryRun
-   * @param {number} thresholdDays    // количество дней «старше» которых версии удаляются
-   * @param {Date} thresholdDate      // пороговая дата — всё что создано до неё удаляется
-   * @param {string[]} includedTags   // паттерны для поиска по имени версии
+   * @param {number} thresholdDays    // Number of days 'older' than which versions are deleted
+   * @param {Date} thresholdDate      // Threshold date - everything created before it is deleted
+   * @param {string[]} includedTags   // Patterns for searching by version name
    */
 
     async writeSummary(context) {

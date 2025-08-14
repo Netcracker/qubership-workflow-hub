@@ -2,7 +2,7 @@
 jest.mock('@actions/github');
 jest.mock('child_process');
 
-// Мокаем util.promisify ещё до require модуля
+// Mock util.promisify before require module
 const mockExecPromise = jest.fn();
 jest.mock('util', () => {
   const actual = jest.requireActual('util');
@@ -21,7 +21,7 @@ describe('OctokitWrapper', () => {
   let mockOctokit;
 
   beforeEach(() => {
-    // Настраиваем фейковый octokit
+    // Configuring a mock Octokit
     mockOctokit = {
       rest: {
         users: { getByUsername: jest.fn() },

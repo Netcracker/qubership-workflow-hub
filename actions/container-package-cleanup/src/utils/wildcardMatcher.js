@@ -8,43 +8,28 @@ class WildcardMatcher {
   match(tag, pattern) {
     const t = tag.toLowerCase();
     const p = pattern.toLowerCase();
-    // Специальный кейс для 'semver' -- ищем строки вида '1.2.3', 'v1.2.3', '1.2.3-alpha', 'v1.2.3-fix'
+    // Special case for 'semver' -- searching strings like '1.2.3', 'v1.2.3', '1.2.3-alpha', 'v1.2.3-fix'
     let regexPattern;
     if (p === 'semver') {
       regexPattern = '^[v]?\\d+\\.\\d+\\.\\d+[-]?.*';
       const re = new RegExp(regexPattern, 'i');
       return re.test(t);
     }
-    // специальный кейс для '?*' — только буквы+цифры и хотя бы одна цифра
+    // Special case for '?*' — alpha-number only and at least one digit
     if (p === '?*') {
-      // /^[a-z0-9]+$/ соответствует только алфа‑цифре
-      // /\d/ проверяет, что есть хотя бы одна цифра
+      // /^[a-z0-9]+$/ apha-number only
+      // /\d/ at least one digit
       return /^[a-z0-9]+$/.test(t) && /\d/.test(t);
     }
 
-    // нет ни звёздочки, ни вопроса — строгое сравнение
+    // No wildcards at all — strict comparison
     if (!p.includes('*') && !p.includes('?')) {
       return t === p;
     }
 
-    // чистый префикс: xxx*
-    //if (p.endsWith('*') && !p.startsWith('*') && !p.includes('?')) {
-    //  return t.startsWith(escapeStringRegexp(p.slice(0, -1)));
-    //}
-
-    // чистый суффикс: *xxx
-    //if (p.startsWith('*') && !p.endsWith('*') && !p.includes('?')) {
-    //  return t.endsWith(escapeStringRegexp(p.slice(1)));
-    //}
-
-    // contains: *xxx*
-    //if (p.startsWith('*') && p.endsWith('*') && !p.includes('?')) {
-    //  return t.includes(escapeStringRegexp(p.slice(1, -1)));
-    //}
-
-    // общий вариант: билдим RegExp, эскейпим спецсимволы, затем *→.* и ?→.
+    // General case: build RegExp, escape special characters, then *→.* and ?→.
     console.log(`Matching tag "${t}" against pattern "${p}"`);
-    // Сначала заменяем * и ? на уникальные маркеры, затем экранируем, затем возвращаем их как .*
+    // First replace * and ? with unique markers, then escape, then return them as .*
     const wildcardPattern = p.replace(/\*/g, '__WILDCARD_STAR__').replace(/\?/g, '__WILDCARD_QM__');
     const escaped = escapeStringRegexp(wildcardPattern)
       .replace(/__WILDCARD_STAR__/g, '.*')
