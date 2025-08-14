@@ -64,7 +64,7 @@ class OctokitWrapper {
         {
           org: org,
           package_type,
-          per_page: 100,      // максимум 100 пакетов за запрос
+          per_page: 100,      // max 100 packages per request
         }
       );
     } catch (error) {
@@ -85,7 +85,7 @@ class OctokitWrapper {
         {
           username,
           package_type,
-          per_page: 100,      // максимум 100 пакетов за запрос
+          per_page: 100,      // max 100 packages per request
         }
       );
 
@@ -175,19 +175,19 @@ class OctokitWrapper {
   }
 
   /**
- * Возвращает массив digest’ов из manifest-list для заданного тега.
+ * Returns an array of digests from the manifest list for a given tag.
  *
- * @param {string} owner — организация или пользователь
- * @param {string} packageName — имя контейнерного пакета
- * @param {string} tag — тег образа
- * @returns {Promise<string[]>} — список digest’ов для всех платформ
+ * @param {string} owner — organization or user name, depending on whether the owner is
+ * @param {string} packageName — container package name
+ * @param {string} tag — image tag
+ * @returns {Promise<string[]>} — digest list for all platforms
  */
   async getManifestDigests(owner, packageName, tag) {
     const ref = `ghcr.io/${owner}/${packageName}:${tag}`;
-    // запуским docker manifest inspect и распарсим JSON
+    // Run docker manifest inspect and parse JSON
     const { stdout } = await execPromise(`docker manifest inspect ${ref}`);
     const manifest = JSON.parse(stdout);
-    // вернём digest из каждого entry в manifests
+    // return digest from each entry in manifests
     return manifest.manifests.map(m => m.digest);
   }
 

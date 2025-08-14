@@ -60,7 +60,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
         const ownerLC = typeof owner === 'string' ? owner.toLowerCase() : owner;
 
         for (const pkg of packages) {
-            // Защищённые теги: latest + те, что попали в excludedPatterns
+            // Protected tags: latest + those that match excludedPatterns
             const protectedTags = new Set();
             for (const v of pkg.versions) {
                 for (const tag of v.metadata.container.tags) {
@@ -72,7 +72,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             }
 
             const imageLC = pkg.name.toLowerCase();
-            // Собираем digest'ы защищённых тегов
+            // Gathering digests of protected tags
             const protectedDigests = new Set();
             for (const tag of protectedTags) {
                 try {
@@ -84,7 +84,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
             }
 
-            // 1) Базовая фильтрация по дате и excludedPatterns для tagged/orphan
+            // 1) Basic filtering by date and excludedPatterns for tagged/orphan
             const withoutExclude = pkg.versions.filter(v => {
                 if (new Date(v.createdAt) > thresholdDate) return false;
                 const tags = v.metadata.container.tags.map(t => t.toLowerCase());
@@ -95,7 +95,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 return true;
             });
 
-            // 2) Отбираем tagged-версии по includePatterns
+            // 2) Selecting tagged versions by includePatterns
             const taggedToDelete = included.length > 0
                 ? withoutExclude.filter(v =>
                     v.metadata.container.tags
@@ -106,7 +106,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
 
             if (debug) core.info(` [${pkg.name}] taggedToDelete: ${taggedToDelete.map(v => v.name).join(', ')}`);
 
-            // 3) Собираем manifest-digests для каждого тегнутого
+            // 3) Gathering manifest digests for each tagged
             const digestMap = new Map();
             for (const v of taggedToDelete) {
                 const digs = new Set();
@@ -122,14 +122,14 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 digestMap.set(v.name, digs);
             }
 
-            // 4) Arch layers: из withoutExclude
+            // 4) Arch layers: from withoutExclude
             const archLayers = withoutExclude.filter(v =>
                 v.metadata.container.tags.length === 0 &&
                 Array.from(digestMap.values()).some(digs => digs.has(v.name))
             );
             if (debug) core.info(` [${pkg.name}] archLayers: ${archLayers.map(v => v.name).join(', ')}`);
 
-            // 5) Упорядочиваем tagged + их archLayers
+            // 5) Sorting tagged + their archLayers
             const ordered = [];
             const used = new Set();
             for (const v of taggedToDelete) {
@@ -143,7 +143,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
             }
 
-            // 6) Dangling: только по дате, без тегов, не в ordered и не в protectedDigests
+            // 6) Dangling: only by date, without tags, not in ordered and not in protectedDigests
             const danglingLayers = pkg.versions.filter(v =>
                 new Date(v.createdAt) <= thresholdDate &&
                 v.metadata.container.tags.length === 0 &&
