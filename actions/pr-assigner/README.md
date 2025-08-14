@@ -11,16 +11,41 @@ This **PR Assigner** GitHub Action automatically assigns a pull request to users
 
 | Name                  | Description                                      | Required | Default                          |
 | --------------------- | ------------------------------------------------ | -------- | -------------------------------- |
+| `shuffle`             | Number of assignees to assign (overrides config `count`). | No       | `1`                              |
 | `configuration-path`  | Path to the configuration file.                  | No       | `.github/pr-assigner-config.yml` |
-| `shuffle`             | Number of assignees to assign.                   | No       | `1`                              |
+| `env.GITHUB_TOKEN`   | GitHub token used to call API and assign PRs; must be provided via step env. | Yes      | `${{ secrets.GITHUB_TOKEN }}`    |
 
 ## Usage Example
 
-Below is an example of how to use this action in a GitHub Actions workflow:
 
 ```yaml
-name: Assign PR
+# Example 1 — No config file, fallback to CODEOWNERS and use input for count
+name: Assign PR (CODEOWNERS only)
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
 
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PR Auto-Assignment (from CODEOWNERS)
+        uses: netcracker/qubership-workflow-hub/actions/pr-assigner@main
+        with:
+          shuffle: 2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+```yaml
+# Example 2 — Use config file and (optionally) override count via input
+name: Assign PR
 on:
   pull_request:
     types: [opened, reopened, synchronize]
@@ -41,11 +66,13 @@ jobs:
         with:
           configuration-path: ".github/pr-assigner-config.yml"
           shuffle: 2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Configuration File
 
-The configuration file (pr-assigner-config.yml) can be define, by default location file `.github/pr-assigner-config.yml`. Here is an example configuration:
+The configuration file (`pr-assigner-config.yml`) can be defined; by default the action looks for `.github/pr-assigner-config.yml`. Here is an example configuration:
 
 ```yaml
 assignees:
@@ -54,14 +81,38 @@ assignees:
 count: 2
 ```
 
-- assignees: List of GitHub usernames to assign to the pull request.
-- count: Number of assignees to assign. If not specified, the default value is 1. (need for shuffle)
+- `assignees`: List of GitHub usernames to assign to the pull request.
+- `count`: Number of assignees to assign. If not specified, the default value is 1. Used when no `shuffle` input override is provided.
+
+## Behavior and Precedence
+
+- Source of assignees:
+  1) If `configuration-path` file exists and is valid — use its `assignees`.
+  2) Else — fallback to owners from `.github/CODEOWNERS` (pattern `*` line).
+- How many assignees:
+  - `shuffle` input takes precedence when provided.
+  - Otherwise use `count` from config file.
+  - If neither provided, defaults to `1`.
+- Selection is randomized using the Fisher–Yates shuffle for fair distribution.
+
+## Permissions
+
+Minimum recommended permissions for the job:
+```yaml
+permissions:
+  pull-requests: write   # required to assign users
+  contents: read         # to read config/CODEOWNERS
+```
+
+## Outputs
+
+- This action does not expose outputs.
 
 ## Additional Information
 
 - If the configuration file is not found, the action will attempt to use the CODEOWNERS file to determine the assignees.
 - If the CODEOWNERS file is not found or cannot be processed, the action will fail.
-- The action will look for a line starting with * in the CODEOWNERS file and use the users listed there as assignees.
+- The action will look for a line starting with `*` in the CODEOWNERS file and use the users listed there as assignees.
 - The assignees array is shuffled using the Fisher-Yates algorithm to ensure even distribution of assignments.
 
 ### Configuration File Schema
