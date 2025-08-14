@@ -30151,7 +30151,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 continue;
             }
 
-            // 1) отфильтровываем по дате и excludedPatterns
+            // 1) Filtering by date and excludedPatterns
             const withoutExclude = versions.filter(v => {
                 if (!Array.isArray(v.metadata?.container?.tags)) return false;
                 if (new Date(v.created_at) > thresholdDate) return false;
@@ -30160,7 +30160,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 );
             });
 
-            // 2) из оставшихся берём tagged-версии по includedPatterns (или все, если include пуст)
+            // 2) From the remaining, take tagged versions by includedPatterns (or all if include is empty)
             const taggedToDelete = included.length > 0
                 ? withoutExclude.filter(v =>
                     v.metadata.container.tags.some(tag => included.some(pattern => this.wildcardMatcher.match(tag, pattern))))
@@ -30171,7 +30171,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 continue;
             }
 
-            // 3) собираем digest’ы для каждой tagged-версии
+            // 3) Gathering digests for each tagged version
             const digestMap = new Map();  // version.name -> Set(digests)
             for (const v of taggedToDelete) {
                 const digs = new Set();
@@ -30186,14 +30186,14 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 digestMap.set(v.name, digs);
             }
 
-            // 4) находим «сырые» слои без тегов, у которых name (sha256) попал в любой из этих сетов
+            // 4) Finding 'raw' layers without tags, whose name (sha256) fell into any of these sets
             const layersToDelete = withoutExclude.filter(v =>
                 v.metadata.container.tags.length === 0 &&
-                // встречается ли v.name в какой-нибудь коллекции digestMap
+                // Is v.name found in any of the digestMap collections
                 Array.from(digestMap.values()).some(digs => digs.has(v.name))
             );
 
-            // 5) строим итоговый упорядоченный список: тег, его слои, следующий тег, его слои...
+            // 5) Building the final ordered list: tag, its layers, next tag, its layers...
             const ordered = [];
             const usedLayers = new Set();
             for (const v of taggedToDelete) {
@@ -30207,7 +30207,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
             }
 
-            // 6) если есть что удалять — пушим в result
+            // 6) If there's something to delete — push to result
             if (ordered.length > 0) {
                 result.push({
                     package: {
@@ -30410,43 +30410,28 @@ class WildcardMatcher {
   match(tag, pattern) {
     const t = tag.toLowerCase();
     const p = pattern.toLowerCase();
-    // Специальный кейс для 'semver' -- ищем строки вида '1.2.3', 'v1.2.3', '1.2.3-alpha', 'v1.2.3-fix'
+    // Special case for 'semver' -- searching for strings like '1.2.3', 'v1.2.3', '1.2.3-alpha', 'v1.2.3-fix'
     let regexPattern;
     if (p === 'semver') {
       regexPattern = '^[v]?\\d+\\.\\d+\\.\\d+[-]?.*';
       const re = new RegExp(regexPattern, 'i');
       return re.test(t);
     }
-    // специальный кейс для '?*' — только буквы+цифры и хотя бы одна цифра
+    // Special case for '?*' — only alpha-number and at least one digit
     if (p === '?*') {
-      // /^[a-z0-9]+$/ соответствует только алфа‑цифре
-      // /\d/ проверяет, что есть хотя бы одна цифра
+      // /^[a-z0-9]+$/ match alpfa-number only
+      // /\d/ check that there is at least one digit
       return /^[a-z0-9]+$/.test(t) && /\d/.test(t);
     }
 
-    // нет ни звёздочки, ни вопроса — строгое сравнение
+    // No star or question mark — exact match
     if (!p.includes('*') && !p.includes('?')) {
       return t === p;
     }
 
-    // чистый префикс: xxx*
-    //if (p.endsWith('*') && !p.startsWith('*') && !p.includes('?')) {
-    //  return t.startsWith(escapeStringRegexp(p.slice(0, -1)));
-    //}
-
-    // чистый суффикс: *xxx
-    //if (p.startsWith('*') && !p.endsWith('*') && !p.includes('?')) {
-    //  return t.endsWith(escapeStringRegexp(p.slice(1)));
-    //}
-
-    // contains: *xxx*
-    //if (p.startsWith('*') && p.endsWith('*') && !p.includes('?')) {
-    //  return t.includes(escapeStringRegexp(p.slice(1, -1)));
-    //}
-
-    // общий вариант: билдим RegExp, эскейпим спецсимволы, затем *→.* и ?→.
+    // basic case: build RegExp, Escape special characters, then *→.* and ?→.
     console.log(`Matching tag "${t}" against pattern "${p}"`);
-    // Сначала заменяем * и ? на уникальные маркеры, затем экранируем, затем возвращаем их как .*
+    // First replace * and ? with unique markers, then escape, then return them as .*
     const wildcardPattern = p.replace(/\*/g, '__WILDCARD_STAR__').replace(/\?/g, '__WILDCARD_QM__');
     const escaped = escapeStringRegexp(wildcardPattern)
       .replace(/__WILDCARD_STAR__/g, '.*')
