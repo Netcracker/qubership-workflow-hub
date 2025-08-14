@@ -63,8 +63,3 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [maven-publish.yml](reusable/maven-publish.md) | Replaced by standardized maven-publish reusable workflow (current above) |
 | prettier.yaml & prettierFix.yaml | Removed; rely on local prettier + CI lint job template (no standalone workflow) |
 | re-maven-snapshot-deploy.yaml | Legacy name; use maven-snapshot-deploy action/workflow |
-
-
----
-
-Need a quick high-level list instead? See the lighter [Navigation Index](navigation.md) which highlights a subset of key items.
