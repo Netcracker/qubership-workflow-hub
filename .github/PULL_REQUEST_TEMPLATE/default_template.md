@@ -1,10 +1,10 @@
 ### Summary
 
-<what & why>
+\<what & why\>
 
 ### Issue
 
-Fixes #<id>
+Fixes #\<id\>
 
 ### Type
 
@@ -16,16 +16,16 @@ No
 
 ### Scope / Project
 
-<component>
+\<component\>
 
 ### Implementation Notes
 
-<optional>
+\<optional\>
 
 ### Tests / Evidence
 
-<how verified>
+\<how verified\>
 
 ### Additional Notes
 
-<optional>
+\<optional\>
