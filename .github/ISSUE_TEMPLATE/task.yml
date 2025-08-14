@@ -1,6 +1,9 @@
 name: Task
 description: Create a task
 labels: [task]
+title: "[Task]: "
+projects: ["Netcracker/13"]
+type: Task
 body:
   - type: textarea
     id: summary
@@ -23,6 +26,15 @@ body:
     validations:
       required: true
   - type: textarea
+    id: risks
+    attributes:
+      label: Risks / Considerations
+      description: "Risks associated with the task."
+      placeholder: |
+        <regression risk, rollout plan>
+    validations:
+      required: false
+  - type: textarea
     id: scope
     attributes:
       label: Scope / Boundaries
@@ -41,13 +53,4 @@ body:
         - [ ] Criterion 1
         - [ ] Criterion 2
     validations:
-      required: true
-  - type: textarea
-    id: risks
-    attributes:
-      label: Risks / Considerations
-      description: "Risks associated with the task."
-      placeholder: |
-        <regression risk, rollout plan>
-    validations:
-      required: true
+      required: false

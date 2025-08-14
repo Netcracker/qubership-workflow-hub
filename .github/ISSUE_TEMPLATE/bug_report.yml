@@ -1,6 +1,9 @@
 name: Bug report
 description: Create a report to help us improve
 labels: [bug]
+title: "[Bug]: "
+projects: ["Netcracker/13"]
+type: Bug
 body:
   - type: textarea
     id: summary
@@ -35,33 +38,13 @@ body:
   - type: textarea
     id: reproduction-steps
     attributes:
-      label: Reproduction Steps
+      label: Reproduction Steps / Logs
       description: |
         A clear and concise description of how to reproduce the bug.
       placeholder: |
         1. ...
         2. ...
         3. ...
-    validations:
-      required: true
-  - type: textarea
-    id: logs
-    attributes:
-      label: Minimal Example / Logs
-      description: |
-        A trimmed logs, command, workflow snippet.
-      placeholder: |
-        <trimmed logs, command, workflow snippet>
-    validations:
-      required: true
-  - type: textarea
-    id: environment
-    attributes:
-      label: Environment
-      description: |
-        Action / workflow version(s), Runner OS / architecture, relevant inputs.
-      placeholder: |
-        Action / workflow version(s), Runner OS / architecture, relevant inputs.
     validations:
       required: true
   - type: textarea
@@ -73,7 +56,17 @@ body:
       placeholder: |
         <e.g. blocks release / minor annoyance / data risk>
     validations:
-      required: true
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Action / workflow version(s), Runner OS / architecture, relevant inputs.
+      placeholder: |
+        Action / workflow version(s), Runner OS / architecture, relevant inputs.
+    validations:
+      required: false
   - type: textarea
     id: hypothesis
     attributes:
