@@ -21,7 +21,6 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [container-package-cleanup](../actions/container-package-cleanup/README.md) | Remove stale container or Maven package versions |
 | [custom-event](../actions/custom-event/README.md) | Emit repository_dispatch custom event with payload |
 | [docker-action](../actions/docker-action/README.md) | Build & push (multi-platform) Docker images |
-| [helm-charts-release](../actions/helm-charts-release/README.md) | Update image refs & publish Helm charts |
 | [maven-release](../actions/maven-release/README.md) | Run Maven release scripting (docs WIP) |
 | [maven-snapshot-deploy](../actions/maven-snapshot-deploy/README.md) | Deploy Maven SNAPSHOT artifacts |
 | [metadata-action](../actions/metadata-action/README.md) | Produce version / tag metadata outputs |
@@ -59,7 +58,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 |----------|--------------------|
 | [docker-publish](reusable/docker-publish.md) | Use docker-action (action) + custom workflow |
 | [pom-updater](reusable/pom-updater.md) | Superseded by metadata-action + build tooling |
-| [maven-central-snapshot-deploy](reusable/maven-central-snapshot-deploy-reusable.md) | Consolidated into maven-publish & maven-snapshot-deploy actions/workflows |
 | [maven-publish.yml](reusable/maven-publish.md) | Replaced by standardized maven-publish reusable workflow (current above) |
+| maven-central-snapshot-deploy | Consolidated into maven-publish & maven-snapshot-deploy actions/workflows |
 | prettier.yaml & prettierFix.yaml | Removed; rely on local prettier + CI lint job template (no standalone workflow) |
 | re-maven-snapshot-deploy.yaml | Legacy name; use maven-snapshot-deploy action/workflow |
