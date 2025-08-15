@@ -6,20 +6,6 @@ Provide a concise description of what this pull request does and why it is neede
 ## Issue
 Link to the issue(s) this PR addresses (e.g., `Fixes #123` or `Closes #456`). If no issue exists, explain why this change is necessary.
 
-## Type
-Indicate the type of change (select one):
-- [ ] **feat**: A new feature
-- [ ] **fix**: A bug fix
-- [ ] **docs**: Documentation changes
-- [ ] **refactor**: Code refactoring without changing functionality
-- [ ] **chore**: Routine tasks, maintenance, or tooling updates
-- [ ] **perf**: Performance improvements
-- [ ] **ci**: Changes to CI/CD pipelines
-- [ ] **build**: Changes to the build system or dependencies
-- [ ] **test**: Adding or modifying tests
-- [ ] **deprecate**: Deprecating features or functionality
-- [ ] **revert**: Reverting a previous change
-
 ## Breaking Change?
 - [ ] Yes
 - [ ] No
@@ -27,7 +13,7 @@ Indicate the type of change (select one):
 If yes, describe the breaking change and its impact (e.g., API changes, behavior changes, or required updates for users).
 
 ## Scope / Project
-Specify the component, module, or project area affected by this change (e.g., `frontend`, `backend`, `database`, `auth`).
+Specify the component, module, or project area affected by this change (e.g., `docs`, `actions`, `workflows`).
 
 ## Implementation Notes
 Provide details on how the change was implemented, including any technical considerations, trade-offs, or notable design decisions. Leave blank if not applicable.
@@ -46,12 +32,3 @@ Include any extra information, such as:
 - References to related PRs or discussions
 
 Leave blank if not applicable.
-
----
-
-**Checklist**:
-- [ ] Code follows the project's style guidelines
-- [ ] Tests pass locally
-- [ ] Documentation is updated (if applicable)
-- [ ] Changes are compatible with existing functionality
-- [ ] Reviewed my own code for accuracy and clarity
