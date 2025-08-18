@@ -42,7 +42,6 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [tag-checker](../actions/tag-checker/README.md) | Functionality superseded by tag-action |
 | [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Superseded by assets-action (consolidated implementation) |
 
-
 ---
 
 ## 🔄 Reusable Workflows
