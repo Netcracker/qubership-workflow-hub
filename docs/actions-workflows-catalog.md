@@ -3,9 +3,9 @@
 Central directory of available GitHub Actions and Reusable Workflows in this repository.
 
 Purpose:
-* Single place to browse everything (active + deprecated) with short descriptions.
-* Shows deprecation status so you avoid adopting legacy components.
-* Fast jumping-off point to each Action / Workflow detail readme.
+ * Single place to browse everything (active + deprecated) with short descriptions.
+ * Shows deprecation status so you avoid adopting legacy components.
+ * Fast jumping-off point to each Action / Workflow detail readme.
 
 Deprecation & evolution rules are defined in [Standards & Change Policy](standards-and-change-policy.md). Always check that document before modifying or depending on a deprecated component.
 
