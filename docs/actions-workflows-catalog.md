@@ -5,7 +5,7 @@ Central directory of available GitHub Actions and Reusable Workflows in this rep
 Purpose:
 * Single place to browse everything (active + deprecated) with short descriptions.
 * Shows deprecation status so you avoid adopting legacy components.
-* Fast jumping-off point to each Action / Workflow detail README.
+* Fast jumping-off point to each Action / Workflow detail readme.
 
 Deprecation & evolution rules are defined in [Standards & Change Policy](standards-and-change-policy.md). Always check that document before modifying or depending on a deprecated component.
 
@@ -34,7 +34,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 ### Deprecated Actions
 | Action | Replacement / Note |
 |--------|--------------------|
-| [commit-and-push](../actions/commit-and-push/README.md) | Use native git steps |
+| [commit-and-push](../actions/commit-and-push/README.md) | Use native Git steps |
 | [pom-updater](../actions/pom-updater/README.md) | Prefer metadata-action + build tooling |
 | [tag-checker](../actions/tag-checker/README.md) | Functionality superseded by tag-action |
 | [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Superseded by assets-action (consolidated implementation) |
