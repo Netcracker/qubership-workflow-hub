@@ -3,15 +3,17 @@
 Central directory of available GitHub Actions and Reusable Workflows in this repository.
 
 Purpose:
- * Single place to browse everything (active + deprecated) with short descriptions.
- * Shows deprecation status so you avoid adopting legacy components.
- * Fast jumping-off point to each Action / Workflow detail readme.
+
+* Single place to browse everything (active + deprecated) with short descriptions.
+* Shows deprecation status so you avoid adopting legacy components.
+* Fast jumping-off point to each Action / Workflow detail readme.
 
 Deprecation & evolution rules are defined in [Standards & Change Policy](standards-and-change-policy.md). Always check that document before modifying or depending on a deprecated component.
 
 ---
 
- ## 🔄 Actions
+## 🔄 Actions
+
 | Action | Description |
 |--------|-------------|
 | [assets-action](../actions/assets-action/README.md) | Alternative asset archiving / upload path (legacy alias) |
@@ -31,7 +33,8 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [tag-action](../actions/tag-action/README.md) | Create / delete / check tags; optional release creation |
 | [verify-json](../actions/verify-json/README.md) | Validate JSON files against a schema |
 
- ### Deprecated Actions
+### Deprecated Actions
+
 | Action | Replacement / Note |
 |--------|--------------------|
 | [commit-and-push](../actions/commit-and-push/README.md) | Use native Git steps |
@@ -42,9 +45,10 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 
 ---
 
- ## 🔄 Reusable Workflows
+## 🔄 Reusable Workflows
 
- ### Active
+### Active
+
 | Workflow | Description |
 |----------|-------------|
 | [broadcast-files](reusable/broadcast-files.md) | Distribute specified files to multiple target repos |
@@ -54,7 +58,8 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [release-drafter](reusable/release-drafter.md) | Generate or refresh draft release notes |
 | [npm-publish](reusable/npm-publish.md) | Build, test, and publish npm packages to a registry (supports monorepo and single package) |
 
- ### Deprecated Workflows
+### Deprecated Workflows
+
 | Workflow | Replacement / Note |
 |----------|--------------------|
 | [docker-publish](reusable/docker-publish.md) | Use docker-action (action) + custom workflow |
