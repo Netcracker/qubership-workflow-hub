@@ -52,6 +52,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [maven-publish](reusable/maven-publish.md) | Build & publish Maven artifacts (release flow) |
 | [python-publish](reusable/python-publish.md) | Build, test & publish Python package (Poetry) |
 | [release-drafter](reusable/release-drafter.md) | Generate or refresh draft release notes |
+| [npm-publish](reusable/npm-publish.md) | Build, test, and publish npm packages to a registry (supports monorepo and single package) |
 
 ### Deprecated Workflows
 | Workflow | Replacement / Note |
