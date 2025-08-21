@@ -66,12 +66,10 @@ inputs:
 
 runs:
   using: "composite"
-  defaults:
-    run:
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
   steps:
     - name: "Setup xmlstarlet"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         # Skip installing package docs {makes the man-db trigger much faster)
         sudo tee /etc/dpkg/dpkg.cfg.d/01_nodoc > /dev/null << 'EOF'
@@ -81,6 +79,8 @@ runs:
         EOF
         sudo apt install -y xmlstarlet
     - name: "Check if ${{ inputs.pom-file }} exists"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [[ -f "${{ inputs.pom-file }}" ]]; then
           echo "✅ pom.xml file found at '${{ inputs.pom-file }}'" >> $GITHUB_STEP_SUMMARY
@@ -92,6 +92,8 @@ runs:
         fi
 
     - name: "Check that version is SNAPSHOT"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}'." >> $GITHUB_STEP_SUMMARY
         echo "ℹ️ The target store is '${{ inputs.target-store }}'. Relevant only for 'deploy' command." >> $GITHUB_STEP_SUMMARY
@@ -131,6 +133,8 @@ runs:
           echo "MVN_COMMAND=${{ inputs.maven-command }}" >> $GITHUB_ENV
         fi
     - name: "Check if ${{ inputs.target-store }} profile exists in ${{ inputs.pom-file }}"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         echo "ℹ️ Checking if the '${{ inputs.target-store }}' profile exists in ${{ inputs.pom-file }}" >> $GITHUB_STEP_SUMMARY
         PROFILE_CHECK=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:profiles/x:profile[x:id='${{ inputs.target-store }}']" ./${{ inputs.pom-file }} || echo "")
@@ -146,6 +150,8 @@ runs:
           echo "MVN_PROFILE=-P${{ inputs.target-store }}" >> $GITHUB_ENV
         fi
     - name: "Setup mvn additional args"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [[ "${{ inputs.additional-mvn-args }}" == "" ]]
         then
@@ -188,6 +194,8 @@ runs:
         java-version: ${{ inputs.java-version }}
         distribution: "temurin"
     - name: "Additional GitHub repository configuration"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -n "$(xmlstarlet sel -N x="http://maven.apache.org/SETTINGS/1.0.0" -t -v "/x:settings/x:servers/x:server[x:id='github']" ~/.m2/settings.xml)" ]; then
           echo "ℹ️ GitHub server configuration already exists in ~/.m2/settings.xml"
@@ -203,6 +211,8 @@ runs:
          cat ~/.m2/settings.xml
 
     - name: "Execute Maven command"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [[ "${{ inputs.pom-file }}" == "" || "${{ inputs.pom-file }}" == "pom.xml" ]]; then
           echo "ℹ️ No pom.xml file specified. Using default 'pom.xml'." >> $GITHUB_STEP_SUMMARY
