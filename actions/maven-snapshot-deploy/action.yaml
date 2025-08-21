@@ -47,6 +47,16 @@ inputs:
     description: "Path to the pom.xml file"
     required: false
     default: "pom.xml"
+  upload-artifact:
+    type: string
+    description: "Upload the built artifact to GitHub Actions artifacts"
+    required: false
+    default: 'false'
+  artifact-id:
+    type: string
+    description: "Artifact ID to use when uploading the artifact"
+    required: false
+    default: "maven-snapshot-deploy-artifact"
   maven-username:
     type: string
     description: "Maven username"
@@ -229,3 +239,9 @@ runs:
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_TOKEN: ${{ github.token }}
+    - name: "Upload artifact to GitHub Actions artifacts"
+      if: ${{ inputs.upload-artifact != 'false' && inputs.artifact-id != '' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifact-id }}
+        path: '**/target'

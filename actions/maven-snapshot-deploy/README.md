@@ -31,6 +31,16 @@ Default is `.`.
 Path and name of pom.xml file. Path to file must be relative to `working-directory`.
 Default is `pom.xml`
 
+### `upload-artifact`
+
+**Optional**  
+Upload `**/target` as an artifact to the workflow artifacts. Defaults to `'false'`.
+
+### `artifact-id`
+
+**Optional**  
+Artifact ID. Defaults to `maven-snapshot-deploy-artifact`.
+
 ### `maven-username`
 
 **Optional**  
