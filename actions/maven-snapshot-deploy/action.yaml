@@ -37,6 +37,16 @@ inputs:
     description: "Additional mvn cmd-line params (e.g. '-Dskip.tests=true')"
     required: false
     default: ""
+  working-directory:
+    type: string
+    description: "Working directory for the action"
+    required: false
+    default: ""
+  pom-file:
+    type: string
+    description: "Path to the pom.xml file"
+    required: false
+    default: "pom.xml"
   maven-username:
     type: string
     description: "Maven username"
@@ -56,9 +66,12 @@ inputs:
 
 runs:
   using: "composite"
+  deffaults:
+    run:
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
   steps:
     - name: "Setup xmlstarlet"
-      shell: bash
       run: |
         # Skip installing package docs {makes the man-db trigger much faster)
         sudo tee /etc/dpkg/dpkg.cfg.d/01_nodoc > /dev/null << 'EOF'
@@ -67,8 +80,18 @@ runs:
         path-exclude /usr/share/info/*
         EOF
         sudo apt install -y xmlstarlet
+    - name: "Check if ${{ inputs.pom-file }} exists"
+      run: |
+        if [[ -f "${{ inputs.pom-file }}" ]]; then
+          echo "✅ pom.xml file found at '${{ inputs.pom-file }}'" >> $GITHUB_STEP_SUMMARY
+          echo "✅ pom.xml file found at '${{ inputs.pom-file }}'"
+        else
+          echo "❌ pom.xml file not found at '${{ inputs.pom-file }}'. Please check the path." >> $GITHUB_STEP_SUMMARY
+          echo "❌ pom.xml file not found at '${{ inputs.pom-file }}'. Please check the path."
+          exit 1
+        fi
+
     - name: "Check that version is SNAPSHOT"
-      shell: bash
       run: |
         echo "ℹ️ The maven command to execute is '${{ inputs.maven-command }}'." >> $GITHUB_STEP_SUMMARY
         echo "ℹ️ The target store is '${{ inputs.target-store }}'. Relevant only for 'deploy' command." >> $GITHUB_STEP_SUMMARY
@@ -79,27 +102,27 @@ runs:
           echo "ℹ️ Checking if the project version is a SNAPSHOT version."
 
           cd ${GITHUB_WORKSPACE}
-          VERSION_CHECK=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:version[contains(., '{revision}')]" ./pom.xml || echo "")
+          VERSION_CHECK=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:version[contains(., '{revision}')]" ./${{ inputs.pom-file }} || echo "")
           # If project/version is not a reference to project/properties/revision, then check project/version if it contains '-SNAPSHOT'
           # Else check project/properties/revision if it contains '-SNAPSHOT'
           if [[ "${VERSION_CHECK}" == "" ]]
           then
-            IS_SNAPSHOT=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:version[contains(., '-SNAPSHOT')]" ./pom.xml || echo "")
+            IS_SNAPSHOT=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:version[contains(., '-SNAPSHOT')]" ./${{ inputs.pom-file }} || echo "")
           else
-            IS_SNAPSHOT=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:properties/x:revision[contains(., '-SNAPSHOT')]" ./pom.xml || echo "")
+            IS_SNAPSHOT=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:properties/x:revision[contains(., '-SNAPSHOT')]" ./${{ inputs.pom-file }} || echo "")
           fi
           if [[ "${IS_SNAPSHOT}" == "" ]]
           then
-            echo "ℹ️ The project's version in the pom.xml has no '-SNAPSHOT' postfix." >> $GITHUB_STEP_SUMMARY
+            echo "ℹ️ The project's version in the ${{ inputs.pom-file }} has no '-SNAPSHOT' postfix." >> $GITHUB_STEP_SUMMARY
             echo "ℹ️ Workflow will not deploy any artifacts. It will execute 'mvn install' command." >> $GITHUB_STEP_SUMMARY
-            echo "ℹ️ The project's version in the pom.xml has no '-SNAPSHOT' postfix."
+            echo "ℹ️ The project's version in the ${{ inputs.pom-file }} has no '-SNAPSHOT' postfix."
             echo "ℹ️ Workflow will not deploy any artifacts. It will execute 'mvn install' command."
             echo "IS_SNAPSHOT=false" >> $GITHUB_ENV
             echo "MVN_COMMAND=install" >> $GITHUB_ENV
           else
-            echo "✅ The project's version in the pom.xml has '-SNAPSHOT' postfix" >> $GITHUB_STEP_SUMMARY
+            echo "✅ The project's version in the ${{ inputs.pom-file }} has '-SNAPSHOT' postfix" >> $GITHUB_STEP_SUMMARY
             echo "✅ Workflow will deploy SNAPSHOT artifact" >> $GITHUB_STEP_SUMMARY
-            echo "✅ The project's version in the pom.xml has '-SNAPSHOT' postfix."
+            echo "✅ The project's version in the ${{ inputs.pom-file }} has '-SNAPSHOT' postfix."
             echo "✅ Workflow will deploy SNAPSHOT artifact"
             echo "IS_SNAPSHOT=true" >> $GITHUB_ENV
             echo "MVN_COMMAND=deploy" >> $GITHUB_ENV
@@ -107,24 +130,22 @@ runs:
         else
           echo "MVN_COMMAND=${{ inputs.maven-command }}" >> $GITHUB_ENV
         fi
-    - name: "Check if ${{ inputs.target-store }} profile exists in pom.xml"
-      shell: bash
+    - name: "Check if ${{ inputs.target-store }} profile exists in ${{ inputs.pom-file }}"
       run: |
-        echo "ℹ️ Checking if the '${{ inputs.target-store }}' profile exists in pom.xml" >> $GITHUB_STEP_SUMMARY
-        PROFILE_CHECK=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:profiles/x:profile[x:id='${{ inputs.target-store }}']" ./pom.xml || echo "")
+        echo "ℹ️ Checking if the '${{ inputs.target-store }}' profile exists in ${{ inputs.pom-file }}" >> $GITHUB_STEP_SUMMARY
+        PROFILE_CHECK=$(xmlstarlet sel -N x="http://maven.apache.org/POM/4.0.0" -t -v "/x:project/x:profiles/x:profile[x:id='${{ inputs.target-store }}']" ./${{ inputs.pom-file }} || echo "")
         if [[ "${PROFILE_CHECK}" == "" ]]
         then
-          echo "ℹ️ The '${{ inputs.target-store }}' profile does not exist in pom.xml. Please create it if you plan to deploy artifacts." >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ The '${{ inputs.target-store }}' profile does not exist in ${{ inputs.pom-file }}. Please create it if you plan to deploy artifacts." >> $GITHUB_STEP_SUMMARY
           echo "ℹ️ The detailed instruction: https://github.com/Netcracker/qubership-workflow-hub/blob/main/docs/maven-publish-pom-preparation_doc.md" >> $GITHUB_STEP_SUMMARY
-          echo "ℹ️ The '${{ inputs.target-store }}' profile does not exist in pom.xml. Please create it if you plan to deploy artifacts."
+          echo "ℹ️ The '${{ inputs.target-store }}' profile does not exist in ${{ inputs.pom-file }}. Please create it if you plan to deploy artifacts."
           echo "MVN_PROFILE=" >> $GITHUB_ENV
         else
-          echo "✅ The '${{ inputs.target-store }}' profile exists in pom.xml" >> $GITHUB_STEP_SUMMARY
-          echo "✅ The '${{ inputs.target-store }}' profile exists in pom.xml"
+          echo "✅ The '${{ inputs.target-store }}' profile exists in ${{ inputs.pom-file }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ The '${{ inputs.target-store }}' profile exists in ${{ inputs.pom-file }}"
           echo "MVN_PROFILE=-P${{ inputs.target-store }}" >> $GITHUB_ENV
         fi
     - name: "Setup mvn additional args"
-      shell: bash
       run: |
         if [[ "${{ inputs.additional-mvn-args }}" == "" ]]
         then
@@ -167,7 +188,6 @@ runs:
         java-version: ${{ inputs.java-version }}
         distribution: "temurin"
     - name: "Additional GitHub repository configuration"
-      shell: bash
       run: |
         if [ -n "$(xmlstarlet sel -N x="http://maven.apache.org/SETTINGS/1.0.0" -t -v "/x:settings/x:servers/x:server[x:id='github']" ~/.m2/settings.xml)" ]; then
           echo "ℹ️ GitHub server configuration already exists in ~/.m2/settings.xml"
@@ -183,10 +203,16 @@ runs:
          cat ~/.m2/settings.xml
 
     - name: "Execute Maven command"
-      shell: bash
       run: |
-        echo "ℹ️ Executing Maven command: mvn --batch-mode ${{ env.MVN_COMMAND }} ${{ env.MVN_PROFILE }} ${{ env.ADDITIONAL_MVN_ARGS }}" >> $GITHUB_STEP_SUMMARY
-        mvn --batch-mode ${{ env.MVN_COMMAND }} ${{ env.MVN_PROFILE }} ${{ env.ADDITIONAL_MVN_ARGS }}
+        if [[ "${{ inputs.pom-file }}" == "" || "${{ inputs.pom-file }}" == "pom.xml" ]]; then
+          echo "ℹ️ No pom.xml file specified. Using default 'pom.xml'." >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ No pom.xml file specified. Using default 'pom.xml'."
+          POM_FILE=""
+        else
+          POM_FILE="-f ${{ inputs.pom-file }}"
+        fi
+        echo "ℹ️ Executing Maven command: mvn --batch-mode ${MVN_COMMAND} ${MVN_PROFILE} ${ADDITIONAL_MVN_ARGS} ${POM_FILE}" >> $GITHUB_STEP_SUMMARY
+        mvn --batch-mode ${MVN_COMMAND} ${MVN_PROFILE} ${ADDITIONAL_MVN_ARGS} ${POM_FILE}
       env:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-token }}

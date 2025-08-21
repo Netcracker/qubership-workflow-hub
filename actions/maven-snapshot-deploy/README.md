@@ -19,6 +19,18 @@ The target store for the artifact. Can be `central` or `github`. Defaults to `ce
 **Optional**  
 Additional Maven command-line parameters (e.g., `-Dskip.tests=true`). Defaults to an empty string.
 
+### `working-directory`
+
+**Optional**  
+Working directory for the action. It is usefull when there are several independant pom.xml files in the repository.
+Default is `.`.
+
+### `pom-file`
+
+**Optional**  
+Path and name of pom.xml file. Path to file must be relative to `working-directory`.
+Default is `pom.xml`
+
 ### `maven-username`
 
 **Optional**  
