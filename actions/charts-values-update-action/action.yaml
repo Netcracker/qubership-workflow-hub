@@ -150,7 +150,7 @@ runs:
         echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
           #chart_name=$(basename ${chart} | sed 's/\.yaml$//')
-          helm push ${chart} oci:://ghcr.io/${{ github.repository_owner }}/
+          helm push ${chart} oci:://ghcr.io/${{ github.repository }}/
         done
         helm registry logout 'ghcr.io'
       shell: bash
