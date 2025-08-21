@@ -1,6 +1,6 @@
 ---
 
-name: "Charts Release"
+name: "Charts Values Update Action"
 description: "Update helm charts versions in values.yaml file and create a release draft"
 
 inputs:
@@ -33,10 +33,23 @@ inputs:
     required: false
     default: "."
     type: string
+  package-charts:
+    description: "Package helm charts after updating versions"
+    required: false
+    default: "false"
+    type: string
+  publish-charts:
+    description: "Publish helm charts to the ghcr registry"
+    required: false
+    default: "false"
+    type: string
 outputs:
   images-versions:
     description: "Image versions updated in the values.yaml file"
     value: ${{ steps.update-versions.outputs.images-versions }}
+  chart-metadata:
+    description: "Chart metadata"
+    value: ${{ steps.metadata.outputs.chart-metadata }}
 runs:
   using: "composite"
   steps:
@@ -67,7 +80,7 @@ runs:
             exit 1
           fi
         done
-       
+
     - name: "Create release branch"
       if: ${{ inputs.create-release-branch == 'true' }}
       id: create-release-branch
@@ -114,5 +127,55 @@ runs:
         git add .
         git commit -m "release: Set chart and images versions to release ${{ inputs.release-version }}. [skip ci]"
         git push
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: "Configure helm"
+      uses: azure/setup-helm@v4.3.0
+
+    - name: "Package helm charts"
+      if: ${{ inputs.package-charts == 'true' }}
+      run: |
+        charts=$(grep "chart_file: " ${{ inputs.config-file }} | sed "s#^\s*chart_file:\s*##" | dirname)
+        for chart in ${charts}; do
+          echo "Packaging chart: ${chart}"
+          helm package ${chart} --destination ${{ github.workspace }}/.cr-release-packages
+        done
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: "Publish helm charts"
+      if: ${{ inputs.publish-charts == 'true' }}
+      run: |
+        echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
+        for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
+          #chart_name=$(basename ${chart} | sed 's/\.yaml$//')
+          helm push ${chart} oci:://ghcr.io/${{ github.repository_owner }}/
+        done
+        helm registry logout 'ghcr.io'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: "Get chart metadata"
+      if: ${{ inputs.package-charts == 'true' }}
+      id: metadata
+      run: |
+        charts_metadata=""
+        for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
+          chart_name=$(helm show chart ${chart} | grep "name: " | sed "s#^\s*name:\s*##" | tr -d '\r')
+          chart_version=$(helm show chart ${chart} | grep "version: " | sed "s#^\s*version:\s*##" | tr -d '\r')
+          chart_app_version=$(helm show chart ${chart} | grep "appVersion: " | sed "s#^\s*appVersion:\s*##" | tr -d '\r')
+          if [[ ${{ inputs.publish-charts }} == 'true' ]]; then
+            chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"purl\":\"ghcr.io/${{ github.repository_owner }}/${chart_name}-${{ inputs.release-version }}.tgz\"}"
+          else
+            chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\"}"
+          fi
+          #chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\"}"
+          charts_metadata="${charts_metadata}${chart_meta},"
+        done
+        charts_metadata=${charts_metadata%,}  # Remove trailing comma
+        charts_metadata="{\"charts\":[${charts_metadata}]}"
+        echo "metadata=${charts_metadata}" >> $GITHUB_OUTPUT
+        echo "metadata=${charts_metadata}" >> $GITHUB_STEP_SUMMARY
       shell: bash
       working-directory: ${{ inputs.working-directory }}
