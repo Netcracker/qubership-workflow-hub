@@ -136,7 +136,7 @@ runs:
     - name: "Package helm charts"
       if: ${{ inputs.package-charts == 'true' }}
       run: |
-        charts=$(grep "chart_file: " ${{ inputs.config-file }} | sed "s#^\s*chart_file:\s*##" | dirname)
+        charts=$(grep "chart_file: " ${{ inputs.config-file }} | sed "s#^\s*chart_file:\s*##" | xargs dirname)
         for chart in ${charts}; do
           echo "Packaging chart: ${chart}"
           helm package ${chart} --destination ${{ github.workspace }}/.cr-release-packages
