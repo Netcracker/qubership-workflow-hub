@@ -49,7 +49,7 @@ outputs:
     value: ${{ steps.update-versions.outputs.images-versions }}
   chart-metadata:
     description: "Chart metadata"
-    value: ${{ steps.metadata.outputs.chart-metadata }}
+    value: ${{ steps.metadata.outputs.metadata }}
 runs:
   using: "composite"
   steps:
