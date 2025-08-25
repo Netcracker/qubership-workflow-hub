@@ -149,7 +149,6 @@ runs:
       run: |
         echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
-          #chart_name=$(basename ${chart} | sed 's/\.yaml$//')
           helm push ${chart} oci://ghcr.io/${{ github.repository }}/
         done
         helm registry logout 'ghcr.io'
@@ -165,12 +164,14 @@ runs:
           chart_name=$(helm show chart ${chart} | grep "name: " | sed "s#^\s*name:\s*##" | tr -d '\r')
           chart_version=$(helm show chart ${chart} | grep "version: " | sed "s#^\s*version:\s*##" | tr -d '\r')
           chart_app_version=$(helm show chart ${chart} | grep "appVersion: " | sed "s#^\s*appVersion:\s*##" | tr -d '\r')
+          uuid=$(uuidgen)
+          # to lowercase 
+          uuid=${uuid,,}
           if [[ ${{ inputs.publish-charts }} == 'true' ]]; then
-            chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"purl\":\"ghcr.io/${{ github.repository }}/${chart_name}:${chart_version}\"}"
+            chart_meta="{\"bom-ref\":\"${chart_name}:${uuid}\",\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"purl\":\"ghcr.io/${{ github.repository }}/${chart_name}:${chart_version}\"}"
           else
-            chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\"}"
+            chart_meta="{\"bom-ref\":\"${chart_name}:${uuid}\",\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\"}"
           fi
-          #chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\"}"
           charts_metadata="${charts_metadata}${chart_meta},"
         done
         charts_metadata=${charts_metadata%,}  # Remove trailing comma
