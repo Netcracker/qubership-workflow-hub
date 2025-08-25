@@ -69,6 +69,12 @@ outputs:
   image-name:
     description: "The name of the built Docker image."
     value: "${{ steps.output_result.outputs.image_name }}"
+  metadata-json:
+    description: "Path to the generated metadata file."
+    value: "${{ steps.output_result.outputs.metadata_path }}"
+  metadata-filename:
+    description: "Name of the generated metadata file."
+    value: "${{ steps.output_result.outputs.metadata_filename }}"
 runs:
   using: "composite"
   steps:
@@ -188,11 +194,60 @@ runs:
         build-args: ${{ inputs.build-args }}
 
     - name: Output result
-      shell: bash
       id: output_result
+      shell: bash
       run: |
-        IMAGE_NAME=$(echo '${{ steps.dockerbuild.outputs.metadata }}' | jq -r '.["image.name"]' | cut -d',' -f1)
-        echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+        set -euo pipefail
+
+        IMAGE_NAME_FULL=$(echo '${{ steps.dockerbuild.outputs.metadata }}' | jq -r '.["image.name"]' | cut -d',' -f1)
+        IMAGE_NAME="${IMAGE_NAME_FULL%%:*}"
+        TAG="${IMAGE_NAME_FULL##*:}"
+
+        DIGEST="${{ steps.dockerbuild.outputs.digest }}"
+        ALG="${DIGEST%%:*}"
+        DIGEST_NO_PREFIX="${DIGEST##*:}"
+        DIGEST_SHORT="${DIGEST_NO_PREFIX:0:12}"
+
+        GROUP="${{ inputs.app-manifest-group }}"
+
+        VERSION="$TAG"
+
+        if command -v uuidgen >/dev/null 2>&1; then
+          UUID="$(uuidgen)"
+        else
+          UUID="${VERSION}-0000-0000-0000-000000000000"
+        fi
+
+        BOM_REF="${IMAGE_NAME}:${UUID}"
+
+        BASENAME=$(basename "$IMAGE_NAME")
+        FILENAME="${BASENAME}-${TAG}-${DIGEST_SHORT}.json"
+
+        echo ">>> IMAGE_NAME        = $IMAGE_NAME"
+        echo ">>> DIGEST            = $DIGEST"
+        echo ">>> DIGEST_SHORT(12)  = $DIGEST_SHORT"
+        echo ">>> FILENAME          = $FILENAME"
+        echo ">>> BOM_REF           = $BOM_REF"
+
+        cat <<EOF > "$FILENAME"
+        {
+          "bom-ref": "${BOM_REF}",
+          "type": "container",
+          "mime-type": "application/vnd.docker.image",
+          "name": "${IMAGE_NAME}",
+          "group": "${GROUP}",
+          "version": "${VERSION}",
+          "hashes":[
+            {
+              "alg": "${ALG}",
+              "content": "${DIGEST_NO_PREFIX}"
+            }],
+          "purl": "pkg:docker/core/${IMAGE_NAME}@${VERSION}?registryName=sandbox"
+        }
+        EOF
+
+        echo "metadata_path=$PWD/$FILENAME" >> "$GITHUB_OUTPUT"
+        echo "metadata_filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
     - name: Analyze for critical and high CVEs
       id: docker-scout-cves
