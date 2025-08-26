@@ -4,83 +4,83 @@ description: Build Maven artifact
 
 inputs:
   version-type:
-    description: 'Version type to release. Can be one of [major, minor, patch]'
+    description: "Version type to release. Can be one of [major, minor, patch]"
     required: true
-    default: 'patch'
+    default: "patch"
     type: string
   module:
-    description: 'Module to build == Repository name.'
+    description: "Module to build == Repository name."
     required: true
-    default: ''
+    default: ""
     type: string
   ref:
-    description: 'Branch name to create release from'
+    description: "Branch name to create release from"
     required: false
-    default: 'main'
+    default: "main"
     type: string
   maven-args:
-    description: 'Maven arguments to pass'
+    description: "Maven arguments to pass"
     required: false
-    default: '-DskipTests=true -Dmaven.javadoc.skip=true -B'
+    default: "-DskipTests=true -Dmaven.javadoc.skip=true -B"
     type: string
   server-id:
-    description: 'Maven server ID'
+    description: "Maven server ID"
     required: false
-    default: 'github'
+    default: "github"
     type: string
   java-version:
-    description: 'Java version to use'
+    description: "Java version to use"
     required: false
-    default: '21'
+    default: "21"
     type: string
   maven-version:
-    description: 'Maven version'
+    description: "Maven version"
     required: false
-    default: ''
+    default: ""
     type: string
   dry-run:
-    description: 'Dry run flag'
+    description: "Dry run flag"
     required: false
-    default: 'true'
+    default: "true"
     type: string
   token:
-    description: 'GitHub token'
+    description: "GitHub token"
     required: true
-    default: ''
+    default: ""
     type: string
   gpg-private-key:
-    description: 'GPG private key'
+    description: "GPG private key"
     required: true
-    default: ''
+    default: ""
     type: string
   gpg-passphrase:
-    description: 'GPG passphrase'
+    description: "GPG passphrase"
     required: true
-    default: ''
+    default: ""
     type: string
   profile:
-    description: 'Maven profile to use'
+    description: "Maven profile to use"
     required: false
-    default: ''
+    default: ""
     type: string
   maven-user:
-    description: 'Maven user'
+    description: "Maven user"
     required: false
-    default: ''
+    default: ""
     type: string
   maven-password:
-    description: 'Maven password'
+    description: "Maven password"
     required: false
-    default: ''
+    default: ""
     type: string
   bump-dependencies-after-release:
-    description: 'Bump dependencies versions to next snapshot'
+    description: "Bump dependencies versions to next snapshot"
     required: false
-    default: 'false'
+    default: "false"
     type: string
 outputs:
   release-version:
-    description: 'Release version'
+    description: "Release version"
     value: ${{ steps.release.outputs.RELEASE_VERSION }}
 runs:
   using: "composite"
@@ -97,7 +97,7 @@ runs:
       uses: actions/setup-java@v4
       with:
         java-version: ${{ inputs.java-version }}
-        distribution: 'temurin'
+        distribution: "temurin"
         server-id: ${{ inputs.server-id }}
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
@@ -130,19 +130,26 @@ runs:
         echo "Scanning all pom.xml files..."
         viol=0
 
+        # exact groupIds that are forbidden (subpackages are allowed)
+        forbidden=("org.qubership" "com.netcracker")
+
         while IFS= read -r pom; do
-          gid=$(mvn -q -f "$pom" help:evaluate -Dexpression=project.groupId -DforceStdout)
-          if [[ -z "${gid// }" ]]; then
+          gid=$(mvn -q -f "$pom" help:evaluate -Dexpression=project.groupId -DforceStdout 2>/dev/null || true)
+          gid_trimmed=$(printf "%s" "$gid" | tr -d '[:space:]')
+
+          if [[ -z "$gid_trimmed" ]]; then
             echo "::warning file=$pom::Failed to determine groupId"
             continue
           fi
-          if [[ "$gid" == "org.qubership" ]]; then
-            echo "::error file=$pom::Forbidden groupId=org.qubership (only org.qubership.* is allowed)"
+
+          if [[ " ${forbidden[*]} " == *" $gid_trimmed "* ]]; then
+            echo "::error file=$pom::Forbidden groupId=$gid_trimmed (only ${gid_trimmed}.* is allowed)"
             viol=1
           else
-            echo "OK: $pom => $gid"
+            echo "OK: $pom => $gid_trimmed"
           fi
-        done <<< $(find . -name pom.xml -type f -not -path "*/target/*" | sort)
+        done < <(find . -name pom.xml -type f -not -path "*/target/*" | sort)
+
         exit $viol
     - name: "Release"
       id: release
