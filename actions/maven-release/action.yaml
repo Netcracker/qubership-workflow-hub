@@ -142,7 +142,7 @@ runs:
           else
             echo "OK: $pom => $gid"
           fi
-        done <<(find . -name pom.xml -type f -not -path "*/target/*" | sort)
+        done <<< $(find . -name pom.xml -type f -not -path "*/target/*" | sort)
         exit $viol
     - name: "Release"
       id: release
