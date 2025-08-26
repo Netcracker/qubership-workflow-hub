@@ -148,7 +148,7 @@ runs:
           else
             echo "OK: $pom => $gid_trimmed"
           fi
-        done <<<(find . -name pom.xml -type f -not -path "*/target/*" | sort)
+        done <<< $(find . -name pom.xml -type f -not -path "*/target/*" | sort)
 
         exit $viol
     - name: "Release"
