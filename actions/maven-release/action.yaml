@@ -122,6 +122,28 @@ runs:
         path: ${{ inputs.module }}
         repository: ${{ github.repository_owner }}/${{ inputs.module }}
         token: ${{ inputs.token }}
+    - name: Validate Maven groupId policy
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        echo "Scanning all pom.xml files..."
+        viol=0
+
+        while IFS= read -r pom; do
+          gid=$(mvn -q -f "$pom" help:evaluate -Dexpression=project.groupId -DforceStdout)
+          if [[ -z "${gid// }" ]]; then
+            echo "::warning file=$pom::Failed to determine groupId"
+            continue
+          fi
+          if [[ "$gid" == "org.qubership" ]]; then
+            echo "::error file=$pom::Forbidden groupId=org.qubership (only org.qubership.* is allowed)"
+            viol=1
+          else
+            echo "OK: $pom => $gid"
+          fi
+        done <<(find . -name pom.xml -type f -not -path "*/target/*" | sort)
+        exit $viol
     - name: "Release"
       id: release
       run: |
