@@ -42,6 +42,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.ref ||  github.ref_name }}
+          persist-credentials: false
 
       - name: Run Release Drafter
         uses: netcracker/release-drafter@master

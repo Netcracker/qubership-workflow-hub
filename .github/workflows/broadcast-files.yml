@@ -38,6 +38,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Replicating common files
         uses: derberg/manage-files-in-multiple-repositories@v2
         with:
@@ -59,6 +61,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Replicating common config files
         uses: derberg/manage-files-in-multiple-repositories@v2
         with:
@@ -81,6 +85,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        persist-credentials: false
     - name: Replicating file
       uses: derberg/manage-files-in-multiple-repositories@v2
       with:
@@ -99,6 +105,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Replicating common workflows
         uses: derberg/manage-files-in-multiple-repositories@v2
         with:
@@ -126,6 +134,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        persist-credentials: false
     - name: Replicating file
       uses: derberg/manage-files-in-multiple-repositories@v2
       with:
@@ -144,6 +154,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Obsoleted workflow cleanup
         uses: derberg/manage-files-in-multiple-repositories@v2
         with:

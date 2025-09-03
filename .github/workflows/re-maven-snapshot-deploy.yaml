@@ -51,6 +51,8 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: "Setup xmlstarlet"
         run: |
           # Skip installing package docs {makes the man-db trigger much faster)
