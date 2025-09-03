@@ -44,6 +44,7 @@ async function run() {
 
   const now = new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1000);
+  const thresholdVersions = parseInt(core.getInput('threshold-versions'), 0);
 
   // core.info(`Configuration Path: ${configurationPath}`);
   core.info(`Threshold Days: ${thresholdDays}`);
@@ -94,6 +95,7 @@ async function run() {
     excludedPatterns: excludedTags,
     includedPatterns: includedTags,
     thresholdDate,
+    thresholdVersions,
     wrapper,
     owner,
     isOrganization,

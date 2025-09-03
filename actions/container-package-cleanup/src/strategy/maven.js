@@ -8,7 +8,7 @@ class MavenStrategy extends AbstractPackageStrategy {
         this.name = 'Maven Strategy';
     }
 
-    async execute({ packagesWithVersions, excludedPatterns, includedPatterns, thresholdDate, debug = false }) {
+    async execute({ packagesWithVersions, excludedPatterns, includedPatterns, thresholdDate, thresholdVersions, debug = false }) {
 
         // includedTags = ['*SNAPSHOT*', ...includedTags];
         const wildcardMatcher = new WildcardMatcher();
@@ -16,7 +16,7 @@ class MavenStrategy extends AbstractPackageStrategy {
         // Filter packages with versions based on the threshold date and patterns
         let filteredPackagesWithVersionsForDelete = packagesWithVersions.map(({ package: pkg, versions }) => {
 
-            if (versions.length === 1) return core.info(`Skipping package: ${pkg.name} — only one version.`), null;
+            if (versions.length <= thresholdVersions) return core.info(`Skipping package: ${pkg.name} because it has less than ${thresholdVersions} versions.`), null;
 
             let versionForDelete = versions.filter((version) => {
                 const createdAt = new Date(version.created_at);
@@ -34,7 +34,11 @@ class MavenStrategy extends AbstractPackageStrategy {
 
             if (versionForDelete.length === 0) {
 
-                debug && core.info(`No versions found for package: ${pcdkg.name} that match the criteria.`);
+                debug && core.info(`No versions found for package: ${pkg.name} that match the criteria.`);
+                return null;
+            }
+            if (versionForDelete.length <= thresholdVersions) {
+                debug && core.info(`Skipping package: ${pkg.name} because it has less than ${thresholdVersions} versions to delete.`);
                 return null;
             }
 
@@ -42,8 +46,8 @@ class MavenStrategy extends AbstractPackageStrategy {
             versionForDelete.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             // Remove the most recent version (the first one after sorting)
-            if (versionForDelete.length > 1) {
-                versionForDelete = versionForDelete.slice(1);
+            if (versionForDelete.length > thresholdVersions) {
+                versionForDelete = versionForDelete.slice(thresholdVersions);
             }
 
             let customPackage = {
