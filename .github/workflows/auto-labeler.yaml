@@ -28,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Execute assign labels
         id: action-assign-labels
         uses: mauroalderete/action-assign-labels@v1

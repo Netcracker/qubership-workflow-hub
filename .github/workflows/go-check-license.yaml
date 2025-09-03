@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Code checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Find go.mod files
         id: find
