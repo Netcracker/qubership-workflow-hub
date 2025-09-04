@@ -28,7 +28,7 @@ It supports both Docker/container images and Maven JAR files.
 | `PACKAGE_TOKEN` | GitHub token with permissions to manage packages | Yes      |
 
 > **Note:** The `PACKAGE_TOKEN` must have the following permissions:
-
+>
 > - **`read:packages`**: To list and retrieve package information.
 > - **`delete:packages`**: To delete package versions.
 
