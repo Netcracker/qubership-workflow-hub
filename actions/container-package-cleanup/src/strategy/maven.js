@@ -16,7 +16,7 @@ class MavenStrategy extends AbstractPackageStrategy {
         // Filter packages with versions based on the threshold date and patterns
         let filteredPackagesWithVersionsForDelete = packagesWithVersions.map(({ package: pkg, versions }) => {
 
-            if (versions.length <= 1) return core.info(`Skipping package: ${pkg.name} because it has only 1 version.`), null;
+            if (versions.length === 1) return core.info(`Skipping package: ${pkg.name} because it has only 1 version.`), null;
 
             let versionForDelete = versions.filter((version) => {
                 const createdAt = new Date(version.created_at);
