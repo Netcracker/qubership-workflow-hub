@@ -39,13 +39,16 @@ jobs:
           apply-changes: ${{ github.event.pull_request.base.repo.id == github.event.pull_request.head.repo.id }}
 
       - name: Set labels-next safely
+        if: ${{ github.event.pull_request.base.repo.id != github.event.pull_request.head.repo.id }}
         run: |
-          echo "LABELS_NEXT=$(echo '${{ steps.action-assign-labels.outputs.labels-next }}' | tr -dc 'a-zA-Z0-9-,')" >> $GITHUB_ENV
+          echo "LABELS_NEXT=$(echo ${STEPS_ACTION_ASSIGN_LABELS_OUTPUTS_LABELS_NEXT} | tr -dc 'a-zA-Z0-9-,')" >> $GITHUB_ENV
+        env:
+          STEPS_ACTION_ASSIGN_LABELS_OUTPUTS_LABELS_NEXT: ${{ steps.action-assign-labels.outputs.labels-next }}
       - name: "Drop warning if PR from fork"
         if: ${{ github.event.pull_request.base.repo.id != github.event.pull_request.head.repo.id }}
         run: |
           {
             echo "⚠️ Pull request from fork! ⚠️";
             echo "Labels will not be applied to PR. Assign them manually please.";
-            echo "Labels to assign: '${{ env.LABELS_NEXT }}'";
+            echo "Labels to assign: '${LABELS_NEXT}'";
           } >> "$GITHUB_STEP_SUMMARY"
