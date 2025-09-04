@@ -178,7 +178,7 @@ The action filters tags/versions in the following order of priority:
    - If neither `included-tags` nor `included-patterns` is specified, all versions are considered for deletion, except those explicitly excluded by `excluded-tags` or `excluded-patterns`.
    - **For Maven:** If neither `included-tags` or `included-patterns` is specified, only `*SNAPSHOT*` versions are considered for deletion by default.
 
-#### Filtering Process
+### Filtering Process
 
 1. Exclude versions matching `excluded-tags` or `excluded-patterns`.
 2. From the remaining versions, include only those matching `included-tags` or `included-patterns` (if specified).
@@ -200,6 +200,7 @@ Supported patterns for tags/versions:
 | **Special wildcards** | | |
 | `?*` | alphanum string: `SHA2430957234628737465`, `SHANGRILLA2` | `1.2.3`, `SHANGRILLA-2` |
 | `semver` | SemVer: `1.2.3`, `v1.2.3`, `v1.2.3-1`, `1.2.3-megafix` | `alpha-1.2.3`, `dependabot-1.2.3-update` |
+
 ---
 
 ## Debug & Dry-Run Modes
