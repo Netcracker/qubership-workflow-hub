@@ -47,5 +47,5 @@ jobs:
           {
             echo "⚠️ Pull request from fork! ⚠️";
             echo "Labels will not be applied to PR. Assign them manually please.";
-            echo "Labels to assign: ${{ env.LABELS_NEXT }}";
+            echo "Labels to assign: '${{ env.LABELS_NEXT }}'";
           } >> "$GITHUB_STEP_SUMMARY"
