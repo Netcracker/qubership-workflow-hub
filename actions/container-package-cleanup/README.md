@@ -10,6 +10,7 @@ It supports both Docker/container images and Maven JAR files.
 | Name               | Description                                                                 | Required | Default                     |
 | ------------------ | --------------------------------------------------------------------------- | -------- | --------------------------- |
 | `threshold-days`   | The number of days to keep package versions. Older versions will be deleted. | No       | `7`                         |
+| `threshold-versions` | The number of versions to keep. Applicable for maven artifacts only. | No | `1` |
 | `included-tags`    | A comma-separated list of tags/versions to include for deletion. Wildcards (`*`) are supported. | No       | `""` (all tags included, or `*SNAPSHOT*` for Maven) |
 | `excluded-tags`    | A comma-separated list of tags/versions to exclude from deletion. Wildcards (`*`) are supported.| No       | `""` (no tags excluded)      |
 | `included-patterns`| A comma-separated list of patterns to include for deletion. Wildcards (`*`) are supported. | No       | `""`                       |
@@ -98,6 +99,10 @@ on:
         description: "Number of days to keep Maven JAR versions"
         required: false
         default: "14"
+      threshold-versions:
+        description: "The number of latest SNAPSHOT versions to keep."
+        required: false
+        default: "1"
       included-patterns:
         description: "Patterns to include for deletion"
         required: false
@@ -127,6 +132,7 @@ jobs:
         uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@main
         with:
           threshold-days: ${{ github.event.inputs.threshold-days || 14 }}
+          threshold-versions: ${{ github.event.inputs.threshold-versions || 1 }}
           included-patterns: ${{ github.event.inputs.included-patterns || '*SNAPSHOT*' }}
           excluded-patterns: ${{ github.event.inputs.excluded-patterns || 'release*' }}
           debug: ${{ github.event.inputs.debug || 'false' }}

@@ -13,9 +13,6 @@ inputs:
   excluded-tags:
     description: "A comma-separated list of tags to exclude from deletion."
     default: ""
-  # config-file-path:
-  #   description: "The path to the config file."
-  #   default: ".github/package-cleanup.yml"
   debug:
     description: "Enable debug mode."
     default: "true"
