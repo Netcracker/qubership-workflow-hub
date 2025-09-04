@@ -75,6 +75,6 @@ jobs:
 
 ## Notes
 
-- Ensure project pom.xml file configured according [pom preparation instruction](../../docs/maven-publish-pom-preparation_doc.md)
+- Ensure project pom.xml file configured according [pom preparation instruction](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-pom-preparation_doc.md)
 - Ensure all required secrets are available in your repository.
 - The action supports both dry-run and actual release modes.

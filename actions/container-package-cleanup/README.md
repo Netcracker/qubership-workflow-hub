@@ -1,6 +1,6 @@
 # 🚀 Package Cleanup Action
 
-This **Package Cleanup** GitHub Action automates the cleanup of old package versions in a GitHub repository or organization.  
+This **Package Cleanup** GitHub Action automates the cleanup of old package versions in a GitHub repository or organization.
 It supports both Docker/container images and Maven JAR files.
 
 ---

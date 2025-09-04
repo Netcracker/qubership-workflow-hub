@@ -6,59 +6,59 @@ This GitHub Action builds and deploys a Maven project to either Maven Central or
 
 ### `java-version`
 
-**Optional**  
+**Optional**
 The JDK version to use. Defaults to `21`.
 
 ### `target-store`
 
-**Optional**  
+**Optional**
 The target store for the artifact. Can be `central` or `github`. Defaults to `central`.
 
 ### `additional-mvn-args`
 
-**Optional**  
+**Optional**
 Additional Maven command-line parameters (e.g., `-Dskip.tests=true`). Defaults to an empty string.
 
 ### `working-directory`
 
-**Optional**  
+**Optional**
 Working directory for the action. It is usefull when there are several independant pom.xml files in the repository.
 Default is `.`.
 
 ### `pom-file`
 
-**Optional**  
+**Optional**
 Path and name of pom.xml file. Path to file must be relative to `working-directory`.
 Default is `pom.xml`
 
 ### `upload-artifact`
 
-**Optional**  
+**Optional**
 Upload `**/target` as an artifact to the workflow artifacts. Defaults to `'false'`.
 
 ### `artifact-id`
 
-**Optional**  
+**Optional**
 Artifact ID. Defaults to `maven-snapshot-deploy-artifact`.
 
 ### `maven-username`
 
-**Optional**  
+**Optional**
 The username for Maven authentication.
 
 ### `maven-token`
 
-**Required**  
+**Required**
 The token for Maven authentication.
 
 ### `gpg-private-key`
 
-**Optional**  
+**Optional**
 The GPG private key for signing artifacts.
 
 ### `gpg-passphrase`
 
-**Optional**  
+**Optional**
 The passphrase for the GPG private key.
 
 ## Example Usage
@@ -101,6 +101,6 @@ jobs:
 
 ## Notes
 
-- Ensure that the `pom.xml` file is correctly configured for deployment. [How to configure pom.xml](../../docs/maven-publish-pom-preparation_doc.md)
-- Secrets to use to publish to Maven Central can be found there [Organization level secrets](../../docs/maven-publish-secrets_doc.md)
+- Ensure that the `pom.xml` file is correctly configured for deployment. [How to configure pom.xml](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-pom-preparation_doc.md)
+- Secrets to use to publish to Maven Central can be found there [Organization level secrets](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-secrets_doc.md)
 - For deploying to GitHub Packages, additional setup is performed to disable the `central-publishing-maven-plugin` and set an alternative deployment repository.
