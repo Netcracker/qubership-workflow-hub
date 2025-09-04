@@ -3,6 +3,7 @@
 This GitHub Action automates the process of building and releasing a Maven artifact. It supports version bumping (major, minor, patch), GPG signing, and optional dependency version bumping after release.
 
 ---
+
 ## Features
 
 - **Automatic Version Bumping:** Supports major, minor, and patch version increments for Maven artifacts.
