@@ -9,10 +9,21 @@ This GitHub Action builds and deploys a Maven project to either Maven Central or
 **Optional**
 The JDK version to use. Defaults to `21`.
 
+### `maven-version`
+
+**Optional**
+The maven version to use. GitHub runner default maven will be used.
+
 ### `target-store`
 
 **Optional**
 The target store for the artifact. Can be `central` or `github`. Defaults to `central`.
+
+### `maven-command`
+
+**Optional**
+Maven command to execute (default is 'deploy' for SNAPSHOT versions, 'install' otherwise).
+
 
 ### `additional-mvn-args`
 
@@ -61,6 +72,11 @@ The GPG private key for signing artifacts.
 **Optional**
 The passphrase for the GPG private key.
 
+### `sonar-token`
+
+**Optional**
+Sonar token. Default to `''`
+
 ## Example Usage
 
 ```yaml
@@ -85,11 +101,13 @@ jobs:
         with:
           java-version: '17'
           target-store: 'github'
-          additional-mvn-args: '-Dskip.tests=true'
+          maven-command: 'clean verify'
+          additional-mvn-args: 'org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar -Dsonar.projectKey=Netcracker_qubership -Dsonar.organization=netcracker -Dsonar.host.url=https://sonarcloud.io'
           maven-username: ${{ github.actor }} # For maven central repository it would be ${{ secrets.MAVEN_USER }}. Already set for Netcracker.
           maven-token: ${{ github.token }} # For maven central repository it would be ${{ secrets.MAVEN_PASSWORD}}. Already set for Netcracker.
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Organization level secret. Already set for Netcracker.
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }} # Organization level secret. Already set for Netcracker.
+          sonar-token: ${{ secrets.SONAR_TOKEN }} # Organization level secret. Already set for Netcracker.
 ```
 
 ## How It Works
