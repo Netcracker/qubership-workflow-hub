@@ -73,6 +73,10 @@ inputs:
     type: string
     description: "GPG passphrase"
     required: false
+  sonar-token:
+    type: string
+    description: "Sonarqube token"
+    required: false
 
 runs:
   using: "composite"
@@ -239,6 +243,7 @@ runs:
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_TOKEN: ${{ github.token }}
+        SONAR_TOKEN: ${{ inputs.sonar-token }}
     - name: "Upload artifact to GitHub Actions artifacts"
       if: ${{ inputs.upload-artifact != 'false' && inputs.artifact-id != '' }}
       uses: actions/upload-artifact@v4
