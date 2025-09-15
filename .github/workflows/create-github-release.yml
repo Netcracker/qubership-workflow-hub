@@ -38,14 +38,17 @@ jobs:
         git log -1
 
     - name: Create and push tag
+      env:
+        REVISION: ${{ inputs.revision }}
       run: |
         git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
         git config --global user.name "qubership-actions[bot]"
-        git tag -a v${{ inputs.revision }} -m "Release v${{ inputs.revision }}"
-        git push origin v${{ inputs.revision }}
+        git tag -a "v$REVISION" -m "Release v$REVISION"
+        git push origin "v$REVISION"
 
     - name: Create GitHub release using gh CLI
-      run: |
-         gh release create v${{ inputs.revision }} --title "Release v${{ inputs.revision }}" --notes "Release v${{ inputs.revision }}"
       env:
+        REVISION: ${{ inputs.revision }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+         gh release create "v$REVISION" --title "Release v$REVISION" --notes "Release v$REVISION"
