@@ -45,7 +45,7 @@ jobs:
     steps:
       - name: Info
         run: |
-            echo "::warning:: 💥🚀 This action is not supported anymore (deprecated).
+            echo "::warning:: 💥🚀 This action is not supported anymore (deprecated)."
             echo "::warning:: Please use [actions/docker-action] instead. "https://github.com/netcracker/qubership-workflow-hub/tree/main/actions/docker-action."
 
       - name: Checkout repository
