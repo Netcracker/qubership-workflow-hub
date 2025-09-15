@@ -123,7 +123,7 @@ jobs:
     # ================= Maven Central deployment part
       - name: "Set up JDK for Maven Central deployment"
         if: ${{ inputs.target-store == 'maven-central' }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ inputs.java-version }}
           distribution: "temurin"
@@ -145,7 +145,7 @@ jobs:
     # ================= GitHub Packages deployment part
       - name: "Set up JDK for GitHub Packages deployment"
         if: ${{ inputs.target-store == 'github-packages' }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ inputs.java-version }}
           distribution: "temurin"
