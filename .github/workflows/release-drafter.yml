@@ -6,24 +6,24 @@ on:
       version:
         required: true
         type: string
-        description: 'Release version'
+        description: "Release version"
       ref:
         description: "Branch name to create release from"
         required: false
         type: string
         default: main
       publish:
-        description: 'Enable publish release?'
+        description: "Enable publish release?"
         required: false
-        default: 'false'
+        default: "false"
         type: string
       config-name:
-        description: 'Release Drafter configuration file'
+        description: "Release Drafter configuration file"
         required: false
-        default: 'release-drafter-config.yml'
+        default: "release-drafter-config.yml"
         type: string
       tag:
-        description: 'The tag name to be associated with the GitHub release'
+        description: "The tag name to be associated with the GitHub release"
         required: false
         type: string
 
@@ -33,9 +33,11 @@ jobs:
     steps:
       - name: Input parameters
         run: |
-          echo "Release version: ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "Tag: ${{ inputs.tag || format('v{0}', inputs.version) }}" >> $GITHUB_STEP_SUMMARY
-          echo "Enable publish release: ${{ inputs.publish }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "Release version: ${{ inputs.version }}"
+            echo "Tag: ${{ inputs.tag || format('v{0}', inputs.version) }}"
+            echo "Enable publish release: ${{ inputs.publish }}"
+           } >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout code
         uses: actions/checkout@v5
