@@ -147,16 +147,6 @@ runs:
       run: |
         echo "🔍 Current directory:"
         pwd
-        echo
-        echo "📂 Full tree under workspace:"
-        ls -R -la ${{ github.workspace }} || true
-
-        echo "📁 Listing current directory:"
-        ls -la
-
-        echo "📁 Listing parent directory:"
-        ls -la ..
-
         echo "📂 Full workspace tree:"
         ls -R -la ${{ github.workspace }}
 
@@ -175,8 +165,11 @@ runs:
 
     - name: Display Image URL
       shell: bash
+      env:
+        REPO_OWNER: ${{ github.repository_owner }}
+        CONTAINER_NAME: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}
       run: |
-        echo "URL: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}"
+         echo "URL: ghcr.io/$REPO_OWNER/$CONTAINER_NAME"
 
     - name: Extract Docker Metadata
       if: ${{ inputs.tags == '' }}
@@ -195,18 +188,23 @@ runs:
       if: ${{ inputs.tags != '' }}
       id: prepare-tags
       shell: bash
+      env:
+        REPO_OWNER: ${{ github.repository_owner }}
+        ARTIFACT_ID: ${{ inputs.artifact-id }}
+        COMPONENT_NAME: ${{ steps.parse_component.outputs.name }}
+        TAGS_INPUT: ${{ inputs.tags }}
       run: |
-        IFS=',' read -ra TAGS <<< "${{ inputs.tags }}"
+        IMAGE_NAME="${ARTIFACT_ID:-$COMPONENT_NAME}"
+        IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
         TAGS_OUTPUT=""
         for TAG in "${TAGS[@]}"; do
           TAG=$(echo "$TAG" | xargs)
           if [ -z "$TAGS_OUTPUT" ]; then
-            TAGS_OUTPUT="ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}:${TAG}"
+            TAGS_OUTPUT="ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
           else
-            TAGS_OUTPUT="${TAGS_OUTPUT}, ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}:${TAG}"
+            TAGS_OUTPUT="$TAGS_OUTPUT, ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
           fi
         done
-        # Convert tags to lowercase
         TAGS_OUTPUT=$(echo "$TAGS_OUTPUT" | tr '[:upper:]' '[:lower:]')
         echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
 
