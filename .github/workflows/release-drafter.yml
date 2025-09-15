@@ -38,7 +38,7 @@ jobs:
           echo "Enable publish release: ${{ inputs.publish }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: 0

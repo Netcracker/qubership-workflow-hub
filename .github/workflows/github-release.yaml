@@ -21,7 +21,7 @@ jobs:
           echo "Version: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
           token: ${{ secrets.GH_ACCESS_TOKEN }}

@@ -49,7 +49,7 @@ jobs:
             echo "::warning:: Please use [actions/docker-action] instead. "https://github.com/netcracker/qubership-workflow-hub/tree/main/actions/docker-action."
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
           ref: ${{ inputs.ref }}
