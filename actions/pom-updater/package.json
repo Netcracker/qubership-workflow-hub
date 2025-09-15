@@ -14,7 +14,7 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
     "child_process": "^1.0.2",
-    "fast-xml-parser": "^4.5.1",
+    "fast-xml-parser": "^5.2.5",
     "fs": "^0.0.1-security",
     "xmldom": "^0.6.0",
     "xpath": "^0.0.34"
