@@ -77,12 +77,13 @@ jobs:
         run: cat ~/.m2/settings.xml
 
       - name: Sign and Deploy jar to Maven Central
-        run: mvn ${{ inputs.maven-command }}
+        run: mvn $MAVEN_COMMAND
         env:
           MAVEN_USERNAME: ${{ secrets.maven-username }}
           MAVEN_PASSWORD: ${{ secrets.maven-token }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
           SONAR_TOKEN: ${{ secrets.sonar-token }}
+          MAVEN_COMMAND: ${{ inputs.maven-command }}
 
       - name: Upload all Maven target directories
         if: ${{ inputs.upload-artifact }}

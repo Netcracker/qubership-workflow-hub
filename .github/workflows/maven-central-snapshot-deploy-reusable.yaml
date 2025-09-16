@@ -79,8 +79,9 @@ jobs:
       - name: "Maven deploy"
         if: ${{ env.IS_SNAPSHOT == 'true' }}
         run: |
-          mvn --batch-mode deploy ${{ inputs.additional-mvn-args }}
+          mvn --batch-mode deploy ${MAVEN_ARGS}
         env:
           MAVEN_USER: ${{ secrets.maven-user }}
           MAVEN_PASSWORD: ${{ secrets.maven-token }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.gpg-passphrase }}
+          MAVEN_ARGS: ${{ inputs.additional-mvn-args }}
