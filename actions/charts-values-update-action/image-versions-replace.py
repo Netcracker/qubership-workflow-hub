@@ -121,7 +121,7 @@ def set_image_versions(config_file, release, chart_version,  method):
             print(f"{values_file}: Updating {search_str} version to {image_ver}")
             os.system(f"sed -i 's|{search_str}:[a-zA-Z0-9._-]*|{search_str}:{image_ver}|' {values_file}")
             # Check if image key exists in values.yaml
-            replacements = subprocess.run(f"grep -o '{search_str}' {values_file} | wc -l", shell=True, check=True, capture_output=True)
+            replacements = subprocess.run(f"grep -o '{search_str}' {values_file} | wc -l", shell=True, check=True, capture_output=True).stdout.split()[0]
             if int(replacements) == 0:
                 print(f"::warning::Image {search_str} not found in {values_file}")
             else:
