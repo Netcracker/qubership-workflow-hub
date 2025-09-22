@@ -124,7 +124,6 @@ def set_image_versions(config_file, release, chart_version,  method):
             replacements = subprocess.run(f"grep -o '{search_str}' {values_file} | wc -l", shell=True, check=True, capture_output=True).stdout.split()[0]
             if int(replacements) == 0:
                 print(f"::warning::Image {search_str} not found in {values_file}")
-                os.system(f"echo '::warning::Image {search_str} not found in {values_file}' >> $GITHUB_STEP_SUMMARY")
             else:
                 print(f"Replaced {str(replacements)} occurrence(s) of {search_str} in {values_file}")
                 print(f"{values_file}: {search_str} version set to {image_ver}")
