@@ -120,6 +120,13 @@ def set_image_versions(config_file, release, chart_version,  method):
                 image_ver = replace_tag_regexp(search_str, image_ver)
             print(f"{values_file}: Updating {search_str} version to {image_ver}")
             os.system(f"sed -i 's|{search_str}:[a-zA-Z0-9._-]*|{search_str}:{image_ver}|' {values_file}")
+            # Check if image key exists in values.yaml
+            replacements = subprocess.run(f"grep -o '{search_str}' {values_file} | wc -l", shell=True, check=True, capture_output=True)
+            if int(replacements) == 0:
+                print(f"::warning::Image {search_str} not found in {values_file}")
+            else:
+                print(f"Replaced {replacements} occurrence(s) of {search_str} in {values_file}")
+                print(f"{values_file}: {search_str} version set to {image_ver}")
             # Add to dictionary for action output
             images_versions[search_str.split('/')[-1]] = image_ver
     # Write the updated images versions to GITHUB_OUTPUT as a JSON string

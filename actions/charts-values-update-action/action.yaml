@@ -67,7 +67,7 @@ runs:
             exit 1
           fi
         done
-       
+
     - name: "Create release branch"
       if: ${{ inputs.create-release-branch == 'true' }}
       id: create-release-branch
