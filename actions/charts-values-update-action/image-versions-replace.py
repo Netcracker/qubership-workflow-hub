@@ -46,7 +46,6 @@ def get_latest_version_by_regex(versions, pattern_str):
     except re.error as e:
         print(f"::error::Invalid regular expression '{pattern}': {str(e)}")
         sys.exit(1)
-        #raise ValueError(f"Incorrect regular expression: {str(e)}") from None
 
     matched_versions = []
 
@@ -67,7 +66,7 @@ def replace_tag_regexp(image_str, tag_re):
     # Try to find the requested tag for given image_str
     if tag_re.startswith("#"):
         try:
-            os.system(f"skopeo login -u $GITHUB_ACTOR -p $GITHUB_TOKEN ghcr.io")
+            os.system("skopeo login -u $GITHUB_ACTOR -p $GITHUB_TOKEN ghcr.io")
             tags = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[]'", shell=True, text=True, check=True, capture_output=True).stdout.split()
             if tag_re[1:] == 'latest':
                 result_tag = get_latest_stable_version(tags)
@@ -87,8 +86,8 @@ def replace_tag_regexp(image_str, tag_re):
 def create_summary(images_versions):
     # Create a summary of the images versions
     summary = "## Image Versions Updated\n"
-    for image, version in images_versions.items():
-        summary += f"- **{image}**: `{version}`\n"
+    for image, image_version in images_versions.items():
+        summary += f"- **{image}**: `{image_version}`\n"
     # Write the summary to a file
     with open('summary.md', 'w') as f:
         f.write(summary)
