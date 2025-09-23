@@ -26,6 +26,12 @@ on:
         description: "The tag name to be associated with the GitHub release"
         required: false
         type: string
+      latest:
+        description: "Mark release as latest"
+        required: false
+        type: string
+        default: "true"
+          
 
 jobs:
   draft-release:
@@ -54,6 +60,7 @@ jobs:
           name: ${{ env.RELEASE_VERSION }}
           tag: ${{ inputs.tag || format('v{0}', inputs.version) }}
           version: v${{ env.RELEASE_VERSION }}
+          latest: ${{ inputs.latest == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_VERSION: ${{ inputs.version }}
