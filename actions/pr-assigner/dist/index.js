@@ -1882,6 +1882,7 @@ class Context {
         this.action = process.env.GITHUB_ACTION;
         this.actor = process.env.GITHUB_ACTOR;
         this.job = process.env.GITHUB_JOB;
+        this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT, 10);
         this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
         this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
         this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
@@ -22972,7 +22973,7 @@ module.exports = {
 
 
 const { parseSetCookie } = __nccwpck_require__(1948)
-const { stringify, getHeadersList } = __nccwpck_require__(2491)
+const { stringify } = __nccwpck_require__(2491)
 const { webidl } = __nccwpck_require__(3159)
 const { Headers } = __nccwpck_require__(1682)
 
@@ -23048,14 +23049,13 @@ function getSetCookies (headers) {
 
   webidl.brandCheck(headers, Headers, { strict: false })
 
-  const cookies = getHeadersList(headers).cookies
+  const cookies = headers.getSetCookie()
 
   if (!cookies) {
     return []
   }
 
-  // In older versions of undici, cookies is a list of name:value.
-  return cookies.map((pair) => parseSetCookie(Array.isArray(pair) ? pair[1] : pair))
+  return cookies.map((pair) => parseSetCookie(pair))
 }
 
 /**
@@ -23483,14 +23483,15 @@ module.exports = {
 /***/ }),
 
 /***/ 2491:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((module) => {
 
 "use strict";
 
 
-const assert = __nccwpck_require__(2613)
-const { kHeadersList } = __nccwpck_require__(5606)
-
+/**
+ * @param {string} value
+ * @returns {boolean}
+ */
 function isCTLExcludingHtab (value) {
   if (value.length === 0) {
     return false
@@ -23751,31 +23752,13 @@ function stringify (cookie) {
   return out.join('; ')
 }
 
-let kHeadersListNode
-
-function getHeadersList (headers) {
-  if (headers[kHeadersList]) {
-    return headers[kHeadersList]
-  }
-
-  if (!kHeadersListNode) {
-    kHeadersListNode = Object.getOwnPropertySymbols(headers).find(
-      (symbol) => symbol.description === 'headers list'
-    )
-
-    assert(kHeadersListNode, 'Headers cannot be parsed')
-  }
-
-  const headersList = headers[kHeadersListNode]
-  assert(headersList)
-
-  return headersList
-}
-
 module.exports = {
   isCTLExcludingHtab,
-  stringify,
-  getHeadersList
+  validateCookieName,
+  validateCookiePath,
+  validateCookieValue,
+  toIMFDate,
+  stringify
 }
 
 
@@ -27779,6 +27762,7 @@ const {
   isValidHeaderName,
   isValidHeaderValue
 } = __nccwpck_require__(6218)
+const util = __nccwpck_require__(9023)
 const { webidl } = __nccwpck_require__(3159)
 const assert = __nccwpck_require__(2613)
 
@@ -28332,6 +28316,9 @@ Object.defineProperties(Headers.prototype, {
   [Symbol.toStringTag]: {
     value: 'Headers',
     configurable: true
+  },
+  [util.inspect.custom]: {
+    enumerable: false
   }
 })
 
@@ -37508,6 +37495,20 @@ class Pool extends PoolBase {
       ? { ...options.interceptors }
       : undefined
     this[kFactory] = factory
+
+    this.on('connectionError', (origin, targets, error) => {
+      // If a connection error occurs, we remove the client from the pool,
+      // and emit a connectionError event. They will not be re-used.
+      // Fixes https://github.com/nodejs/undici/issues/3895
+      for (const target of targets) {
+        // Do not use kRemoveClient here, as it will close the client,
+        // but the client cannot be closed in this state.
+        const idx = this[kClients].indexOf(target)
+        if (idx !== -1) {
+          this[kClients].splice(idx, 1)
+        }
+      }
+    })
   }
 
   [kGetDispatcher] () {
@@ -42700,16 +42701,29 @@ const path = __nccwpck_require__(6928);
 const ConfigLoader = __nccwpck_require__(9027);
 const GhCommand = __nccwpck_require__(9299);
 
-function findFile(filename, startDir = process.cwd()) {
-    let dir = startDir;
-    while (dir !== path.parse(dir).root) {
-        const filePath = path.join(dir, filename);
-        if (fs.existsSync(filePath)) {
-            return filePath;
+function findCodeowners(startDir = process.cwd()) {
+    let found = null;
+
+    function searchDir(dir) {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+
+            if (entry.isFile() && entry.name === "CODEOWNERS") {
+                found = fullPath;
+                return true; // прерываем цикл
+            } else if (entry.isDirectory()) {
+                // пропускаем служебные папки
+                if ([".git", "node_modules"].includes(entry.name)) continue;
+                if (searchDir(fullPath)) return true; // если внутри нашли, тоже выходим
+            }
         }
-        dir = path.dirname(dir);
+        return false;
     }
-    return null;
+
+    searchDir(startDir);
+    return found;
 }
 
 function getUsersFromCodeowners(codeownersPath) {
@@ -42755,12 +42769,12 @@ async function run() {
         sourceUsed = `configuration file: ${configurationPath}`;
 
     } else {
-        const codeownersPath = findFile('CODEOWNERS');
-        if (!codeownersPath) {
+        const filePath = findCodeowners();
+        if (!filePath) {
             core.setFailed(`❗️ Can't find CODEOWNERS file.`);
             return;
         }
-        assignees = getUsersFromCodeowners(codeownersPath);
+        assignees = getUsersFromCodeowners(filePath);
     }
 
     core.info(`🔹 Count for shuffle: ${count}`);
@@ -42784,7 +42798,7 @@ async function run() {
         const ghCommand = new GhCommand();
         let currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
         // core.info(`🔍 Current assignees: ${currentAssignees}`);
-        if (currentAssignees != null && currentAssignees != "" ) {
+        if (currentAssignees != null && currentAssignees != "") {
             core.info(`✔️ PR has current assignees: ${currentAssignees}, skipping...`);
             return;
         }
