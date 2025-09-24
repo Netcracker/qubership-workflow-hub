@@ -42701,45 +42701,45 @@ const path = __nccwpck_require__(6928);
 const ConfigLoader = __nccwpck_require__(9027);
 const GhCommand = __nccwpck_require__(9299);
 
-function findCodeowners(startDir = process.cwd()) {
-    let found = null;
-
-    function searchDir(dir) {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-        for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name);
-
-            if (entry.isFile() && entry.name === "CODEOWNERS") {
-                found = fullPath;
-                return true;
-            } else if (entry.isDirectory()) {
-                if ([".git", "node_modules"].includes(entry.name)) continue;
-                if (searchDir(fullPath)) return true;
-            }
-        }
-        return false;
-    }
-
-    searchDir(startDir);
-    return found;
-}
-
 // function findCodeowners(startDir = process.cwd()) {
-//     const repoRoot = startDir;
-//     const candidates = [
-//         path.join(repoRoot, ".github", "CODEOWNERS"),
-//         path.join(repoRoot, "CODEOWNERS"),
-//         path.join(repoRoot, "docs", "CODEOWNERS"),
-//     ];
+//     let found = null;
 
-//     for (const filePath of candidates) {
-//         if (fs.existsSync(filePath)) {
-//             return filePath;
+//     function searchDir(dir) {
+//         const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+//         for (const entry of entries) {
+//             const fullPath = path.join(dir, entry.name);
+
+//             if (entry.isFile() && entry.name === "CODEOWNERS") {
+//                 found = fullPath;
+//                 return true;
+//             } else if (entry.isDirectory()) {
+//                 if ([".git", "node_modules"].includes(entry.name)) continue;
+//                 if (searchDir(fullPath)) return true;
+//             }
 //         }
+//         return false;
 //     }
-//     return null;
+
+//     searchDir(startDir);
+//     return found;
 // }
+
+function findCodeowners(startDir = process.cwd()) {
+    const repoRoot = startDir;
+    const candidates = [
+        path.join(repoRoot, ".github", "CODEOWNERS"),
+        path.join(repoRoot, "CODEOWNERS"),
+        path.join(repoRoot, "docs", "CODEOWNERS"),
+    ];
+
+    for (const filePath of candidates) {
+        if (fs.existsSync(filePath)) {
+            return filePath;
+        }
+    }
+    return null;
+}
 
 function getUsersFromCodeowners(codeownersPath) {
     core.info(`🔍 CODEOWNERS file found on: ${codeownersPath}`);
