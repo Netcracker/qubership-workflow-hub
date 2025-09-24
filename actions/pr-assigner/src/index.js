@@ -5,29 +5,44 @@ const path = require("path");
 const ConfigLoader = require("./loader");
 const GhCommand = require("./command");
 
+// function findCodeowners(startDir = process.cwd()) {
+//     let found = null;
+
+//     function searchDir(dir) {
+//         const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+//         for (const entry of entries) {
+//             const fullPath = path.join(dir, entry.name);
+
+//             if (entry.isFile() && entry.name === "CODEOWNERS") {
+//                 found = fullPath;
+//                 return true;
+//             } else if (entry.isDirectory()) {
+//                 if ([".git", "node_modules"].includes(entry.name)) continue;
+//                 if (searchDir(fullPath)) return true;
+//             }
+//         }
+//         return false;
+//     }
+
+//     searchDir(startDir);
+//     return found;
+// }
+
 function findCodeowners(startDir = process.cwd()) {
-    let found = null;
+    const repoRoot = startDir;
+    const candidates = [
+        path.join(repoRoot, ".github", "CODEOWNERS"),
+        path.join(repoRoot, "CODEOWNERS"),
+        path.join(repoRoot, "docs", "CODEOWNERS"),
+    ];
 
-    function searchDir(dir) {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-        for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name);
-
-            if (entry.isFile() && entry.name === "CODEOWNERS") {
-                found = fullPath;
-                return true; // прерываем цикл
-            } else if (entry.isDirectory()) {
-                // пропускаем служебные папки
-                if ([".git", "node_modules"].includes(entry.name)) continue;
-                if (searchDir(fullPath)) return true; // если внутри нашли, тоже выходим
-            }
+    for (const filePath of candidates) {
+        if (fs.existsSync(filePath)) {
+            return filePath;
         }
-        return false;
     }
-
-    searchDir(startDir);
-    return found;
+    return null;
 }
 
 function getUsersFromCodeowners(codeownersPath) {
