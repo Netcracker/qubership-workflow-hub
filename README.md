@@ -6,6 +6,7 @@ A comprehensive collection of reusable GitHub Actions and Workflows, designed to
 Centralises common CI/CD tasks (tagging, version / metadata generation, artifact & package publishing, Helm chart release, cleanup, custom events) to avoid per‑repo scripts and drift.
 
 Key pieces:
+
 - Actions (single focused step) – `actions/<name>/`
 - Reusable workflows (multi‑job orchestration) – `reusable/*.md`
 - Standards & Change Policy (naming, version pinning, permissions, deprecation rules) – `standards-and-change-policy.md`
@@ -40,17 +41,20 @@ Shortcut: contributing code? Read 1 → 2 → 3 → 4, otherwise for usage start
 Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for structure, composition patterns, permissions, versioning and checklist.
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/netcracker/qubership-workflow-hub.git
    cd qubership-workflow-hub
    ```
 
-2. **Explore Actions and Workflows**
+3. **Explore Actions and Workflows**
+
    - Browse the [`actions/`](actions/) folder for individual action packages.
    - Browse the [`docs/reusable/`](docs/reusable/) folder for workflow templates.
 
-3. **Use an Action**
+5. **Use an Action**
    Reference an action in your own workflow YAML:
+
    ```yaml
    jobs:
      tag:
@@ -64,8 +68,9 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
              tag-message: "Release {{version}}"
    ```
 
-4. **Use a Reusable Workflow**
+7. **Use a Reusable Workflow**
    Include a reusable workflow by path:
+
    ```yaml
    jobs:
      release:
@@ -84,8 +89,8 @@ Need to contribute? Read the fork workflow: [Fork Sequence Guide](docs/fork-sequ
 Full, always up-to-date list (active + deprecated) with short descriptions moved to a dedicated page: [Actions & Workflows Catalog](docs/actions-workflows-catalog.md).
 
 Quick starts:
-* Need a specific capability? Open the catalog and search in-page.
-* Unsure if something is deprecated? The catalog groups deprecated items separately with replacements.
+- Need a specific capability? Open the catalog and search in-page.
+- Unsure if something is deprecated? The catalog groups deprecated items separately with replacements.
 
 ---
 
