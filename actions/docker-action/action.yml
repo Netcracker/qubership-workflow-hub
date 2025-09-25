@@ -33,7 +33,7 @@ inputs:
     description: "Docker image tags. If empty, tags will be generated automatically."
     required: false
     default: ""
-  dowload-artifact-name:
+  download-artifact-name:
     description: "Name of the artifact to download. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
     required: false
     default: ""
@@ -146,7 +146,7 @@ runs:
       if: ${{ inputs.download-artifact == 'true' }}
       uses: actions/download-artifact@v5
       with:
-        name: ${{ inputs.dowload-artifact-name }}
+        name: ${{ inputs.download-artifact-name }}
         path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '.' }}
         merge-multiple: ${{ inputs.download-artifact-merge-multiple == 'true' }}
 
