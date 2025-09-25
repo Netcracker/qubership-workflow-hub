@@ -108,17 +108,17 @@ runs:
       id: prepare-image-name
       shell: bash
       run: |
-        if [ -z "${{ inputs.custom-image-name }}" ]; then
-          if [ -z "${{ steps.parse_component.outputs.name }}" ] || [ "${{ steps.parse_component.outputs.name }}" == "default" ]; then
-            IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
-            CONTAINER_NAME="$repo"
-          else
-            CONTAINER_NAME="${{ steps.parse_component.outputs.name }}"
-          fi
+        if [ -n "${{ inputs.custom-image-name }}" ]; then
+            CONTAINER_NAME="${{ inputs.custom-image-name }}"
+        elif [ -n "${{ steps.parse_component.outputs.name }}" ] && [ "${{ steps.parse_component.outputs.name }}" != "default" ]; then
+           CONTAINER_NAME="${{ steps.parse_component.outputs.name }}"
         else
-          CONTAINER_NAME="${{ inputs.custom-image-name }}"
+           IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
+           CONTAINER_NAME="$repo"
         fi
+
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
+        echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
 
     - name: Checkout Repository
       if: ${{ inputs.checkout == 'true' }}
@@ -174,7 +174,7 @@ runs:
         REPO_OWNER: ${{ github.repository_owner }}
         CONTAINER_NAME: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}
       run: |
-         echo "URL: ghcr.io/$REPO_OWNER/$CONTAINER_NAME"
+        echo "URL: ghcr.io/$REPO_OWNER/$CONTAINER_NAME"
 
     - name: Extract Docker Metadata
       if: ${{ inputs.tags == '' }}
