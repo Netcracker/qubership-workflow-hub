@@ -286,24 +286,24 @@ runs:
         echo "metadata_path=$PWD/$FILENAME" >> "$GITHUB_OUTPUT"
         echo "metadata_filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
-    - name: Analyze for critical and high CVEs
-      id: docker-scout-cves
-      if: ${{ inputs.security-scan == 'true' }}
-      uses: docker/scout-action@v1
-      continue-on-error: true
-      with:
-        command: cves,recommendations
-        image: ${{ steps.output_result.outputs.image_name }}
-        sarif-file: sarif.output.json
-        summary: true
-        ignore-base: false
-        dockerhub-user: ${{ inputs.docker-io-user }}
-        dockerhub-password: ${{ inputs.docker-io-password }}
-        github-token: ${{ env.GITHUB_TOKEN }}
+    # - name: Analyze for critical and high CVEs
+    #   id: docker-scout-cves
+    #   if: ${{ inputs.security-scan == 'true' }}
+    #   uses: docker/scout-action@v1
+    #   continue-on-error: true
+    #   with:
+    #     command: cves,recommendations
+    #     image: ${{ steps.output_result.outputs.image_name }}
+    #     sarif-file: sarif.output.json
+    #     summary: true
+    #     ignore-base: false
+    #     dockerhub-user: ${{ inputs.docker-io-user }}
+    #     dockerhub-password: ${{ inputs.docker-io-password }}
+    #     github-token: ${{ env.GITHUB_TOKEN }}
 
-    - name: Upload SARIF result
-      id: upload-sarif
-      if: ${{ inputs.security-scan == 'true' }}
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: sarif.output.json
+    # - name: Upload SARIF result
+    #   id: upload-sarif
+    #   if: ${{ inputs.security-scan == 'true' }}
+    #   uses: github/codeql-action/upload-sarif@v3
+    #   with:
+    #     sarif_file: sarif.output.json
