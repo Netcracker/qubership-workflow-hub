@@ -158,6 +158,20 @@ runs:
         echo "📂 Full workspace tree:"
         ls -R -la ${{ github.workspace }}
 
+    - name: Check Downloaded Artifact
+      if: ${{ inputs.download-artifact == 'true' }}
+      shell: bash
+      run: |
+        echo "🔍 Artifact download path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '..' }}"
+        echo "📂 Checking workspace (${{ github.workspace }}):"
+        ls -la ${{ github.workspace }}
+        echo "📂 Checking for target in workspace:"
+        find ${{ github.workspace }} -name "target" -type d -exec ls -la {} \; 2>/dev/null || echo "No target dir in workspace"
+        echo "📂 Checking parent dir (${{ github.workspace }}/..):"
+        ls -la ${{ github.workspace }}/.. | grep qubership-colly || echo "No qubership-colly in parent"
+        echo "📂 Checking for target in parent:"
+        find ${{ github.workspace }}/.. -name "target" -type d -exec ls -la {} \; 2>/dev/null || echo "No target dir in parent"
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
