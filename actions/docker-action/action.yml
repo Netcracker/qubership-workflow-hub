@@ -33,6 +33,10 @@ inputs:
     description: "Docker image tags. If empty, tags will be generated automatically."
     required: false
     default: ""
+  dowload-artifact-name:
+    description: "Name of the artifact to download. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
+    required: false
+    default: ""
   download-artifact-ids:
     description: "IDs of the artifacts to download, comma-separated. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
     required: false
@@ -142,7 +146,7 @@ runs:
       if: ${{ inputs.download-artifact == 'true' }}
       uses: actions/download-artifact@v5
       with:
-        name: ${{ inputs.custom-image-name }}
+        name: ${{ inputs.dowload-artifact-name }}
         path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '.' }}
         merge-multiple: ${{ inputs.download-artifact-merge-multiple == 'true' }}
 
@@ -157,20 +161,6 @@ runs:
         pwd
         echo "📂 Full workspace tree:"
         ls -R -la ${{ github.workspace }}
-
-    - name: Check Downloaded Artifact
-      if: ${{ inputs.download-artifact == 'true' }}
-      shell: bash
-      run: |
-        echo "🔍 Artifact download path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '..' }}"
-        echo "📂 Checking workspace (${{ github.workspace }}):"
-        ls -la ${{ github.workspace }}
-        echo "📂 Checking for target in workspace:"
-        find ${{ github.workspace }} -name "target" -type d -exec ls -la {} \; 2>/dev/null || echo "No target dir in workspace"
-        echo "📂 Checking parent dir (${{ github.workspace }}/..):"
-        ls -la ${{ github.workspace }}/.. | grep qubership-colly || echo "No qubership-colly in parent"
-        echo "📂 Checking for target in parent:"
-        find ${{ github.workspace }}/.. -name "target" -type d -exec ls -la {} \; 2>/dev/null || echo "No target dir in parent"
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
