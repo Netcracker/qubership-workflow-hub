@@ -132,10 +132,11 @@ runs:
       run: |
         echo "custom-image-name: ${CUSTOM_IMAGE_NAME:-empty}"
         echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
+        echo "env OWNER: ${{ env.OWNER }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
-        echo "URL: ghcr.io/${{ env.OWNER }}/${{ env.CONTAINER_NAME }}}"
+        echo "URL: ghcr.io/${{ env.OWNER }}/${{ env.CONTAINER_NAME }}"
 
     - name: Download Artifact
       if: ${{ inputs.download-artifact == 'true' }}
@@ -183,30 +184,6 @@ runs:
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
 
-    # - name: Prepare Tags
-    #   if: ${{ inputs.tags != '' }}
-    #   id: prepare-tags
-    #   shell: bash
-    #   env:
-    #     REPO_OWNER: ${{ github.repository_owner }}
-    #     ARTIFACT_ID: ${{ inputs.artifact-id }}
-    #     COMPONENT_NAME: ${{ steps.parse_component.outputs.name }}
-    #     TAGS_INPUT: ${{ inputs.tags }}
-    #   run: |
-    #     IMAGE_NAME="${ARTIFACT_ID:-$COMPONENT_NAME}"
-    #     IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
-    #     TAGS_OUTPUT=""
-    #     for TAG in "${TAGS[@]}"; do
-    #       TAG=$(echo "$TAG" | xargs)
-    #       if [ -z "$TAGS_OUTPUT" ]; then
-    #         TAGS_OUTPUT="ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
-    #       else
-    #         TAGS_OUTPUT="$TAGS_OUTPUT, ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
-    #       fi
-    #     done
-    #     TAGS_OUTPUT=$(echo "$TAGS_OUTPUT" | tr '[:upper:]' '[:lower:]')
-    #     echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
-
     - name: Create Image Refs (docker ghcr.io/owner/name:tag)
       if: ${{ inputs.tags != '' }}
       id: create-image-refs
@@ -214,6 +191,7 @@ runs:
       env:
         TAGS_INPUT: ${{ inputs.tags }}
       run: |
+        echo "Create Image Refs (docker ghcr.io/owner/name:tag)"
         CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
         REPO_OWNER="${{ env.OWNER }}"
         TAGS_INPUT="${{ inputs.tags }}"
@@ -228,8 +206,9 @@ runs:
 
         IMAGE_REFS="${IMAGE_REFS#,}"
         IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')
-        echo "prepared_tags=$IMAGE_REFS" >> "$GITHUB_OUTPUT"
 
+        # echo "prepared_tags=$IMAGE_REFS" >> "$GITHUB_OUTPUT"
+        echo "Image refs: $IMAGE_REFS
         echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
     - name: Build and Push Docker Image
