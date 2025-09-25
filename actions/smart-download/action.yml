@@ -1,0 +1,44 @@
+name: "Smart Download Artifact"
+description: "Download artifacts by name, IDs, or pattern"
+
+inputs:
+  name:
+    description: "Artefact name"
+    required: false
+    default: ""
+  artifact-ids:
+    description: "IDs artifacts (comma-separated)"
+    required: false
+    default: ""
+  pattern:
+    description: "Glob pattern to match artifact names"
+    required: false
+    default: ""
+  path:
+    description: "Folder to download artifacts to"
+    required: false
+    default: "artifacts"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download by name
+      if: ${{ inputs.name != '' }}
+      uses: actions/download-artifact@v5
+      with:
+        name: ${{ inputs.name }}
+        path: ${{ inputs.path }}
+
+    - name: Download by IDs
+      if: ${{ inputs.artifact-ids != '' }}
+      uses: actions/download-artifact@v5
+      with:
+        artifact-ids: ${{ inputs.artifact-ids }}
+        path: ${{ inputs.path }}
+
+    - name: Download by pattern
+      if: ${{ inputs.pattern != '' }}
+      uses: actions/download-artifact@v5
+      with:
+        pattern: ${{ inputs.pattern }}
+        path: ${{ inputs.path }}
