@@ -149,7 +149,7 @@ runs:
       run: |
         echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
-          helm push ${chart} oci://ghcr.io/${{ github.repository }}/
+          helm push ${chart} oci://ghcr.io/${{ github.repository_owner }}/
         done
         helm registry logout 'ghcr.io'
       shell: bash
@@ -168,10 +168,12 @@ runs:
           # to lowercase 
           uuid=${uuid,,}
           if [[ ${{ inputs.publish-charts }} == 'true' ]]; then
-            chart_meta="{\"bom-ref\":\"${chart_name}:${uuid}\",\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"purl\":\"ghcr.io/${{ github.repository }}/${chart_name}:${chart_version}\"}"
+            chart_meta="{\"bom-ref\":\"${chart_name}:${uuid}\",\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"reference\":\"oci://ghcr.io/${{ github.repository_owner }}/${chart_name}:${chart_version}\"}"
           else
             chart_meta="{\"bom-ref\":\"${chart_name}:${uuid}\",\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\"}"
           fi
+          mkdir -p ./charts_meta
+          echo ${chart_meta} > ./charts_meta/${chart_name}-${chart_version}.json
           charts_metadata="${charts_metadata}${chart_meta},"
         done
         charts_metadata=${charts_metadata%,}  # Remove trailing comma
@@ -180,3 +182,8 @@ runs:
         echo "metadata=${charts_metadata}" >> $GITHUB_STEP_SUMMARY
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+    - name: Upload charts meta
+      uses: actions/upload-artifact@v5
+      with:
+        name: charts-meta
+        path: "./charts_meta/*.json"
