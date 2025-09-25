@@ -69,7 +69,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
    ```yaml
    jobs:
      release:
-       uses: netcracker/qubership-workflow-hub/docs/reusable/release-drafter.md@main
+       uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
        with:
          config-file: ".github/release-drafter.yml"
    ```
