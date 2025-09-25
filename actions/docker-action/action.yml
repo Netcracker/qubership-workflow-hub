@@ -130,7 +130,7 @@ runs:
       env:
         CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
       run: |
-        echo "custom-image-name: ${${{ inputs.custom-image-name }}}:-empty"
+        echo "custom-image-name: ${CUSTOM_IMAGE_NAME:-empty}"
         echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
