@@ -135,6 +135,7 @@ runs:
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
+        echo "URL: ghcr.io/${{ env.OWNER }}/${{ env.CONTAINER_NAME }}}"
 
     - name: Download Artifact
       if: ${{ inputs.download-artifact == 'true' }}
@@ -168,14 +169,6 @@ runs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ env.GITHUB_TOKEN }}
-
-    - name: Display Image URL
-      shell: bash
-      env:
-        REPO_OWNER: ${{ github.repository_owner }}
-        CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
-      run: |
-        echo "URL: ghcr.io/$REPO_OWNER/$CONTAINER_NAME"
 
     - name: Extract Docker Metadata
       if: ${{ inputs.tags == '' }}
