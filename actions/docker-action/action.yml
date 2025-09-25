@@ -131,6 +131,7 @@ runs:
       run: |
         echo "artifact_id: ${{ inputs.custom-image-name }}"
         echo "prepare-image-name: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}"
+        echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
