@@ -105,7 +105,6 @@ runs:
         echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
 
     - name: Prepare Image Name
-      id: prepare-image-name
       shell: bash
       run: |
         if [ -n "${{ inputs.custom-image-name }}" ]; then
@@ -116,9 +115,9 @@ runs:
            IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
            CONTAINER_NAME="$repo"
         fi
-
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
+        echo "OWNER=$(echo "$owner" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
     - name: Checkout Repository
       if: ${{ inputs.checkout == 'true' }}
@@ -128,9 +127,10 @@ runs:
 
     - name: Display Debug Information
       shell: bash
+      env:
+        CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
       run: |
-        echo "artifact_id: ${{ inputs.custom-image-name }}"
-        echo "prepare-image-name: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}"
+        echo "custom-image-name: ${${{ inputs.custom-image-name }}}:-empty"
         echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
@@ -173,7 +173,7 @@ runs:
       shell: bash
       env:
         REPO_OWNER: ${{ github.repository_owner }}
-        CONTAINER_NAME: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}
+        CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
       run: |
         echo "URL: ghcr.io/$REPO_OWNER/$CONTAINER_NAME"
 
@@ -183,36 +183,61 @@ runs:
       uses: docker/metadata-action@v5
       with:
         context: ${{ inputs.context }}
-        images: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}
+        images: ghcr.io/${{ github.repository_owner }}/${{ env.CONTAINER_NAME }}
         tags: |
           type=ref,event=branch
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
 
-    - name: Prepare Tags
+    # - name: Prepare Tags
+    #   if: ${{ inputs.tags != '' }}
+    #   id: prepare-tags
+    #   shell: bash
+    #   env:
+    #     REPO_OWNER: ${{ github.repository_owner }}
+    #     ARTIFACT_ID: ${{ inputs.artifact-id }}
+    #     COMPONENT_NAME: ${{ steps.parse_component.outputs.name }}
+    #     TAGS_INPUT: ${{ inputs.tags }}
+    #   run: |
+    #     IMAGE_NAME="${ARTIFACT_ID:-$COMPONENT_NAME}"
+    #     IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
+    #     TAGS_OUTPUT=""
+    #     for TAG in "${TAGS[@]}"; do
+    #       TAG=$(echo "$TAG" | xargs)
+    #       if [ -z "$TAGS_OUTPUT" ]; then
+    #         TAGS_OUTPUT="ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
+    #       else
+    #         TAGS_OUTPUT="$TAGS_OUTPUT, ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
+    #       fi
+    #     done
+    #     TAGS_OUTPUT=$(echo "$TAGS_OUTPUT" | tr '[:upper:]' '[:lower:]')
+    #     echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
+
+    - name: Create Image Refs (docker ghcr.io/owner/name:tag)
       if: ${{ inputs.tags != '' }}
-      id: prepare-tags
+      id: create-image-refs
       shell: bash
       env:
-        REPO_OWNER: ${{ github.repository_owner }}
-        ARTIFACT_ID: ${{ inputs.artifact-id }}
-        COMPONENT_NAME: ${{ steps.parse_component.outputs.name }}
         TAGS_INPUT: ${{ inputs.tags }}
       run: |
-        IMAGE_NAME="${ARTIFACT_ID:-$COMPONENT_NAME}"
+        CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
+        REPO_OWNER="${{ env.OWNER }}"
+        TAGS_INPUT="${{ inputs.tags }}"
+
         IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
-        TAGS_OUTPUT=""
+
+        IMAGE_REFS=""
         for TAG in "${TAGS[@]}"; do
           TAG=$(echo "$TAG" | xargs)
-          if [ -z "$TAGS_OUTPUT" ]; then
-            TAGS_OUTPUT="ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
-          else
-            TAGS_OUTPUT="$TAGS_OUTPUT, ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
-          fi
+          TAGS_OUTPUT="$TAGS_OUTPUT,ghcr.io/$REPO_OWNER/$CONTAINER_NAME:$TAG"
         done
-        TAGS_OUTPUT=$(echo "$TAGS_OUTPUT" | tr '[:upper:]' '[:lower:]')
-        echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
+
+        IMAGE_REFS="${IMAGE_REFS#,}"
+        IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')
+        echo "prepared_tags=$IMAGE_REFS" >> "$GITHUB_OUTPUT"
+
+        echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v6
@@ -223,7 +248,7 @@ runs:
         context: ${{ steps.parse_component.outputs.ctx }}
         file: ${{ steps.parse_component.outputs.file }}
         push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
-        tags: ${{ inputs.tags != '' && steps.prepare-tags.outputs.prepared_tags || steps.meta.outputs.tags }}
+        tags: ${{ inputs.tags != '' && steps.create-image-refs.outputs. || steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
         build-args: ${{ inputs.build-args }}
