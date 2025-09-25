@@ -248,7 +248,7 @@ runs:
         context: ${{ steps.parse_component.outputs.ctx }}
         file: ${{ steps.parse_component.outputs.file }}
         push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
-        tags: ${{ inputs.tags != '' && steps.create-image-refs.outputs. || steps.meta.outputs.tags }}
+        tags: ${{ inputs.tags != '' && env.IMAGE_REFS || steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
         build-args: ${{ inputs.build-args }}
