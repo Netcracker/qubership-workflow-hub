@@ -201,7 +201,7 @@ runs:
         IMAGE_REFS=""
         for TAG in "${TAGS[@]}"; do
           TAG=$(echo "$TAG" | xargs)
-          IMAGE_REFS="$TAGS_OUTPUT,ghcr.io/$REPO_OWNER/$CONTAINER_NAME:$TAG"
+          IMAGE_REFS="$IMAGE_REFS,ghcr.io/$REPO_OWNER/$CONTAINER_NAME:$TAG"
         done
 
         IMAGE_REFS="${IMAGE_REFS#,}"
