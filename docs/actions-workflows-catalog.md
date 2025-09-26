@@ -38,7 +38,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | Action | Replacement / Note |
 |--------|--------------------|
 | [commit-and-push](../actions/commit-and-push/README.md) | Use native Git steps |
-| [pom-updater](../actions/pom-updater/README.md) | Prefer metadata-action + build tooling |
+| [pom-updater](DELETED) | Prefer metadata-action + build tooling |
 | [tag-checker](../actions/tag-checker/README.md) | Functionality superseded by tag-action |
 | [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Superseded by assets-action (consolidated implementation) |
 
