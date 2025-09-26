@@ -119,10 +119,11 @@ jobs:
         run: |
           SARIF_FILE=grype.sarif
           jq '.runs[].results |= map(
-            select(
-              ((.properties.severity // "" | ascii_upcase) | any(. == "HIGH","CRITICAL"))
+          select(
+              ((.properties.severity // "" | ascii_upcase) == "HIGH")
+              or ((.properties.severity // "" | ascii_upcase) == "CRITICAL")
               or ((.help.text // "") | test("Severity:\\s*(high|critical)"; "i"))
-            )
+          )
           )' "$SARIF_FILE" > "${SARIF_FILE%.sarif}.filtered.sarif"
           mv "${SARIF_FILE%.sarif}.filtered.sarif" "$SARIF_FILE"
 
