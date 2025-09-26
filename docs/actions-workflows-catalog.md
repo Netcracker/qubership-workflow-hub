@@ -37,10 +37,12 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 
 | Action | Replacement / Note |
 |--------|--------------------|
-| [commit-and-push](../actions/commit-and-push/README.md) | Use native Git steps |
-| [pom-updater](../actions/pom-updater/README.md) | Prefer metadata-action + build tooling |
-| [tag-checker](../actions/tag-checker/README.md) | Functionality superseded by tag-action |
-| [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Superseded by assets-action (consolidated implementation) |
+| [commit-and-push]|(DELETED) Use native Git steps |
+| [pom-updater] |(DELETED) Prefer metadata-action + build tooling |
+| [tag-checker]|(DELETED) Functionality superseded by tag-action |
+| [archive-and-upload-assets]|(DELETED) Superseded by assets-action (consolidated implementation) |
+
+> **⚠️ Warning:** If you have issues with **deleted actions**, please use **v1.0.6** version.
 
 ---
 
@@ -56,6 +58,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [python-publish](reusable/python-publish.md) | Build, test & publish Python package (Poetry) |
 | [release-drafter](reusable/release-drafter.md) | Generate or refresh draft release notes |
 | [npm-publish](reusable/npm-publish.md) | Build, test, and publish npm packages to a registry (supports monorepo and single package) |
+| [re-security-scan](reusable/re-security-scan.md) | On-demand security scan (Grype + Trivy) |
 
 ### Deprecated Workflows
 
