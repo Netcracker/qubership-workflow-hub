@@ -33,9 +33,6 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 | `download-artifact-merge-multiple` | When download multiple artifacts unpack them as is or into separate directories.                                          | No       | `false`                                                      |
 | `sbom`                    | Flag to enable SBoM generation. | No | `false` |
 | `build-args`              | List of build-time variables, newline-delimited string. | No | `""` |
-| `security-scan`           | Perform security scan of the built image by docker-scout. | No | `false` |
-| `docker-io-user`          | Docker Hub username for security scanning. Required if `security-scan` is `"true"`| No | `""` |
-| `docker-io-password`      | Docker Hub user password for security scanning. Required if `security-scan` is `"true"`| No | `""` |
 
 ---
 
@@ -43,8 +40,6 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 
 - Minimum permissions level `contents: read` in dry-run mode.
 - In normal mode it is required to set `packages: write`.
-- If `security-scan: 'true'` then need to set `security-events: write`.
-- If action used in workflow which triggered by `pool_request` and `security-scan: true`, then need to set `pull-requests: write` permission. The summary of security scan will be added to pull request as a comment.
 
 ---
 
@@ -87,9 +82,6 @@ jobs:
           dry-run: false
           download-artifact: true
           download-artifact-path: ./artifacts
-          security-scan: true
-          docker-io-user: ${{ secrets.DOCKERHUB_USER }}
-          docker-io-password: ${{ secrets.DOCKERHUB_RW_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
