@@ -33,6 +33,10 @@ inputs:
     description: "Docker image tags. If empty, tags will be generated automatically."
     required: false
     default: ""
+  download-artifact-name:
+    description: "Name of the artifact to download. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
+    required: false
+    default: ""
   download-artifact-ids:
     description: "IDs of the artifacts to download, comma-separated. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
     required: false
@@ -55,18 +59,6 @@ inputs:
     default: "false"
   build-args:
     description: "Build arguments for the Docker image, in JSON format."
-    required: false
-    default: ""
-  security-scan:
-    description: "Flag to enable security scanning of the Docker image."
-    required: false
-    default: "false"
-  docker-io-user:
-    description: "Docker Hub username for security scanning."
-    required: false
-    default: ""
-  docker-io-password:
-    description: "Docker Hub password for security scanning."
     required: false
     default: ""
   checkout:
@@ -105,20 +97,19 @@ runs:
         echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
 
     - name: Prepare Image Name
-      id: prepare-image-name
       shell: bash
       run: |
-        if [ -z "${{ inputs.custom-image-name }}" ]; then
-          if [ -z "${{ steps.parse_component.outputs.name }}" ] || [ "${{ steps.parse_component.outputs.name }}" == "default" ]; then
-            IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
-            CONTAINER_NAME="$repo"
-          else
-            CONTAINER_NAME="${{ steps.parse_component.outputs.name }}"
-          fi
+        if [ -n "${{ inputs.custom-image-name }}" ]; then
+            CONTAINER_NAME="${{ inputs.custom-image-name }}"
+        elif [ -n "${{ steps.parse_component.outputs.name }}" ] && [ "${{ steps.parse_component.outputs.name }}" != "default" ]; then
+           CONTAINER_NAME="${{ steps.parse_component.outputs.name }}"
         else
-          CONTAINER_NAME="${{ inputs.custom-image-name }}"
+           IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
+           CONTAINER_NAME="$repo"
         fi
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
+        echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
+        echo "OWNER=$(echo "$owner" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
     - name: Checkout Repository
       if: ${{ inputs.checkout == 'true' }}
@@ -128,19 +119,23 @@ runs:
 
     - name: Display Debug Information
       shell: bash
+      env:
+        CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
       run: |
-        echo "artifact_id: ${{ inputs.custom-image-name }}"
-        echo "prepare-image-name: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}"
+        echo "custom-image-name: ${CUSTOM_IMAGE_NAME:-empty}"
+        echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
+        echo "env OWNER: ${{ env.OWNER }}"
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
+        echo "URL: ghcr.io/${{ env.OWNER }}/${{ env.CONTAINER_NAME }}"
 
     - name: Download Artifact
       if: ${{ inputs.download-artifact == 'true' }}
       uses: actions/download-artifact@v5
       with:
-        name: ${{ inputs.custom-image-name }}
-        path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '..' }}
+        name: ${{ inputs.download-artifact-name }}
+        path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '.' }}
         merge-multiple: ${{ inputs.download-artifact-merge-multiple == 'true' }}
 
     - name: Debug ls
@@ -168,50 +163,47 @@ runs:
         username: ${{ github.actor }}
         password: ${{ env.GITHUB_TOKEN }}
 
-    - name: Display Image URL
-      shell: bash
-      env:
-        REPO_OWNER: ${{ github.repository_owner }}
-        CONTAINER_NAME: ${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}
-      run: |
-         echo "URL: ghcr.io/$REPO_OWNER/$CONTAINER_NAME"
-
     - name: Extract Docker Metadata
       if: ${{ inputs.tags == '' }}
       id: meta
       uses: docker/metadata-action@v5
       with:
         context: ${{ inputs.context }}
-        images: ghcr.io/${{ github.repository_owner }}/${{ steps.prepare-image-name.outputs.CONTAINER_NAME }}
+        images: ghcr.io/${{ github.repository_owner }}/${{ env.CONTAINER_NAME }}
         tags: |
           type=ref,event=branch
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
 
-    - name: Prepare Tags
+    - name: Create Image Refs (docker ghcr.io/owner/name:tag)
       if: ${{ inputs.tags != '' }}
-      id: prepare-tags
+      id: create-image-refs
       shell: bash
       env:
-        REPO_OWNER: ${{ github.repository_owner }}
-        ARTIFACT_ID: ${{ inputs.artifact-id }}
-        COMPONENT_NAME: ${{ steps.parse_component.outputs.name }}
         TAGS_INPUT: ${{ inputs.tags }}
       run: |
-        IMAGE_NAME="${ARTIFACT_ID:-$COMPONENT_NAME}"
+        echo "Create Image Refs (docker ghcr.io/owner/name:tag)"
+        CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
+        REPO_OWNER="${{ env.OWNER }}"
+        TAGS_INPUT="${{ inputs.tags }}"
+
         IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
-        TAGS_OUTPUT=""
+
+        IMAGE_REFS=""
         for TAG in "${TAGS[@]}"; do
           TAG=$(echo "$TAG" | xargs)
-          if [ -z "$TAGS_OUTPUT" ]; then
-            TAGS_OUTPUT="ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
-          else
-            TAGS_OUTPUT="$TAGS_OUTPUT, ghcr.io/$REPO_OWNER/$IMAGE_NAME:$TAG"
-          fi
+          IMAGE_REFS="$IMAGE_REFS,ghcr.io/$REPO_OWNER/$CONTAINER_NAME:$TAG"
         done
-        TAGS_OUTPUT=$(echo "$TAGS_OUTPUT" | tr '[:upper:]' '[:lower:]')
-        echo "prepared_tags=$TAGS_OUTPUT" >> "$GITHUB_OUTPUT"
+
+        IMAGE_REFS="${IMAGE_REFS#,}"
+        IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')
+
+        # echo "prepared_tags=$IMAGE_REFS" >> "$GITHUB_OUTPUT"
+        echo "Image refs: $IMAGE_REFS"
+        echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+        echo "REFERENCE=ghcr.io/$REPO_OWNER/$CONTAINER_NAME:$TAG" >> "$GITHUB_ENV"
+
 
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v6
@@ -222,7 +214,7 @@ runs:
         context: ${{ steps.parse_component.outputs.ctx }}
         file: ${{ steps.parse_component.outputs.file }}
         push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
-        tags: ${{ inputs.tags != '' && steps.prepare-tags.outputs.prepared_tags || steps.meta.outputs.tags }}
+        tags: ${{ inputs.tags != '' && env.IMAGE_REFS || steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
         build-args: ${{ inputs.build-args }}
@@ -246,14 +238,6 @@ runs:
 
         VERSION="$TAG"
 
-        if command -v uuidgen >/dev/null 2>&1; then
-          UUID="$(uuidgen)"
-        else
-          UUID="${VERSION}-0000-0000-0000-000000000000"
-        fi
-
-        BOM_REF="${IMAGE_NAME}:${UUID}"
-
         BASENAME=$(basename "$IMAGE_NAME")
         FILENAME="${BASENAME}-${TAG}-${DIGEST_SHORT}.json"
 
@@ -261,11 +245,9 @@ runs:
         echo ">>> DIGEST            = $DIGEST"
         echo ">>> DIGEST_SHORT(12)  = $DIGEST_SHORT"
         echo ">>> FILENAME          = $FILENAME"
-        echo ">>> BOM_REF           = $BOM_REF"
 
         cat <<EOF > "$FILENAME"
         {
-          "bom-ref": "${BOM_REF}",
           "type": "container",
           "mime-type": "application/vnd.docker.image",
           "name": "${IMAGE_NAME}",
@@ -276,31 +258,15 @@ runs:
               "alg": "${ALG}",
               "content": "${DIGEST_NO_PREFIX}"
             }],
-          "purl": "pkg:docker/core/${IMAGE_NAME}@${VERSION}?registryName=sandbox"
+          "reference": "${REFERENCE}"
         }
         EOF
 
         echo "metadata_path=$PWD/$FILENAME" >> "$GITHUB_OUTPUT"
         echo "metadata_filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
-    - name: Analyze for critical and high CVEs
-      id: docker-scout-cves
-      if: ${{ inputs.security-scan == 'true' }}
-      uses: docker/scout-action@v1
-      continue-on-error: true
+    - name: "Upload metadata file"
+      uses: actions/upload-artifact@v4
       with:
-        command: cves,recommendations
-        image: ${{ steps.output_result.outputs.image_name }}
-        sarif-file: sarif.output.json
-        summary: true
-        ignore-base: false
-        dockerhub-user: ${{ inputs.docker-io-user }}
-        dockerhub-password: ${{ inputs.docker-io-password }}
-        github-token: ${{ env.GITHUB_TOKEN }}
-
-    - name: Upload SARIF result
-      id: upload-sarif
-      if: ${{ inputs.security-scan == 'true' }}
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: sarif.output.json
+        name: ${{ steps.output_result.outputs.metadata_filename }}
+        path: ${{ steps.output_result.outputs.metadata_path }}

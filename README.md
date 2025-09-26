@@ -43,6 +43,7 @@ Shortcut: contributing code? Read 1 → 2 → 3 → 4, otherwise for usage start
 Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for structure, composition patterns, permissions, versioning and checklist.
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/netcracker/qubership-workflow-hub.git
    cd qubership-workflow-hub
@@ -54,6 +55,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
 
 3. **Use an Action**
    Reference an action in your own workflow YAML:
+
    ```yaml
    jobs:
      tag:
@@ -69,6 +71,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
 
 4. **Use a Reusable Workflow**
    Include a reusable workflow by path:
+
    ```yaml
    jobs:
      release:
