@@ -214,6 +214,7 @@ runs:
         # echo "prepared_tags=$IMAGE_REFS" >> "$GITHUB_OUTPUT"
         echo "Image refs: $IMAGE_REFS"
         echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+        echo "REFERENCE=ghcr.io/$REPO_OWNER/$CONTAINER_NAME:$TAG" >> "$GITHUB_ENV"
 
 
     - name: Build and Push Docker Image
@@ -249,14 +250,6 @@ runs:
 
         VERSION="$TAG"
 
-        if command -v uuidgen >/dev/null 2>&1; then
-          UUID="$(uuidgen)"
-        else
-          UUID="${VERSION}-0000-0000-0000-000000000000"
-        fi
-
-        BOM_REF="${IMAGE_NAME}:${UUID}"
-
         BASENAME=$(basename "$IMAGE_NAME")
         FILENAME="${BASENAME}-${TAG}-${DIGEST_SHORT}.json"
 
@@ -264,11 +257,9 @@ runs:
         echo ">>> DIGEST            = $DIGEST"
         echo ">>> DIGEST_SHORT(12)  = $DIGEST_SHORT"
         echo ">>> FILENAME          = $FILENAME"
-        echo ">>> BOM_REF           = $BOM_REF"
 
         cat <<EOF > "$FILENAME"
         {
-          "bom-ref": "${BOM_REF}",
           "type": "container",
           "mime-type": "application/vnd.docker.image",
           "name": "${IMAGE_NAME}",
@@ -279,12 +270,18 @@ runs:
               "alg": "${ALG}",
               "content": "${DIGEST_NO_PREFIX}"
             }],
-          "purl": "pkg:docker/core/${IMAGE_NAME}@${VERSION}?registryName=sandbox"
+          "reference": "${REFERENCE}"
         }
         EOF
 
         echo "metadata_path=$PWD/$FILENAME" >> "$GITHUB_OUTPUT"
         echo "metadata_filename=$FILENAME" >> "$GITHUB_OUTPUT"
+
+    - name: "Upload metadata file"
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.output_result.outputs.metadata_filename }}
+        path: ${{ steps.output_result.outputs.metadata_path }}
 
     # - name: Analyze for critical and high CVEs
     #   id: docker-scout-cves
