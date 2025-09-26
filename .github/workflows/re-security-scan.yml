@@ -101,7 +101,7 @@ jobs:
           output-file: grype.sarif
           fail-build: false
           severity-cutoff: critical
-        continue-on-error: ${{ inputs['continue-on-error'] }}
+        continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: "Grype scan (Source: High+Critical)"
         if: ${{ inputs.target == 'source' }}
@@ -112,10 +112,10 @@ jobs:
           output-file: grype.sarif
           fail-build: false
           severity-cutoff: critical
-        continue-on-error: ${{ inputs['continue-on-error'] }}
+        continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: Filter Grype SARIF
-        if: ${{ inputs['only-high-critical'] }}
+        if: ${{ inputs.only-high-critical }}
         run: |
           SARIF_FILE=grype.sarif
           jq '.runs[].results |= map(
@@ -140,7 +140,7 @@ jobs:
 
   trivy-scan:
     runs-on: ubuntu-latest
-    if: ${{ inputs['trivy-scan'] }}
+    if: ${{ inputs.trivy-scan }}
     needs: [init]
     steps:
       - name: Login to GHCR (docker target)
@@ -164,7 +164,7 @@ jobs:
           severity: ${{ env.TRIVY_SEVERITY }}
           output: trivy.sarif
           format: "sarif"
-        continue-on-error: ${{ inputs['continue-on-error'] }}
+        continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: "Trivy scan (Source: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'source' }}
@@ -175,10 +175,10 @@ jobs:
           severity: ${{ env.TRIVY_SEVERITY }}
           output: trivy.sarif
           format: "sarif"
-        continue-on-error: ${{ inputs['continue-on-error'] }}
+        continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: Filter SARIF (High+Critical only)
-        if: ${{ inputs['only-high-critical'] }}
+        if: ${{ inputs.only-high-critical }}
         run: |
           SARIF_FILE=trivy.sarif
           jq '.runs[].results |= map(
