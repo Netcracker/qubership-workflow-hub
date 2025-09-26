@@ -39,7 +39,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 |--------|--------------------|
 | [commit-and-push]|(DELETED) Use native Git steps |
 | [pom-updater] |(DELETED) Prefer metadata-action + build tooling |
-| [tag-checker](../actions/tag-checker/README.md) | Functionality superseded by tag-action |
+| [tag-checker]|(DELETED) Functionality superseded by tag-action |
 | [archive-and-upload-assets](../actions/archive-and-upload-assets/README.md) | Superseded by assets-action (consolidated implementation) |
 
 > **⚠️ Warning:** If you have issues with **deleted actions**, please use **v1.0.6** version.
