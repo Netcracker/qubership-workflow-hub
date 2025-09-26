@@ -42,7 +42,6 @@ permissions:
 env:
   GRYPE_SEVERITY: "critical"
   TRIVY_SEVERITY: "Critical,high"
-  SNYK_SEVERITY: "high"
 
 jobs:
   init:
