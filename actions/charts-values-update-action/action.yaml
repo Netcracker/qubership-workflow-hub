@@ -149,7 +149,7 @@ runs:
       run: |
         echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
-          helm push ${chart} oci://ghcr.io/${{ github.repository_owner }}/
+          helm push ${chart} oci://ghcr.io/${{ github.repository }}/
         done
         helm registry logout 'ghcr.io'
       shell: bash
@@ -165,7 +165,7 @@ runs:
           chart_version=$(helm show chart ${chart} | grep "version: " | sed "s#^\s*version:\s*##" | tr -d '\r')
           chart_app_version=$(helm show chart ${chart} | grep "appVersion: " | sed "s#^\s*appVersion:\s*##" | tr -d '\r')
           if [[ ${{ inputs.publish-charts }} == 'true' ]]; then
-            chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"reference\":\"oci://ghcr.io/${{ github.repository_owner }}/${chart_name}:${chart_version}\"}"
+            chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"reference\":\"oci://ghcr.io/${{ github.repository }}/${chart_name}:${chart_version}\"}"
           else
             chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\"}"
           fi
