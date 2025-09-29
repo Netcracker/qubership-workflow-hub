@@ -182,5 +182,5 @@ runs:
     - name: Upload charts meta
       uses: actions/upload-artifact@v4
       with:
-        name: charts-meta
+        name: charts-meta.json
         path: "./charts_meta/*.json"
