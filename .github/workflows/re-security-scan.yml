@@ -157,7 +157,7 @@ jobs:
       - name: "Trivy scan (Docker: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'docker' }}
         id: trivy-docker
-        uses: aquasecurity/trivy-action@0.33.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: "${{ needs.init.outputs.image }}"
           severity: ${{ env.TRIVY_SEVERITY }}
@@ -168,7 +168,7 @@ jobs:
       - name: "Trivy scan (Source: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'source' }}
         id: trivy-source
-        uses: aquasecurity/trivy-action@0.33.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: "fs"
           severity: ${{ env.TRIVY_SEVERITY }}
