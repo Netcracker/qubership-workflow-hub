@@ -146,7 +146,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
 
     - name: "Publish helm charts"
-      if: ${{ inputs.publish-charts == 'true' }}
+      if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
       run: |
         echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
@@ -181,6 +181,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
     - name: Upload charts meta
+      if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: charts-meta.json
