@@ -131,6 +131,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
 
     - name: "Configure helm"
+      if: ${{ inputs.package-charts == 'true' || inputs.publish-charts == 'true' }}
       uses: azure/setup-helm@v4.3.0
 
     - name: "Package helm charts"
@@ -156,7 +157,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
 
     - name: "Get chart metadata"
-      if: ${{ inputs.package-charts == 'true' }}
+      if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
       id: metadata
       run: |
         charts_metadata=""
@@ -183,4 +184,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: charts-meta.json
-        path: "./charts_meta/*.json"
+        path: "${{ inputs.working-directory }}/charts_meta/*.json"

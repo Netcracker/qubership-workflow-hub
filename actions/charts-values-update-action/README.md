@@ -41,6 +41,16 @@ In that case the action will find the latest tag of an image which satisfy the r
 **Optional**  
 The working directory for the action. Defaults to `.`. Used in specific cases, in testing CI workflows mostly.
 
+### `package-charts`
+
+**Optional**  
+Pckage charts using `helm package` command. Defaults to `false`.
+
+### `publish-charts`
+
+**Optional**  
+Publish helm charts to the `ghcr.io` registry using `oci://ghcr.io/${{ github.repository }}/` command. Defaults to `false`.
+
 ## Environment
 
 ### `GITHUB_TOKEN`
@@ -66,6 +76,21 @@ The updated image versions in JSON format.
 "qubership-zookeeper-monitoring": "1.1.8",
 "qubership-zookeeper-backup-daemon": "1.1.8",
 "qubership-zookeeper-integration-tests": "1.1.8-3.8.4"
+}
+```
+
+### `chart-metadata`
+
+Charts metadata in JSON format.
+
+```json
+{
+    "appVersion": "2.10.0",
+    "mime-type": "application/vnd.qubership.helm.chart",
+    "name": "qubership-jaeger",
+    "reference": "oci://ghcr.io/netcracker/qubership-jaeger/qubership-jaeger:0.0.8",
+    "type": "application",
+    "version": "0.0.8"
 }
 ```
 
