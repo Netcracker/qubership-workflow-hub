@@ -138,6 +138,7 @@ async function run() {
     ...ref, "ref-name": ref.name, "short-sha": shortSha,
     ...semverParts, ...parts,
     "dist-tag": selectedTemplateAndTag.distTag,
+    "runNumber": github.context.runNumber,
     ...flattenObject({ github }, '')
   };
 
