@@ -16,6 +16,7 @@ runs:
       shell: bash
       run: |
         echo "Waiting for workflow '${{ inputs.workflow }}' on ref '${{ inputs.ref }}' to complete..."
-        gh run list  --workflow "${{ inputs.workflow }}" \
-        -bramch "${{ inputs.ref }}" \
+        gh run list \
+        --workflow "${{ inputs.workflow }}" \
+        --branch "${{ inputs.ref }}" \
         --json databaseId,headBranch,headSha,status,conclusion,createdAt,updatedAt,displayTitle
