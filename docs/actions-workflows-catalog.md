@@ -33,7 +33,6 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [tag-action](../actions/tag-action/README.md) | Create / delete / check tags; optional release creation |
 | [verify-json](../actions/verify-json/README.md) | Validate JSON files against a schema |
 | [wait-for-workflow](../actions/wait-for-workflow/README.md) | Wait for a specific GitHub Actions workflow to complete |
-|
 
 ### Deprecated Actions
 

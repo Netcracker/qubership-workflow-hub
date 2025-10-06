@@ -25,6 +25,7 @@ This **Wait for Workflow** GitHub Action waits for a specific GitHub Actions wor
 ## Usage Example
 
 ```yaml
+
 # Example 1 — Wait for a workflow by file name on PR
 name: Wait for Build Workflow
 on:
@@ -48,6 +49,7 @@ jobs:
 ```
 
 ```yaml
+
 # Example 2 — Wait for a workflow by run ID with custom timeout
 name: Wait for Specific Run
 on:
