@@ -136,7 +136,7 @@ runs:
           status=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.status')
           conclusion=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.conclusion')
 
-          echo "Status: ${status}, Conclusion: ${conclusion}"
+          echo "Status: ${status}, Conclusion: ${conclusion:-Runned}"
 
           if [ "${status}" = "completed" ]; then
             echo ""
