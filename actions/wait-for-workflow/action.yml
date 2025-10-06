@@ -22,6 +22,6 @@ runs:
         gh run list \
         --workflow "${{ inputs.workflow }}" \
         --branch "${{ inputs.ref }}" \
-        --json databaseId,headBranch,headSha,status,conclusion,createdAt,updatedAt,displayTitle
+        --json databaseId,status,conclusion
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
