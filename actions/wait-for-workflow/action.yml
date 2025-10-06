@@ -1,18 +1,30 @@
 name: "Wait for Workflow"
-description: "Ожидает завершение указанного workflow"
+description: "Wait for a specific GitHub Actions workflow to complete for a given pull request."
 inputs:
   workflow:
-    description: "Имя файла workflow (например build.yml)"
+    description: "Workflow name (sample: build.yml)"
     required: true
   ref:
-    description: "Ветка или SHA, для которой нужно ждать (опционально)"
+    description: "Ветка или SHA, для которой нужно ждать (optional)"
     required: false
     default: ${{ github.ref }}
-  pr_number:
-    description: "Номер pull request, для которого нужно ждать (опционально)"
+  pr-number:
+    description: "Номер pull request, для которого нужно ждать (optional)"
     required: false
+  timeout:
+    description: "Max time to wait in minutes (optional)"
+    required: false
+    default: "30"
+  poll-interval:
+    description: "Polling interval in seconds (optional)"
+    required: false
+    default: "10"
+  compact:
+    description: "Use compact output (optional)"
+    required: false
+    default: "false"
   token:
-    description: "GitHub Token для аутентификации (опционально)"
+    description: "GitHub Token для аутентификации (optional)"
     required: false
 
 runs:
@@ -24,7 +36,10 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
         GH_REPO: ${{ github.repository }}
         WORKFLOW: ${{ inputs.workflow }}
-        PR_NUMBER: ${{ inputs.pr_number }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        TIMEOUT: ${{ inputs.timeout }}
+        POLL_INTERVAL: ${{ inputs.poll-interval }}
+        COMPACT: ${{ inputs.compact }}
       run: |
         echo "⏳ Waiting for workflow '${WORKFLOW}' triggered by PR #${PR_NUMBER}..."
 
@@ -40,6 +55,11 @@ runs:
           exit 1
         fi
 
-        echo "✅ Found workflow run ID: $run_id"
-        gh run watch "$run_id" --exit-status
+        COMPACT_FLAG=""
+        if [ "${COMPACT}" = "true" ]; then
+           COMPACT_FLAG="--compact"
+        fi
 
+        echo "✅ Found workflow run ID: $run_id"
+
+        timeout "${TIMEOUT}" gh run watch "$run_id" --interval "${POLL_INTERVAL}" {COMPACT_FLAG} --exit-status
