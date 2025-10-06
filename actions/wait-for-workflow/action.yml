@@ -74,6 +74,6 @@ runs:
            COMPACT_FLAG="--compact"
         fi
 
-        echo "✅ Found workflow run ID: $run_id"
+        echo "✅ Found workflow run ID: $run_id, PULL request: ${PR_NUMBER:-N/A}"
 
         timeout "${TIMEOUT}" gh run watch "$run_id" --interval "${POLL_INTERVAL}" {COMPACT_FLAG} --exit-status
