@@ -19,9 +19,13 @@ runs:
       shell: bash
       run: |
         echo "Waiting for workflow '${{ inputs.workflow }}' on ref '${{ inputs.ref }}' to complete..."
-        gh run list \
-        --workflow "${{ inputs.workflow }}" \
-        --branch "${{ inputs.ref }}" \
-        --json databaseId,status,conclusion
+        echo "Fetching workflow runs..."
+        runs_json=$(gh run list \
+          --workflow "${{ inputs.workflow }}" \
+          --branch "${{ inputs.ref }}" \
+          --json databaseId,status,conclusion,event,headBranch,headSha,displayTitle,createdAt \
+          --limit 20)
+
+        echo "$runs_json" | jq .
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
