@@ -17,9 +17,9 @@ inputs:
     required: false
     default: "${{ github.event.pull_request.number || '' }}"
   timeout:
-    description: "Maximum time to wait for workflow completion (e.g. 30m, 1h)."
+    description: "Maximum time to wait for workflow completion (in minutes)."
     required: false
-    default: 30m
+    default: "30"
   max-wait:
     description: "Maximum time (in minutes) to wait for the workflow run to start."
     required: false
@@ -28,10 +28,6 @@ inputs:
     description: "Interval (in seconds) between status checks."
     required: false
     default: "10"
-  compact:
-    description: "Show compact gh run watch output (true/false)."
-    required: false
-    default: "false"
 
 outputs:
   conclusion:
@@ -53,13 +49,12 @@ runs:
         WORKFLOW: ${{ inputs.workflow }}
         SHA: ${{ inputs.sha }}
         PR_NUMBER: ${{ inputs.pr-number }}
-        TIMEOUT: ${{ inputs.timeout }}
-        MAX_WAIT: ${{ inputs.max-wait }}
+        TIMEOUT_MIN: ${{ inputs.timeout }}
+        MAX_WAIT_MIN: ${{ inputs.max-wait }}
         POLL_INTERVAL: ${{ inputs.poll-interval }}
-        COMPACT: ${{ inputs.compact }}
       run: |
         set -euo pipefail
-        trap 'echo "Workflow watch process interrupted or timed out."' SIGTERM
+        trap 'echo "Process interrupted."' SIGTERM
 
         echo "Repository: ${GH_REPO}"
         echo "Workflow: ${WORKFLOW}"
@@ -79,7 +74,7 @@ runs:
           exit 1
         fi
 
-        # 2. Wait for workflow run to be triggered (if RUN_ID not provided)
+        # 2. Wait for workflow run to start
         if [ -z "${RUN_ID:-}" ]; then
           echo "Waiting for workflow '${WORKFLOW_FILE}' to be triggered..."
           start_time=$(date +%s)
@@ -120,8 +115,8 @@ runs:
 
             now=$(date +%s)
             elapsed=$(( (now - start_time) / 60 ))
-            if [ "${elapsed}" -ge "${MAX_WAIT}" ]; then
-              echo "Timeout: workflow '${WORKFLOW_FILE}' did not start within ${MAX_WAIT} minutes."
+            if [ "${elapsed}" -ge "${MAX_WAIT_MIN}" ]; then
+              echo "Timeout: workflow '${WORKFLOW_FILE}' did not start within ${MAX_WAIT_MIN} minutes."
               exit 1
             fi
 
@@ -130,37 +125,37 @@ runs:
         fi
 
         echo "run-id=${RUN_ID}" >> "$GITHUB_OUTPUT"
-
-        # 3. Wait for workflow run to complete
-        COMPACT_FLAG=""
-        if [ "${COMPACT}" = "true" ]; then
-          COMPACT_FLAG="--compact"
-        fi
-
         echo ""
         echo "Waiting for workflow run ${RUN_ID} to complete..."
-        echo "Timeout: ${TIMEOUT}, Poll interval: ${POLL_INTERVAL}s"
+        echo "Timeout: ${TIMEOUT_MIN} minutes, Poll interval: ${POLL_INTERVAL}s"
         echo ""
 
-        set +e
-        timeout "${TIMEOUT}" gh run watch "${RUN_ID}" --interval "${POLL_INTERVAL}" ${COMPACT_FLAG} --exit-status
-        exit_code=$?
-        set -e
+        # 3. Poll for completion
+        start_time=$(date +%s)
+        while true; do
+          status=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.status')
+          conclusion=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.conclusion')
 
-        if [ "${exit_code}" -eq 124 ]; then
-          echo "Timeout reached: workflow did not complete within ${TIMEOUT}."
-          exit 1
-        elif [ "${exit_code}" -ne 0 ]; then
-          echo "Workflow failed or was cancelled (exit ${exit_code})."
-          exit "${exit_code}"
-        fi
+          echo "Status: ${status}, Conclusion: ${conclusion}"
 
-        # 4. Fetch final status
-        status=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.status')
-        conclusion=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.conclusion')
+          if [ "${status}" = "completed" ]; then
+            echo ""
+            echo "Workflow completed with conclusion: ${conclusion}"
+            echo "conclusion=${conclusion}" >> "$GITHUB_OUTPUT"
 
-        echo ""
-        echo "Workflow status: ${status}"
-        echo "Workflow completed with conclusion: ${conclusion}"
+            if [ "${conclusion}" != "success" ]; then
+              echo "Workflow failed or was cancelled."
+              exit 1
+            fi
+            break
+          fi
 
-        echo "conclusion=${conclusion}" >> "$GITHUB_OUTPUT"
+          now=$(date +%s)
+          elapsed=$(( (now - start_time) / 60 ))
+          if [ "${elapsed}" -ge "${TIMEOUT_MIN}" ]; then
+            echo "Timeout reached: workflow did not complete within ${TIMEOUT_MIN} minutes."
+            exit 1
+          fi
+
+          sleep "${POLL_INTERVAL}"
+        done
