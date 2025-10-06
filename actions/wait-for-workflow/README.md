@@ -92,6 +92,7 @@ jobs:
 ## Permissions
 
 Minimum recommended permissions for the job:
+
 ```yaml
 permissions:
   contents: read   # to access repository information
