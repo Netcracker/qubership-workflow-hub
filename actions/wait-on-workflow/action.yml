@@ -46,13 +46,12 @@ outputs:
     description: Duration of the workflow run in milliseconds
 
 runs:
-  using: composite
+  using: "composite"
   steps:
-    - id: wait
-      name: Wait for workflow
+    - name: Wait for ${{ inputs.workflow }}
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token || github.token }}
+        GH_TOKEN: ${{ github.token }}
         REPO: ${{ inputs.repo || github.repository }}
         WF: ${{ inputs.workflow }}
         SHA: ${{ inputs.sha || github.sha }}
@@ -64,20 +63,31 @@ runs:
 
         end_time=$(( $(date +%s) + TIMEOUT * 60 ))
 
-        # Resolve workflow ID from name or numeric value
+        # --- Исправлено: определяем ID workflow по имени через gh run list ---
         if [[ "$WF" =~ ^[0-9]+$ ]]; then
           wf_id="$WF"
         else
-          wf_id=$(gh api "repos/$REPO/actions/workflows/$WF" --jq .id)
+          echo "Resolving workflow ID for '$WF'..."
+          wf_id=$(gh api "repos/$REPO/actions/workflows" \
+            --jq ".workflows[] | select(.name==\"$WF\") | .id" | head -n1 || true)
+          if [[ -z "$wf_id" ]]; then
+            echo "Error: Could not find workflow named '$WF' in $REPO."
+            exit 1
+          fi
         fi
-        echo "Waiting for workflow $wf_id on commit $SHA in $REPO ..."
+        echo "Using workflow ID: $wf_id"
+
+        echo "Waiting for workflow '$WF' (id: $wf_id) on commit $SHA in $REPO ..."
+        run_id=""
 
         # Wait for run to appear
-        run_id=""
         while [[ -z "$run_id" && $(date +%s) -lt $end_time ]]; do
           run_id=$(gh api "repos/$REPO/actions/runs" \
-            --jq ".workflow_runs[] | select(.workflow_id==$wf_id and .head_sha==\"$SHA\") | .id" | head -n1)
-          [[ -z "$run_id" ]] && echo "Run not started yet, retrying in $INTERVAL s ..." && sleep "$INTERVAL"
+            --jq ".workflow_runs[] | select(.workflow_id==$wf_id and .head_sha==\"$SHA\") | .id" | head -n1 || true)
+          if [[ -z "$run_id" ]]; then
+            echo "Run not started yet, retrying in $INTERVAL s ..."
+            sleep "$INTERVAL"
+          fi
         done
 
         if [[ -z "$run_id" ]]; then
