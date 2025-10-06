@@ -72,7 +72,7 @@ runs:
         echo ""
 
         # 1. Determine if WORKFLOW is a run ID or a workflow file name
-        if [[ ! "$WORKFLOW" =~ \.ya?ml$ ]]; then
+        if [[ "$WORKFLOW" =~ ^[0-9]+$ ]]; then
           RUN_ID="${WORKFLOW}"
           echo "Using provided workflow run ID: ${RUN_ID}"
         else
