@@ -42,6 +42,8 @@ permissions:
 env:
   GRYPE_SEVERITY: "critical"
   TRIVY_SEVERITY: "HIGH,CRITICAL"
+  IMAGE: ${{ inputs.image }}
+  TARGET: ${{ inputs.target }}
 
 jobs:
   init:
@@ -52,23 +54,23 @@ jobs:
       - name: Define variables
         id: vars
         run: |
-          if [ -n "${{ inputs.image }}" ]; then
-            echo "image=${{ inputs.image }}" >> $GITHUB_OUTPUT
+          if [ -n "${IMAGE}" ]; then
+            echo "image=${IMAGE}" >> $GITHUB_OUTPUT
           else
             echo "image=ghcr.io/${{ github.repository }}:latest" >> $GITHUB_OUTPUT
           fi
 
       - name: Scan plan
         run: |
-          echo "Mode: ${{ inputs.target }}"
+          echo "Mode: ${IMAGE}"
           echo "Image (if docker): ${{ steps.vars.outputs.image }}"
           echo "Only high+critical: ${{ inputs['only-high-critical'] }}"
-          if [ "${{ inputs.target }}" = "docker" ]; then
+          if [ "${TARGET}" = "docker" ]; then
             echo "   - Docker scan: enabled"
           else
             echo "   - Docker scan: skipped"
           fi
-          if [ "${{ inputs.target }}" = "source" ]; then
+          if [ "${TARGET}" = "source" ]; then
             echo "   - Source scan: enabled"
           else
             echo "   - Source scan: skipped"
@@ -81,7 +83,7 @@ jobs:
     steps:
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef #v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -89,12 +91,14 @@ jobs:
 
       - name: Checkout repository (source target)
         if: ${{ inputs.target == 'source' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: "Grype scan (Docker: High+Critical)"
         if: ${{ inputs.target == 'docker' }}
         id: grype-docker
-        uses: anchore/scan-action@v7
+        uses: anchore/scan-action@f6601287cdb1efc985d6b765bbf99cb4c0ac29d8 #v7
         with:
           image: "${{ needs.init.outputs.image }}"
           output-file: grype.sarif
@@ -105,7 +109,7 @@ jobs:
       - name: "Grype scan (Source: High+Critical)"
         if: ${{ inputs.target == 'source' }}
         id: grype-source
-        uses: anchore/scan-action@v7
+        uses: anchore/scan-action@f6601287cdb1efc985d6b765bbf99cb4c0ac29d8 #v7
         with:
           path: .
           output-file: grype.sarif
@@ -155,7 +159,7 @@ jobs:
     steps:
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef #v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -163,12 +167,14 @@ jobs:
 
       - name: Checkout repository (source target)
         if: ${{ inputs.target == 'source' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: "Trivy scan (Docker: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'docker' }}
         id: trivy-docker
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 #0.33.1
         with:
           image-ref: "${{ needs.init.outputs.image }}"
           severity: ${{ env.TRIVY_SEVERITY }}
@@ -181,7 +187,7 @@ jobs:
       - name: "Trivy scan (Source: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'source' }}
         id: trivy-source
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 #0.33.1
         with:
           scan-type: "fs"
           severity: ${{ env.TRIVY_SEVERITY }}
