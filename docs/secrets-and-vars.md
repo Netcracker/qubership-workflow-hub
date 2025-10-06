@@ -37,6 +37,7 @@ Organization-level secrets and variables referenced across actions and reusable 
 | `SONAR_PLUGIN_VERSION` | Version of the SonarQube plugin to use in analysis workflows. |
 
 ## Usage Guidelines
+
 - Prefer `GITHUB_TOKEN` when sufficient; use PATs only if extra scopes (workflow dispatch, cross-repo access, delete package) are required.
 - Do not echo secret values; avoid `set -x` around sensitive commands.
 - Rotate external registry tokens, PATs, and GPG keys periodically (recommended quarterly).
@@ -44,6 +45,7 @@ Organization-level secrets and variables referenced across actions and reusable 
 - Validate new or rotated credentials with a dry-run capable workflow before full release tasks.
 
 ## Rotation Checklist
+
 1. Generate / rotate credential.
 2. Update at organization (or repository) Secrets.
 3. Invalidate/ revoke old credential where applicable.
@@ -51,6 +53,7 @@ Organization-level secrets and variables referenced across actions and reusable 
 5. Remove any temporary debugging output.
 
 ## Related Docs
+
 - Standards & Change Policy: [standards-and-change-policy.md](standards-and-change-policy.md)
 - Actions & Workflows Catalog: [actions-workflows-catalog.md](actions-workflows-catalog.md)
 - Reusable Workflows: [reusable/](reusable/)
