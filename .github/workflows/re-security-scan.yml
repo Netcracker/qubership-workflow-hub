@@ -41,7 +41,7 @@ permissions:
 
 env:
   GRYPE_SEVERITY: "critical"
-  TRIVY_SEVERITY: "Critical,high"
+  TRIVY_SEVERITY: "HIGH,CRITICAL"
 
 jobs:
   init:
@@ -110,20 +110,31 @@ jobs:
           path: .
           output-file: grype.sarif
           fail-build: false
-          severity-cutoff: critical
+          severity-cutoff: high
+          only-fixed: true
         continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: Filter Grype SARIF
         if: ${{ inputs.only-high-critical }}
         run: |
           SARIF_FILE=grype.sarif
-          jq '.runs[].results |= map(
-          select(
-              ((.properties.severity // "" | ascii_upcase) == "HIGH")
-              or ((.properties.severity // "" | ascii_upcase) == "CRITICAL")
-              or ((.help.text // "") | test("Severity:\\s*(high|critical)"; "i"))
+          jq '. as $input
+          | .runs[].results
+          |= map(. + {
+          security_severity: (
+          $input.runs[0].tool.driver.rules[] as $rule
+          | select($rule.id == .ruleId)
+          | $rule.properties["security-severity"]
           )
-          )' "$SARIF_FILE" > "${SARIF_FILE%.sarif}.filtered.sarif"
+          }
+          )' "$SARIF_FILE"  > "${SARIF_FILE%.sarif}.sec-sev.sarif"
+
+          jq '.runs[].results |= map(
+              select(
+                (.security_severity | tonumber) >= 7
+              ) | del(.security_severity)
+              )' "${SARIF_FILE%.sarif}.sec-sev.sarif" > "${SARIF_FILE%.sarif}.filtered.sarif"
+
           mv "${SARIF_FILE%.sarif}.filtered.sarif" "$SARIF_FILE"
 
       - name: Upload Grype SARIF
@@ -163,6 +174,8 @@ jobs:
           severity: ${{ env.TRIVY_SEVERITY }}
           output: trivy.sarif
           format: "sarif"
+          ignore-unfixed: true
+          limit-severities-for-sarif: true
         continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: "Trivy scan (Source: ${{ env.TRIVY_SEVERITY }})"
@@ -174,20 +187,9 @@ jobs:
           severity: ${{ env.TRIVY_SEVERITY }}
           output: trivy.sarif
           format: "sarif"
+          ignore-unfixed: true
+          limit-severities-for-sarif: true
         continue-on-error: ${{ inputs.continue-on-error }}
-
-      - name: Filter SARIF (High+Critical only)
-        if: ${{ inputs.only-high-critical }}
-        run: |
-          SARIF_FILE=trivy.sarif
-          jq '.runs[].results |= map(
-            select(
-              ((.properties.tags[]? | ascii_upcase) | any(. == "HIGH","CRITICAL"))
-              or ((.help.text // "") | test("Severity:\\s*(high|critical)"; "i"))
-              or ((.message.text // "") | test("Severity:\\s*(high|critical)"; "i"))
-            )
-          )' "$SARIF_FILE" > "${SARIF_FILE%.sarif}.filtered.sarif"
-          mv "${SARIF_FILE%.sarif}.filtered.sarif" "$SARIF_FILE"
 
       - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@v3
