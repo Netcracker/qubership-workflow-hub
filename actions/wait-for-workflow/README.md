@@ -17,7 +17,7 @@ This **Wait for Workflow** GitHub Action waits for a specific GitHub Actions wor
 | `workflow`      | Workflow file name (e.g., build.yml) or workflow run ID.                   | Yes      |                                                   |
 | `token`         | GitHub token for API authentication (usually secrets.GITHUB_TOKEN).        | Yes      |                                                   |
 | `sha`           | Commit SHA to match the workflow run (if PR number is not provided).       | No       | `${{ github.sha }}`                               |
-| `pr-number`     | Pull request number if the workflow was triggered by a PR.                 | No       | `${{ github.event.pull_request.number || '' }}`  |
+| `pr-number`     | Pull request number if the workflow was triggered by a PR.                 | No       | `${{ github.event.pull_request.number }}`  |
 | `timeout`       | Maximum time to wait for workflow completion (in minutes).                 | No       | `30`                                              |
 | `max-wait`      | Maximum time (in minutes) to wait for the workflow run to start.           | No       | `10`                                              |
 | `poll-interval` | Interval (in seconds) between status checks.                              | No       | `10`                                              |
