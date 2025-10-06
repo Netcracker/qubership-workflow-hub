@@ -5,7 +5,6 @@ on:
     inputs:
       target:
         description: "Scan part"
-        required: true
         default: "docker"
         type: string
       image:
@@ -61,9 +60,11 @@ jobs:
           fi
 
       - name: Scan plan
+        env:
+          STEPS_IMAGE: ${{ steps.vars.outputs.image }}
         run: |
-          echo "Mode: ${IMAGE}"
-          echo "Image (if docker): ${{ steps.vars.outputs.image }}"
+          echo "Mode: ${TARGET}"
+          echo "Image (if docker): ${STEPS_IMAGE}"
           echo "Only high+critical: ${{ inputs['only-high-critical'] }}"
           if [ "${TARGET}" = "docker" ]; then
             echo "   - Docker scan: enabled"
