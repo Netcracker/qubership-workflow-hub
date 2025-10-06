@@ -8,6 +8,9 @@ inputs:
     description: "Ветка или SHA, для которой нужно ждать (опционально)"
     required: false
     default: ${{ github.ref }}
+  pr_number:
+    description: "Номер pull request, для которого нужно ждать (опционально)"
+    required: false
   token:
     description: "GitHub Token для аутентификации (опционально)"
     required: false
@@ -17,6 +20,11 @@ runs:
   steps:
     - name: Wait for workflow to finish
       shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        GH_REPO: ${{ github.repository }}
+        WORKFLOW: ${{ inputs.workflow }}
+        PR_NUMBER: ${{ inputs.pr_number }}
       run: |
         run_id=$(gh api repos/${GH_REPO}/actions/runs \
           --jq ".workflow_runs[]
@@ -35,6 +43,3 @@ runs:
         echo "Waiting for end..."
 
         gh run watch "$run_id" --exit-status
-
-      env:
-        GITHUB_TOKEN: ${{ inputs.token }}
