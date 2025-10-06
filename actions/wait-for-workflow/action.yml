@@ -40,10 +40,8 @@ inputs:
 outputs:
   conclusion:
     value: ${{ steps.wait.outputs.conclusion }}
-    description: "Conclusion of the completed workflow (success, failure, cancelled, etc.)."
   run-id:
     value: ${{ steps.wait.outputs.run-id }}
-    description: "ID of the matched workflow run."
 
 runs:
   using: "composite"
@@ -75,8 +73,12 @@ runs:
         if [[ "$WORKFLOW" =~ ^[0-9]+$ ]]; then
           RUN_ID="${WORKFLOW}"
           echo "Using provided workflow run ID: ${RUN_ID}"
-        else
+        elif [[ "$WORKFLOW" =~ \.ya?ml$ ]]; then
           WORKFLOW_FILE="${WORKFLOW}"
+          echo "Using workflow file: ${WORKFLOW_FILE}"
+        else
+          echo "Error: Invalid 'workflow' input. Please provide either a workflow file (e.g. build.yml) or run ID (numeric)."
+          exit 1
         fi
 
         # 2. Wait for workflow run to be triggered (if RUN_ID not provided)
