@@ -1,11 +1,11 @@
 # 🚀 Wait for Workflow GitHub Action
 
-This **Wait for Workflow** GitHub Action waits for a specific GitHub Actions workflow to start and complete successfully. It supports waiting by workflow file name or run ID, with configurable timeouts and polling intervals.
+This **Wait for Workflow** GitHub Action waits for a specific GitHub Actions workflow to start and complete successfully. It supports waiting by workflow filename or run ID, with configurable timeouts and polling intervals.
 
 ## Features
 
 - Waits for workflow runs triggered by PRs or commits.
-- Supports specifying workflow by file name (e.g., build.yml) or run ID.
+- Supports specifying workflow by filename (e.g., build.yml) or run ID.
 - Configurable timeouts for workflow start and completion.
 - Polls workflow status at specified intervals.
 - Outputs workflow conclusion and run ID.
@@ -14,7 +14,7 @@ This **Wait for Workflow** GitHub Action waits for a specific GitHub Actions wor
 
 | Name            | Description                                                                 | Required | Default                                           |
 | --------------- | --------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
-| `workflow`      | Workflow file name (e.g., build.yml) or workflow run ID.                   | Yes      |                                                   |
+| `workflow`      | Workflow filename (e.g., build.yml) or workflow run ID.                   | Yes      |                                                   |
 | `token`         | GitHub token for API authentication (usually secrets.GITHUB_TOKEN).        | Yes      |                                                   |
 | `sha`           | Commit SHA to match the workflow run (if PR number is not provided).       | No       | `${{ github.sha }}`                               |
 | `pr-number`     | Pull request number if the workflow was triggered by a PR.                 | No       | `${{ github.event.pull_request.number }}`  |
@@ -80,7 +80,7 @@ jobs:
 
 - Workflow specification:
   1) If `workflow` is a numeric value — treated as workflow run ID.
-  2) If `workflow` ends with `.yml` or `.yaml` — treated as workflow file name.
+  2) If `workflow` ends with `.yml` or `.yaml` — treated as workflow filename.
 - Workflow run detection:
   - When `pr-number` is provided — looks for workflow runs triggered by that PR.
   - Otherwise uses `sha` to match workflow runs for specific commit.
@@ -107,8 +107,8 @@ permissions:
 
 ## Additional Information
 
-- If a workflow file name is provided but not found in the repository, the action will fail with an error.
-- When waiting for a workflow by file name, the action will look for the most recent run matching the specified criteria (PR number or commit SHA).
+- If a workflow filename is provided but not found in the repository, the action will fail with an error.
+- When waiting for a workflow by filename, the action will look for the most recent run matching the specified criteria (PR number or commit SHA).
 - The action will exit with status code 1 if the workflow fails, is cancelled, or times out.
 - For PR-triggered workflows, ensure the `pr-number` input is provided for accurate workflow matching.
 - When using commit SHA matching, make sure the SHA corresponds to the exact commit that triggered the workflow.
