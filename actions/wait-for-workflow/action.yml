@@ -1,3 +1,14 @@
+name: "Wait for Workflow"
+description: "Ожидает завершение указанного workflow"
+inputs:
+  workflow:
+    description: "Имя файла workflow (например build.yml)"
+    required: true
+  ref:
+    description: "Ветка или SHA, для которой нужно ждать (опционально)"
+    required: false
+    default: ${{ github.ref }}
+
 runs:
   using: "composite"
   steps:
@@ -9,15 +20,3 @@ runs:
           --workflow "${{ inputs.workflow }}" \
           --ref "${{ inputs.ref }}" \
           --exit-status
-
-    - name: Show workflow details
-      if: ${{ success() || failure() }}
-      shell: bash
-      run: |
-        echo "Fetching details for workflow '${{ inputs.workflow }}'..."
-        gh run list \
-          --workflow "${{ inputs.workflow }}" \
-          --ref "${{ inputs.ref }}" \
-          --limit 1 \
-          --json databaseId,displayTitle,status,conclusion,url \
-          --jq '.[] | "Run: \(.displayTitle)\nStatus: \(.status)\nConclusion: \(.conclusion)\nURL: \(.url)"'
