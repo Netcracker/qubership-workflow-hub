@@ -18,14 +18,23 @@ runs:
     - name: Wait for workflow to finish
       shell: bash
       run: |
-        echo "Waiting for workflow '${{ inputs.workflow }}' on ref '${{ inputs.ref }}' to complete..."
-        echo "Fetching workflow runs..."
-        runs_json=$(gh run list \
-          --workflow "${{ inputs.workflow }}" \
-          --branch "${{ inputs.ref }}" \
-          --json databaseId,status,conclusion,event,headBranch,headSha,displayTitle,createdAt \
-          --limit 20)
+        run_id=$(gh api repos/${GH_REPO}/actions/runs \
+          --jq ".workflow_runs[]
+            | select(.event==\"pull_request\")
+            | select(.pull_requests[].number == ${PR_NUMBER})
+            | select(.name == \"${WORKFLOW}\")
+            | .id" \
+          | head -n1)
 
-        echo "$runs_json" | jq .
+        if [ -z "$run_id" ]; then
+          echo "❌ Workflow '${WORKFLOW}' for PR #${PR_NUMBER} not found."
+          exit 1
+        fi
+
+        echo "✅ PR #${PR_NUMBER} run workflow '${WORKFLOW}' (Run ID: $run_id)"
+        echo "Waiting for end..."
+
+        gh run watch "$run_id" --exit-status
+
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
