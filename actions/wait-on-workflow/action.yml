@@ -1,0 +1,111 @@
+name: Wait on Workflow
+author: Pavel Anikin
+description: Wait for another workflow on a specific commit to finish.
+branding:
+  icon: clock
+  color: blue
+
+inputs:
+  token:
+    description: GitHub token with repo/workflow read access (defaults to GITHUB_TOKEN)
+    required: false
+  repo:
+    description: Target repository (defaults to current)
+    required: false
+  workflow:
+    description: Workflow file name or ID to wait for (e.g. ".github/workflows/ci.yml")
+    required: true
+  sha:
+    description: Commit SHA (defaults to GITHUB_SHA)
+    required: false
+  poll-interval-seconds:
+    description: Polling interval in seconds
+    default: "10"
+  timeout-minutes:
+    description: Timeout in minutes
+    default: "60"
+  fail-on-non-success:
+    description: Fail if workflow conclusion is not success
+    default: "true"
+
+outputs:
+  run_id:
+    value: ${{ steps.wait.outputs.run_id }}
+    description: ID of the matched workflow run
+  status:
+    value: ${{ steps.wait.outputs.status }}
+    description: Latest status of the workflow run
+  conclusion:
+    value: ${{ steps.wait.outputs.conclusion }}
+    description: Final conclusion of the workflow run
+  html_url:
+    value: ${{ steps.wait.outputs.html_url }}
+    description: HTML URL of the workflow run
+  duration_ms:
+    value: ${{ steps.wait.outputs.duration_ms }}
+    description: Duration of the workflow run in milliseconds
+
+runs:
+  using: composite
+  steps:
+    - id: wait
+      name: Wait for workflow
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token || github.token }}
+        REPO: ${{ inputs.repo || github.repository }}
+        WF: ${{ inputs.workflow }}
+        SHA: ${{ inputs.sha || github.sha }}
+        INTERVAL: ${{ inputs.poll-interval-seconds }}
+        TIMEOUT: ${{ inputs.timeout-minutes }}
+        FAIL_ON_NON_SUCCESS: ${{ inputs.fail-on-non-success }}
+      run: |
+        set -euo pipefail
+
+        end_time=$(( $(date +%s) + TIMEOUT * 60 ))
+
+        # Resolve workflow ID from name or numeric value
+        if [[ "$WF" =~ ^[0-9]+$ ]]; then
+          wf_id="$WF"
+        else
+          wf_id=$(gh api "repos/$REPO/actions/workflows/$WF" --jq .id)
+        fi
+        echo "Waiting for workflow $wf_id on commit $SHA in $REPO ..."
+
+        # Wait for run to appear
+        run_id=""
+        while [[ -z "$run_id" && $(date +%s) -lt $end_time ]]; do
+          run_id=$(gh api "repos/$REPO/actions/runs" \
+            --jq ".workflow_runs[] | select(.workflow_id==$wf_id and .head_sha==\"$SHA\") | .id" | head -n1)
+          [[ -z "$run_id" ]] && echo "Run not started yet, retrying in $INTERVAL s ..." && sleep "$INTERVAL"
+        done
+
+        if [[ -z "$run_id" ]]; then
+          echo "Timeout: workflow run not found"
+          echo "run_id=" >> "$GITHUB_OUTPUT"
+          echo "status=not_found" >> "$GITHUB_OUTPUT"
+          echo "conclusion=timed_out" >> "$GITHUB_OUTPUT"
+          exit 1
+        fi
+
+        echo "Found run: $run_id"
+
+        # Wait until completed
+        while [[ $(date +%s) -lt $end_time ]]; do
+          status=$(gh api "repos/$REPO/actions/runs/$run_id" --jq .status)
+          [[ "$status" == "completed" ]] && break
+          echo "Status: $status, waiting..."
+          sleep "$INTERVAL"
+        done
+
+        # Fetch final data and write outputs
+        gh api "repos/$REPO/actions/runs/$run_id" --jq '
+          "run_id=\(.id)\nstatus=\(.status)\nconclusion=\(.conclusion)\nhtml_url=\(.html_url)\nduration_ms=\(((.updated_at|fromdateiso8601 - .created_at|fromdateiso8601)*1000 | floor))"
+        ' >> "$GITHUB_OUTPUT"
+
+        conclusion=$(grep conclusion "$GITHUB_OUTPUT" | cut -d= -f2)
+        echo "Workflow finished with conclusion: $conclusion"
+
+        if [[ "$FAIL_ON_NON_SUCCESS" == "true" && "$conclusion" != "success" ]]; then
+          exit 1
+        fi
