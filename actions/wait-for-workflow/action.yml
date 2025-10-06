@@ -40,8 +40,10 @@ inputs:
 outputs:
   conclusion:
     value: ${{ steps.wait.outputs.conclusion }}
+    description: "The conclusion of the workflow run (success, failure, cancelled, etc.)."
   run-id:
     value: ${{ steps.wait.outputs.run-id }}
+    description: "The ID of the workflow run that was waited on."
 
 runs:
   using: "composite"
