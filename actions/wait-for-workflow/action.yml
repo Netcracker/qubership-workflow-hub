@@ -32,10 +32,6 @@ inputs:
     description: "Show compact gh run watch output (true/false)."
     required: false
     default: "false"
-  verbose:
-    description: "Enable verbose logging (true/false)."
-    required: false
-    default: "false"
 
 outputs:
   conclusion:
@@ -61,9 +57,9 @@ runs:
         MAX_WAIT: ${{ inputs.max-wait }}
         POLL_INTERVAL: ${{ inputs.poll-interval }}
         COMPACT: ${{ inputs.compact }}
-        VERBOSE: ${{ inputs.verbose }}
       run: |
         set -euo pipefail
+        trap 'echo "Workflow watch process interrupted or timed out."' SIGTERM
 
         echo "Repository: ${GH_REPO}"
         echo "Workflow: ${WORKFLOW}"
@@ -79,7 +75,7 @@ runs:
           WORKFLOW_FILE="${WORKFLOW}"
           echo "Using workflow file: ${WORKFLOW_FILE}"
         else
-          echo "Error: Invalid 'workflow' input. Please provide either a workflow file (e.g. build.yml) or run ID (numeric)."
+          echo "Error: Invalid 'workflow' input. Provide a workflow file (e.g. build.yml) or numeric run ID."
           exit 1
         fi
 
@@ -89,27 +85,35 @@ runs:
           start_time=$(date +%s)
 
           while true; do
-            if [ "${VERBOSE}" = "true" ]; then
-              echo "Checking for workflow runs..."
-            fi
-
             if [ -n "${PR_NUMBER:-}" ]; then
-              # Filter by PR number
-              response=$(gh api "repos/${GH_REPO}/actions/workflows/${WORKFLOW_FILE}/runs" --jq \
-                "([.workflow_runs | sort_by(.created_at)[]
-                  | select(.event == \"pull_request\")
-                  | select(any(.pull_requests[]; .number == ${PR_NUMBER}))
-                  | .id] | last)")
+              response=$(gh api "repos/${GH_REPO}/actions/workflows/${WORKFLOW_FILE}/runs" 2>&1 || true)
+              if echo "$response" | grep -q "Not Found"; then
+                echo "Error: workflow file '${WORKFLOW_FILE}' not found in ${GH_REPO}."
+                exit 1
+              fi
+
+              run_id=$(echo "$response" | jq -r \
+                --arg pr "${PR_NUMBER}" \
+                '.workflow_runs | sort_by(.created_at)[] 
+                | select(.event == "pull_request") 
+                | select(any(.pull_requests[]; .number == ($pr | tonumber))) 
+                | .id' | tail -n1)
             else
-              # Filter by SHA
-              response=$(gh api "repos/${GH_REPO}/actions/workflows/${WORKFLOW_FILE}/runs" --jq \
-                "([.workflow_runs | sort_by(.created_at)[]
-                  | select(.head_sha == \"${SHA}\")
-                  | .id] | last)")
+              response=$(gh api "repos/${GH_REPO}/actions/workflows/${WORKFLOW_FILE}/runs" 2>&1 || true)
+              if echo "$response" | grep -q "Not Found"; then
+                echo "Error: workflow file '${WORKFLOW_FILE}' not found in ${GH_REPO}."
+                exit 1
+              fi
+
+              run_id=$(echo "$response" | jq -r \
+                --arg sha "${SHA}" \
+                '.workflow_runs | sort_by(.created_at)[] 
+                | select(.head_sha == $sha) 
+                | .id' | tail -n1)
             fi
 
-            if [ -n "${response}" ] && [ "${response}" != "null" ]; then
-              RUN_ID="${response}"
+            if [ -n "${run_id:-}" ] && [ "${run_id}" != "null" ]; then
+              RUN_ID="${run_id}"
               echo "Detected workflow run: ${RUN_ID}"
               break
             fi
@@ -152,7 +156,11 @@ runs:
         fi
 
         # 4. Fetch final status
+        status=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.status')
         conclusion=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.conclusion')
+
         echo ""
+        echo "Workflow status: ${status}"
         echo "Workflow completed with conclusion: ${conclusion}"
+
         echo "conclusion=${conclusion}" >> "$GITHUB_OUTPUT"
