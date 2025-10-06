@@ -11,6 +11,7 @@ inputs:
   pr-number:
     description: "Номер pull request, для которого нужно ждать (optional)"
     required: false
+    default: ${{ github.event.pull_request.number }}
   timeout:
     description: "Max time to wait in minutes (optional)"
     required: false
@@ -43,12 +44,25 @@ runs:
       run: |
         echo "⏳ Waiting for workflow '${WORKFLOW}' triggered by PR #${PR_NUMBER}..."
 
-        run_id=$(gh api "repos/${GH_REPO}/actions/runs" \
-          --jq "([.workflow_runs[]
-                  | select(.event==\"pull_request\")
-                  | select(.pull_requests[].number == ${PR_NUMBER})
-                  | select(.name == \"${WORKFLOW}\")
-                  | .id][0])")
+        if [ -z "${PR_NUMBER}" ] && [ -n "${GITHUB_EVENT_PATH}" ]; then
+          PR_NUMBER=$(jq -r '.pull_request.number // empty' < "$GITHUB_EVENT_PATH")
+        fi
+
+        if [ -n "$PR_NUMBER" ]; then
+          echo "🔎 Detected PR #${PR_NUMBER}. Searching for matching workflow..."
+          jq_filter="([.workflow_runs[]
+                      | select(.event==\"pull_request\")
+                      | select((.pull_requests[].number|tostring) == \"${PR_NUMBER}\")
+                      | select(.name == \"${WORKFLOW}\")
+                      | .id][0])"
+        else
+          echo "No PR number provided. Searching by workflow name only..."
+          jq_filter="([.workflow_runs[]
+                      | select(.name == \"${WORKFLOW}\")
+                      | .id][0])"
+        fi
+
+        run_id=$(gh api "repos/${GH_REPO}/actions/runs" --jq "${jq_filter}")
 
         if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
           echo "❌ Workflow '${WORKFLOW}' for PR #${PR_NUMBER} not found."
