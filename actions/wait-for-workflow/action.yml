@@ -1,0 +1,14 @@
+name: "White Workwlow"
+description: Waits for a GitHub Actions workflow to complete
+inputs:
+  workflow:
+    description: "The name of the workflow to wait for or ID."
+    required: true
+runs:
+  using: "node20"
+  main: "dist/index.js"
+
+branding:
+  icon: "clock"
+  color: "blue"
+
