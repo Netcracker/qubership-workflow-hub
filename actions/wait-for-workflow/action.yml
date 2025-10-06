@@ -44,7 +44,7 @@ runs:
       id: wait
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        GH_TOKEN: ${{ inputs.token || github.token }}
         GH_REPO: ${{ github.repository }}
         WORKFLOW: ${{ inputs.workflow }}
         SHA: ${{ inputs.sha }}
@@ -89,9 +89,9 @@ runs:
 
               run_id=$(echo "$response" | jq -r \
                 --arg pr "${PR_NUMBER}" \
-                '.workflow_runs | sort_by(.created_at)[] 
-                | select(.event == "pull_request") 
-                | select(any(.pull_requests[]; .number == ($pr | tonumber))) 
+                '.workflow_runs | sort_by(.created_at)[]
+                | select(.event == "pull_request")
+                | select(any(.pull_requests[]; .number == ($pr | tonumber)))
                 | .id' | tail -n1)
             else
               response=$(gh api "repos/${GH_REPO}/actions/workflows/${WORKFLOW_FILE}/runs" 2>&1 || true)
@@ -102,8 +102,8 @@ runs:
 
               run_id=$(echo "$response" | jq -r \
                 --arg sha "${SHA}" \
-                '.workflow_runs | sort_by(.created_at)[] 
-                | select(.head_sha == $sha) 
+                '.workflow_runs | sort_by(.created_at)[]
+                | select(.head_sha == $sha)
                 | .id' | tail -n1)
             fi
 
