@@ -1,79 +1,154 @@
 name: "Wait for Workflow"
-description: "Wait for a specific GitHub Actions workflow to complete for a given pull request."
+description: "Waits for a specific GitHub Actions workflow to start and complete successfully."
+
 inputs:
   workflow:
-    description: "Workflow name (sample: build.yml)"
+    description: "Workflow file name (e.g., build.yml) or workflow run ID."
     required: true
-  ref:
-    description: "Ветка или SHA, для которой нужно ждать (optional)"
+  token:
+    description: "GitHub token for API authentication (usually secrets.GITHUB_TOKEN)."
+    required: true
+  sha:
+    description: "Commit SHA to match the workflow run (if PR number is not provided)."
     required: false
-    default: ${{ github.ref }}
+    default: ${{ github.sha }}
   pr-number:
-    description: "Номер pull request, для которого нужно ждать (optional)"
+    description: "Pull request number if the workflow was triggered by a PR."
     required: false
-    default: ${{ github.event.pull_request.number }}
+    default: "${{ github.event.pull_request.number || '' }}"
   timeout:
-    description: "Max time to wait in minutes (optional)"
+    description: "Maximum time to wait for workflow completion (e.g. 30m, 1h)."
     required: false
-    default: "30"
+    default: 30m
+  max-wait:
+    description: "Maximum time (in minutes) to wait for the workflow run to start."
+    required: false
+    default: "10"
   poll-interval:
-    description: "Polling interval in seconds (optional)"
+    description: "Interval (in seconds) between status checks."
     required: false
     default: "10"
   compact:
-    description: "Use compact output (optional)"
+    description: "Show compact gh run watch output (true/false)."
     required: false
     default: "false"
-  token:
-    description: "GitHub Token для аутентификации (optional)"
+  verbose:
+    description: "Enable verbose logging (true/false)."
     required: false
+    default: "false"
+
+outputs:
+  conclusion:
+    value: ${{ steps.wait.outputs.conclusion }}
+    description: "Conclusion of the completed workflow (success, failure, cancelled, etc.)."
+  run-id:
+    value: ${{ steps.wait.outputs.run-id }}
+    description: "ID of the matched workflow run."
 
 runs:
   using: "composite"
   steps:
-    - name: Wait for workflow to finish
+    - name: Wait for workflow to complete
+      id: wait
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
         GH_REPO: ${{ github.repository }}
         WORKFLOW: ${{ inputs.workflow }}
+        SHA: ${{ inputs.sha }}
         PR_NUMBER: ${{ inputs.pr-number }}
         TIMEOUT: ${{ inputs.timeout }}
+        MAX_WAIT: ${{ inputs.max-wait }}
         POLL_INTERVAL: ${{ inputs.poll-interval }}
         COMPACT: ${{ inputs.compact }}
+        VERBOSE: ${{ inputs.verbose }}
       run: |
-        echo "⏳ Waiting for workflow '${WORKFLOW}' triggered by PR #${PR_NUMBER}..."
+        set -euo pipefail
 
-        if [ -z "${PR_NUMBER}" ] && [ -n "${GITHUB_EVENT_PATH}" ]; then
-          PR_NUMBER=$(jq -r '.pull_request.number // empty' < "$GITHUB_EVENT_PATH")
-        fi
+        echo "Repository: ${GH_REPO}"
+        echo "Workflow: ${WORKFLOW}"
+        echo "Commit SHA: ${SHA}"
+        echo "PR Number: ${PR_NUMBER:-none}"
+        echo ""
 
-        if [ -n "$PR_NUMBER" ]; then
-          echo "🔎 Detected PR #${PR_NUMBER}. Searching for matching workflow..."
-          jq_filter="([.workflow_runs[]
-                      | select(.event==\"pull_request\")
-                      | select((.pull_requests[].number|tostring) == \"${PR_NUMBER}\")
-                      | select(.name == \"${WORKFLOW}\")
-                      | .id][0])"
+        # 1. Determine if WORKFLOW is a run ID or a workflow file name
+        if [[ ! "$WORKFLOW" =~ \.ya?ml$ ]]; then
+          RUN_ID="${WORKFLOW}"
+          echo "Using provided workflow run ID: ${RUN_ID}"
         else
-          echo "No PR number provided. Searching by workflow name only..."
-          jq_filter="([.workflow_runs[]
-                      | select(.name == \"${WORKFLOW}\")
-                      | .id][0])"
+          WORKFLOW_FILE="${WORKFLOW}"
         fi
 
-        run_id=$(gh api "repos/${GH_REPO}/actions/runs" --jq "${jq_filter}")
+        # 2. Wait for workflow run to be triggered (if RUN_ID not provided)
+        if [ -z "${RUN_ID:-}" ]; then
+          echo "Waiting for workflow '${WORKFLOW_FILE}' to be triggered..."
+          start_time=$(date +%s)
 
-        if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
-          echo "❌ Workflow '${WORKFLOW}' for PR #${PR_NUMBER} not found."
-          exit 1
+          while true; do
+            if [ "${VERBOSE}" = "true" ]; then
+              echo "Checking for workflow runs..."
+            fi
+
+            if [ -n "${PR_NUMBER:-}" ]; then
+              # Filter by PR number
+              response=$(gh api "repos/${GH_REPO}/actions/workflows/${WORKFLOW_FILE}/runs" --jq \
+                "([.workflow_runs | sort_by(.created_at)[]
+                  | select(.event == \"pull_request\")
+                  | select(any(.pull_requests[]; .number == ${PR_NUMBER}))
+                  | .id] | last)")
+            else
+              # Filter by SHA
+              response=$(gh api "repos/${GH_REPO}/actions/workflows/${WORKFLOW_FILE}/runs" --jq \
+                "([.workflow_runs | sort_by(.created_at)[]
+                  | select(.head_sha == \"${SHA}\")
+                  | .id] | last)")
+            fi
+
+            if [ -n "${response}" ] && [ "${response}" != "null" ]; then
+              RUN_ID="${response}"
+              echo "Detected workflow run: ${RUN_ID}"
+              break
+            fi
+
+            now=$(date +%s)
+            elapsed=$(( (now - start_time) / 60 ))
+            if [ "${elapsed}" -ge "${MAX_WAIT}" ]; then
+              echo "Timeout: workflow '${WORKFLOW_FILE}' did not start within ${MAX_WAIT} minutes."
+              exit 1
+            fi
+
+            sleep "${POLL_INTERVAL}"
+          done
         fi
 
+        echo "run-id=${RUN_ID}" >> "$GITHUB_OUTPUT"
+
+        # 3. Wait for workflow run to complete
         COMPACT_FLAG=""
         if [ "${COMPACT}" = "true" ]; then
-           COMPACT_FLAG="--compact"
+          COMPACT_FLAG="--compact"
         fi
 
-        echo "✅ Found workflow run ID: $run_id, PULL request: ${PR_NUMBER:-N/A}"
+        echo ""
+        echo "Waiting for workflow run ${RUN_ID} to complete..."
+        echo "Timeout: ${TIMEOUT}, Poll interval: ${POLL_INTERVAL}s"
+        echo ""
 
-        timeout "${TIMEOUT}" gh run watch "$run_id" --interval "${POLL_INTERVAL}" {COMPACT_FLAG} --exit-status
+        set +e
+        timeout "${TIMEOUT}" gh run watch "${RUN_ID}" --interval "${POLL_INTERVAL}" ${COMPACT_FLAG} --exit-status
+        exit_code=$?
+        set -e
+
+        if [ "${exit_code}" -eq 124 ]; then
+          echo "Timeout reached: workflow did not complete within ${TIMEOUT}."
+          exit 1
+        elif [ "${exit_code}" -ne 0 ]; then
+          echo "Workflow failed or was cancelled (exit ${exit_code})."
+          exit "${exit_code}"
+        fi
+
+        # 4. Fetch final status
+        conclusion=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq '.conclusion')
+        echo ""
+        echo "Workflow completed with conclusion: ${conclusion}"
+        echo "conclusion=${conclusion}" >> "$GITHUB_OUTPUT"
