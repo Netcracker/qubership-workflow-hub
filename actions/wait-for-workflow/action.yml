@@ -26,20 +26,20 @@ runs:
         WORKFLOW: ${{ inputs.workflow }}
         PR_NUMBER: ${{ inputs.pr_number }}
       run: |
-        run_id=$(gh api repos/${GH_REPO}/actions/runs \
-          --jq ".workflow_runs[]
-            | select(.event==\"pull_request\")
-            | select(.pull_requests[].number == ${PR_NUMBER})
-            | select(.name == \"${WORKFLOW}\")
-            | .id" \
-          | head -n1)
+        echo "⏳ Waiting for workflow '${WORKFLOW}' triggered by PR #${PR_NUMBER}..."
 
-        if [ -z "$run_id" ]; then
+        run_id=$(gh api "repos/${GH_REPO}/actions/runs" \
+          --jq "([.workflow_runs[]
+                  | select(.event==\"pull_request\")
+                  | select(.pull_requests[].number == ${PR_NUMBER})
+                  | select(.name == \"${WORKFLOW}\")
+                  | .id][0])")
+
+        if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
           echo "❌ Workflow '${WORKFLOW}' for PR #${PR_NUMBER} not found."
           exit 1
         fi
 
-        echo "✅ PR #${PR_NUMBER} run workflow '${WORKFLOW}' (Run ID: $run_id)"
-        echo "Waiting for end..."
-
+        echo "✅ Found workflow run ID: $run_id"
         gh run watch "$run_id" --exit-status
+
