@@ -110,7 +110,7 @@ jobs:
           path: .
           output-file: grype.sarif
           fail-build: false
-          severity-cutoff: high
+          severity-cutoff: critical
           only-fixed: true
         continue-on-error: ${{ inputs.continue-on-error }}
 
