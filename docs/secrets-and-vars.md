@@ -18,6 +18,24 @@ Organization-level secrets and variables referenced across actions and reusable 
 | `secrets.DOCKERHUB_USER` | Docker Hub account username used for authenticating when pushing images or increasing anonymous pull rate limits. |
 | `secrets.DOCKERHUB_RW_TOKEN` | Access token / password for the Docker Hub user with read/write (and possibly delete) permissions; used for `docker login` prior to build & push steps. Rotate if leaked. |
 
+## Dependabot Secrets
+
+| Name | Purpose |
+|------|---------|
+| `AWS_ACCESS_KEY_ID` | AWS access key ID for Dependabot to access AWS services during dependency updates. |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret access key paired with `AWS_ACCESS_KEY_ID` for AWS authentication in Dependabot. |
+| `AWS_S3_ACCESS_KEY_ID` | Specific AWS S3 access key ID for Dependabot S3 operations during dependency management. |
+| `AWS_S3_ACCESS_KEY_SECRET` | Secret key paired with `AWS_S3_ACCESS_KEY_ID` for S3-specific operations in Dependabot. |
+
+## Organization Variables
+
+| Name | Purpose |
+|------|---------|
+| `GH_BUMP_VERSION_APP_ID` | GitHub App ID used for automated version bumping processes. |
+| `SONAR_HOST_URL` | URL of the SonarQube/SonarCloud server for code quality analysis. |
+| `SONAR_ORGANIZATION` | Organization identifier in SonarQube/SonarCloud for project association. |
+| `SONAR_PLUGIN_VERSION` | Version of the SonarQube plugin to use in analysis workflows. |
+
 ## Usage Guidelines
 - Prefer `GITHUB_TOKEN` when sufficient; use PATs only if extra scopes (workflow dispatch, cross-repo access, delete package) are required.
 - Do not echo secret values; avoid `set -x` around sensitive commands.
