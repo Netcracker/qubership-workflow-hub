@@ -8,6 +8,10 @@ inputs:
     description: "Ветка или SHA, для которой нужно ждать (опционально)"
     required: false
     default: ${{ github.ref }}
+  token:
+    description: "GitHub Token для аутентификации (опционально)"
+    required: false
+    default: ${{ secrets.GITHUB_TOKEN }}
 
 runs:
   using: "composite"
@@ -21,4 +25,4 @@ runs:
         --branch "${{ inputs.ref }}" \
         --json databaseId,headBranch,headSha,status,conclusion,createdAt,updatedAt,displayTitle
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.token }}
