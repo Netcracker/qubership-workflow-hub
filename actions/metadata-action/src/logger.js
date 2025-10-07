@@ -37,6 +37,18 @@ class Logger {
     endGroup() {
         core.endGroup();
     }
+
+    plain(message) {
+        core.info(message);
+    }
+
+    // 🧩 if onlu debug = true
+    debug(message) {
+        // if (this.debugMode) {
+        //     core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
+        // }
+        core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
+    }
 }
 
 module.exports = new Logger();
