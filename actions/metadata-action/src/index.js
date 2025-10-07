@@ -169,6 +169,7 @@ async function run() {
     core.setOutput("minor", semverParts.minor);
     core.setOutput("patch", semverParts.patch);
     core.setOutput("tag", selectedTemplateAndTag.distTag);
+    core.setOutput("runNumber", github.context.runNumber);
     core.setOutput("ref-type", refData.type);
 
     if (inputs.showReport) {
