@@ -73,7 +73,7 @@ describe("index.js (main action)", () => {
         await run();
 
         // Проверяем, что извлечение ссылки вызвано
-        expect(mockRefNormalizer.extract).toHaveBeenCalledWith("refs/heads/main");
+        expect(mockRefNormalizer.extract).toHaveBeenCalledWith("refs/heads/main","-");
 
         // Проверяем, что записались основные outputs
         expect(core.setOutput).toHaveBeenCalledWith("ref-name", "main");

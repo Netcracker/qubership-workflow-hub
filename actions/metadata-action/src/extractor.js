@@ -13,10 +13,8 @@ class RefNormalizer {
 
         if (isBranch) {
             rawName = ref.slice("refs/heads/".length);
-            core.info(`Run-on branch: ${rawName}`);
         } else if (isTag) {
             rawName = ref.slice("refs/tags/".length);
-            core.info(`Run-on tag: ${rawName}`);
         } else {
             rawName = ref;
             core.warning(`🔸 Cant detect type ref: ${ref}`);

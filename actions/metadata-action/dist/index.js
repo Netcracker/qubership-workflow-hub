@@ -39897,10 +39897,8 @@ class RefNormalizer {
 
         if (isBranch) {
             rawName = ref.slice("refs/heads/".length);
-            core.info(`Run-on branch: ${rawName}`);
         } else if (isTag) {
             rawName = ref.slice("refs/tags/".length);
-            core.info(`Run-on tag: ${rawName}`);
         } else {
             rawName = ref;
             core.warning(`🔸 Cant detect type ref: ${ref}`);
@@ -39932,24 +39930,7 @@ const github = __nccwpck_require__(5355);
 const ConfigLoader = __nccwpck_require__(9027);
 const RefNormalizer = __nccwpck_require__(1074);
 const Report = __nccwpck_require__(1090);
-
-const COLORS = {
-  reset: "\x1b[0m",
-  blue: "\x1b[34m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
-  red: "\x1b[31m",
-  gray: "\x1b[90m"
-};
-
-const log = {
-  info: (msg) => core.info(`${COLORS.blue}${msg}${COLORS.reset}`),
-  success: (msg) => core.info(`${COLORS.green}${msg}${COLORS.reset}`),
-  warn: (msg) => core.warning(`${COLORS.yellow}${msg}${COLORS.reset}`),
-  error: (msg) => core.error(`${COLORS.red}${msg}${COLORS.reset}`),
-  dim: (msg) => core.info(`${COLORS.gray}${msg}${COLORS.reset}`)
-};
-
+const log = __nccwpck_require__(4276);
 // --- utility functions ---
 function generateSnapshotVersionParts() {
   const now = new Date();
@@ -40005,11 +39986,11 @@ function flattenObject(obj, prefix = "") {
 
 async function run() {
   try {
-    core.startGroup("🚀 Metadata Action Initialization");
+    log.group("🚀 Metadata Action Initialization");
 
     let ref = core.getInput("ref") || (github.context.eventName === "pull_request" ? github.context.payload.pull_request?.head?.ref : github.context.ref);
 
-    log.info(`📦 Ref: ${ref}`);
+    log.info(`Ref: ${ref}`);
 
     const dryRun = core.getInput("dry-run") === "true";
     const showReport = core.getInput("show-report") === "true";
@@ -40041,8 +40022,8 @@ async function run() {
     const extraTags = core.getInput("extra-tags") || "";
     const mergeTags = core.getInput("merge-tags") === "true";
 
-    log.dim(`🔸 defaultTemplate: ${defaultTemplate}`);
-    log.dim(`🔸 defaultTag: ${defaultTag}`);
+    log.dim(`defaultTemplate: ${defaultTemplate}`);
+    log.dim(`defaultTag: ${defaultTag}`);
 
     const selectedTemplateAndTag = { template: null, distTag: null, toString() { return `Template: ${this.template}, DistTag: ${this.distTag}`; }, };
 
@@ -40052,12 +40033,12 @@ async function run() {
     }
 
     if (!selectedTemplateAndTag.template) {
-      log.warn(`⚠️ No template found for ref: ${refData.normalizedName}, using default -> ${defaultTemplate}`);
+      log.warn(`No template found for ref: ${refData.normalizedName}, using default -> ${defaultTemplate}`);
       selectedTemplateAndTag.template = defaultTemplate;
     }
 
     if (!selectedTemplateAndTag.distTag) {
-      log.warn(`⚠️ No dist-tag found for ref: ${refData.normalizedName}, using default -> ${defaultTag}`);
+      log.warn(`No dist-tag found for ref: ${refData.normalizedName}, using default -> ${defaultTag}`);
       selectedTemplateAndTag.distTag = defaultTag;
     }
 
@@ -40077,12 +40058,13 @@ async function run() {
 
     let result = fillTemplate(selectedTemplateAndTag.template, values);
     if (extraTags && mergeTags) {
-      log.info(`🔹 Merging extra tags: ${extraTags}`);
+      log.info(`Merging extra tags: ${extraTags}`);
       result += `, ${extraTags}`;
     }
 
     log.success(`💡 Rendered template: ${result}`);
-    core.endGroup();
+
+    log.endGroup();
 
     // --- Outputs ---
     core.setOutput("result", result);
@@ -40203,6 +40185,55 @@ class ConfigLoader {
 }
 
 module.exports = ConfigLoader;
+
+/***/ }),
+
+/***/ 4276:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const core = __nccwpck_require__(8335);
+
+const COLORS = {
+    reset: "\x1b[0m",
+    blue: "\x1b[34m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    red: "\x1b[31m",
+    gray: "\x1b[90m"
+};
+
+class Logger {
+    info(message) {
+        core.info(`${COLORS.blue}${message}${COLORS.reset}`);
+    }
+
+    success(message) {
+        core.info(`${COLORS.green}${message}${COLORS.reset}`);
+    }
+
+    warn(message) {
+        core.warning(`${COLORS.yellow}${message}${COLORS.reset}`);
+    }
+
+    error(message) {
+        core.error(`${COLORS.red}${message}${COLORS.reset}`);
+    }
+
+    dim(message) {
+        core.info(`${COLORS.gray}${message}${COLORS.reset}`);
+    }
+
+    group(title) {
+        core.startGroup(`${COLORS.blue}${title}${COLORS.reset}`);
+    }
+
+    endGroup() {
+        core.endGroup();
+    }
+}
+
+module.exports = new Logger();
+
 
 /***/ }),
 
