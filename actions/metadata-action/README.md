@@ -50,6 +50,7 @@ The primary output of this action is a generated version string. This string is 
 | `patch`     | Patch version number extracted from semantic versioning.                                                                            | 3               |
 | `short-sha` | Shortened SHA of the current commit.                                                                                                | abc1234         |
 
+
 ---
 
 ## Usage Example

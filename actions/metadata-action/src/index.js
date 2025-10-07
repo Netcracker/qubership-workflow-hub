@@ -182,6 +182,7 @@ async function run() {
         distTag: selectedTemplateAndTag.distTag,
         extraTags,
         renderResult: result,
+        github: github.context
       };
       await new Report().writeSummary(reportItem, inputs.dryRun);
     }

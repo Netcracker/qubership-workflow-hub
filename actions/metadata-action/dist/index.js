@@ -39996,7 +39996,6 @@ async function run() {
       dryRun: core.getInput("dry-run") === "true",
       showReport: core.getInput("show-report") === "true",
       replaceSymbol: core.getInput("replace-symbol") || "-",
-      shortShaLength: parseInt(core.getInput("short-sha"), 10),
       mergeTags: core.getInput("merge-tags") === "true",
       extraTags: core.getInput("extra-tags") || "",
       configPath: core.getInput("configuration-path") || "./.github/metadata-action-config.yml",
@@ -40014,7 +40013,7 @@ async function run() {
     const { normalizedName } = refData;
 
     // --- short-sha logic ---
-    let shortShaLength = inputs.shortShaLength || 7;
+    let shortShaLength = parseInt(core.getInput("short-sha"), 10);
     if (isNaN(shortShaLength) || shortShaLength < 1 || shortShaLength > 40) {
       log.warn(`⚠️ Invalid short-sha value: ${core.getInput("short-sha")}, fallback to 7`);
       shortShaLength = 7;
@@ -40105,6 +40104,7 @@ async function run() {
         distTag: selectedTemplateAndTag.distTag,
         extraTags,
         renderResult: result,
+        github: github.context
       };
       await new Report().writeSummary(reportItem, inputs.dryRun);
     }
