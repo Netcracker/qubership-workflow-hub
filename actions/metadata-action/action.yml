@@ -36,6 +36,10 @@ inputs:
         description: "Dry run mode."
         default: "false"
         required: false
+    replace-symbol:
+        description: "Symbol to replace '/' in branch or tag names."
+        default: "-"
+        required: false
 outputs:
     result:
         description: "Current timestamp."
