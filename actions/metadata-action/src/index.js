@@ -125,10 +125,6 @@ async function run() {
     const parts = generateSnapshotVersionParts();
     const semverParts = extractSemverParts(refData.normalizedName);
 
-    log.debug(`Snapshot parts: ${JSON.stringify(parts)}`);
-    log.debug(`Semver parts: ${JSON.stringify(semverParts)}`);
-    log.info(`Selected ${selectedTemplateAndTag}`);
-
     const values = {
       ...refData,
       "ref-name": refData.normalizedName,
