@@ -23,7 +23,7 @@ function generateSnapshotVersionParts() {
 function extractSemverParts(versionString) {
   const normalized = versionString.replace(/^v/i, "");
   if (!/^\d+\.\d+\.\d+$/.test(normalized)) {
-    log.dim(`💡 Not a valid semver string (skip): ${versionString}`);
+    log.dim(`Not a valid semver string (skip): ${versionString}`);
     return { major: "", minor: "", patch: "" };
   }
   const [major, minor, patch] = normalized.split(".");
@@ -89,7 +89,7 @@ async function run() {
 
     const fullSha = github.context.sha;
     const shortSha = fullSha.slice(0, shortShaLength);
-    log.info(`🧩 Commit: ${shortSha} (full: ${fullSha}, length: ${shortShaLength})`);
+    log.info(`Commit: ${shortSha} (full: ${fullSha}, length: ${shortShaLength})`);
 
     // --- Config load ---
     const configurationPath = core.getInput("configuration-path") || "./.github/metadata-action-config.yml";
