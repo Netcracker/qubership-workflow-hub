@@ -90,11 +90,10 @@ async function run() {
 
     const dryRun = core.getInput("dry-run") === "true";
     const showReport = core.getInput("show-report") === "true";
-    const debug = ["true", "1", "yes", "on"].includes(
-      core.getInput("debug")?.toLowerCase()
-    );
+    const debug = ["true", "1", "yes", "on"].includes(core.getInput("debug")?.toLowerCase());
+    const replaceSymbol = core.getInput("replace-symbol") || "-";
 
-    const refData = new RefNormalizer().extract(ref);
+    const refData = new RefNormalizer().extract(ref, replaceSymbol);
     const { normalizedName } = refData;
 
     // --- short-sha logic ---

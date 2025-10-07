@@ -39918,6 +39918,217 @@ module.exports = RefNormalizer;
 
 /***/ }),
 
+/***/ 4870:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+// With a motherf***ing microphone, plug it in my soul
+// I'm a renegade riot getting out of control
+// I'm-a keeping it alive and continue to be
+// Flying like an eagle to my destiny
+
+const core = __nccwpck_require__(8335);
+const github = __nccwpck_require__(5355);
+
+const ConfigLoader = __nccwpck_require__(9027);
+const RefNormalizer = __nccwpck_require__(1074);
+const Report = __nccwpck_require__(1090);
+
+const COLORS = {
+  reset: "\x1b[0m",
+  blue: "\x1b[34m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  red: "\x1b[31m",
+  gray: "\x1b[90m"
+};
+
+const log = {
+  info: (msg) => core.info(`${COLORS.blue}${msg}${COLORS.reset}`),
+  success: (msg) => core.info(`${COLORS.green}${msg}${COLORS.reset}`),
+  warn: (msg) => core.warning(`${COLORS.yellow}${msg}${COLORS.reset}`),
+  error: (msg) => core.error(`${COLORS.red}${msg}${COLORS.reset}`),
+  dim: (msg) => core.info(`${COLORS.gray}${msg}${COLORS.reset}`)
+};
+
+// --- utility functions ---
+function generateSnapshotVersionParts() {
+  const now = new Date();
+  const iso = now.toISOString();
+  const date = iso.slice(0, 10).replace(/-/g, "");
+  const time = iso.slice(11, 19).replace(/:/g, "");
+  return { date, time, timestamp: `${date}${time}` };
+}
+
+function extractSemverParts(versionString) {
+  const normalized = versionString.replace(/^v/i, "");
+  if (!/^\d+\.\d+\.\d+$/.test(normalized)) {
+    log.dim(`💡 Not a valid semver string (skip): ${versionString}`);
+    return { major: "", minor: "", patch: "" };
+  }
+  const [major, minor, patch] = normalized.split(".");
+  return { major, minor, patch };
+}
+
+function matchesPattern(refName, pattern) {
+  const normalizedPattern = pattern.replace(/\//g, "-").replace(/\*/g, ".*");
+  return new RegExp(`^${normalizedPattern}$`).test(refName);
+}
+
+function findTemplate(refName, templates) {
+  if (!Array.isArray(templates) || templates.length === 0) return null;
+  for (const item of templates) {
+    const pattern = Object.keys(item)[0];
+    if (matchesPattern(refName, pattern)) {
+      return item[pattern];
+    }
+  }
+  return null;
+}
+
+function fillTemplate(template, values) {
+  return template.replace(/{{\s*([\w\.-]+)\s*}}/g, (match, key) => {
+    return key in values ? values[key] : match;
+  });
+}
+
+function flattenObject(obj, prefix = "") {
+  return Object.entries(obj).reduce((acc, [key, val]) => {
+    const name = prefix ? `${prefix}.${key}` : key;
+    if (val !== null && typeof val === "object") {
+      Object.assign(acc, flattenObject(val, name));
+    } else {
+      acc[name] = val;
+    }
+    return acc;
+  }, {});
+}
+
+async function run() {
+  try {
+    core.startGroup("🚀 Metadata Action Initialization");
+
+    let ref = core.getInput("ref") || (github.context.eventName === "pull_request" ? github.context.payload.pull_request?.head?.ref : github.context.ref);
+
+    log.info(`📦 Ref: ${ref}`);
+
+    const dryRun = core.getInput("dry-run") === "true";
+    const showReport = core.getInput("show-report") === "true";
+    const debug = ["true", "1", "yes", "on"].includes(core.getInput("debug")?.toLowerCase());
+    const replaceSymbol = core.getInput("replace-symbol") || "-";
+
+    const refData = new RefNormalizer().extract(ref, replaceSymbol);
+    const { normalizedName } = refData;
+
+    // --- short-sha logic ---
+    let shortShaLength = parseInt(core.getInput("short-sha"), 10);
+    if (isNaN(shortShaLength) || shortShaLength < 1 || shortShaLength > 40) {
+      log.warn(`⚠️ Invalid short-sha value: ${core.getInput("short-sha")}, fallback to 7`);
+      shortShaLength = 7;
+    }
+
+    const fullSha = github.context.sha;
+    const shortSha = fullSha.slice(0, shortShaLength);
+    log.info(`🧩 Commit: ${shortSha} (full: ${fullSha}, length: ${shortShaLength})`);
+
+    // --- Config load ---
+    const configurationPath = core.getInput("configuration-path") || "./.github/metadata-action-config.yml";
+    const loader = new ConfigLoader();
+    const config = loader.load(configurationPath, debug);
+
+    const defaultTemplate = core.getInput("default-template") || config?.["default-template"] || `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
+    const defaultTag = core.getInput("default-tag") || config?.["default-tag"] || "latest";
+
+    const extraTags = core.getInput("extra-tags") || "";
+    const mergeTags = core.getInput("merge-tags") === "true";
+
+    log.dim(`🔸 defaultTemplate: ${defaultTemplate}`);
+    log.dim(`🔸 defaultTag: ${defaultTag}`);
+
+    const selectedTemplateAndTag = { template: null, distTag: null, toString() { return `Template: ${this.template}, DistTag: ${this.distTag}`; }, };
+
+    if (loader.fileExists) {
+      selectedTemplateAndTag.template = findTemplate(!refData.isTag ? refData.normalizedName : "tag", config["branches-template"]);
+      selectedTemplateAndTag.distTag = findTemplate(refData.normalizedName, config["distribution-tag"]);
+    }
+
+    if (!selectedTemplateAndTag.template) {
+      log.warn(`⚠️ No template found for ref: ${refData.normalizedName}, using default -> ${defaultTemplate}`);
+      selectedTemplateAndTag.template = defaultTemplate;
+    }
+
+    if (!selectedTemplateAndTag.distTag) {
+      log.warn(`⚠️ No dist-tag found for ref: ${refData.normalizedName}, using default -> ${defaultTag}`);
+      selectedTemplateAndTag.distTag = defaultTag;
+    }
+
+    const parts = generateSnapshotVersionParts();
+    const semverParts = extractSemverParts(refData.normalizedName);
+
+    const values = {
+      ...refData,
+      "ref-name": refData.normalizedName,
+      "short-sha": shortSha,
+      ...semverParts,
+      ...parts,
+      "dist-tag": selectedTemplateAndTag.distTag,
+      "runNumber": github.context.runNumber,
+      ...flattenObject({ github }, ""),
+    };
+
+    let result = fillTemplate(selectedTemplateAndTag.template, values);
+    if (extraTags && mergeTags) {
+      log.info(`🔹 Merging extra tags: ${extraTags}`);
+      result += `, ${extraTags}`;
+    }
+
+    log.success(`💡 Rendered template: ${result}`);
+    core.endGroup();
+
+    // --- Outputs ---
+    core.setOutput("result", result);
+    core.setOutput("ref", refData.normalizedName);
+    core.setOutput("ref-name", refData.normalizedName);
+    core.setOutput("commit", fullSha);
+    core.setOutput("short-sha", shortSha);
+    core.setOutput("date", parts.date);
+    core.setOutput("time", parts.time);
+    core.setOutput("timestamp", parts.timestamp);
+    core.setOutput("major", semverParts.major);
+    core.setOutput("minor", semverParts.minor);
+    core.setOutput("patch", semverParts.patch);
+    core.setOutput("tag", selectedTemplateAndTag.distTag);
+
+    if (showReport) {
+      const reportItem = {
+        ref: refData.normalizedName,
+        sha: fullSha,
+        shortSha,
+        semver: `${semverParts.major}.${semverParts.minor}.${semverParts.patch}`,
+        timestamp: parts.timestamp,
+        template: selectedTemplateAndTag.template,
+        distTag: selectedTemplateAndTag.distTag,
+        extraTags,
+        renderResult: result,
+      };
+      await new Report().writeSummary(reportItem, dryRun);
+    }
+
+    log.success("✅ Action completed successfully!");
+  } catch (error) {
+    log.error(`❌ Action failed: ${error.message}`);
+    core.setFailed(error.message);
+  }
+}
+
+if (require.main === require.cache[eval('__filename')]) {
+  run();
+}
+
+module.exports = run;
+
+
+/***/ }),
+
 /***/ 9027:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -42765,209 +42976,12 @@ module.exports = /*#__PURE__*/JSON.parse('{"$schema":"http://json-schema.org/dra
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// With a motherf***ing microphone, plug it in my soul
-// I'm a renegade riot getting out of control
-// I'm-a keeping it alive and continue to be
-// Flying like an eagle to my destiny
-
-const core = __nccwpck_require__(8335);
-const github = __nccwpck_require__(5355);
-
-const ConfigLoader = __nccwpck_require__(9027);
-const RefNormalizer = __nccwpck_require__(1074);
-const Report = __nccwpck_require__(1090);
-
-const COLORS = {
-  reset: "\x1b[0m",
-  blue: "\x1b[34m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
-  red: "\x1b[31m",
-  gray: "\x1b[90m"
-};
-
-const log = {
-  info: (msg) => core.info(`${COLORS.blue}${msg}${COLORS.reset}`),
-  success: (msg) => core.info(`${COLORS.green}${msg}${COLORS.reset}`),
-  warn: (msg) => core.warning(`${COLORS.yellow}${msg}${COLORS.reset}`),
-  error: (msg) => core.error(`${COLORS.red}${msg}${COLORS.reset}`),
-  dim: (msg) => core.info(`${COLORS.gray}${msg}${COLORS.reset}`)
-};
-
-// --- utility functions ---
-function generateSnapshotVersionParts() {
-  const now = new Date();
-  const iso = now.toISOString();
-  const date = iso.slice(0, 10).replace(/-/g, "");
-  const time = iso.slice(11, 19).replace(/:/g, "");
-  return { date, time, timestamp: `${date}${time}` };
-}
-
-function extractSemverParts(versionString) {
-  const normalized = versionString.replace(/^v/i, "");
-  if (!/^\d+\.\d+\.\d+$/.test(normalized)) {
-    log.dim(`💡 Not a valid semver string (skip): ${versionString}`);
-    return { major: "", minor: "", patch: "" };
-  }
-  const [major, minor, patch] = normalized.split(".");
-  return { major, minor, patch };
-}
-
-function matchesPattern(refName, pattern) {
-  const normalizedPattern = pattern.replace(/\//g, "-").replace(/\*/g, ".*");
-  return new RegExp(`^${normalizedPattern}$`).test(refName);
-}
-
-function findTemplate(refName, templates) {
-  if (!Array.isArray(templates) || templates.length === 0) return null;
-  for (const item of templates) {
-    const pattern = Object.keys(item)[0];
-    if (matchesPattern(refName, pattern)) {
-      return item[pattern];
-    }
-  }
-  return null;
-}
-
-function fillTemplate(template, values) {
-  return template.replace(/{{\s*([\w\.-]+)\s*}}/g, (match, key) => {
-    return key in values ? values[key] : match;
-  });
-}
-
-function flattenObject(obj, prefix = "") {
-  return Object.entries(obj).reduce((acc, [key, val]) => {
-    const name = prefix ? `${prefix}.${key}` : key;
-    if (val !== null && typeof val === "object") {
-      Object.assign(acc, flattenObject(val, name));
-    } else {
-      acc[name] = val;
-    }
-    return acc;
-  }, {});
-}
-
-async function run() {
-  try {
-    core.startGroup("🚀 Metadata Action Initialization");
-
-    let ref = core.getInput("ref") || (github.context.eventName === "pull_request" ? github.context.payload.pull_request?.head?.ref : github.context.ref);
-
-    log.info(`📦 Ref: ${ref}`);
-
-    const dryRun = core.getInput("dry-run") === "true";
-    const showReport = core.getInput("show-report") === "true";
-    const debug = ["true", "1", "yes", "on"].includes(
-      core.getInput("debug")?.toLowerCase()
-    );
-
-    const refData = new RefNormalizer().extract(ref);
-    const { normalizedName } = refData;
-
-    // --- short-sha logic ---
-    let shortShaLength = parseInt(core.getInput("short-sha"), 10);
-    if (isNaN(shortShaLength) || shortShaLength < 1 || shortShaLength > 40) {
-      log.warn(`⚠️ Invalid short-sha value: ${core.getInput("short-sha")}, fallback to 7`);
-      shortShaLength = 7;
-    }
-
-    const fullSha = github.context.sha;
-    const shortSha = fullSha.slice(0, shortShaLength);
-    log.info(`🧩 Commit: ${shortSha} (full: ${fullSha}, length: ${shortShaLength})`);
-
-    // --- Config load ---
-    const configurationPath = core.getInput("configuration-path") || "./.github/metadata-action-config.yml";
-    const loader = new ConfigLoader();
-    const config = loader.load(configurationPath, debug);
-
-    const defaultTemplate = core.getInput("default-template") || config?.["default-template"] || `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
-    const defaultTag = core.getInput("default-tag") || config?.["default-tag"] || "latest";
-
-    const extraTags = core.getInput("extra-tags") || "";
-    const mergeTags = core.getInput("merge-tags") === "true";
-
-    log.dim(`🔸 defaultTemplate: ${defaultTemplate}`);
-    log.dim(`🔸 defaultTag: ${defaultTag}`);
-
-    const selectedTemplateAndTag = { template: null, distTag: null, toString() { return `Template: ${this.template}, DistTag: ${this.distTag}`; }, };
-
-    if (loader.fileExists) {
-      selectedTemplateAndTag.template = findTemplate(!refData.isTag ? refData.normalizedName : "tag", config["branches-template"]);
-      selectedTemplateAndTag.distTag = findTemplate(refData.normalizedName, config["distribution-tag"]);
-    }
-
-    if (!selectedTemplateAndTag.template) {
-      log.warn(`⚠️ No template found for ref: ${refData.normalizedName}, using default -> ${defaultTemplate}`);
-      selectedTemplateAndTag.template = defaultTemplate;
-    }
-
-    if (!selectedTemplateAndTag.distTag) {
-      log.warn(`⚠️ No dist-tag found for ref: ${refData.normalizedName}, using default -> ${defaultTag}`);
-      selectedTemplateAndTag.distTag = defaultTag;
-    }
-
-    const parts = generateSnapshotVersionParts();
-    const semverParts = extractSemverParts(refData.normalizedName);
-
-    const values = {
-      ...refData,
-      "ref-name": refData.normalizedName,
-      "short-sha": shortSha,
-      ...semverParts,
-      ...parts,
-      "dist-tag": selectedTemplateAndTag.distTag,
-      "runNumber": github.context.runNumber,
-      ...flattenObject({ github }, ""),
-    };
-
-    let result = fillTemplate(selectedTemplateAndTag.template, values);
-    if (extraTags && mergeTags) {
-      log.info(`🔹 Merging extra tags: ${extraTags}`);
-      result += `, ${extraTags}`;
-    }
-
-    log.success(`💡 Rendered template: ${result}`);
-    core.endGroup();
-
-    // --- Outputs ---
-    core.setOutput("result", result);
-    core.setOutput("ref", refData.normalizedName);
-    core.setOutput("ref-name", refData.normalizedName);
-    core.setOutput("commit", fullSha);
-    core.setOutput("short-sha", shortSha);
-    core.setOutput("date", parts.date);
-    core.setOutput("time", parts.time);
-    core.setOutput("timestamp", parts.timestamp);
-    core.setOutput("major", semverParts.major);
-    core.setOutput("minor", semverParts.minor);
-    core.setOutput("patch", semverParts.patch);
-    core.setOutput("tag", selectedTemplateAndTag.distTag);
-
-    if (showReport) {
-      const reportItem = {
-        ref: refData.normalizedName,
-        sha: fullSha,
-        shortSha,
-        semver: `${semverParts.major}.${semverParts.minor}.${semverParts.patch}`,
-        timestamp: parts.timestamp,
-        template: selectedTemplateAndTag.template,
-        distTag: selectedTemplateAndTag.distTag,
-        extraTags,
-        renderResult: result,
-      };
-      await new Report().writeSummary(reportItem, dryRun);
-    }
-
-    log.success("✅ Action completed successfully!");
-  } catch (error) {
-    log.error(`❌ Action failed: ${error.message}`);
-    core.setFailed(error.message);
-  }
-}
-
-run();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(4870);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;
