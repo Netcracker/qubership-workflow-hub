@@ -10,6 +10,14 @@ const COLORS = {
 };
 
 class Logger {
+    constructor() {
+        this.debugMode = false;
+    }
+
+    setDebug(enabled) {
+        this.debugMode = Boolean(enabled);
+    }
+
     info(message) {
         core.info(`${COLORS.blue}${message}${COLORS.reset}`);
     }
@@ -42,12 +50,10 @@ class Logger {
         core.info(message);
     }
 
-    // 🧩 if onlu debug = true
     debug(message) {
-        // if (this.debugMode) {
-        //     core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
-        // }
-        core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
+        if (this.debugMode) {
+            core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
+        }
     }
 }
 

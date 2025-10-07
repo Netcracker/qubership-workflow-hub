@@ -39990,20 +39990,31 @@ async function run() {
   try {
     log.group("🚀 Metadata Action Initialization");
 
-    let ref = core.getInput("ref") || (github.context.eventName === "pull_request" ? github.context.payload.pull_request?.head?.ref : github.context.ref);
+    const inputs = {
+      ref: core.getInput("ref"),
+      debug: ["true", "1", "yes", "on"].includes(core.getInput("debug")?.toLowerCase()),
+      dryRun: core.getInput("dry-run") === "true",
+      showReport: core.getInput("show-report") === "true",
+      replaceSymbol: core.getInput("replace-symbol") || "-",
+      shortShaLength: parseInt(core.getInput("short-sha"), 10),
+      mergeTags: core.getInput("merge-tags") === "true",
+      extraTags: core.getInput("extra-tags") || "",
+      configPath: core.getInput("configuration-path") || "./.github/metadata-action-config.yml",
+      defaultTemplate: core.getInput("default-template"),
+      defaultTag: core.getInput("default-tag"),
+    };
+
+    log.setDebug(inputs.debug);
+
+    let ref = inputs.ref || (github.context.eventName === "pull_request" ? github.context.payload.pull_request?.head?.ref : github.context.ref);
 
     log.info(`Ref: ${ref}`);
 
-    const dryRun = core.getInput("dry-run") === "true";
-    const showReport = core.getInput("show-report") === "true";
-    const debug = ["true", "1", "yes", "on"].includes(core.getInput("debug")?.toLowerCase());
-    const replaceSymbol = core.getInput("replace-symbol") || "-";
-
-    const refData = new RefNormalizer().extract(ref, replaceSymbol);
+    const refData = new RefNormalizer().extract(ref, inputs.replaceSymbol);
     const { normalizedName } = refData;
 
     // --- short-sha logic ---
-    let shortShaLength = parseInt(core.getInput("short-sha"), 10);
+    let shortShaLength = inputs.shortShaLength || 7;
     if (isNaN(shortShaLength) || shortShaLength < 1 || shortShaLength > 40) {
       log.warn(`⚠️ Invalid short-sha value: ${core.getInput("short-sha")}, fallback to 7`);
       shortShaLength = 7;
@@ -40014,15 +40025,14 @@ async function run() {
     log.info(`Commit: ${shortSha} (full: ${fullSha}, length: ${shortShaLength})`);
 
     // --- Config load ---
-    const configurationPath = core.getInput("configuration-path") || "./.github/metadata-action-config.yml";
     const loader = new ConfigLoader();
-    const config = loader.load(configurationPath, debug);
+    const config = loader.load(inputs.configPath, inputs.debug);
 
-    const defaultTemplate = core.getInput("default-template") || config?.["default-template"] || `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
-    const defaultTag = core.getInput("default-tag") || config?.["default-tag"] || "latest";
+    const defaultTemplate = inputs.defaultTemplate || config?.["default-template"] || `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
+    const defaultTag = inputs.defaultTag || config?.["default-tag"] || "latest";
 
-    const extraTags = core.getInput("extra-tags") || "";
-    const mergeTags = core.getInput("merge-tags") === "true";
+    const extraTags = inputs.extraTags;
+    const mergeTags = inputs.mergeTags;
 
     log.dim(`defaultTemplate: ${defaultTemplate}`);
     log.dim(`defaultTag: ${defaultTag}`);
@@ -40059,12 +40069,13 @@ async function run() {
     };
 
     let result = fillTemplate(selectedTemplateAndTag.template, values);
-    if (extraTags && mergeTags) {
+
+    if (mergeTags && extraTags) {
       log.info(`Merging extra tags: ${extraTags}`);
-      result += `, ${extraTags}`;
+      result = [result, extraTags].join(", ");
     }
 
-    log.success(`💡 Rendered template: ${result}`);
+    log.success(`💡 Rendered Metadata: ${result}`);
 
     log.endGroup();
 
@@ -40081,8 +40092,9 @@ async function run() {
     core.setOutput("minor", semverParts.minor);
     core.setOutput("patch", semverParts.patch);
     core.setOutput("tag", selectedTemplateAndTag.distTag);
+    core.setOutput("ref-type", refData.type);
 
-    if (showReport) {
+    if (inputs.showReport) {
       const reportItem = {
         ref: refData.normalizedName,
         sha: fullSha,
@@ -40094,10 +40106,13 @@ async function run() {
         extraTags,
         renderResult: result,
       };
-      await new Report().writeSummary(reportItem, dryRun);
+      await new Report().writeSummary(reportItem, inputs.dryRun);
     }
 
     log.success("✅ Action completed successfully!");
+
+    //for testing purpose
+    return { result, refData, shortSha, parts, semverParts };
   } catch (error) {
     log.error(`❌ Action failed: ${error.message}`);
     core.setFailed(error.message);
@@ -40206,6 +40221,14 @@ const COLORS = {
 };
 
 class Logger {
+    constructor() {
+        this.debugMode = false;
+    }
+
+    setDebug(enabled) {
+        this.debugMode = Boolean(enabled);
+    }
+
     info(message) {
         core.info(`${COLORS.blue}${message}${COLORS.reset}`);
     }
@@ -40238,12 +40261,10 @@ class Logger {
         core.info(message);
     }
 
-    // 🧩 if onlu debug = true
     debug(message) {
-        // if (this.debugMode) {
-        //     core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
-        // }
-        core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
+        if (this.debugMode) {
+            core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
+        }
     }
 }
 
