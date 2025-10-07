@@ -1,4 +1,5 @@
 const core = require("@actions/core");
+const log = require("./logger");
 
 class RefNormalizer {
     extract(ref, replaceSymbol = "-") {
@@ -17,7 +18,7 @@ class RefNormalizer {
             rawName = ref.slice("refs/tags/".length);
         } else {
             rawName = ref;
-            core.warning(`🔸 Cant detect type ref: ${ref}`);
+            log.warn(`Cant detect type ref: ${ref}`);
         }
 
         const normalizedName = rawName.replace(/\//g, replaceSymbol);

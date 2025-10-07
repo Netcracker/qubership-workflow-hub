@@ -3,6 +3,7 @@ const yaml = require("js-yaml");
 const core = require("@actions/core");
 const Ajv = require("ajv");
 const path = require("path");
+const log = require("./logger");
 
 class ConfigLoader {
   constructor() {
@@ -15,10 +16,10 @@ class ConfigLoader {
 
   load(filePath, debug = false) {
     const configPath = path.resolve(filePath);
-    console.log(`💡 Try to reading configuration ${configPath}`)
+    log.dim(`Try to reading configuration ${configPath}`)
 
     if (!fs.existsSync(configPath)) {
-      core.info(`❗️ Configuration file not found: ${configPath}`);
+      log.error(`❗️ Configuration file not found: ${configPath}`);
       this.fileExist = false;
       return;
     }
@@ -29,8 +30,8 @@ class ConfigLoader {
     try {
       config = yaml.load(fileContent);
       if (debug) {
-        console.log("🔍 Loaded configuration YAML:", JSON.stringify(config, null, 2));
-        console.log("🔑 Object Keys:", Object.keys(config));
+        log.dim("🔍 Loaded configuration YAML:", JSON.stringify(config, null, 2));
+        log.dim("🔑 Object Keys:", Object.keys(config));
       }
     }
     catch (error) {

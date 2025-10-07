@@ -39883,6 +39883,7 @@ function wrappy (fn, cb) {
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const core = __nccwpck_require__(8335);
+const log = __nccwpck_require__(4276);
 
 class RefNormalizer {
     extract(ref, replaceSymbol = "-") {
@@ -39901,7 +39902,7 @@ class RefNormalizer {
             rawName = ref.slice("refs/tags/".length);
         } else {
             rawName = ref;
-            core.warning(`🔸 Cant detect type ref: ${ref}`);
+            log.warn(`Cant detect type ref: ${ref}`);
         }
 
         const normalizedName = rawName.replace(/\//g, replaceSymbol);
@@ -39931,6 +39932,7 @@ const ConfigLoader = __nccwpck_require__(9027);
 const RefNormalizer = __nccwpck_require__(1074);
 const Report = __nccwpck_require__(1090);
 const log = __nccwpck_require__(4276);
+
 // --- utility functions ---
 function generateSnapshotVersionParts() {
   const now = new Date();
@@ -40119,6 +40121,7 @@ const yaml = __nccwpck_require__(5756);
 const core = __nccwpck_require__(8335);
 const Ajv = __nccwpck_require__(2236);
 const path = __nccwpck_require__(6928);
+const log = __nccwpck_require__(4276);
 
 class ConfigLoader {
   constructor() {
@@ -40131,10 +40134,10 @@ class ConfigLoader {
 
   load(filePath, debug = false) {
     const configPath = path.resolve(filePath);
-    console.log(`💡 Try to reading configuration ${configPath}`)
+    log.dim(`Try to reading configuration ${configPath}`)
 
     if (!fs.existsSync(configPath)) {
-      core.info(`❗️ Configuration file not found: ${configPath}`);
+      log.error(`❗️ Configuration file not found: ${configPath}`);
       this.fileExist = false;
       return;
     }
@@ -40145,8 +40148,8 @@ class ConfigLoader {
     try {
       config = yaml.load(fileContent);
       if (debug) {
-        console.log("🔍 Loaded configuration YAML:", JSON.stringify(config, null, 2));
-        console.log("🔑 Object Keys:", Object.keys(config));
+        log.dim("🔍 Loaded configuration YAML:", JSON.stringify(config, null, 2));
+        log.dim("🔑 Object Keys:", Object.keys(config));
       }
     }
     catch (error) {
