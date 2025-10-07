@@ -32,7 +32,6 @@ The primary output of this action is a generated version string. This string is 
 | `dry-run`            | Enable dry-run mode to simulate the action.    | No       | `false`                                    |
 | `replace-symbol`     | Symbol to replace '/' in branch or tag names.  | No       | `-`                                        |
 
-
 ---
 
 ## 📌 Outputs
@@ -53,7 +52,6 @@ The primary output of this action is a generated version string. This string is 
 | `runNumber` | The unique number for each run of a particular workflow in a repository.                                                           | 123             |
 | `commit`    | The full SHA of the current commit.                                                                                                 | abc123456789    |
 | `ref-type`  | The type of the reference (e.g., branch or tag).                                                                                    | branch          |
-
 
 ---
 
@@ -125,8 +123,7 @@ In this example:
 ### GitHub Context Availability
 
 The GitHub context is available, allowing you to access properties such as the current branch, tag, and other metadata. This context can be used within the action to dynamically generate version strings and tailor behavior based on the repository state.
-More information [here](https://docs.github.com/ru/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs).
-
+[More information](https://docs.github.com/ru/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs).
 
 ### Semantic Version Parsing Contract
 
@@ -134,7 +131,7 @@ The variables `major`, `minor`, and `patch` are parsed only from a branch or tag
 
 ### Configuration File Schema
 
-The configuration file for this action must adhere to the schema defined [here](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json). This ensures that all templates, distribution tags, and other configuration options follow the required structure for correct parsing and execution.
+The configuration file for this action must adhere to [the schema defined](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json). This ensures that all templates, distribution tags, and other configuration options follow the required structure for correct parsing and execution.
 
 ```json
 {
