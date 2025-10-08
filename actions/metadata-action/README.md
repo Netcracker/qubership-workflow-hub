@@ -14,7 +14,11 @@ This **GitHub Metadata** GitHub Action extracts metadata from the current GitHub
 
 ### Action Result
 
-The primary output of this action is a generated version string. This string is determined by the branch or tag on which the action was executed, and it is created by applying the corresponding template defined in the configuration file. For example, if the action is triggered on the `v1.2.3` tag, the output might follow the `v{{major}}.{{minor}}.{{patch}}-{{date}}` template, resulting in a string such as `v1.2.3-20250312`. Or triggered on the `release/1.2.3` branch, resulting in `release-1.2.3-20250313235959`, `feature/some-feature` resulting in `feature-some-feature-20250313235959`.
+The primary output of this action is a generated version string. This string is determined by the branch or tag on which the action was executed, and it is created by applying the corresponding template defined in the configuration file.
+
+For example, if the action is triggered on the `v1.2.3` tag, the output might follow the `v{{major}}.{{minor}}.{{patch}}-{{date}}` template, resulting in a string such as `v1.2.3-20250312`.
+
+Or triggered on the `release/1.2.3` branch, resulting in `release-1.2.3-20250313235959`, `feature/some-feature` resulting in `feature-some-feature-20250313235959`.
 
 ## 📌 Inputs
 

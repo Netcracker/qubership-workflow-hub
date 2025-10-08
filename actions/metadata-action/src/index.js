@@ -83,6 +83,7 @@ async function run() {
     };
 
     log.setDebug(inputs.debug);
+    log.debugJSON("Action Inputs", inputs);
 
     let ref = inputs.ref || (github.context.eventName === "pull_request" ? github.context.payload.pull_request?.head?.ref : github.context.ref);
 
@@ -105,6 +106,8 @@ async function run() {
     // --- Config load ---
     const loader = new ConfigLoader();
     const config = loader.load(inputs.configPath, inputs.debug);
+
+    log.debugJSON("Loaded Configuration", config);
 
     const defaultTemplate = inputs.defaultTemplate || config?.["default-template"] || `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
     const defaultTag = inputs.defaultTag || config?.["default-tag"] || "latest";
@@ -146,6 +149,8 @@ async function run() {
       ...flattenObject({ github }, ""),
     };
 
+    log.debugJSON("Template Values", values);
+
     let result = fillTemplate(selectedTemplateAndTag.template, values);
 
     if (mergeTags && extraTags) {
@@ -169,7 +174,7 @@ async function run() {
     core.setOutput("major", semverParts.major);
     core.setOutput("minor", semverParts.minor);
     core.setOutput("patch", semverParts.patch);
-    core.setOutput("tag", selectedTemplateAndTag.distTag);
+    core.setOutput("dist-tag", selectedTemplateAndTag.distTag);
     core.setOutput("runNumber", github.context.runNumber);
     core.setOutput("ref-type", refData.type);
 
