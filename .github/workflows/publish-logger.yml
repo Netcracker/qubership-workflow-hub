@@ -21,6 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -32,10 +33,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check if package content changed
-        id: diff
-        run: |
-          git diff --quiet HEAD~1 -- . || echo "changed=true" >> $GITHUB_OUTPUT
+      # - name: Check if package content changed
+      #   id: diff
+      #   run: |
+      #     git diff --quiet HEAD~1 -- . || echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Publish @netcracker/action-logger
         env:
