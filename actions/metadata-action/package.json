@@ -16,7 +16,8 @@
     "fs": "^0.0.1-security",
     "js-yaml": "^4.1.0",
     "path": "^0.12.7",
-    "semver": "^7.7.1"
+    "semver": "^7.7.1",
+    "@netcracker/action-logger": "file:../../packages/action-logger"
   },
   "devDependencies": {
     "jest": "^30.2.0"

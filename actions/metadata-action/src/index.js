@@ -5,11 +5,12 @@
 
 const core = require("@actions/core");
 const github = require("@actions/github");
+const log = require("@netcracker/action-logger");
 
 const ConfigLoader = require("./loader");
 const RefNormalizer = require("./extractor");
 const Report = require("./report");
-const log = require("./logger");
+// const log = require("./logger");
 
 // --- utility functions ---
 function generateSnapshotVersionParts() {
