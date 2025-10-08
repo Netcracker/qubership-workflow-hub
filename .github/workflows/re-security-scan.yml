@@ -206,6 +206,7 @@ jobs:
             echo "TRIVY_SEVERITY=HIGH,CRITICAL" >> $GITHUB_ENV
           else:
             echo "TRIVY_SEVERITY=UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" >> $GITHUB_ENV
+          fi
 
       - name: "Trivy scan (Docker: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'docker' }}
