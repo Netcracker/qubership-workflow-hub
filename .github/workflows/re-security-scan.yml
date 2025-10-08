@@ -261,12 +261,13 @@ jobs:
       - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: |
-            trivy.sarif
-            trivy.csv
+          sarif_file: trivy.sarif
 
       - name: Upload all scan artifacts
         uses: actions/upload-artifact@v4
         with:
           name: trivy.sarif
-          path: trivy.sarif
+          path: |
+            trivy.sarif
+            trivy.csv
+
