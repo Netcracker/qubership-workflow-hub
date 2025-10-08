@@ -1,5 +1,6 @@
 const core = require("@actions/core");
-const log = require("./logger");
+const log = require("@netcracker/action-logger");
+
 
 class RefNormalizer {
     extract(ref, replaceSymbol = "-") {
