@@ -148,7 +148,7 @@ jobs:
           jq '.runs[].results |= map(
               select(
                 (.security_severity | tonumber) >= 7
-              ) | del(.security_severity)
+              ) | del(.security_severity) | del(.info)
               )' "${SARIF_FILE%.sarif}.ext.sarif" > "${SARIF_FILE%.sarif}.filtered.sarif"
           mv "${SARIF_FILE%.sarif}.filtered.sarif" "$SARIF_FILE"
           # Convert to CSV for easier reading
@@ -204,7 +204,7 @@ jobs:
         run: |
           if [ "${{ inputs['only-high-critical'] }}" = "true" ]; then
             echo "TRIVY_SEVERITY=HIGH,CRITICAL" >> $GITHUB_ENV
-          else:
+          else
             echo "TRIVY_SEVERITY=UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" >> $GITHUB_ENV
           fi
 
