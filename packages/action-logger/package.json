@@ -8,7 +8,14 @@
   "keywords": [],
   "author": "Pavel Anikin",
   "license": "MIT",
-  "description": "",
+  "description": "Lightweight colored logger for GitHub Actions",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Netcracker/qubership-workflow-hub.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "dependencies": {
     "@actions/core": "^1.11.1"
   }

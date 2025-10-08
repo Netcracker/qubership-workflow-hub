@@ -1,0 +1,43 @@
+name: Publish @netcracker/action-logger to GitHub Packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    name: Publish package
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: packages/action-logger
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@netcracker"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check if package content changed
+        id: diff
+        run: |
+          git diff --quiet HEAD~1 -- . || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Publish @netcracker/action-logger
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish
