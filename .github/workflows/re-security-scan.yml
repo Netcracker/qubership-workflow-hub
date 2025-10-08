@@ -152,10 +152,11 @@ jobs:
               )' "${SARIF_FILE%.sarif}.ext.sarif" > "${SARIF_FILE%.sarif}.filtered.sarif"
           mv "${SARIF_FILE%.sarif}.filtered.sarif" "$SARIF_FILE"
           # Convert to CSV for easier reading
-          jq --raw-output '["CVE", "Severity", "Type", "Component", "Affected Version", "Fix Version", "Summary"] as $headers | (
+          jq --raw-output '["CVE", "Severity", "Provider Severity", "Type", "Component", "Affected Version", "Fix Version", "Summary"] as $headers | (
               $headers, (
                   .runs[0].results[] as $result | [
                       ($result.info | capture("Vulnerability (?<cve>.*)"; "n") | .cve),
+                      ($result.security_severity | tonumber | if . < 4 then "Low" elif . < 7 then "Medium" elif . < 9 then "High" else "Critical" end),
                       ($result.info | capture("Severity: (?<severity>\\w+)"; "n") | .severity),
                       ($result.info | capture("Type: (?<type>\\w+)"; "n") | .type),
                       ($result.info | capture("Package: (?<package>.*)"; "n") | .package),
