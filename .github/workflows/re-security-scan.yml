@@ -45,9 +45,9 @@ permissions:
 
 env:
   GRYPE_SEVERITY: "critical"
-  TRIVY_SEVERITY: "HIGH,CRITICAL"
   IMAGE: ${{ inputs.image }}
   TARGET: ${{ inputs.target }}
+#  TRIVY_SEVERITY: "HIGH,CRITICAL"
 
 jobs:
   init:
