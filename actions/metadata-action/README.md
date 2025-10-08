@@ -120,6 +120,10 @@ In this example:
 
 ## Additional Information
 
+### Dependencies
+
+This action uses the `@netcracker/action-logger` package for enhanced logging capabilities, providing consistent log formatting and debug functionality across different action executions.
+
 ### GitHub Context Availability
 
 The GitHub context is available, allowing you to access properties such as the current branch, tag, and other metadata. This context can be used within the action to dynamically generate version strings and tailor behavior based on the repository state.
