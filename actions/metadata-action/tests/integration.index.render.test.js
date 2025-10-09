@@ -2,7 +2,6 @@ const core = require("@actions/core");
 const github = require("@actions/github");
 const ConfigLoader = require("../src/loader");
 const RefNormalizer = require("../src/extractor");
-const Report = require("../src/report");
 
 jest.mock("@actions/core");
 jest.mock("@actions/github");

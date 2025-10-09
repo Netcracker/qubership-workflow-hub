@@ -61,7 +61,7 @@ class ConfigLoader {
     const validate = ajv.compile(schema);
     const valid = validate(config);
     if (!valid) {
-      let errors = ajv.errorsText(validate.errors);
+      const errors = ajv.errorsText(validate.errors);
       core.setFailed(`❗️ Configuration file is invalid: ${errors}`);
       return;
     }

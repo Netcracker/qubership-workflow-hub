@@ -1,4 +1,3 @@
-const core = require("@actions/core");
 const RefNormalizer = require("../src/extractor");
 
 jest.mock("@actions/core");
