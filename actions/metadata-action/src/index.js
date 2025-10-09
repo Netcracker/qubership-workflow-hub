@@ -56,11 +56,16 @@ function fillTemplate(template, values) {
 function flattenObject(obj, prefix = "") {
   return Object.entries(obj).reduce((acc, [key, val]) => {
     const name = prefix ? `${prefix}.${key}` : key;
+
     if (val !== null && typeof val === "object") {
-      Object.assign(acc, flattenObject(val, name));
+      const flat = flattenObject(val, name);
+      for (const [k, v] of Object.entries(flat)) {
+        acc[k] = v;
+      }
     } else {
       acc[name] = val;
     }
+
     return acc;
   }, {});
 }
