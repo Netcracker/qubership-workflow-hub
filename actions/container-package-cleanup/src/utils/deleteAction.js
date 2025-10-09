@@ -1,4 +1,5 @@
 const core = require("@actions/core");
+const log = require("@netcracker/action-logger");
 
 /**
  *
@@ -7,7 +8,7 @@ const core = require("@actions/core");
  */
 async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, dryRun = false } = {}) {
   if (!Array.isArray(filtered) || filtered.length === 0) {
-    core.info("Nothing to delete.");
+    log.warn("Nothing to delete.");
     return;
   }
   if (!wrapper || typeof wrapper.deletePackageVersion !== "function") {
@@ -27,33 +28,31 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       const tags = v.metadata?.container?.tags ?? [];
       const detail = type === "maven" ? v.name : (tags.length ? tags.join(", ") : v.name);
 
-      if (dryRun) {
-        core.info(`DRY-RUN: ${ownerLC}/${imageLC} (${type}) — would delete version ${v.id} (${detail})`);
-        continue;
-      }
+      log.setDryRun(dryRun);
+      log.dryrun(`${ownerLC}/${imageLC} (${type}) — would delete version ${v.id} (${detail})`);
 
       try {
-        core.info(`Deleting ${ownerLC}/${imageLC} (${type}) — version ${v.id} (${detail})`);
+        log.info(`Deleting ${ownerLC}/${imageLC} (${type}) — version ${v.id} (${detail})`);
         await wrapper.deletePackageVersion(ownerLC, type, imageLC, v.id, isOrganization);
       } catch (error) {
-        const msg = String(error && error.message || error);
+        const msg = String(error?.message || error);
 
         if (/more than 5000 downloads/i.test(msg)) {
-          core.warning(`Skipping ${imageLC} v:${v.id} (${detail}) — too many downloads.`);
+          log.warn(`Skipping ${imageLC} v:${v.id} (${detail}) — too many downloads.`);
           continue;
         }
 
         if (/404|not found/i.test(msg)) {
-          core.warning(`Version not found: ${imageLC} v:${v.id} — probably already deleted.`);
+          log.warn(`Version not found: ${imageLC} v:${v.id} — probably already deleted.`);
           continue;
         }
 
         if (/403|rate.?limit|insufficient permissions/i.test(msg)) {
-          core.error(`Permission/rate issue for ${imageLC} v:${v.id}: ${msg}`);
+          log.warn(`Permission/rate issue for ${imageLC} v:${v.id}: ${msg}`);
           throw error;
         }
 
-        core.error(`Failed to delete ${imageLC} v:${v.id} (${detail}) — ${msg}`);
+        log.error(`Failed to delete ${imageLC} v:${v.id} (${detail}) — ${msg}`);
       }
     }
   }

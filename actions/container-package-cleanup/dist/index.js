@@ -30332,7 +30332,7 @@ class MavenStrategy extends AbstractPackageStrategy {
         const wildcardMatcher = new WildcardMatcher();
 
         // Filter packages with versions based on the threshold date and patterns
-        let filteredPackagesWithVersionsForDelete = packagesWithVersions.map(({ package: pkg, versions }) => {
+        const filteredPackagesWithVersionsForDelete = packagesWithVersions.map(({ package: pkg, versions }) => {
 
             // if (versions.length === 1) return core.info(`Skipping package: ${pkg.name} because it has only 1 version.`), null;
             if (versions.length === 1) {
@@ -30372,7 +30372,7 @@ class MavenStrategy extends AbstractPackageStrategy {
                 versionForDelete = versionForDelete.slice(thresholdVersions);
             }
 
-            let customPackage = {
+            const customPackage = {
                 id: pkg.id,
                 name: pkg.name,
                 type: pkg.package_type
@@ -30431,6 +30431,7 @@ module.exports = { getStrategy };
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const core = __nccwpck_require__(8335);
+const log = __nccwpck_require__(2938);
 
 /**
  *
@@ -30439,7 +30440,7 @@ const core = __nccwpck_require__(8335);
  */
 async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, dryRun = false } = {}) {
   if (!Array.isArray(filtered) || filtered.length === 0) {
-    core.info("Nothing to delete.");
+    log.warn("Nothing to delete.");
     return;
   }
   if (!wrapper || typeof wrapper.deletePackageVersion !== "function") {
@@ -30459,33 +30460,31 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       const tags = v.metadata?.container?.tags ?? [];
       const detail = type === "maven" ? v.name : (tags.length ? tags.join(", ") : v.name);
 
-      if (dryRun) {
-        core.info(`DRY-RUN: ${ownerLC}/${imageLC} (${type}) — would delete version ${v.id} (${detail})`);
-        continue;
-      }
+      log.setDryRun(dryRun);
+      log.dryrun(`${ownerLC}/${imageLC} (${type}) — would delete version ${v.id} (${detail})`);
 
       try {
-        core.info(`Deleting ${ownerLC}/${imageLC} (${type}) — version ${v.id} (${detail})`);
+        log.info(`Deleting ${ownerLC}/${imageLC} (${type}) — version ${v.id} (${detail})`);
         await wrapper.deletePackageVersion(ownerLC, type, imageLC, v.id, isOrganization);
       } catch (error) {
-        const msg = String(error && error.message || error);
+        const msg = String(error?.message || error);
 
         if (/more than 5000 downloads/i.test(msg)) {
-          core.warning(`Skipping ${imageLC} v:${v.id} (${detail}) — too many downloads.`);
+          log.warn(`Skipping ${imageLC} v:${v.id} (${detail}) — too many downloads.`);
           continue;
         }
 
         if (/404|not found/i.test(msg)) {
-          core.warning(`Version not found: ${imageLC} v:${v.id} — probably already deleted.`);
+          log.warn(`Version not found: ${imageLC} v:${v.id} — probably already deleted.`);
           continue;
         }
 
         if (/403|rate.?limit|insufficient permissions/i.test(msg)) {
-          core.error(`Permission/rate issue for ${imageLC} v:${v.id}: ${msg}`);
+          log.warn(`Permission/rate issue for ${imageLC} v:${v.id}: ${msg}`);
           throw error;
         }
 
-        core.error(`Failed to delete ${imageLC} v:${v.id} (${detail}) — ${msg}`);
+        log.error(`Failed to delete ${imageLC} v:${v.id} (${detail}) — ${msg}`);
       }
     }
   }
@@ -30574,7 +30573,7 @@ class OctokitWrapper {
     try {
       console.log(`Checking if ${username} is an organization...`);
       const response = await this.octokit.rest.users.getByUsername({ username });
-      return response.data.type !== 'User' ? true : false;
+      return response.data.type !== 'User';
     } catch (error) {
       console.error(`Error fetching user ${username}:`, error);
       throw error;
@@ -30766,12 +30765,18 @@ const COLORS = {
 class Logger {
   constructor() {
     this.debugMode = false;
+    this.dryRunMode = false;
   }
 
   /** Enable or disable debug logging */
   setDebug(enabled) {
     this.debugMode = Boolean(enabled);
     this.debug(`Debug mode ${this.debugMode ? "enabled" : "disabled"}`);
+  }
+
+  setDryRun(enabled) {
+    this.dryRunMode = Boolean(enabled);
+    this.debug(`Dry-run mode ${this.dryRunMode ? "enabled" : "disabled"}`);
   }
 
   // --- Base color wrappers ---
@@ -30817,9 +30822,20 @@ class Logger {
   }
 
   debugJSON(label, obj) {
-    if (!this.debugMode) return;
+    if (!this.dr) return;
     const formatted = JSON.stringify(obj, null, 2);
     this.debug(`${label}:\n${formatted}`);
+  }
+
+  dryrun(message) {
+    if (!this.dryRunMode) return;
+    const formatted = `${COLORS.gray}[dry-run] ${message}${COLORS.reset}`;
+    core.info(formatted);
+  }
+
+  // --- Errors ---
+  fail(message) {
+    core.setFailed(message);
   }
 }
 

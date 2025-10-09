@@ -12,12 +12,18 @@ const COLORS = {
 class Logger {
   constructor() {
     this.debugMode = false;
+    this.dryRunMode = false;
   }
 
   /** Enable or disable debug logging */
   setDebug(enabled) {
     this.debugMode = Boolean(enabled);
     this.debug(`Debug mode ${this.debugMode ? "enabled" : "disabled"}`);
+  }
+
+  setDryRun(enabled) {
+    this.dryRunMode = Boolean(enabled);
+    this.debug(`Dry-run mode ${this.dryRunMode ? "enabled" : "disabled"}`);
   }
 
   // --- Base color wrappers ---
@@ -63,9 +69,20 @@ class Logger {
   }
 
   debugJSON(label, obj) {
-    if (!this.debugMode) return;
+    if (!this.dr) return;
     const formatted = JSON.stringify(obj, null, 2);
     this.debug(`${label}:\n${formatted}`);
+  }
+
+  dryrun(message) {
+    if (!this.dryRunMode) return;
+    const formatted = `${COLORS.gray}[dry-run] ${message}${COLORS.reset}`;
+    core.info(formatted);
+  }
+
+  // --- Errors ---
+  fail(message) {
+    core.setFailed(message);
   }
 }
 

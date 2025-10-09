@@ -3,6 +3,8 @@ const yaml = require("js-yaml");
 const core = require("@actions/core");
 const Ajv = require("ajv");
 const path = require("node:path");
+const log = require("@netcracker/action-logger");
+
 
 class ConfigLoader {
   constructor() {
@@ -15,10 +17,10 @@ class ConfigLoader {
 
   load(filePath) {
     const configPath = path.resolve(filePath);
-    console.log(`💡 Try to reading configuration ${configPath}`)
+    log.dim(`💡 Try to reading configuration ${configPath}`)
 
     if (!fs.existsSync(configPath)) {
-      core.warning(`❗️ Configuration file not found: ${configPath}`);
+      log.warn(`❗️ Configuration file not found: ${configPath}`);
       this.fileExist = false;
       return;
     }
@@ -30,13 +32,13 @@ class ConfigLoader {
       config = yaml.load(fileContent);
     }
     catch (error) {
-      core.setFailed(`❗️ Error parsing YAML file: ${error.message}`);
+      log.fail(`❗️ Error parsing YAML file: ${error.message}`);
       return;
     }
 
     const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
     if (!fs.existsSync(schemaPath)) {
-      core.setFailed(`❗️ Schema file not found: ${schemaPath}`);
+      log.fail(`❗️ Schema file not found: ${schemaPath}`);
       return;
     }
 
@@ -47,7 +49,7 @@ class ConfigLoader {
       schema = JSON.parse(schemaContent);
     }
     catch (error) {
-      core.setFailed(`❗️ Error parsing JSON schema: ${error.message}`);
+      log.fail(`❗️ Error parsing JSON schema: ${error.message}`);
       return;
     }
 
@@ -55,8 +57,8 @@ class ConfigLoader {
     const validate = ajv.compile(schema);
     const valid = validate(config);
     if (!valid) {
-      let errors = ajv.errorsText(validate.errors);
-      core.setFailed(`❗️ Configuration file is invalid: ${errors}`);
+      const errors = ajv.errorsText(validate.errors);
+      log.fail(`❗️ Configuration file is invalid: ${errors}`);
       return;
     }
     core.warning(`Configuration file is valid: ${valid}`);
