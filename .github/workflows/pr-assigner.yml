@@ -18,6 +18,6 @@ jobs:
 
       - uses: netcracker/qubership-workflow-hub/actions/pr-assigner@main
         with:
-          assignees-count: 2
+          assignees-count: 1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

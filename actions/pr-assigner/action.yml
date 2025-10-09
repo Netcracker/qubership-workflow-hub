@@ -12,6 +12,7 @@ inputs:
         description: "Path to the configuration file."
         required: false
     assignees-count:
+        default: '1'
         description: "DEPRECATED count"
         required: false
 runs:
