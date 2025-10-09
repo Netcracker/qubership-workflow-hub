@@ -14,7 +14,7 @@ class MavenStrategy extends AbstractPackageStrategy {
         const wildcardMatcher = new WildcardMatcher();
 
         // Filter packages with versions based on the threshold date and patterns
-        let filteredPackagesWithVersionsForDelete = packagesWithVersions.map(({ package: pkg, versions }) => {
+        const filteredPackagesWithVersionsForDelete = packagesWithVersions.map(({ package: pkg, versions }) => {
 
             // if (versions.length === 1) return core.info(`Skipping package: ${pkg.name} because it has only 1 version.`), null;
             if (versions.length === 1) {
@@ -54,7 +54,7 @@ class MavenStrategy extends AbstractPackageStrategy {
                 versionForDelete = versionForDelete.slice(thresholdVersions);
             }
 
-            let customPackage = {
+            const customPackage = {
                 id: pkg.id,
                 name: pkg.name,
                 type: pkg.package_type

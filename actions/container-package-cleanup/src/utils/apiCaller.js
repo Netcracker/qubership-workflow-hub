@@ -7,7 +7,7 @@ class ApiCaller {
         this.apiClient = apiClient;
     }
 
-    execute(method, ...args) {
+    execute(method, ..._args) {
         if (typeof this.apiClient[method] !== 'function') {
             throw new Error(`Method ${method} does not exist on ApiClient`);
         }
