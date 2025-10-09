@@ -30430,7 +30430,6 @@ module.exports = { getStrategy };
 /***/ 2591:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const core = __nccwpck_require__(8335);
 const log = __nccwpck_require__(2938);
 
 /**

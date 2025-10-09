@@ -1,4 +1,3 @@
-const core = require("@actions/core");
 const log = require("@netcracker/action-logger");
 
 /**

@@ -39883,7 +39883,8 @@ function wrappy (fn, cb) {
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const core = __nccwpck_require__(8335);
-const log = __nccwpck_require__(4276);
+const log = __nccwpck_require__(2938);
+
 
 class RefNormalizer {
     extract(ref, replaceSymbol = "-") {
@@ -39970,7 +39971,7 @@ function findTemplate(refName, templates) {
 }
 
 function fillTemplate(template, values) {
-  return template.replace(/{{\s*([\w\.-]+)\s*}}/g, (match, key) => {
+  return template.replace(/{{\s*([\w.-]+)\s*}}/g, (match, key) => {
     return key in values ? values[key] : match;
   });
 }
@@ -40005,6 +40006,7 @@ async function run() {
     };
 
     log.setDebug(inputs.debug);
+    log.debugJSON("Action Inputs", inputs);
 
     let ref = inputs.ref || (github.context.eventName === "pull_request" ? github.context.payload.pull_request?.head?.ref : github.context.ref);
 
@@ -40027,6 +40029,8 @@ async function run() {
     // --- Config load ---
     const loader = new ConfigLoader();
     const config = loader.load(inputs.configPath, inputs.debug);
+
+    log.debugJSON("Loaded Configuration", config);
 
     const defaultTemplate = inputs.defaultTemplate || config?.["default-template"] || `{{ref-name}}-{{timestamp}}-{{runNumber}}`;
     const defaultTag = inputs.defaultTag || config?.["default-tag"] || "latest";
@@ -40068,6 +40072,8 @@ async function run() {
       ...flattenObject({ github }, ""),
     };
 
+    log.debugJSON("Template Values", values);
+
     let result = fillTemplate(selectedTemplateAndTag.template, values);
 
     if (mergeTags && extraTags) {
@@ -40091,7 +40097,7 @@ async function run() {
     core.setOutput("major", semverParts.major);
     core.setOutput("minor", semverParts.minor);
     core.setOutput("patch", semverParts.patch);
-    core.setOutput("tag", selectedTemplateAndTag.distTag);
+    core.setOutput("dist-tag", selectedTemplateAndTag.distTag);
     core.setOutput("runNumber", github.context.runNumber);
     core.setOutput("ref-type", refData.type);
 
@@ -40138,7 +40144,8 @@ const yaml = __nccwpck_require__(5756);
 const core = __nccwpck_require__(8335);
 const Ajv = __nccwpck_require__(2236);
 const path = __nccwpck_require__(6928);
-const log = __nccwpck_require__(4276);
+
+const log = __nccwpck_require__(2938);
 
 class ConfigLoader {
   constructor() {
@@ -40208,73 +40215,6 @@ module.exports = ConfigLoader;
 
 /***/ }),
 
-/***/ 4276:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const core = __nccwpck_require__(8335);
-
-const COLORS = {
-    reset: "\x1b[0m",
-    blue: "\x1b[34m",
-    green: "\x1b[32m",
-    yellow: "\x1b[33m",
-    red: "\x1b[31m",
-    gray: "\x1b[90m"
-};
-
-class Logger {
-    constructor() {
-        this.debugMode = false;
-    }
-
-    setDebug(enabled) {
-        this.debugMode = Boolean(enabled);
-    }
-
-    info(message) {
-        core.info(`${COLORS.blue}${message}${COLORS.reset}`);
-    }
-
-    success(message) {
-        core.info(`${COLORS.green}${message}${COLORS.reset}`);
-    }
-
-    warn(message) {
-        core.warning(`${COLORS.yellow}${message}${COLORS.reset}`);
-    }
-
-    error(message) {
-        core.error(`${COLORS.red}${message}${COLORS.reset}`);
-    }
-
-    dim(message) {
-        core.info(`${COLORS.gray}${message}${COLORS.reset}`);
-    }
-
-    group(title) {
-        core.startGroup(`${COLORS.blue}${title}${COLORS.reset}`);
-    }
-
-    endGroup() {
-        core.endGroup();
-    }
-
-    plain(message) {
-        core.info(message);
-    }
-
-    debug(message) {
-        if (this.debugMode) {
-            core.info(`${COLORS.gray}[debug] ${message}${COLORS.reset}`);
-        }
-    }
-}
-
-module.exports = new Logger();
-
-
-/***/ }),
-
 /***/ 8709:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -40338,12 +40278,18 @@ const COLORS = {
 class Logger {
   constructor() {
     this.debugMode = false;
+    this.dryRunMode = false;
   }
 
   /** Enable or disable debug logging */
   setDebug(enabled) {
     this.debugMode = Boolean(enabled);
     this.debug(`Debug mode ${this.debugMode ? "enabled" : "disabled"}`);
+  }
+
+  setDryRun(enabled) {
+    this.dryRunMode = Boolean(enabled);
+    this.debug(`Dry-run mode ${this.dryRunMode ? "enabled" : "disabled"}`);
   }
 
   // --- Base color wrappers ---
@@ -40389,9 +40335,20 @@ class Logger {
   }
 
   debugJSON(label, obj) {
-    if (!this.debugMode) return;
+    if (!this.dr) return;
     const formatted = JSON.stringify(obj, null, 2);
     this.debug(`${label}:\n${formatted}`);
+  }
+
+  dryrun(message) {
+    if (!this.dryRunMode) return;
+    const formatted = `${COLORS.gray}[dry-run] ${message}${COLORS.reset}`;
+    core.info(formatted);
+  }
+
+  // --- Errors ---
+  fail(message) {
+    core.setFailed(message);
   }
 }
 
