@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --verbose",
-    "build": "ncc build src/index.js -o dist --source-map"
+    "build": "ncc build src/index.js -o dist"
   },
   "keywords": [],
   "author": "",
