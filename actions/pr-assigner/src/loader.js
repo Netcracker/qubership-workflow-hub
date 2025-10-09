@@ -1,8 +1,10 @@
-const fs = require("fs");
+const fs = require("node:fs");
 const yaml = require("js-yaml");
 const core = require("@actions/core");
 const Ajv = require("ajv");
-const path = require("path");
+const path = require("node:path");
+
+const log = require('@netcracker/action-logger');
 
 class ConfigLoader {
   load(filePath) {
@@ -10,7 +12,7 @@ class ConfigLoader {
     console.log(`💡 Try to reading configuration ${configPath}`)
 
     if (!fs.existsSync(configPath)) {
-      core.setFailed(`❗️ File not found: ${configPath}`);
+      log.error(`❗️ Configuration file not found: ${configPath}`);
       return;
     }
 
@@ -21,13 +23,13 @@ class ConfigLoader {
       config = yaml.load(fileContent);
     }
     catch (error) {
-      core.setFailed(`❗️ Error parsing YAML file: ${error.message}`);
+      log.fail(`❗️ Error parsing YAML file: ${error.message}`);
       return;
     }
 
     const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
     if (!fs.existsSync(schemaPath)) {
-      core.setFailed(`❗️ Schema file not found: ${schemaPath}`);
+      log.fail(`❗️ JSON schema file not found: ${schemaPath}`);
       return;
     }
 
@@ -38,7 +40,7 @@ class ConfigLoader {
       schema = JSON.parse(schemaContent);
     }
     catch (error) {
-      core.setFailed(`❗️ Error parsing JSON schema: ${error.message}`);
+      log.fail(`❗️ Error parsing JSON schema: ${error.message}`);
       return;
     }
 
@@ -46,11 +48,11 @@ class ConfigLoader {
     const validate = ajv.compile(schema);
     const valid = validate(config);
     if (!valid) {
-      let errors = ajv.errorsText(validate.errors);
-      core.setFailed(`❗️ Configuration file is invalid: ${errors}`);
+      const errors = ajv.errorsText(validate.errors);
+      log.fail(`❗️ Configuration validation error: ${errors}`);
       return;
     }
-    core.warning(`Configuration file is valid: ${valid}`);
+    log.success(`✅ Configuration file is valid.`);
     return config;
   }
 }

@@ -39903,11 +39903,13 @@ module.exports = GhCommand;
 /***/ 9027:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const fs = __nccwpck_require__(9896);
+const fs = __nccwpck_require__(3024);
 const yaml = __nccwpck_require__(5756);
 const core = __nccwpck_require__(8335);
 const Ajv = __nccwpck_require__(2236);
-const path = __nccwpck_require__(6928);
+const path = __nccwpck_require__(6760);
+
+const log = __nccwpck_require__(2938);
 
 class ConfigLoader {
   load(filePath) {
@@ -39915,7 +39917,7 @@ class ConfigLoader {
     console.log(`💡 Try to reading configuration ${configPath}`)
 
     if (!fs.existsSync(configPath)) {
-      core.setFailed(`❗️ File not found: ${configPath}`);
+      log.error(`❗️ Configuration file not found: ${configPath}`);
       return;
     }
 
@@ -39926,24 +39928,24 @@ class ConfigLoader {
       config = yaml.load(fileContent);
     }
     catch (error) {
-      core.setFailed(`❗️ Error parsing YAML file: ${error.message}`);
+      log.fail(`❗️ Error parsing YAML file: ${error.message}`);
       return;
     }
 
-    const schemaPath = __nccwpck_require__.ab + "config.schema.json";
-    if (!fs.existsSync(__nccwpck_require__.ab + "config.schema.json")) {
-      core.setFailed(`❗️ Schema file not found: ${schemaPath}`);
+    const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
+    if (!fs.existsSync(schemaPath)) {
+      log.fail(`❗️ JSON schema file not found: ${schemaPath}`);
       return;
     }
 
-    const schemaContent = fs.readFileSync(__nccwpck_require__.ab + "config.schema.json", 'utf8');
+    const schemaContent = fs.readFileSync(schemaPath, 'utf8');
 
     let schema;
     try {
       schema = JSON.parse(schemaContent);
     }
     catch (error) {
-      core.setFailed(`❗️ Error parsing JSON schema: ${error.message}`);
+      log.fail(`❗️ Error parsing JSON schema: ${error.message}`);
       return;
     }
 
@@ -39951,11 +39953,11 @@ class ConfigLoader {
     const validate = ajv.compile(schema);
     const valid = validate(config);
     if (!valid) {
-      let errors = ajv.errorsText(validate.errors);
-      core.setFailed(`❗️ Configuration file is invalid: ${errors}`);
+      const errors = ajv.errorsText(validate.errors);
+      log.fail(`❗️ Configuration validation error: ${errors}`);
       return;
     }
-    core.warning(`Configuration file is valid: ${valid}`);
+    log.success(`✅ Configuration file is valid.`);
     return config;
   }
 }
@@ -65822,6 +65824,22 @@ module.exports = require("node:events");
 
 /***/ }),
 
+/***/ 3024:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:fs");
+
+/***/ }),
+
+/***/ 6760:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
+
+/***/ }),
+
 /***/ 7075:
 /***/ ((module) => {
 
@@ -70171,7 +70189,7 @@ async function run() {
         const ghCommand = new GhCommand();
         const currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
         // core.info(`🔍 Current assignees: ${currentAssignees}`);
-        if (currentAssignees != null && currentAssignees != "") {
+        if (currentAssignees !== null && currentAssignees != "") {
             log.success(`✔️ PR already has assignees: ${currentAssignees}`);
             return;
         }

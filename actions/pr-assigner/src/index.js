@@ -117,7 +117,7 @@ async function run() {
         const ghCommand = new GhCommand();
         const currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
         // core.info(`🔍 Current assignees: ${currentAssignees}`);
-        if (currentAssignees != null && currentAssignees != "") {
+        if (currentAssignees !== null && currentAssignees != "") {
             log.success(`✔️ PR already has assignees: ${currentAssignees}`);
             return;
         }
