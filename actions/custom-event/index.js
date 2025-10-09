@@ -1,11 +1,12 @@
 const core = require("@actions/core");
 const github = require("@actions/github");
+const log = require("@netcracker/action-logger");
 
 function parseClientPayload(input) {
   try {
     return JSON.parse(input);
   } catch (error) {
-    throw new Error(`❗ Invalid JSON for client_payload: ${input}`);
+    log.fail(`❗ Failed to parse client_payload: ${error.message}`);
   }
 }
 
@@ -15,14 +16,11 @@ async function run() {
     const clientPayloadInput = core.getInput("client-payload") || "{}";
     const clientPayload = parseClientPayload(clientPayloadInput);
 
-    core.info(`🔹 Event name: ${eventType}`);
-    core.info(`🔹 Client Payload: ${JSON.stringify(clientPayload)}`);
+    log.info(`Event name: ${eventType}`);
+    log.info(`Client Payload: ${JSON.stringify(clientPayload)}`);
 
-    const token =
-      core.getInput("github-token", { required: true }) || process.env.GITHUB_TOKEN;
-    if (!token) {
-      throw new Error("❗ GitHub token is not provided. Make sure it is passed.");
-    }
+    const token = core.getInput("github-token", { required: true }) || process.env.GITHUB_TOKEN;
+    if (!token) log.fail("❗ GitHub token is required");
 
     const octokit = github.getOctokit(token);
     const { owner: defaultOwner, repo: defaultRepo } = github.context.repo;
@@ -36,11 +34,10 @@ async function run() {
       client_payload: clientPayload,
     });
 
-    core.info(`💡 Custom event "${eventType}" triggered on ${owner}/${repo} with status: ${status}`);
+    log.success(`✅ Custom event "${eventType}" triggered on ${owner}/${repo} with status: ${status}`);
     core.setOutput("status", status);
   } catch (error) {
-    core.setFailed(`❗ Action failed with error: ${error.message}`);
-    console.error(error);
+    log.fail(`❗ Action failed with error: ${error.message}`);
   }
 }
 
