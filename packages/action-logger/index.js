@@ -69,7 +69,7 @@ class Logger {
   }
 
   debugJSON(label, obj) {
-    if (!this.dr) return;
+    if (!this.debugMode) return;
     const formatted = JSON.stringify(obj, null, 2);
     this.debug(`${label}:\n${formatted}`);
   }
