@@ -5,9 +5,6 @@ const fs = require("fs");
 const core = require("@actions/core");
 
 class Loader {
-    constructor() {
-    }
-
     async loadConfig(jsonPath) {
         //const configPath = path.resolve(process.env.GITHUB_WORKSPACE || process.cwd(), jsonPath);
 

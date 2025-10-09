@@ -24,21 +24,17 @@ class AssetUploader {
         const absPath = path.resolve(assetPath);
         const repoArg = `${this.owner}/${this.repo}`;
 
-        try {
-            const cmd = [
-                "gh", "release", "upload",
-                this.releaseTag,
-                `"${absPath}"`,
-                "--repo", repoArg,
-                "--clobber",
-            ].join(" ");
+        const cmd = [
+            "gh", "release", "upload",
+            this.releaseTag,
+            `"${absPath}"`,
+            "--repo", repoArg,
+            "--clobber",
+        ].join(" ");
 
-            core.info(`Try Uploading asset: ${fileName} to release: ${this.releaseTag} in repo: ${repoArg}`);
-            execSync(cmd, { stdio: "inherit", env: process.env });
-            core.info(`✔️ Asset uploaded successfully: ${fileName} \n`);
-        } catch (err) {
-            throw err;
-        }
+        core.info(`Try Uploading asset: ${fileName} to release: ${this.releaseTag} in repo: ${repoArg}`);
+        execSync(cmd, { stdio: "inherit", env: process.env });
+        core.info(`✔️ Asset uploaded successfully: ${fileName} \n`);
     }
 }
 
