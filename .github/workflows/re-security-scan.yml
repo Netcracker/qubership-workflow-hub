@@ -45,31 +45,20 @@ permissions:
 
 env:
   GRYPE_SEVERITY: "critical"
-  IMAGE: ${{ inputs.image }}
   TARGET: ${{ inputs.target }}
-#  TRIVY_SEVERITY: "HIGH,CRITICAL"
+  TRIVY_SEVERITY: >-
+    ${{ inputs['only-high-critical'] && 'HIGH,CRITICAL' || 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL' }}
+  IMAGE: >-
+    ${{ inputs.target == 'docker' && (inputs.image != '' && inputs.image || format('ghcr.io/{0}:latest', github.repository)) || '' }}
 
 jobs:
   init:
     runs-on: ubuntu-latest
-    outputs:
-      image: ${{ steps.vars.outputs.image }}
     steps:
-      - name: Define variables
-        id: vars
-        run: |
-          if [ -n "${IMAGE}" ]; then
-            echo "image=${IMAGE}" >> $GITHUB_OUTPUT
-          else
-            echo "image=ghcr.io/${{ github.repository }}:latest" >> $GITHUB_OUTPUT
-          fi
-
       - name: Scan plan
-        env:
-          STEPS_IMAGE: ${{ steps.vars.outputs.image }}
         run: |
           echo "Mode: ${TARGET}"
-          echo "Image (if docker): ${STEPS_IMAGE}"
+          echo "Image (if docker): ${IMAGE}"
           echo "Only high+critical: ${{ inputs['only-high-critical'] }}"
           if [ "${TARGET}" = "docker" ]; then
             echo "   - Docker scan: enabled"
@@ -106,7 +95,7 @@ jobs:
         id: grype-docker
         uses: anchore/scan-action@f6601287cdb1efc985d6b765bbf99cb4c0ac29d8 #v7
         with:
-          image: "${{ needs.init.outputs.image }}"
+          image: "${{ env.IMAGE }}"
           output-file: grype.sarif
           fail-build: false
           severity-cutoff: critical
@@ -205,20 +194,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: "Set Trivy severity range"
-        run: |
-          if [ "${{ inputs['only-high-critical'] }}" = "true" ]; then
-            echo "TRIVY_SEVERITY=HIGH,CRITICAL" >> $GITHUB_ENV
-          else
-            echo "TRIVY_SEVERITY=UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" >> $GITHUB_ENV
-          fi
-
       - name: "Trivy scan (Docker: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'docker' }}
         id: trivy-docker
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 #0.33.1
         with:
-          image-ref: "${{ needs.init.outputs.image }}"
+          image-ref: "${{ env.IMAGE }}"
           severity: ${{ env.TRIVY_SEVERITY }}
           output: trivy.sarif
           format: "sarif"
