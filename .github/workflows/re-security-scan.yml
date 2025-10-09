@@ -126,6 +126,8 @@ jobs:
         continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: "Convert Grype SARIF to CSV"
+        env:
+          ONLY_HIGH_CRITICAL: ${{ inputs['only-high-critical'] }}
         run: |
           SARIF_FILE=grype.sarif
           jq '. as $input
@@ -145,7 +147,7 @@ jobs:
           }
           )' "$SARIF_FILE"  > "${SARIF_FILE%.sarif}.ext.sarif"
           # Filter only high and critical (>=7)
-          if [ "${{ inputs.only-high-critical }}" == "true"]; then
+          if [ "${ONLY_HIGH_CRITICAL}" = "true" ]; then
           jq '.runs[].results |= map(
               select(
                 (.security_severity | tonumber) >= 7
@@ -278,4 +280,3 @@ jobs:
           path: |
             trivy.sarif
             trivy.csv
-
