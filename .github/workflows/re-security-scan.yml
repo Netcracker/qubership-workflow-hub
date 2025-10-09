@@ -152,7 +152,7 @@ jobs:
               )' "${SARIF_FILE%.sarif}.ext.sarif" > "${SARIF_FILE%.sarif}.filtered.sarif"
           mv "${SARIF_FILE%.sarif}.filtered.sarif" "$SARIF_FILE"
           # Convert to CSV for easier reading
-          jq --raw-output '["CVE", "Severity", "Provider Severity", "Type", "Component", "Affected Version", "Fix Version", "Summary"] as $headers | (
+          jq --raw-output '["CVE", "Severity", "Provider Severity", "Type", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
               $headers, (
                   .runs[0].results[] as $result | [
                       ($result.info | capture("Vulnerability (?<cve>.*)"; "n") | .cve),
@@ -243,9 +243,14 @@ jobs:
           |= map(. + { security_severity: ($input.runs[0].tool.driver.rules[] as $rule
               | select($rule.id == .ruleId)
               | $rule.properties["security-severity"])
-              })' "$SARIF_FILE"  > "${SARIF_FILE%.sarif}.ext.sarif"
+              } +
+              { info: (
+              $input.runs[0].tool.driver.rules[] as $rule
+              | select($rule.id == .ruleId)
+              | $rule.fullDescription.text | gsub("\n"; " ")
+              )})' "$SARIF_FILE"  > "${SARIF_FILE%.sarif}.ext.sarif"
 
-          jq --raw-output '["CVE", "Severity", "Component", "Affected Version", "Fix Version", "Link"] as $headers | (
+          jq --raw-output '["CVE", "Severity", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
               $headers, (
                   .runs[0].results[] as $result | [
                       ($result.ruleId),
@@ -253,7 +258,7 @@ jobs:
                       ($result.message.text | capture("Package: (?<package>.*)"; "n") | .package),
                       ($result.message.text | capture("Installed Version: (?<version>.*)"; "n") | .version),
                       ($result.message.text | capture("Fixed Version: (?<fix_version>.*)"; "n") | .fix_version),
-                      ($result.message.text | capture("Link: (?<link>.*)"; "n") | .link)
+                      ($result.info)
                   ]
               )
           ) | @csv' "${SARIF_FILE%.sarif}.ext.sarif" > "${SARIF_FILE%.sarif}.csv"
