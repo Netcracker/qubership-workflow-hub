@@ -65,9 +65,9 @@ async function run() {
 
   // let packages = await wrapper.listPackages(owner, 'container', isOrganization);
 
-  let packages = await wrapper.listPackages(owner, package_type, isOrganization);
+  const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
-  let filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
+  const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   core.info(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
 
 
@@ -103,12 +103,12 @@ async function run() {
   };
 
 
-  let strategy = getStrategy(package_type);
+  const strategy = getStrategy(package_type);
   // // let strategy = package_type === 'container' ? new ContainerStrategy() : new MavenStrategy();
 
   console.log(`Using strategy -> ${await strategy.toString()}`);
 
-  let filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
+  const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
   // core.info(`Filtered Packages with Versions for Delete: ${JSON.stringify(filteredPackagesWithVersionsForDelete, null, 2)}`);
 
   if (isDebug) {
@@ -118,7 +118,7 @@ async function run() {
     core.info(`::endgroup::`);
   }
 
-  let reportContext = {
+  const reportContext = {
     filteredPackagesWithVersionsForDelete,
     thresholdDays,
     thresholdDate,
@@ -147,7 +147,7 @@ async function run() {
 }
 
 async function showReport(context, type = 'container') {
-  let report = type === 'container' ? new ContainerReport() : new MavenReport();
+  const report = type === 'container' ? new ContainerReport() : new MavenReport();
   await report.writeSummary(context);
 
 }

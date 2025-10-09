@@ -18,6 +18,7 @@ class AbstractPackageStrategy {
      * @param {Object} context - Execution context containing necessary data for filtering.
      * @returns {Array<{ package: object, versions: object[] }>}
      */
+    // biome-ignore lint/correctness/noUnusedFunctionParameters: abstract method
     execute(context) {
         throw new Error(`${this.name}: method 'execute(context)' must be implemented.`);
     }
