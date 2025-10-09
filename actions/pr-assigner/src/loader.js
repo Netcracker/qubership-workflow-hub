@@ -1,6 +1,5 @@
 const fs = require("node:fs");
 const yaml = require("js-yaml");
-const core = require("@actions/core");
 const Ajv = require("ajv");
 const path = require("node:path");
 

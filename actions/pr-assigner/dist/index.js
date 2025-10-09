@@ -39905,7 +39905,6 @@ module.exports = GhCommand;
 
 const fs = __nccwpck_require__(3024);
 const yaml = __nccwpck_require__(5756);
-const core = __nccwpck_require__(8335);
 const Ajv = __nccwpck_require__(2236);
 const path = __nccwpck_require__(6760);
 
@@ -70189,7 +70188,7 @@ async function run() {
         const ghCommand = new GhCommand();
         const currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
         // core.info(`🔍 Current assignees: ${currentAssignees}`);
-        if (currentAssignees !== null && currentAssignees != "") {
+        if (currentAssignees !== null && currentAssignees !== "") {
             log.success(`✔️ PR already has assignees: ${currentAssignees}`);
             return;
         }
