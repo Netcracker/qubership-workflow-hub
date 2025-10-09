@@ -9,6 +9,7 @@ const ContainerReport = require("./reports/containerReport");
 const MavenReport = require("./reports/mavenReport");
 const { getStrategy } = require("./strategy/strategyRegistry");
 const { deletePackageVersion } = require('./utils/deleteAction');
+const log = require("@netcracker/action-logger");
 
 async function run() {
 
@@ -24,8 +25,8 @@ async function run() {
 
   const package_type = core.getInput("package-type").toLowerCase();
 
-  core.info(`Is debug? -> ${isDebug}`);
-  core.info(`Dry run? -> ${dryRun}`);
+  log.info(`Is debug? -> ${isDebug}`);
+  log.info(`Dry run? -> ${dryRun}`);
 
   const thresholdDays = parseInt(core.getInput('threshold-days'), 10);
 
@@ -47,41 +48,41 @@ async function run() {
   const thresholdVersions = parseInt(core.getInput('threshold-versions'), 10);
 
   // core.info(`Configuration Path: ${configurationPath}`);
-  core.info(`Threshold Days: ${thresholdDays}`);
-  core.info(`Threshold Date: ${thresholdDate}`);
+  log.info(`Threshold Days: ${thresholdDays}`);
+  log.info(`Threshold Date: ${thresholdDate}`);
 
-  excludedTags.length && core.info(`Excluded Tags: ${excludedTags}`);
-  includedTags.length && core.info(`Included Tags: ${includedTags}`);
+  excludedTags.length && log.info(`Excluded Tags: ${excludedTags}`);
+  includedTags.length && log.info(`Included Tags: ${includedTags}`);
 
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
   const wrapper = new OctokitWrapper(process.env.PACKAGE_TOKEN);
 
   const isOrganization = await wrapper.isOrganization(owner);
-  core.info(`Is Organization? -> ${isOrganization}`);
+  log.info(`Is Organization? -> ${isOrganization}`);
 
   // strategy will start  here for different types of packages
-  core.info(`Package type: ${package_type}, owner: ${owner}, repo: ${repo}`);
+  log.info(`Package type: ${package_type}, owner: ${owner}, repo: ${repo}`);
 
   // let packages = await wrapper.listPackages(owner, 'container', isOrganization);
 
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  core.info(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
+  log.info(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
 
 
-  core.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
+  log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
 
   if (packages.length === 0) {
-    core.info("❗️ No packages found.");
+    log.warn("No packages found.");
     return;
   }
 
   const packagesWithVersions = await Promise.all(
     filteredPackages.map(async (pkg) => {
       const versionsForPkg = await wrapper.listVersionsForPackage(owner, pkg.package_type, pkg.name, isOrganization);
-      core.info(`Found ${versionsForPkg.length} versions for package: ${pkg.name}`);
+      log.info(`Found ${versionsForPkg.length} versions for package: ${pkg.name}`);
       // core.info(JSON.stringify(versionsForPkg, null, 2));
       return { package: pkg, versions: versionsForPkg };
     })
@@ -106,17 +107,16 @@ async function run() {
   const strategy = getStrategy(package_type);
   // // let strategy = package_type === 'container' ? new ContainerStrategy() : new MavenStrategy();
 
-  console.log(`Using strategy -> ${await strategy.toString()}`);
+  log.log(`Using strategy -> ${await strategy.toString()}`);
 
   const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
   // core.info(`Filtered Packages with Versions for Delete: ${JSON.stringify(filteredPackagesWithVersionsForDelete, null, 2)}`);
 
-  if (isDebug) {
+  log.setDebug(isDebug);
+  log.group('Delete versions Log')
+  log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
+  log.groupEnd();
 
-    core.info(`::group::Delete versions Log.`);
-    core.info(`💡 Package with version for delete: ${JSON.stringify(filteredPackagesWithVersionsForDelete, null, 2)}`);
-    core.info(`::endgroup::`);
-  }
 
   const reportContext = {
     filteredPackagesWithVersionsForDelete,
@@ -128,7 +128,7 @@ async function run() {
   };
 
   if (dryRun) {
-    core.warning("Dry run mode enabled. No versions will be deleted.");
+    log.warn("Dry run mode enabled. No versions will be deleted.");
     await showReport(reportContext, package_type);
     return;
   }
@@ -143,7 +143,7 @@ async function run() {
   }
 
   await showReport(reportContext, package_type);
-  core.info("✅ Action completed.");
+  log.success("✅ Action completed.");
 }
 
 async function showReport(context, type = 'container') {
