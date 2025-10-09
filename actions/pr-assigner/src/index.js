@@ -83,8 +83,8 @@ async function run() {
     let sourceUsed = "CODEOWNERS file";
     if (fs.existsSync(configurationPath)) {
         const content = new ConfigLoader().load(configurationPath);
-        assignees = content['assignees'];
-        count = content['count'] != null ? content['count'] : count;
+        assignees = content.assignees || [];
+        count = content.count != null ? content.count : count;
         sourceUsed = `configuration file: ${configurationPath}`;
 
     } else {

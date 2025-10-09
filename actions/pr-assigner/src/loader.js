@@ -5,9 +5,6 @@ const Ajv = require("ajv");
 const path = require("path");
 
 class ConfigLoader {
-  constructor() {
-  }
-
   load(filePath) {
     const configPath = path.resolve(filePath);
     console.log(`💡 Try to reading configuration ${configPath}`)
