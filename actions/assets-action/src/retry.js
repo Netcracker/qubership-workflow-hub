@@ -1,4 +1,4 @@
-const core = require('@actions/core');
+const log = require("@netcracker/action-logger");
 
    async function retryAsync(fn, options = {}) {
     let { retries = 3, delay = 1000, factor = 1 } = options;
@@ -12,7 +12,7 @@ const core = require('@actions/core');
             if (retries === 0) {
                 throw error;
             }
-            console.info(`⚠️ Retrying due to error: ${error.message}. Retries left: ${retries}. Delay: ${constDelay}ms`);
+            log.warn(`⚠️ Retrying due to error: ${error.message}. Retries left: ${retries}. Delay: ${constDelay}ms`);
             constDelay *= factor; // Increase delay for next retry
             await new Promise(resolve => setTimeout(resolve, constDelay));
         }

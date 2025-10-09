@@ -3,13 +3,14 @@ const Ajv = require('ajv');
 const yaml = require('js-yaml');
 const fs = require("fs");
 const core = require("@actions/core");
+const log = require("@netcracker/action-logger");
 
 class Loader {
     async loadConfig(jsonPath) {
         //const configPath = path.resolve(process.env.GITHUB_WORKSPACE || process.cwd(), jsonPath);
 
         const configPath = path.resolve(jsonPath);
-        console.log(`💡 Reading asset config from ${configPath}`)
+        log.info(`💡 Reading asset config from ${configPath}`)
 
 
         if (!fs.existsSync(configPath)) {
@@ -53,7 +54,7 @@ class Loader {
             core.setFailed(`❗️ Configuration file is invalid: ${constErrors}`);
             return;
         }
-        core.warning(`Config file is valid: ${valid}\n`);
+        log.warn(`Config file is valid: ${valid}\n`);
         return config;
     }
 }
