@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const ConfigLoader = require("./loader");
 const GhCommand = require("./command");
+const log = require("@netcracker/action-logger");
 
 // function findCodeowners(startDir = process.cwd()) {
 //     let found = null;
@@ -46,12 +47,12 @@ function findCodeowners(startDir = process.cwd()) {
 }
 
 function getUsersFromCodeowners(codeownersPath) {
-    core.info(`🔍 CODEOWNERS file found on: ${codeownersPath}`);
+    log.info(`🔍 CODEOWNERS file found on: ${codeownersPath}`);
     const codeownersContent = fs.readFileSync(codeownersPath, 'utf8');
     const lines = codeownersContent.split('\n');
     const userLine = lines.find(line => line.trim().startsWith('*'));
     if (!userLine) {
-        core.warning(`❗️ No user found in CODEOWNERS file`);
+        log.warn(`❗️ No user found in CODEOWNERS file`);
         return null;
     }
     return userLine.split(/\s+/).slice(1).filter(user => user.trim() !== '').map(user => user.replace('@', ''));
@@ -69,8 +70,7 @@ async function run() {
 
     const pullRequest = github.context.payload.pull_request;
     if (!pullRequest) {
-        core.setFailed("❗️ Action must run on a pull request.");
-        process.exit(1);
+        log.fail("❗️ No pull request found in the context.");
     }
 
     const defaultConfigurationPath = ".github/pr-assigner-config.yml";
@@ -90,20 +90,20 @@ async function run() {
     } else {
         const filePath = findCodeowners();
         if (!filePath) {
-            core.setFailed(`❗️ Can't find CODEOWNERS file.`);
+            log.fail(`❗️ Can't find CODEOWNERS file.`);
             return;
         }
         assignees = getUsersFromCodeowners(filePath);
     }
 
-    core.info(`🔹 Count for shuffle: ${count}`);
-    core.info(`🔹 Assignees: ${assignees}`);
-    core.info(`💡 Source used: ${sourceUsed}`);
+    log.info(`Count for shuffle: ${count}`);
+    log.info(`Assignees: ${assignees}`);
+    log.info(`Source used: ${sourceUsed}`);
 
 
     const assigneesLength = assignees.length;
     if (count > assigneesLength) {
-        core.warning(`Assignees count ${count} exceeds number of available assignees ${assigneesLength}. Using available count (${assigneesLength}).`);
+        log.warn(`Assignees count ${count} exceeds number of available assignees ${assigneesLength}. Using available count (${assigneesLength}).`);
         count = assigneesLength;
     }
 
@@ -115,19 +115,19 @@ async function run() {
 
     try {
         const ghCommand = new GhCommand();
-        let currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
+        const currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
         // core.info(`🔍 Current assignees: ${currentAssignees}`);
         if (currentAssignees != null && currentAssignees != "") {
-            core.info(`✔️ PR has current assignees: ${currentAssignees}, skipping...`);
+            log.success(`✔️ PR already has assignees: ${currentAssignees}`);
             return;
         }
 
-        core.info(`🟡 Adding new assignees with: ${assignees}`);
+        log.info(`Adding new assignees with: ${assignees}`);
         ghCommand.addAssigneesCommand(pullRequest.number, assignees);
 
-        core.info("✔️ Action completed successfully!");
+        log.success(`✔️ Assigned ${assignees.length} user(s) to PR #${pullRequest.number}: ${assignees.join(", ")}`);
     } catch (error) {
-        core.setFailed(`❗️ ${error.message}`);
+        log.fail(`❗️ Failed to assign users: ${error.message}`);
     }
 }
 

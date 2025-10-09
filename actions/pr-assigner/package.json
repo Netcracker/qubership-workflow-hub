@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "ncc build src"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "child_process": "^1.0.2",
     "fs": "^0.0.1-security",
     "js-yaml": "^4.1.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "@netcracker/action-logger": "file:../../packages/action-logger"
   }
 }
