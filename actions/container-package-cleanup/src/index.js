@@ -139,7 +139,7 @@ async function run() {
     }
 
   } catch (error) {
-    core.setFailed(err.message || String(err));
+    core.setFailed(error.message || String(error));
   }
 
   await showReport(reportContext, package_type);
