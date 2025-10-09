@@ -77,7 +77,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             for (const tag of protectedTags) {
                 try {
                     const ds = await wrapper.getManifestDigests(ownerLC, imageLC, tag);
-                    if (Array.isArray(ds)) ds.forEach(d => protectedDigests.add(d));
+                    if (Array.isArray(ds)) ds.forEach(d => { protectedDigests.add(d) });
                     else if (ds) protectedDigests.add(ds);
                 } catch (e) {
                     if (debug) core.warning(`Failed to fetch manifest for ${pkg.name}:${tag} — ${e.message}`);
@@ -113,7 +113,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 for (const tag of v.metadata.container.tags) {
                     try {
                         const ds = await wrapper.getManifestDigests(ownerLC, pkg.name, tag);
-                        if (Array.isArray(ds)) ds.forEach(d => digs.add(d));
+                        if (Array.isArray(ds)) ds.forEach(d => { digs.add(d) });
                         else if (ds) digs.add(ds);
                     } catch (e) {
                         if (debug) core.warning(`Failed to fetch manifest ${pkg.name}:${tag} — ${e.message}`);
