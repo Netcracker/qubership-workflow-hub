@@ -109,7 +109,7 @@ async function run() {
             return;
         }
 
-        log.info(`Adding new assignees with: ${assignees}`);
+        log.dim(`Final assignees to assign: ${assignees}`);
         ghCommand.addAssigneesCommand(pullRequest.number, assignees);
 
         log.success(`✔️ Assigned ${assignees.length} user(s) to PR #${pullRequest.number}: ${assignees.join(", ")}`);
