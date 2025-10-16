@@ -6,30 +6,6 @@ const ConfigLoader = require("./loader");
 const GhCommand = require("./command");
 const log = require("@netcracker/action-logger");
 
-// function findCodeowners(startDir = process.cwd()) {
-//     let found = null;
-
-//     function searchDir(dir) {
-//         const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-//         for (const entry of entries) {
-//             const fullPath = path.join(dir, entry.name);
-
-//             if (entry.isFile() && entry.name === "CODEOWNERS") {
-//                 found = fullPath;
-//                 return true;
-//             } else if (entry.isDirectory()) {
-//                 if ([".git", "node_modules"].includes(entry.name)) continue;
-//                 if (searchDir(fullPath)) return true;
-//             }
-//         }
-//         return false;
-//     }
-
-//     searchDir(startDir);
-//     return found;
-// }
-
 function findCodeowners(startDir = process.cwd()) {
     const repoRoot = startDir;
     const candidates = [
@@ -52,8 +28,8 @@ function getUsersFromCodeowners(codeownersPath) {
     const lines = codeownersContent.split('\n');
     const userLine = lines.find(line => line.trim().startsWith('*'));
     if (!userLine) {
-        log.warn(`❗️ No user found in CODEOWNERS file`);
-        return null;
+        log.fail(`❗️ No user found in CODEOWNERS file`);
+        return [];
     }
     return userLine.split(/\s+/).slice(1).filter(user => user.trim() !== '').map(user => user.replace('@', ''));
 }
@@ -69,60 +45,71 @@ function shuffleArray(array) {
 async function run() {
 
     const pullRequest = github.context.payload.pull_request;
-    if (!pullRequest) {
-        log.fail("❗️ No pull request found in the context.");
-    }
+
+    if (!pullRequest) return log.fail("❗️ No pull request found in the context.");
+
 
     const defaultConfigurationPath = ".github/pr-assigner-config.yml";
     const configurationPath = core.getInput("configuration-path") || defaultConfigurationPath;
 
-    let count = core.getInput("shuffle");
-    // core.info(`Input shuffle: ${count}`);
-    let assignees = [];
+    let count = parseInt(core.getInput("shuffle") || "1", 10);
+    let selfAssign = core.getInput("self-assign")?.toLowerCase() !== "false";
 
+    let assignees = [];
     let sourceUsed = "CODEOWNERS file";
+
     if (fs.existsSync(configurationPath)) {
-        const content = new ConfigLoader().load(configurationPath);
-        assignees = content.assignees;
-        count = content.count != null ? content.count : count;
+        const config = new ConfigLoader().load(configurationPath);
+        assignees = config.assignees ?? assignees;
+        count = config.count ?? count;
+        selfAssign = config.selfAssign ?? selfAssign;
         sourceUsed = `configuration file: ${configurationPath}`;
 
     } else {
         const filePath = findCodeowners();
-        if (!filePath) {
-            log.fail(`❗️ Can't find CODEOWNERS file.`);
-            return;
-        }
+        if (!filePath) return log.fail(`❗️ Can't find CODEOWNERS file.`);
         assignees = getUsersFromCodeowners(filePath);
     }
 
-    log.info(`Count for shuffle: ${count}`);
-    log.info(`Assignees: ${assignees}`);
-    log.info(`Source used: ${sourceUsed}`);
+    log.dim(`Count for shuffle: ${count}`);
+    log.dim(`Assignees: ${assignees}`);
+    log.dim(`Source used: ${sourceUsed}`);
 
 
-    const assigneesLength = assignees.length;
-    if (count > assigneesLength) {
-        log.warn(`Assignees count ${count} exceeds number of available assignees ${assigneesLength}. Using available count (${assigneesLength}).`);
-        count = assigneesLength;
+    assignees = assignees.filter(user => user && user.trim() !== '');
+    if (assignees.length === 0) return log.fail(`❗️ No assignees found in the configuration file.`);
+
+    const author = pullRequest.user.login;
+    log.dim(`Pull request author: ${author}`);
+
+    const authorAssignee = assignees.filter(user => user.toLowerCase() === author.toLowerCase());
+
+    if (selfAssign && authorAssignee.length > 0) {
+        assignees = authorAssignee;
+        log.dim(`Author found in CODEOWNERS, assigning to self: ${assignees}`);
     }
+    else {
+        if (count > assignees.length) {
+            log.warn(`⚠️ Requested ${count} assignees, but only ${assignees.length} available. Using ${assignees.length}.`);
+            count = assignees.length;
+        }
 
-    if (assigneesLength > 1) {
-        assignees = shuffleArray(assignees);
+        if (assignees.length > 1) {
+            assignees = shuffleArray(assignees);
+        }
+        assignees = assignees.slice(0, count);
     }
-
-    assignees = assignees.slice(0, count);
 
     try {
         const ghCommand = new GhCommand();
         const currentAssignees = ghCommand.getAssigneesCommand(pullRequest.number);
-        // core.info(`🔍 Current assignees: ${currentAssignees}`);
-        if (currentAssignees !== null && currentAssignees !== "") {
+
+        if (currentAssignees && currentAssignees.length > 0) {
             log.success(`✔️ PR already has assignees: ${currentAssignees}`);
             return;
         }
 
-        log.info(`Adding new assignees with: ${assignees}`);
+        log.dim(`Final assignees to assign: ${assignees}`);
         ghCommand.addAssigneesCommand(pullRequest.number, assignees);
 
         log.success(`✔️ Assigned ${assignees.length} user(s) to PR #${pullRequest.number}: ${assignees.join(", ")}`);

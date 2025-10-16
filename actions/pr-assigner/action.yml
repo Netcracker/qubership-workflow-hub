@@ -1,20 +1,20 @@
 name: "PR Assigner"
 description: "Assigns a PR to a user based on the PR configuration or CODEOWNERS."
 inputs:
-    assignees:
-        description: "List of assignees to assign the PR to."
-        required: false
-    shuffle:
-        description: "Number of assignees to assign."
-        default: '1'
-        required: false
-    configuration-path:
-        description: "Path to the configuration file."
-        required: false
-    assignees-count:
-        default: '1'
-        description: "DEPRECATED count"
-        required: false
+  assignees:
+    description: "List of assignees to assign the PR to."
+    required: false
+  shuffle:
+    description: "Number of assignees to assign."
+    default: "1"
+    required: false
+  configuration-path:
+    description: "Path to the configuration file."
+    required: false
+  self-assign:
+    description: "Whether to allow self-assigning if the PR author is in the assignees list."
+    default: "false"
+    required: false
 runs:
   using: "node20"
   main: "dist/index.js"
