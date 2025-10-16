@@ -32,7 +32,7 @@ on:
         required: false
         default: true
         type: boolean
-      ignore-unfixed:
+      only-fixed:
         description: "Ignore unfixed vulnerabilities"
         required: false
         default: true
@@ -99,7 +99,7 @@ jobs:
           output-file: grype.sarif
           fail-build: false
           severity-cutoff: critical
-          only-fixed: ${{ inputs.ignore-unfixed }}
+          only-fixed: ${{ inputs.only-fixed }}
         continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: "Grype scan (Source: High+Critical)"
@@ -111,7 +111,7 @@ jobs:
           output-file: grype.sarif
           fail-build: false
           severity-cutoff: critical
-          only-fixed: true
+          only-fixed: ${{ inputs.only-fixed }}
         continue-on-error: ${{ inputs.continue-on-error }}
 
       - name: "Convert Grype SARIF to CSV"
@@ -208,7 +208,7 @@ jobs:
           severity: ${{ env.TRIVY_SEVERITY }}
           output: trivy.sarif
           format: "sarif"
-          ignore-unfixed: ${{ inputs.ignore-unfixed }}
+          ignore-unfixed: ${{ inputs.only-fixed }}
           limit-severities-for-sarif: true
         continue-on-error: ${{ inputs.continue-on-error }}
 
@@ -221,7 +221,7 @@ jobs:
           severity: ${{ env.TRIVY_SEVERITY }}
           output: trivy.sarif
           format: "sarif"
-          ignore-unfixed: true
+          ignore-unfixed: ${{ inputs.only-fixed }}
           limit-severities-for-sarif: true
         continue-on-error: ${{ inputs.continue-on-error }}
 

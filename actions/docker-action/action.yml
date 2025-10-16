@@ -220,6 +220,7 @@ runs:
         build-args: ${{ inputs.build-args }}
 
     - name: Output result
+      if: ${{ ! (inputs.dry-run == 'true') }}
       id: output_result
       shell: bash
       run: |
@@ -266,6 +267,7 @@ runs:
         echo "metadata_filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
     - name: "Upload metadata file"
+      if: ${{ ! (inputs.dry-run == 'true') }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.output_result.outputs.metadata_filename }}
