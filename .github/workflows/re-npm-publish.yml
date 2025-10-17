@@ -130,7 +130,7 @@ jobs:
 
       - name: Commit Changes
         if: ${{ !inputs.dry-run }}
-        uses: netcracker/qubership-workflow-hub/actions/commit-and-push@v1.0.7
+        uses: netcracker/qubership-workflow-hub/actions/commit-and-push@v2.0.1
         with:
           commit_message: "Update package.json version to ${{ inputs.version }}"
 
