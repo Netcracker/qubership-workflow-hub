@@ -79,7 +79,7 @@ inputs:
   docker-io-token:
     description: "Token to login to docker.io"
     required: false
-  skip-qemu-buildx-setup:
+  skip-qemu-buildx:
     description: "Skip the setup of Docker Buildx (for self-hosted runners with pre-configured Buildx)."
     required: false
     default: "false"
@@ -190,7 +190,6 @@ runs:
         fi
 
         echo "::group::🐋 MANAGEMENT Dockerfile (alpine)"
-        ls -la
         cat ${{ steps.parse_component.outputs.file }}
         echo "::endgroup::"
 
@@ -215,11 +214,11 @@ runs:
         ls -R -la ${{ github.workspace }}
 
     - name: Set up QEMU
-      # if: ${{ skip-qemu-buildx-setup != 'true' }}
+      if: ${{ inputs.skip-qemu-buildx != 'true' }}
       uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
-      # if: ${{ skip-qemu-buildx-setup != 'true' }}
+      if: ${{ inputs.skip-qemu-buildx != 'true' }}
       uses: docker/setup-buildx-action@v3
 
     - name: Log in to GitHub Container Registry
