@@ -124,7 +124,7 @@ runs:
         comp_name=$(echo "$component_parsed" | jq -r '.name')
         comp_file=$(echo "$component_parsed" | jq -r '.file')
         comp_ctx=$(echo "$component_parsed" | jq -r '.context')
-        comp_build_args=$(echo "$component_parsed" | jq -r '.arguments // empty)
+        comp_build_args=$(echo "$component_parsed" | jq -r '.arguments // empty')
         echo "name=$comp_name" >> "$GITHUB_OUTPUT"
         echo "file=$comp_file" >> "$GITHUB_OUTPUT"
         echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
