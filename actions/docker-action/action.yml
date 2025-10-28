@@ -119,9 +119,11 @@ runs:
         comp_name=$(echo "$component_parsed" | jq -r '.name')
         comp_file=$(echo "$component_parsed" | jq -r '.file')
         comp_ctx=$(echo "$component_parsed" | jq -r '.context')
+        comp_build_args=$(echo "$component_parsed" | jq -r '.arguments // empty)
         echo "name=$comp_name" >> "$GITHUB_OUTPUT"
         echo "file=$comp_file" >> "$GITHUB_OUTPUT"
         echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
+        echo "build_args=$comp_build_args" >> "$GITHUB_OUTPUT"
 
     - name: Prepare Image Name
       shell: bash
@@ -282,7 +284,8 @@ runs:
         tags: ${{ inputs.tags != '' && env.IMAGE_REFS || steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
-        build-args: ${{ inputs.build-args }}
+        build-args: ${{ steps.parse_component.outputs.build_args != '' && steps.parse_component.outputs.build_args || inputs.build-args }}
+
 
     - name: Output result
       if: ${{ ! (inputs.dry-run == 'true') }}
