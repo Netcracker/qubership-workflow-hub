@@ -79,6 +79,10 @@ inputs:
   docker-io-token:
     description: "Token to login to docker.io"
     required: false
+  skip-qemu-buildx-setup:
+    description: "Skip the setup of Docker Buildx (for self-hosted runners with pre-configured Buildx)."
+    required: false
+    default: "false"
 outputs:
   image-name:
     description: "The name of the built Docker image."
@@ -89,6 +93,7 @@ outputs:
   metadata-filename:
     description: "Name of the generated metadata file."
     value: "${{ steps.output_result.outputs.metadata_filename }}"
+
 runs:
   using: "composite"
   steps:
@@ -205,9 +210,11 @@ runs:
         ls -R -la ${{ github.workspace }}
 
     - name: Set up QEMU
+      if: ${{ skip-qemu-buildx-setup != 'true' }}
       uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
+      if: ${{ skip-qemu-buildx-setup != 'true' }}
       uses: docker/setup-buildx-action@v3
 
     - name: Log in to GitHub Container Registry
