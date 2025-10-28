@@ -189,6 +189,11 @@ runs:
           echo "ghcr.io URL: ${GHCR_URL}"
         fi
 
+        echo "::group::🐋 MANAGEMENT Dockerfile (alpine)"
+        ls -la
+        cat ${{ steps.parse_component.outputs.file }}
+        echo "::endgroup::"
+
     - name: Download Artifact
       if: ${{ inputs.download-artifact == 'true' }}
       uses: actions/download-artifact@v5
@@ -278,7 +283,6 @@ runs:
         echo "Image refs: $IMAGE_REFS"
         echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
-
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v6
       id: dockerbuild
@@ -292,7 +296,6 @@ runs:
         labels: ${{ steps.meta.outputs.labels }}
         platforms: ${{ inputs.platforms }}
         build-args: ${{ steps.parse_component.outputs.build_args != '' && steps.parse_component.outputs.build_args || inputs.build-args }}
-
 
     - name: Output result
       if: ${{ ! (inputs.dry-run == 'true') }}
