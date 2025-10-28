@@ -215,11 +215,11 @@ runs:
         ls -R -la ${{ github.workspace }}
 
     - name: Set up QEMU
-      if: ${{ skip-qemu-buildx-setup != 'true' }}
+      # if: ${{ skip-qemu-buildx-setup != 'true' }}
       uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
-      if: ${{ skip-qemu-buildx-setup != 'true' }}
+      # if: ${{ skip-qemu-buildx-setup != 'true' }}
       uses: docker/setup-buildx-action@v3
 
     - name: Log in to GitHub Container Registry
