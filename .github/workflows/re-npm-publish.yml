@@ -23,7 +23,7 @@ on:
         type: boolean
         default: false
       dry-run:
-        description: 'Run in dry-run mode (no actual publishing)'
+        description: "Run in dry-run mode (no actual publishing)"
         required: false
         type: boolean
         default: false
@@ -98,10 +98,10 @@ jobs:
 
       - name: Validate version
         if: ${{ !inputs.dry-run }}
+        env:
+          CURRENT_VERSION: ${{ steps.current_version.outputs.current_version }}
+          REQUESTED_VERSION: ${{ env.VERSION }}
         run: |
-          CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
-          REQUESTED_VERSION="${{ env.VERSION }}"
-
           echo "Current version: $CURRENT_VERSION"
           echo "Requested version: $REQUESTED_VERSION"
 
@@ -141,12 +141,12 @@ jobs:
         if: ${{ !inputs.dry-run }}
         id: get_version
         run: |
-            if [ "$IS_LERNA" == "true" ]; then
-              VERSION=$(lerna list --json | jq -r '.[0].version')
-            else
-              VERSION=$(jq -r '.version' package.json)
-            fi
-            echo "package_version=$VERSION" >> $GITHUB_OUTPUT
+          if [ "$IS_LERNA" == "true" ]; then
+            VERSION=$(lerna list --json | jq -r '.[0].version')
+          else
+            VERSION=$(jq -r '.version' package.json)
+          fi
+          echo "package_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build Project
         run: |
