@@ -169,10 +169,12 @@ jobs:
 
       - name: Skip publishing (dry-run mode)
         if: ${{ inputs.dry-run }}
+        env:
+          PACKAGE_VERSION: ${{ steps.get_version.outputs.package_version }}
         run: |
           echo "Publishing skipped - running in dry-run mode"
-          echo "Package version: ${{ steps.get_version.outputs.package_version }}"
-          echo "Would publish with tag: ${{ env.DIST_TAG }}"
+          echo "Package version: $PACKAGE_VERSION"
+          echo "Would publish with tag: $DIST_TAG"
 
       - name: Publish Package
         if: ${{ !inputs.dry-run }}
@@ -180,8 +182,8 @@ jobs:
           npm config get registry
           if [ "$IS_LERNA" = "true" ]; then
             echo "Publishing with Lerna..."
-            npx lerna publish from-package --yes --no-push --no-git-reset --no-git-tag-version --dist-tag ${{ inputs.dist-tag }}
+            npx lerna publish from-package --yes --no-push --no-git-reset --no-git-tag-version --dist-tag $DIST_TAG
           else
             echo "Publishing with npm..."
-            npm publish --tag ${{ env.DIST_TAG }}
+            npm publish --tag $DIST_TAG
           fi
