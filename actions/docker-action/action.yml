@@ -69,6 +69,16 @@ inputs:
     description: "Flag to enable debug mode."
     required: false
     default: "false"
+  registry:
+    description: "Registry name docker.io or ghcr.io or both"
+    required: false
+    default: "ghcr.io"
+  docker-io-login:
+    description: "User name to login to docker.io"
+    required: false
+  docker-io-token:
+    description: "Token to login to docker.io"
+    required: false
 outputs:
   image-name:
     description: "The name of the built Docker image."
@@ -82,6 +92,23 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Validate inputs.registry
+      shell: bash
+      env:
+        REG: ${{ inputs.registry }}
+      run: |
+        if [ -z "${REG+x}" ] || [ -z "${REG}" ]; then
+          echo "REGISTRY='ghcr.io'" >> $GITHUB_ENV
+        else
+          echo "REGISTRY=${{ inputs.registry }}" >> $GITHUB_ENV
+        fi
+    - name: Validate docker.io login params
+      if: ${{ contains(env.REGISTRY, 'docker.io') && (! inputs.docker-io-login || ! inputs.docker-io-token) && (inputs.dry-run != 'true') }}
+      shell: bash
+      run: |
+        echo "docker.io set as a registry, but docker-io-login and/or docker-io-token not provided."
+        exit 1
+
     - name: Parse Component JSON
       id: parse_component
       shell: bash
@@ -109,7 +136,22 @@ runs:
         fi
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
-        echo "OWNER=$(echo "$owner" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+        echo "GHCR_OWNER=$(echo "$owner" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+        echo "DOCKER_OWNER=${{ inputs.docker-io-login }}" >> "$GITHUB_ENV"
+
+    - name: Prepare Image ghcr.io URL
+      if: ${{ contains(env.REGISTRY, 'ghcr.io') }}
+      shell: bash
+      run: |
+        echo "GHCR_URL=ghcr.io/${{ env.GHCR_OWNER }}/${{ env.CONTAINER_NAME }}"
+        echo "GHCR_URL=ghcr.io/${{ env.GHCR_OWNER }}/${{ env.CONTAINER_NAME }}" >> $GITHUB_ENV
+
+    - name: Prepare Image docker.io URL
+      if: ${{ contains(env.REGISTRY, 'docker.io') }}
+      shell: bash
+      run: |
+        echo "DOCKER_URL=${{ env.DOCKER_OWNER }}/${{ env.CONTAINER_NAME }}"
+        echo "DOCKER_URL=${{ env.DOCKER_OWNER }}/${{ env.CONTAINER_NAME }}" >> $GITHUB_ENV
 
     - name: Checkout Repository
       if: ${{ inputs.checkout == 'true' }}
@@ -124,11 +166,21 @@ runs:
       run: |
         echo "custom-image-name: ${CUSTOM_IMAGE_NAME:-empty}"
         echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
-        echo "env OWNER: ${{ env.OWNER }}"
+        if [ -n "${DOCKER_OWNER}" ]; then
+          echo "env DOCKER_OWNER: ${DOCKER_OWNER}"
+        fi
+        if [ -n "${GHCR_OWNER}" ]; then
+          echo "env GHCR_OWNER: ${GHCR_OWNER}"
+        fi
         echo "ref: ${{ inputs.ref }}"
         echo "GITHUB_REPOSITORY: ${{ github.repository }}"
         echo "GITHUB_REF: ${{ github.ref }}"
-        echo "URL: ghcr.io/${{ env.OWNER }}/${{ env.CONTAINER_NAME }}"
+        if [ -n "${DOCKER_URL}" ]; then
+          echo "docker.io URL: ${DOCKER_URL}"
+        fi
+        if [ -n "${GHCR_URL}" ]; then
+          echo "ghcr.io URL: ${GHCR_URL}"
+        fi
 
     - name: Download Artifact
       if: ${{ inputs.download-artifact == 'true' }}
@@ -157,11 +209,19 @@ runs:
       uses: docker/setup-buildx-action@v3
 
     - name: Log in to GitHub Container Registry
+      if: ${{ contains(env.REGISTRY, 'ghcr.io') }}
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ env.GITHUB_TOKEN }}
+
+    - name: Login to Docker Hub
+      if: ${{ contains(env.REGISTRY, 'docker.io') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.docker-io-login }}
+        password: ${{ inputs.docker-io-token }}
 
     - name: Extract Docker Metadata
       if: ${{ inputs.tags == '' }}
@@ -169,7 +229,9 @@ runs:
       uses: docker/metadata-action@v5
       with:
         context: ${{ inputs.context }}
-        images: ghcr.io/${{ github.repository_owner }}/${{ env.CONTAINER_NAME }}
+        images: |
+          ${{ env.GHCR_URL }}
+          ${{ env.DOCKER_URL }}
         tags: |
           type=ref,event=branch
           type=semver,pattern={{version}}
@@ -184,25 +246,28 @@ runs:
         TAGS_INPUT: ${{ inputs.tags }}
       run: |
         echo "Create Image Refs (docker ghcr.io/owner/name:tag)"
-        CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
-        REPO_OWNER="${{ env.OWNER }}"
         TAGS_INPUT="${{ inputs.tags }}"
 
         IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
 
         IMAGE_REFS=""
-        for TAG in "${TAGS[@]}"; do
-          TAG=$(echo "$TAG" | xargs)
-          IMAGE_REFS="$IMAGE_REFS,ghcr.io/$REPO_OWNER/$CONTAINER_NAME:$TAG"
-        done
-
+        if [ -n "${GHCR_URL}" ]; then
+          for TAG in "${TAGS[@]}"; do
+            TAG=$(echo "$TAG" | xargs)
+            IMAGE_REFS="$IMAGE_REFS,$GHCR_URL:$TAG"
+          done
+        fi
+        if [ -n "${DOCKER_URL}" ]; then
+          for TAG in "${TAGS[@]}"; do
+            TAG=$(echo "$TAG" | xargs)
+            IMAGE_REFS="$IMAGE_REFS,$DOCKER_URL:$TAG"
+          done
+        fi
         IMAGE_REFS="${IMAGE_REFS#,}"
         IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')
 
-        # echo "prepared_tags=$IMAGE_REFS" >> "$GITHUB_OUTPUT"
         echo "Image refs: $IMAGE_REFS"
         echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
-        echo "REFERENCE=ghcr.io/$REPO_OWNER/$CONTAINER_NAME:$TAG" >> "$GITHUB_ENV"
 
 
     - name: Build and Push Docker Image

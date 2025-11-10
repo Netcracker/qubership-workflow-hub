@@ -33,6 +33,9 @@ This **Docker Build and Publish** GitHub Action automates the process of buildin
 | `download-artifact-merge-multiple` | When download multiple artifacts unpack them as is or into separate directories.                                          | No       | `false`                                                      |
 | `sbom`                    | Flag to enable SBoM generation. | No | `false` |
 | `build-args`              | List of build-time variables, newline-delimited string. | No | `""` |
+| `registry`                | Registry name to publish images to. Can be set to `ghcr.io`, `docker.io` or `ghcr.io,docker.io` | No | `ghcr.io` |
+| `docker-io-login`         | Account name to login to docker.io | Yes if `registry` contains `docker.io` | - |
+| `docker-io-token`         | Token with `Read,Write` permissions to login to docker.io | Yes if `registry` contains `docker.io` | - |
 
 ---
 
