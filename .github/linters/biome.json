@@ -4,9 +4,7 @@
   "files": {
     "includes": ["**/*"],
     "ignoreUnknown": false,
-    "ignore": [ 
-      "actions/*/dist/**"
-    ],
+    "experimentalScannerIgnores": ["**/dist/**"],
     "maxSize": 3145728
   }
 }
