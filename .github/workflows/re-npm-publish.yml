@@ -40,7 +40,7 @@ on:
 permissions:
   contents: write
   packages: write
-  id-token: write 
+  id-token: write
 env:
   VERSION: ${{ inputs.version }}
   DIST_TAG: ${{ inputs.dist-tag }}
