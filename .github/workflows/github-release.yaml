@@ -2,18 +2,19 @@ on:
   workflow_dispatch:
     inputs:
       version:
+        description: ""
         type: string
         required: true
 
 name: Create Workflow-Hub GitHub release
 run-name: "Workflow-Hub GitHub release v${{ inputs.version }}"
 permissions:
-  contents: write
-  actions: write
+  contents: read
 
 jobs:
-
   check-tag:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Input parameters
@@ -30,9 +31,9 @@ jobs:
 
       - name: Check if tag exists
         id: check_tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-action@v2.0.0
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@b575bad3a0959c4e883bc34f9d055ff07fde2dbd #v2.0.1
         with:
-          tag-name: 'v${{ github.event.inputs.version }}'
+          tag-name: "v${{ github.event.inputs.version }}"
           ref: ${{ github.ref }}
           create-tag: false
           check-tag: true
@@ -41,6 +42,8 @@ jobs:
 
   release-preparation:
     needs: [check-tag]
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -89,6 +92,8 @@ jobs:
 
   create-github-release:
     needs: [release-preparation]
+    permissions:
+      contents: write
     uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
     with:
       version: ${{ inputs.version }}
