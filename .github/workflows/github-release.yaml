@@ -67,10 +67,12 @@ jobs:
           git push origin "release/v$VERSION"
 
       - name: Update references
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           # shellcheck disable=2038
           find . -type f -name '*.yaml' -or -name '*.yml' -or -name '*.md' -and -not -name 'github-release.yml' | \
-          xargs sed -i 's|uses: netcracker/qubership-workflow-hub/\(.*\)@main|uses: netcracker/qubership-workflow-hub/\1@v${{ inputs.version }}|gi'
+          xargs sed -i 's|uses: netcracker/qubership-workflow-hub/\(.*\)@main|uses: netcracker/qubership-workflow-hub/\1@v$VERSION|gi'
 
       - name: Commit and push changes
         env:
@@ -84,7 +86,7 @@ jobs:
           git push origin "release/v$VERSION"
           git tag "v$VERSION"
           git push origin "v$VERSION"
-          
+
   create-github-release:
     needs: [release-preparation]
     uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
