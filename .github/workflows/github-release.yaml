@@ -17,8 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Input parameters
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          echo "Version: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "Version: $VERSION" >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout code
         uses: actions/checkout@v5
@@ -50,29 +52,39 @@ jobs:
       - name: Set up authentication
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          ACTOR: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git config --global user.name "$ACTOR"
+          git config --global user.email "$ACTOR@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/$REPOSITORY
 
       - name: Create Release Branch
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          git checkout -b "release/v${{ inputs.version }}"
-          git push origin "release/v${{ inputs.version }}"
+          git checkout -b "release/v$VERSION"
+          git push origin "release/v$VERSION"
+
       - name: Update references
         run: |
           # shellcheck disable=2038
           find . -type f -name '*.yaml' -or -name '*.yml' -or -name '*.md' -and -not -name 'github-release.yml' | \
           xargs sed -i 's|uses: netcracker/qubership-workflow-hub/\(.*\)@main|uses: netcracker/qubership-workflow-hub/\1@v${{ inputs.version }}|gi'
+
       - name: Commit and push changes
+        env:
+          ACTOR: ${{ github.actor }}
+          VERSION: ${{ inputs.version }}
         run: |
-          git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "$ACTOR"
+          git config --global user.email "$ACTOR@users.noreply.github.com"
           git add .
           git commit -m "Update references to the new version"
-          git push origin "release/v${{ inputs.version }}"
-          git tag "v${{ inputs.version }}"
-          git push origin "v${{ inputs.version }}"
+          git push origin "release/v$VERSION"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+          
   create-github-release:
     needs: [release-preparation]
     uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
