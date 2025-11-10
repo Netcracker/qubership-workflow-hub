@@ -1,10 +1,12 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.0.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
   "root": false,
   "files": {
     "includes": ["**/*"],
     "ignoreUnknown": false,
-    "experimentalScannerIgnores": ["**/dist/**"],
+    "ignore": [ 
+      "actions/*/dist/**"
+    ],
     "maxSize": 3145728
   }
 }
