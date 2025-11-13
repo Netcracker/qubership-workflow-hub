@@ -32,8 +32,13 @@ jobs:
   prepare-configs:
     runs-on: ubuntu-latest
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+      with:
+        egress-policy: audit
+
     - name: "Get the common linters configuration"
-      uses: actions/checkout@v5 # v5.0.0
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         ref: main # fix/superlinter-config
         repository: netcracker/.github
@@ -41,7 +46,7 @@ jobs:
         sparse-checkout: |
           config/linters
     - name: "Upload the common linters configuration"
-      uses: actions/upload-artifact@v5 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: linter-config
         path: "${{ github.workspace }}/config"
@@ -55,14 +60,19 @@ jobs:
       # To report GitHub Actions status checks
       statuses: write
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+      with:
+        egress-policy: audit
+
     - name: Checkout code
-      uses: actions/checkout@v5 # v5.0.0
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         # Full git history is needed to get a proper list of changed files within `super-linter`
         fetch-depth: 0
         persist-credentials: false
     - name: "Get the common linters configuration"
-      uses: actions/download-artifact@v6 # v5.0.0
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
       id: download
       with:
         name: linter-config

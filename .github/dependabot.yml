@@ -21,3 +21,33 @@ updates:
       - "/actions/tag-checker"
     schedule:
       interval: "weekly"
+
+  - package-ecosystem: npm
+    directory: /actions/assets-action
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /actions/container-package-cleanup
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /actions/custom-event
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /actions/metadata-action
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /actions/pr-assigner
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /packages/action-logger
+    schedule:
+      interval: daily

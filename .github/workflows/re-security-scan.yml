@@ -55,6 +55,11 @@ jobs:
   init:
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+          egress-policy: audit
+
       - name: Scan plan
         run: |
           echo "Mode: ${TARGET}"
@@ -76,6 +81,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [init]
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+          egress-policy: audit
+
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef #v3
@@ -86,7 +96,7 @@ jobs:
 
       - name: Checkout repository (source target)
         if: ${{ inputs.target == 'source' }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -168,12 +178,12 @@ jobs:
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Grype SARIF
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@0499de31b99561a6d14a36a5f662c2a54f91beee # v4.31.2
         with:
           sarif_file: grype.sarif
 
       - name: Upload all scan artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: grype.sarif
           path: |
@@ -185,6 +195,11 @@ jobs:
     if: ${{ inputs.trivy-scan }}
     needs: [init]
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+          egress-policy: audit
+
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef #v3
@@ -195,7 +210,7 @@ jobs:
 
       - name: Checkout repository (source target)
         if: ${{ inputs.target == 'source' }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -255,12 +270,12 @@ jobs:
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Trivy SARIF
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@0499de31b99561a6d14a36a5f662c2a54f91beee # v4.31.2
         with:
           sarif_file: trivy.sarif
 
       - name: Upload all scan artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: trivy.sarif
           path: |

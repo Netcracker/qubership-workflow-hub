@@ -23,9 +23,14 @@ jobs:
     # Limit the running time
     timeout-minutes: 10
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+          egress-policy: audit
+
       - name: Invoke the Prettier fix
         # Use the latest commit in the main branch.
-        uses: WorkOfStan/prettier-fix@main
+        uses: WorkOfStan/prettier-fix@f2241b3505f4ddb282079e5d381082b71adde392 # main
         with:
           #node-version: "20"
           commit-changes: false
