@@ -1,351 +1,351 @@
-  name: "Docker Build and Publish Composite Action"
-  description: "Composite action for building and publishing Docker images using Docker Buildx."
-  inputs:
-    ref:
-      description: "Branch to create a release from."
-      required: false
-      default: ""
-    custom-image-name:
-      description: "Custom name for the Docker image."
-      required: false
-      default: ""
-    context:
-      description: "Pipeline context."
-      required: false
-      default: "git"
-    dry-run:
-      description: "Run without pushing (dry run)."
-      required: false
-      default: "false"
-    download-artifact:
-      description: "Flag to download the artifact."
-      required: false
-      default: "false"
-    component:
-      description: "Component configuration in JSON format (an array with a single object)."
-      required: false
-      default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
-    platforms:
-      description: "Platforms for which the Docker image will be built."
-      required: false
-      default: "linux/amd64"
-    tags:
-      description: "Docker image tags. If empty, tags will be generated automatically."
-      required: false
-      default: ""
-    download-artifact-name:
-      description: "Name of the artifact to download. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
-      required: false
-      default: ""
-    download-artifact-ids:
-      description: "IDs of the artifacts to download, comma-separated. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
-      required: false
-      default: ""
-    download-artifact-path:
-      description: "Destination path. Supports basic tilde expansion. Optional. Default is $GITHUB_WORKSPACE"
-      required: false
-      default: ""
-    download-artifact-pattern:
-      description: "A glob pattern to the artifacts that should be downloaded. Ignored if name is specified. Optional."
-      required: false
-      default: ""
-    download-artifact-merge-multiple:
-      description: "When download multiple artifacts unpack them as is or into separate directories. Optional."
-      required: false
-      default: "false"
-    sbom:
-      description: "Flag to enable SBoM generation."
-      required: false
-      default: "false"
-    build-args:
-      description: "Build arguments for the Docker image, in JSON format."
-      required: false
-      default: ""
-    checkout:
-      description: "Flag to enable repository checkout."
-      required: false
-      default: "true"
-    debug:
-      description: "Flag to enable debug mode."
-      required: false
-      default: "false"
-    registry:
-      description: "Registry name docker.io or ghcr.io or both"
-      required: false
-      default: "ghcr.io"
-    docker-io-login:
-      description: "User name to login to docker.io"
-      required: false
-    docker-io-token:
-      description: "Token to login to docker.io"
-      required: false
-    skip-qemu-buildx:
-      description: "Skip the setup of Docker Buildx (for self-hosted runners with pre-configured Buildx)."
-      required: false
-      default: "false"
-  outputs:
-    image-name:
-      description: "The name of the built Docker image."
-      value: "${{ steps.output_result.outputs.image_name }}"
-    metadata-json:
-      description: "Path to the generated metadata file."
-      value: "${{ steps.output_result.outputs.metadata_path }}"
-    metadata-filename:
-      description: "Name of the generated metadata file."
-      value: "${{ steps.output_result.outputs.metadata_filename }}"
+name: "Docker Build and Publish Composite Action"
+description: "Composite action for building and publishing Docker images using Docker Buildx."
+inputs:
+  ref:
+    description: "Branch to create a release from."
+    required: false
+    default: ""
+  custom-image-name:
+    description: "Custom name for the Docker image."
+    required: false
+    default: ""
+  context:
+    description: "Pipeline context."
+    required: false
+    default: "git"
+  dry-run:
+    description: "Run without pushing (dry run)."
+    required: false
+    default: "false"
+  download-artifact:
+    description: "Flag to download the artifact."
+    required: false
+    default: "false"
+  component:
+    description: "Component configuration in JSON format (an array with a single object)."
+    required: false
+    default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
+  platforms:
+    description: "Platforms for which the Docker image will be built."
+    required: false
+    default: "linux/amd64"
+  tags:
+    description: "Docker image tags. If empty, tags will be generated automatically."
+    required: false
+    default: ""
+  download-artifact-name:
+    description: "Name of the artifact to download. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
+    required: false
+    default: ""
+  download-artifact-ids:
+    description: "IDs of the artifacts to download, comma-separated. Either inputs `artifact-ids` or `name` can be used, but not both. Optional"
+    required: false
+    default: ""
+  download-artifact-path:
+    description: "Destination path. Supports basic tilde expansion. Optional. Default is $GITHUB_WORKSPACE"
+    required: false
+    default: ""
+  download-artifact-pattern:
+    description: "A glob pattern to the artifacts that should be downloaded. Ignored if name is specified. Optional."
+    required: false
+    default: ""
+  download-artifact-merge-multiple:
+    description: "When download multiple artifacts unpack them as is or into separate directories. Optional."
+    required: false
+    default: "false"
+  sbom:
+    description: "Flag to enable SBoM generation."
+    required: false
+    default: "false"
+  build-args:
+    description: "Build arguments for the Docker image, in JSON format."
+    required: false
+    default: ""
+  checkout:
+    description: "Flag to enable repository checkout."
+    required: false
+    default: "true"
+  debug:
+    description: "Flag to enable debug mode."
+    required: false
+    default: "false"
+  registry:
+    description: "Registry name docker.io or ghcr.io or both"
+    required: false
+    default: "ghcr.io"
+  docker-io-login:
+    description: "User name to login to docker.io"
+    required: false
+  docker-io-token:
+    description: "Token to login to docker.io"
+    required: false
+  skip-qemu-buildx:
+    description: "Skip the setup of Docker Buildx (for self-hosted runners with pre-configured Buildx)."
+    required: false
+    default: "false"
+outputs:
+  image-name:
+    description: "The name of the built Docker image."
+    value: "${{ steps.output_result.outputs.image_name }}"
+  metadata-json:
+    description: "Path to the generated metadata file."
+    value: "${{ steps.output_result.outputs.metadata_path }}"
+  metadata-filename:
+    description: "Name of the generated metadata file."
+    value: "${{ steps.output_result.outputs.metadata_filename }}"
 
-  runs:
-    using: "composite"
-    steps:
-      - name: Validate inputs.registry
-        shell: bash
-        env:
-          REG: ${{ inputs.registry }}
-        run: |
-          if [ -z "${REG+x}" ] || [ -z "${REG}" ]; then
-            echo "REGISTRY='ghcr.io'" >> $GITHUB_ENV
-          else
-            echo "REGISTRY=${{ inputs.registry }}" >> $GITHUB_ENV
-          fi
-      - name: Validate docker.io login params
-        if: ${{ contains(env.REGISTRY, 'docker.io') && (! inputs.docker-io-login || ! inputs.docker-io-token) && (inputs.dry-run != 'true') }}
-        shell: bash
-        run: |
-          echo "docker.io set as a registry, but docker-io-login and/or docker-io-token not provided."
-          exit 1
+runs:
+  using: "composite"
+  steps:
+    - name: Validate inputs.registry
+      shell: bash
+      env:
+        REG: ${{ inputs.registry }}
+      run: |
+        if [ -z "${REG+x}" ] || [ -z "${REG}" ]; then
+          echo "REGISTRY='ghcr.io'" >> $GITHUB_ENV
+        else
+          echo "REGISTRY=${{ inputs.registry }}" >> $GITHUB_ENV
+        fi
+    - name: Validate docker.io login params
+      if: ${{ contains(env.REGISTRY, 'docker.io') && (! inputs.docker-io-login || ! inputs.docker-io-token) && (inputs.dry-run != 'true') }}
+      shell: bash
+      run: |
+        echo "docker.io set as a registry, but docker-io-login and/or docker-io-token not provided."
+        exit 1
 
-      - name: Parse Component JSON
-        id: parse_component
-        shell: bash
-        run: |
-          # Parse the input JSON object directly
-          component='${{ inputs.component }}'
-          component_parsed=$(echo "$component" | jq 'if type=="array" then .[0] else . end')
-          comp_name=$(echo "$component_parsed" | jq -r '.name')
-          comp_file=$(echo "$component_parsed" | jq -r '.file')
-          comp_ctx=$(echo "$component_parsed" | jq -r '.context')
-          comp_build_args=$(echo "$component_parsed" | jq -r '.arguments // empty')
-          echo "name=$comp_name" >> "$GITHUB_OUTPUT"
-          echo "file=$comp_file" >> "$GITHUB_OUTPUT"
-          echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
-          echo "build_args=$comp_build_args" >> "$GITHUB_OUTPUT"
+    - name: Parse Component JSON
+      id: parse_component
+      shell: bash
+      run: |
+        # Parse the input JSON object directly
+        component='${{ inputs.component }}'
+        component_parsed=$(echo "$component" | jq 'if type=="array" then .[0] else . end')
+        comp_name=$(echo "$component_parsed" | jq -r '.name')
+        comp_file=$(echo "$component_parsed" | jq -r '.file')
+        comp_ctx=$(echo "$component_parsed" | jq -r '.context')
+        comp_build_args=$(echo "$component_parsed" | jq -r '.arguments // empty')
+        echo "name=$comp_name" >> "$GITHUB_OUTPUT"
+        echo "file=$comp_file" >> "$GITHUB_OUTPUT"
+        echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
+        echo "build_args=$comp_build_args" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare Image Name
-        shell: bash
-        run: |
-          IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
-          if [ -n "${{ inputs.custom-image-name }}" ]; then
-              CONTAINER_NAME="${{ inputs.custom-image-name }}"
-          elif [ -n "${{ steps.parse_component.outputs.name }}" ] && [ "${{ steps.parse_component.outputs.name }}" != "default" ]; then
-            CONTAINER_NAME="${{ steps.parse_component.outputs.name }}"
-          else
-            CONTAINER_NAME="$repo"
-          fi
-          echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
-          echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
-          echo "GHCR_OWNER=$(echo "$owner" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
-          echo "DOCKER_OWNER=${{ inputs.docker-io-login }}" >> "$GITHUB_ENV"
+    - name: Prepare Image Name
+      shell: bash
+      run: |
+        IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
+        if [ -n "${{ inputs.custom-image-name }}" ]; then
+            CONTAINER_NAME="${{ inputs.custom-image-name }}"
+        elif [ -n "${{ steps.parse_component.outputs.name }}" ] && [ "${{ steps.parse_component.outputs.name }}" != "default" ]; then
+          CONTAINER_NAME="${{ steps.parse_component.outputs.name }}"
+        else
+          CONTAINER_NAME="$repo"
+        fi
+        echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
+        echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
+        echo "GHCR_OWNER=$(echo "$owner" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+        echo "DOCKER_OWNER=${{ inputs.docker-io-login }}" >> "$GITHUB_ENV"
 
-      - name: Prepare Image ghcr.io URL
-        if: ${{ contains(env.REGISTRY, 'ghcr.io') }}
-        shell: bash
-        run: |
-          echo "GHCR_URL=ghcr.io/${{ env.GHCR_OWNER }}/${{ env.CONTAINER_NAME }}"
-          echo "GHCR_URL=ghcr.io/${{ env.GHCR_OWNER }}/${{ env.CONTAINER_NAME }}" >> $GITHUB_ENV
+    - name: Prepare Image ghcr.io URL
+      if: ${{ contains(env.REGISTRY, 'ghcr.io') }}
+      shell: bash
+      run: |
+        echo "GHCR_URL=ghcr.io/${{ env.GHCR_OWNER }}/${{ env.CONTAINER_NAME }}"
+        echo "GHCR_URL=ghcr.io/${{ env.GHCR_OWNER }}/${{ env.CONTAINER_NAME }}" >> $GITHUB_ENV
 
-      - name: Prepare Image docker.io URL
-        if: ${{ contains(env.REGISTRY, 'docker.io') }}
-        shell: bash
-        run: |
-          echo "DOCKER_URL=${{ env.DOCKER_OWNER }}/${{ env.CONTAINER_NAME }}"
-          echo "DOCKER_URL=${{ env.DOCKER_OWNER }}/${{ env.CONTAINER_NAME }}" >> $GITHUB_ENV
+    - name: Prepare Image docker.io URL
+      if: ${{ contains(env.REGISTRY, 'docker.io') }}
+      shell: bash
+      run: |
+        echo "DOCKER_URL=${{ env.DOCKER_OWNER }}/${{ env.CONTAINER_NAME }}"
+        echo "DOCKER_URL=${{ env.DOCKER_OWNER }}/${{ env.CONTAINER_NAME }}" >> $GITHUB_ENV
 
-      - name: Checkout Repository
-        if: ${{ inputs.checkout == 'true' }}
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.ref }}
+    - name: Checkout Repository
+      if: ${{ inputs.checkout == 'true' }}
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ inputs.ref }}
 
-      - name: Display Debug Information
-        shell: bash
-        env:
-          CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
-        run: |
-          echo "custom-image-name: ${CUSTOM_IMAGE_NAME:-empty}"
-          echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
-          if [ -n "${DOCKER_OWNER}" ]; then
-            echo "env DOCKER_OWNER: ${DOCKER_OWNER}"
-          fi
-          if [ -n "${GHCR_OWNER}" ]; then
-            echo "env GHCR_OWNER: ${GHCR_OWNER}"
-          fi
-          echo "ref: ${{ inputs.ref }}"
-          echo "GITHUB_REPOSITORY: ${{ github.repository }}"
-          echo "GITHUB_REF: ${{ github.ref }}"
-          if [ -n "${DOCKER_URL}" ]; then
-            echo "docker.io URL: ${DOCKER_URL}"
-          fi
-          if [ -n "${GHCR_URL}" ]; then
-            echo "ghcr.io URL: ${GHCR_URL}"
-          fi
+    - name: Display Debug Information
+      shell: bash
+      env:
+        CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
+      run: |
+        echo "custom-image-name: ${CUSTOM_IMAGE_NAME:-empty}"
+        echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
+        if [ -n "${DOCKER_OWNER}" ]; then
+          echo "env DOCKER_OWNER: ${DOCKER_OWNER}"
+        fi
+        if [ -n "${GHCR_OWNER}" ]; then
+          echo "env GHCR_OWNER: ${GHCR_OWNER}"
+        fi
+        echo "ref: ${{ inputs.ref }}"
+        echo "GITHUB_REPOSITORY: ${{ github.repository }}"
+        echo "GITHUB_REF: ${{ github.ref }}"
+        if [ -n "${DOCKER_URL}" ]; then
+          echo "docker.io URL: ${DOCKER_URL}"
+        fi
+        if [ -n "${GHCR_URL}" ]; then
+          echo "ghcr.io URL: ${GHCR_URL}"
+        fi
 
-          echo "::group::🐋 MANAGEMENT Dockerfile (alpine)"
-          cat ${{ steps.parse_component.outputs.file }}
-          echo "::endgroup::"
+        echo "::group::🐋 MANAGEMENT Dockerfile (alpine)"
+        cat ${{ steps.parse_component.outputs.file }}
+        echo "::endgroup::"
 
-      - name: Download Artifact
-        if: ${{ inputs.download-artifact == 'true' }}
-        uses: actions/download-artifact@v5
-        with:
-          name: ${{ inputs.download-artifact-name }}
-          path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '.' }}
-          merge-multiple: ${{ inputs.download-artifact-merge-multiple == 'true' }}
+    - name: Download Artifact
+      if: ${{ inputs.download-artifact == 'true' }}
+      uses: actions/download-artifact@v5
+      with:
+        name: ${{ inputs.download-artifact-name }}
+        path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '.' }}
+        merge-multiple: ${{ inputs.download-artifact-merge-multiple == 'true' }}
 
-      - name: Debug ls
-        if: ${{ inputs.debug == 'true' }}
-        shell: bash
-        env:
-          DL_PATH: ${{ inputs.download-artifact-path }}
-          CONTEXT_DIR: ${{ steps.parse_component.outputs.ctx }}
-        run: |
-          echo "🔍 Current directory:"
-          pwd
-          echo "📂 Full workspace tree:"
-          ls -R -la ${{ github.workspace }}
+    - name: Debug ls
+      if: ${{ inputs.debug == 'true' }}
+      shell: bash
+      env:
+        DL_PATH: ${{ inputs.download-artifact-path }}
+        CONTEXT_DIR: ${{ steps.parse_component.outputs.ctx }}
+      run: |
+        echo "🔍 Current directory:"
+        pwd
+        echo "📂 Full workspace tree:"
+        ls -R -la ${{ github.workspace }}
 
-      - name: Set up QEMU
-        if: ${{ inputs.skip-qemu-buildx != 'true' }}
-        uses: docker/setup-qemu-action@v3
+    - name: Set up QEMU
+      if: ${{ inputs.skip-qemu-buildx != 'true' }}
+      uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
-        if: ${{ inputs.skip-qemu-buildx != 'true' }}
-        uses: docker/setup-buildx-action@v3
+    - name: Set up Docker Buildx
+      if: ${{ inputs.skip-qemu-buildx != 'true' }}
+      uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
-        if: ${{ contains(env.REGISTRY, 'ghcr.io') }}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ env.GITHUB_TOKEN }}
+    - name: Log in to GitHub Container Registry
+      if: ${{ contains(env.REGISTRY, 'ghcr.io') }}
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ env.GITHUB_TOKEN }}
 
-      - name: Login to Docker Hub
-        if: ${{ contains(env.REGISTRY, 'docker.io') }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ inputs.docker-io-login }}
-          password: ${{ inputs.docker-io-token }}
+    - name: Login to Docker Hub
+      if: ${{ contains(env.REGISTRY, 'docker.io') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.docker-io-login }}
+        password: ${{ inputs.docker-io-token }}
 
-      - name: Extract Docker Metadata
-        if: ${{ inputs.tags == '' }}
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          context: ${{ inputs.context }}
-          images: |
-            ${{ env.GHCR_URL }}
-            ${{ env.DOCKER_URL }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+    - name: Extract Docker Metadata
+      if: ${{ inputs.tags == '' }}
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        context: ${{ inputs.context }}
+        images: |
+          ${{ env.GHCR_URL }}
+          ${{ env.DOCKER_URL }}
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
 
-      - name: Create Image Refs (docker ghcr.io/owner/name:tag)
-        if: ${{ inputs.tags != '' }}
-        id: create-image-refs
-        shell: bash
-        env:
-          TAGS_INPUT: ${{ inputs.tags }}
-        run: |
-          echo "Create Image Refs (docker ghcr.io/owner/name:tag)"
-          TAGS_INPUT="${{ inputs.tags }}"
+    - name: Create Image Refs (docker ghcr.io/owner/name:tag)
+      if: ${{ inputs.tags != '' }}
+      id: create-image-refs
+      shell: bash
+      env:
+        TAGS_INPUT: ${{ inputs.tags }}
+      run: |
+        echo "Create Image Refs (docker ghcr.io/owner/name:tag)"
+        TAGS_INPUT="${{ inputs.tags }}"
 
-          IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
+        IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
 
-          IMAGE_REFS=""
-          if [ -n "${GHCR_URL}" ]; then
-            for TAG in "${TAGS[@]}"; do
-              TAG=$(echo "$TAG" | xargs)
-              IMAGE_REFS="$IMAGE_REFS,$GHCR_URL:$TAG"
-            done
-          fi
-          if [ -n "${DOCKER_URL}" ]; then
-            for TAG in "${TAGS[@]}"; do
-              TAG=$(echo "$TAG" | xargs)
-              IMAGE_REFS="$IMAGE_REFS,$DOCKER_URL:$TAG"
-            done
-          fi
-          IMAGE_REFS="${IMAGE_REFS#,}"
-          IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')
+        IMAGE_REFS=""
+        if [ -n "${GHCR_URL}" ]; then
+          for TAG in "${TAGS[@]}"; do
+            TAG=$(echo "$TAG" | xargs)
+            IMAGE_REFS="$IMAGE_REFS,$GHCR_URL:$TAG"
+          done
+        fi
+        if [ -n "${DOCKER_URL}" ]; then
+          for TAG in "${TAGS[@]}"; do
+            TAG=$(echo "$TAG" | xargs)
+            IMAGE_REFS="$IMAGE_REFS,$DOCKER_URL:$TAG"
+          done
+        fi
+        IMAGE_REFS="${IMAGE_REFS#,}"
+        IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')
 
-          echo "Image refs: $IMAGE_REFS"
-          echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+        echo "Image refs: $IMAGE_REFS"
+        echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v6
-        id: dockerbuild
-        with:
-          provenance: false
-          sbom: ${{ inputs.sbom == 'true' && 'true' || 'false' }}
-          context: ${{ steps.parse_component.outputs.ctx }}
-          file: ${{ steps.parse_component.outputs.file }}
-          push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
-          tags: ${{ inputs.tags != '' && env.IMAGE_REFS || steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ inputs.platforms }}
-          build-args: ${{ steps.parse_component.outputs.build_args != '' && steps.parse_component.outputs.build_args || inputs.build-args }}
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v6
+      id: dockerbuild
+      with:
+        provenance: false
+        sbom: ${{ inputs.sbom == 'true' && 'true' || 'false' }}
+        context: ${{ steps.parse_component.outputs.ctx }}
+        file: ${{ steps.parse_component.outputs.file }}
+        push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
+        tags: ${{ inputs.tags != '' && env.IMAGE_REFS || steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        platforms: ${{ inputs.platforms }}
+        build-args: ${{ steps.parse_component.outputs.build_args != '' && steps.parse_component.outputs.build_args || inputs.build-args }}
 
-      - name: Output result
-        if: ${{ ! (inputs.dry-run == 'true') }}
-        id: output_result
-        shell: bash
-        run: |
-          set -euo pipefail
+    - name: Output result
+      if: ${{ ! (inputs.dry-run == 'true') }}
+      id: output_result
+      shell: bash
+      run: |
+        set -euo pipefail
 
-          IMAGE_NAME_FULL=$(echo '${{ steps.dockerbuild.outputs.metadata }}' | jq -r '.["image.name"]' | cut -d',' -f1)
-          IMAGE_NAME="${IMAGE_NAME_FULL%%:*}"
-          TAG="${IMAGE_NAME_FULL##*:}"
+        IMAGE_NAME_FULL=$(echo '${{ steps.dockerbuild.outputs.metadata }}' | jq -r '.["image.name"]' | cut -d',' -f1)
+        IMAGE_NAME="${IMAGE_NAME_FULL%%:*}"
+        TAG="${IMAGE_NAME_FULL##*:}"
 
-          DIGEST="${{ steps.dockerbuild.outputs.digest }}"
-          ALG="${DIGEST%%:*}"
-          DIGEST_NO_PREFIX="${DIGEST##*:}"
-          DIGEST_SHORT="${DIGEST_NO_PREFIX:0:12}"
+        DIGEST="${{ steps.dockerbuild.outputs.digest }}"
+        ALG="${DIGEST%%:*}"
+        DIGEST_NO_PREFIX="${DIGEST##*:}"
+        DIGEST_SHORT="${DIGEST_NO_PREFIX:0:12}"
 
-          GROUP="${{ inputs.app-manifest-group }}"
+        GROUP="${{ inputs.app-manifest-group }}"
 
-          VERSION="$TAG"
+        VERSION="$TAG"
 
-          BASENAME=$(basename "$IMAGE_NAME")
-          FILENAME="${BASENAME}-${TAG}-${DIGEST_SHORT}.json"
+        BASENAME=$(basename "$IMAGE_NAME")
+        FILENAME="${BASENAME}-${TAG}-${DIGEST_SHORT}.json"
 
-          echo ">>> IMAGE_NAME        = $IMAGE_NAME"
-          echo ">>> DIGEST            = $DIGEST"
-          echo ">>> DIGEST_SHORT(12)  = $DIGEST_SHORT"
-          echo ">>> FILENAME          = $FILENAME"
-          REFERENCE=${IMAGE_NAME}:${VERSION}
-          cat <<EOF > "$FILENAME"
-          {
-            "type": "container",
-            "mime-type": "application/vnd.docker.image",
-            "name": "${CONTAINER_NAME}",
-            "group": "${GROUP}",
-            "version": "${VERSION}",
-            "hashes":[
-              {
-                "alg": "${ALG}",
-                "content": "${DIGEST_NO_PREFIX}"
-              }],
-            "reference": "${REFERENCE}"
-          }
-          EOF
+        echo ">>> IMAGE_NAME        = $IMAGE_NAME"
+        echo ">>> DIGEST            = $DIGEST"
+        echo ">>> DIGEST_SHORT(12)  = $DIGEST_SHORT"
+        echo ">>> FILENAME          = $FILENAME"
+        REFERENCE=${IMAGE_NAME}:${VERSION}
+        cat <<EOF > "$FILENAME"
+        {
+          "type": "container",
+          "mime-type": "application/vnd.docker.image",
+          "name": "${CONTAINER_NAME}",
+          "group": "${GROUP}",
+          "version": "${VERSION}",
+          "hashes":[
+            {
+              "alg": "${ALG}",
+              "content": "${DIGEST_NO_PREFIX}"
+            }],
+          "reference": "${REFERENCE}"
+        }
+        EOF
 
-          echo "metadata_path=$PWD/$FILENAME" >> "$GITHUB_OUTPUT"
-          echo "metadata_filename=$FILENAME" >> "$GITHUB_OUTPUT"
+        echo "metadata_path=$PWD/$FILENAME" >> "$GITHUB_OUTPUT"
+        echo "metadata_filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
-      - name: "Upload metadata file"
-        if: ${{ ! (inputs.dry-run == 'true') }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.output_result.outputs.metadata_filename }}
-          path: ${{ steps.output_result.outputs.metadata_path }}
+    - name: "Upload metadata file"
+      if: ${{ ! (inputs.dry-run == 'true') }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.output_result.outputs.metadata_filename }}
+        path: ${{ steps.output_result.outputs.metadata_path }}
