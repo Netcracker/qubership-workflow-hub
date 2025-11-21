@@ -78,14 +78,18 @@
           id: prepare-outputs
           run: |
             if [ "${TARGET}" = "docker" ]; then
-              SHORT_NAME=$(echo "$IMAGE" | sed 's|.*/\(.*\)|\1|')
-              SAFE_NAME=$(echo "$SHORT_NAME" | sed 's/[:\/-]/_/g')
-              echo "GRYPE_FILENAME=grype-${SAFE_NAME}.sarif" >> $GITHUB_OUTPUT
-              echo "TRIVY_FILENAME=trivy-${SAFE_NAME}.sarif" >> $GITHUB_OUTPUT
+              SHORT_NAME=${IMAGE##*/}
+
+              SAFE_NAME=${SHORT_NAME//:/_}
+              SAFE_NAME=${SAFE_NAME//\//_}
+              SAFE_NAME=${SAFE_NAME//-/_}
+
+              echo "GRYPE_FILENAME=grype-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
+              echo "TRIVY_FILENAME=trivy-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
               echo "Prepared filenames for image scan: grype-${SAFE_NAME}.sarif, trivy-${SAFE_NAME}.sarif"
             else
-              echo "GRYPE_FILENAME=grype.sarif" >> $GITHUB_OUTPUT
-              echo "TRIVY_FILENAME=trivy.sarif" >> $GITHUB_OUTPUT
+              echo "GRYPE_FILENAME=grype.sarif" >> "$GITHUB_OUTPUT"
+              echo "TRIVY_FILENAME=trivy.sarif" >> "$GITHUB_OUTPUT"
               echo "Prepared filenames for source scan: grype.sarif, trivy.sarif"
             fi
 
