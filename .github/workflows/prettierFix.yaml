@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Invoke the Prettier fix
         # Use the latest commit in the main branch.
-        uses: WorkOfStan/prettier-fix@main
+        uses: WorkOfStan/prettier-fix@f2241b3505f4ddb282079e5d381082b71adde392 #v1.1.6.2
         with:
           #node-version: "20"
           commit-changes: false
