@@ -178,7 +178,7 @@ with:
     [
       {
         "name": "my-service",
-        "file": "./docker/Dockerfile.prod", 
+        "file": "./docker/Dockerfile.prod",
         "context": "./src",
         "arguments": "NODE_ENV=production"
       }
