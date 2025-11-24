@@ -79,7 +79,7 @@ jobs:
         if: ${{ inputs.target == 'docker' }}
         id: normalize-image
         run: |
-          IMAGE="${{ env.IMAGE }}"
+          IMAGE="$IMAGE"
           IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
           echo "Normalized IMAGE: $IMAGE_LOWER"
           echo "IMAGE=$IMAGE_LOWER" >> "$GITHUB_OUTPUT"
