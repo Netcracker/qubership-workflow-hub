@@ -48,7 +48,7 @@ env:
   TARGET: ${{ inputs.target }}
   TRIVY_SEVERITY: >-
     ${{ inputs['only-high-critical'] && 'HIGH,CRITICAL' || 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL' }}
-  IMAGE: >-
+  INCOMMING_IMAGE: >-
     ${{ inputs.target == 'docker' && (inputs.image != '' && inputs.image || format('ghcr.io/{0}:latest', github.repository)) || '' }}
 
 jobs:
@@ -79,7 +79,7 @@ jobs:
         if: ${{ inputs.target == 'docker' }}
         id: normalize-image
         run: |
-          IMAGE="$IMAGE"
+          IMAGE="$INCOMMING_IMAGE"
           IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
           echo "Normalized IMAGE: $IMAGE_LOWER"
           echo "IMAGE=$IMAGE_LOWER" >> "$GITHUB_OUTPUT"
