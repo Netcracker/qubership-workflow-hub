@@ -57,7 +57,7 @@ jobs:
     outputs:
       GRYPE_FILENAME: ${{ steps.prepare-outputs.outputs.GRYPE_FILENAME }}
       TRIVY_FILENAME: ${{ steps.prepare-outputs.outputs.TRIVY_FILENAME }}
-      IAMGE: ${{ steps.normalize-image.outputs.IMAGE }}
+      IMAGE: ${{ steps.normalize-image.outputs.IMAGE }}
     steps:
       - name: Scan plan
         run: |
