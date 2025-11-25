@@ -93,6 +93,8 @@ jobs:
             SAFE_NAME=${SAFE_NAME//\//_}
             SAFE_NAME=${SAFE_NAME//-/_}
 
+            echo ${SAFE_NAME}
+
             echo "GRYPE_FILENAME=grype-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
             echo "TRIVY_FILENAME=trivy-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
             echo "Prepared filenames for image scan: grype-${SAFE_NAME}.sarif, trivy-${SAFE_NAME}.sarif"
