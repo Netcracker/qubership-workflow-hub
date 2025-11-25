@@ -1,5 +1,4 @@
 name: On-demand Security Scan (Grype + Trivy)
-
 on:
   workflow_call:
     inputs:
