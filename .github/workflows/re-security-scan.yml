@@ -61,7 +61,7 @@ jobs:
       - name: Scan plan
         run: |
           echo "Mode: ${TARGET}"
-          echo "Image (if docker): ${IMAGE}"
+          echo "Image (if docker): ${INCOMMING_IMAGE}"
           echo "Only high+critical: ${{ inputs['only-high-critical'] }}"
           if [ "${TARGET}" = "docker" ]; then
             echo "   - Docker scan: enabled"
