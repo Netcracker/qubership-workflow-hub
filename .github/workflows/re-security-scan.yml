@@ -1,4 +1,5 @@
 name: On-demand Security Scan (Grype + Trivy)
+
 on:
   workflow_call:
     inputs:
@@ -61,7 +62,7 @@ jobs:
       - name: Scan plan
         run: |
           echo "Mode: ${TARGET}"
-          echo "Image (if docker): ${INCOMMING_IMAGE}"
+          echo "Image (if docker): ${IMAGE}"
           echo "Only high+critical: ${{ inputs['only-high-critical'] }}"
           if [ "${TARGET}" = "docker" ]; then
             echo "   - Docker scan: enabled"
@@ -87,7 +88,7 @@ jobs:
         id: prepare-outputs
         run: |
           if [ "${TARGET}" = "docker" ]; then
-            SHORT_NAME=${INCOMMING_IMAGE##*/}
+            SHORT_NAME=${IMAGE##*/}
 
             SAFE_NAME=${SHORT_NAME//:/_}
             SAFE_NAME=${SAFE_NAME//\//_}
@@ -95,9 +96,6 @@ jobs:
 
             echo "GRYPE_FILENAME=grype-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
             echo "TRIVY_FILENAME=trivy-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
-
-            echo "SAFE_FILE=${SAFE_NAME}"
-
             echo "Prepared filenames for image scan: grype-${SAFE_NAME}.sarif, trivy-${SAFE_NAME}.sarif"
           else
             echo "GRYPE_FILENAME=grype.sarif" >> "$GITHUB_OUTPUT"
@@ -120,7 +118,7 @@ jobs:
 
       - name: Checkout repository (source target)
         if: ${{ inputs.target == 'source' }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -130,6 +128,19 @@ jobs:
         uses: anchore/scan-action@3aaf50d765cfcceafa51d322ccb790e40f6cd8c5 #v7.2.0
         with:
           image: ${{ needs.init.outputs.IMAGE }}
+          output-file: ${{ needs.init.outputs.GRYPE_FILENAME }}
+          fail-build: false
+          severity-cutoff: critical
+          only-fixed: ${{ inputs.only-fixed }}
+          output-format: sarif
+        continue-on-error: ${{ inputs.continue-on-error }}
+
+      - name: "Grype scan (Source: High+Critical)"
+        if: ${{ inputs.target == 'source' }}
+        id: grype-source
+        uses: anchore/scan-action@3aaf50d765cfcceafa51d322ccb790e40f6cd8c5 #v7.2.0
+        with:
+          path: .
           output-file: ${{ needs.init.outputs.GRYPE_FILENAME }}
           fail-build: false
           severity-cutoff: critical
