@@ -87,7 +87,7 @@ jobs:
         id: prepare-outputs
         run: |
           if [ "${TARGET}" = "docker" ]; then
-            SHORT_NAME=${IMAGE##*/}
+            SHORT_NAME=${INCOMMING_IMAGE##*/}
 
             SAFE_NAME=${SHORT_NAME//:/_}
             SAFE_NAME=${SAFE_NAME//\//_}
