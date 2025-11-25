@@ -97,8 +97,6 @@ jobs:
             echo "TRIVY_FILENAME=trivy-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
 
             echo "SAFE_FILE=${SAFE_NAME}"
-            echo "GRYPE_FILENAME=${GRYPE_FILENAME}"
-            echo "TRIVY_FILENAME=${TRIVY_FILENAME}"
 
             echo "Prepared filenames for image scan: grype-${SAFE_NAME}.sarif, trivy-${SAFE_NAME}.sarif"
           else
