@@ -12,7 +12,7 @@ This **GHCR Package Discovery** GitHub Action automatically discovers and lists 
 - Provides structured JSON output for easy integration.
 - Returns boolean flag indicating if packages exist.
 - Saves debug artifacts for troubleshooting.
-- Works with organization-owned packages.
+- Works with **organization-owned** packages.
 
 ### Action Result
 
