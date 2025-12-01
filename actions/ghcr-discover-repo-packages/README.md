@@ -1,6 +1,6 @@
 # 🔍 Discover GHCR Packages for Repository
 
-This **GHCR Package Discovery** GitHub Action automatically discovers and lists all GitHub Container Registry (GHCR) packages associated with a specific repository. It provides structured output for automation workflows, package management, and cleanup tasks.
+This **GHCR Package Discovery** GitHub Action automatically discovers and lists all **GitHub Container Registry (GHCR)** packages associated with a specific repository. **This action only supports GHCR** and does not work with other container registries like Docker Hub. It provides structured output for automation workflows, package management, and cleanup tasks.
 
 ---
 
