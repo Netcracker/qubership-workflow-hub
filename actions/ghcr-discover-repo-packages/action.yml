@@ -10,7 +10,7 @@ inputs:
     description: "The name of the repository. Defaults to the current repository name."
     required: false
 outputs:
-  ghcr-packages:
+  packages:
     value: ${{ steps.discover.outputs.ghcr-packages }}
     description: "A JSON array of GitHub Container Registry packages for the specified repository."
   has-packages:
