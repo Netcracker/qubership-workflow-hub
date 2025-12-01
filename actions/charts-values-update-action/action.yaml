@@ -102,7 +102,7 @@ runs:
         sudo chmod +x "${GITHUB_ACTION_PATH}/image-versions-replace.py"
         ${GITHUB_ACTION_PATH}/image-versions-replace.py \
           --config-file ${{ inputs.config-file }} \
-          --release-version ${{ inputs.release-version }} \
+          --tag ${{ inputs.release-version }} \
           --chart-version ${{ inputs.chart-version || inputs.release-version }} \
           --version-replace-method ${{ inputs.version-replace-method }}
       shell: bash
