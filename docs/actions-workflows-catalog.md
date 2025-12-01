@@ -23,6 +23,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [container-package-cleanup](../actions/container-package-cleanup/README.md) | Remove stale container or Maven package versions |
 | [custom-event](../actions/custom-event/README.md) | Emit repository_dispatch custom event with payload |
 | [docker-action](../actions/docker-action/README.md) | Build & push (multi-platform) Docker images |
+| [ghcr-discover-repo-packages](../actions/ghcr-discover-repo-packages/README.md) | Discover and list all GHCR packages for a repository |
 | [maven-release](../actions/maven-release/README.md) | Run Maven release scripting (docs WIP) |
 | [maven-snapshot-deploy](../actions/maven-snapshot-deploy/README.md) | Deploy Maven SNAPSHOT artifacts |
 | [metadata-action](../actions/metadata-action/README.md) | Produce version / tag metadata outputs |
