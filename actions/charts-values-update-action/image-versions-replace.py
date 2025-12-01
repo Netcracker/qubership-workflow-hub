@@ -113,11 +113,11 @@ def set_image_versions(config_file, tag, chart_version,  method):
         image_ver = tag # Image version for method 'replace'
         for image in chart['image']:
             search_str = image.split(':')[0] # Full image name, e.g. ghcr.io/myorg/myimage
-            # If ${GITHUB_REPOSITORY_OWNER} in image name, replace it with GITHUB_REPOSITORY_OWNER variable
+            # If ${owner} in image name, replace it with GITHUB_REPOSITORY_OWNER variable
             # for substitution, but for search replace it with "netcracker"
-            if '${GITHUB_REPOSITORY_OWNER}' in search_str:
-                replace_str = search_str.replace('${GITHUB_REPOSITORY_OWNER}', os.environ['GITHUB_REPOSITORY_OWNER'])
-                search_str = search_str.replace('${GITHUB_REPOSITORY_OWNER}', 'netcracker')
+            if '${owner}' in search_str:
+                replace_str = search_str.replace('${owner}', os.environ['GITHUB_REPOSITORY_OWNER'])
+                search_str = search_str.replace('${owner}', 'netcracker')
             else:
                 replace_str = search_str
             # If method is 'parse', parse the version string from config file.

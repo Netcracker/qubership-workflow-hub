@@ -135,7 +135,7 @@ jobs:
   - `chart_file`: Path to the `Chart.yaml` file.
   - `values_file`: Path to the `values.yaml` file.
   - `name`: Name of the chart.
-  - `version`: Template for the image version (e.g., `my-image:${release}`).
+  - `version`: Template for the image version (e.g., `my-image:${tag}`).
   - `image`: List of image keys to update in `values.yaml`.
 
 > Example: [charts-values-update-config.yaml](./charts-values-update-config.yaml).
