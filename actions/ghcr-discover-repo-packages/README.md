@@ -46,6 +46,12 @@ For example, if a repository has published two container images, the output migh
 | `owner`      | The owner of the repository. Defaults to the current repository owner.          | No       | `${{ github.repository_owner }}`     |
 | `repository` | The name of the repository. Defaults to the current repository name.            | No       | `${{ github.event.repository.name }}` |
 
+**Environment Variables:**
+
+| Name       | Description                                                                      | Required |
+|------------|----------------------------------------------------------------------------------|----------|
+| `GH_TOKEN` | GitHub token with `packages: read` permission. Falls back to `github.token` if not provided. | Yes |
+
 ---
 
 ## 📤 Outputs
