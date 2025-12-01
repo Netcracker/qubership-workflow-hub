@@ -362,13 +362,6 @@ If the action encounters a non-array response from the GitHub API:
 
 ---
 
-## Related Actions
-
-- **[docker-action](../docker-action)** - Build and publish Docker images to GHCR. Complements this action for end-to-end container lifecycle management.
-- **[action-logger](../../packages/action-logger)** - Logging utilities used internally by this action for consistent output formatting.
-
----
-
 ## Notes
 
 - The action queries organization packages using the `/orgs/{owner}/packages` endpoint, not user packages.
