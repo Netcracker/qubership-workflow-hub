@@ -11,7 +11,7 @@ inputs:
     required: false
 outputs:
   packages:
-    value: ${{ steps.discover.outputs.ghcr-packages }}
+    value: ${{ steps.discover.outputs.packages }}
     description: "A JSON array of GitHub Container Registry packages for the specified repository."
   has-packages:
     value: ${{ steps.discover.outputs.has-packages }}
@@ -92,5 +92,5 @@ runs:
 
         has_packages=$(echo "$filtered_packages" | jq 'length > 0')
 
-        echo "ghcr-packages=$filtered_packages" >> "$GITHUB_OUTPUT"
+        echo "packages=$filtered_packages" >> "$GITHUB_OUTPUT"
         echo "has-packages=$has_packages" >> "$GITHUB_OUTPUT"
