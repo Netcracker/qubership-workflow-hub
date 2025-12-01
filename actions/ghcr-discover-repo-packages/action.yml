@@ -1,6 +1,6 @@
 ---
-name: GHCR List Packages For Repository
-description: List all GitHub Container Registry packages for a repository
+name: Discover GHCR Packages for Repository
+description: List all GHCR container packages associated with a specific repository.
 author: Nookyo
 inputs:
   owner:
@@ -11,10 +11,10 @@ inputs:
     required: false
 outputs:
   ghcr-packages:
-    value: ${{ steps.pkgs.outputs.ghcr-packages }}
+    value: ${{ steps.discover.outputs.ghcr-packages }}
     description: "A JSON array of GitHub Container Registry packages for the specified repository."
   has-packages:
-    value: ${{ steps.pkgs.outputs.has-packages }}
+    value: ${{ steps.discover.outputs.has-packages }}
     description: "True if repo has at least one GHCR package."
 
 runs:
@@ -22,7 +22,7 @@ runs:
   steps:
     - name: Show raw GHCR response
       shell: bash
-      id: pkgs
+      id: discover
       env:
         GH_TOKEN: ${{ env.GH_TOKEN || github.token }}
         OWNER: ${{ inputs.owner || github.repository_owner }}
