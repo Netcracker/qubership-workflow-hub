@@ -224,6 +224,7 @@ This action uses standard shell tools (`curl`, `jq`) for API communication and J
 ### Pagination Support
 
 The action automatically handles pagination for organizations with many packages:
+
 - Fetches 100 packages per page
 - Continues until all pages are retrieved
 - Combines results from all pages into a single output
@@ -231,6 +232,7 @@ The action automatically handles pagination for organizations with many packages
 ### Debug Artifacts
 
 The action saves two JSON files in the workspace for debugging purposes:
+
 - `ghcr_all_packages.json` - All packages from the API response (unfiltered)
 - `ghcr_filtered_packages.json` - Packages filtered for the specific repository
 
@@ -239,6 +241,7 @@ These files can be downloaded from the workflow run artifacts for troubleshootin
 ### Authentication
 
 The action requires a GitHub token with package read permissions:
+
 - Uses `GH_TOKEN` environment variable
 - Falls back to `github.token` context variable if `GH_TOKEN` is not provided
 - Token must have `packages: read` scope for the organization
@@ -246,6 +249,7 @@ The action requires a GitHub token with package read permissions:
 ### Repository Filtering
 
 Packages are filtered by exact match on `repository.full_name`:
+
 - Format: `owner/repository` (e.g., `my-org/my-project`)
 - Case-sensitive matching
 - Only packages belonging to the specified repository are returned in the output
@@ -267,6 +271,7 @@ permissions:
 ### Repository with Multiple Packages
 
 **Input:**
+
 ```yaml
 with:
   owner: my-org
@@ -274,6 +279,7 @@ with:
 ```
 
 **Output (`packages`):**
+
 ```json
 [
   {
@@ -296,6 +302,7 @@ with:
 ### Repository without Packages
 
 **Output (`packages`):**
+
 ```json
 []
 ```
@@ -309,6 +316,7 @@ with:
 ### No Packages Found
 
 If the action returns an empty array:
+
 1. Verify the repository has published packages to GHCR using the `docker-action` or similar workflow.
 2. Check that packages are correctly associated with the repository in GitHub's package settings.
 3. Ensure the `GH_TOKEN` has `packages: read` permission for the organization.
@@ -317,6 +325,7 @@ If the action returns an empty array:
 ### API Rate Limiting
 
 If you encounter rate limiting issues:
+
 1. Use a Personal Access Token (PAT) with appropriate scopes instead of `GITHUB_TOKEN`.
 2. Implement retry logic in your workflow using workflow-level error handling.
 3. Consider caching results for frequently run workflows to reduce API calls.
@@ -324,18 +333,22 @@ If you encounter rate limiting issues:
 ### Permission Errors
 
 If you receive permission errors:
+
 - Ensure your workflow has the required permissions block:
+
   ```yaml
   permissions:
     packages: read
     contents: read
   ```
+
 - Verify the token being used has access to the organization's packages.
 - For private repositories, ensure the token has access to the repository.
 
 ### Organization vs Personal Repositories
 
 This action is designed for organization-owned packages:
+
 - Works with the `/orgs/{owner}/packages` API endpoint
 - For personal repositories (user-owned), package discovery may behave differently
 - Ensure packages are published under organization ownership for best results
@@ -343,6 +356,7 @@ This action is designed for organization-owned packages:
 ### Non-Array API Response
 
 If the action encounters a non-array response from the GitHub API:
+
 1. Check the action logs for the raw API response
 2. Verify your `GH_TOKEN` is valid and not expired
 3. Ensure the API endpoint is accessible (no network restrictions)
