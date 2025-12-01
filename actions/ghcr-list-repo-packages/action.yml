@@ -1,0 +1,96 @@
+---
+name: GHCR List Packages For Repository
+description: List all GitHub Container Registry packages for a repository
+author: Nookyo
+inputs:
+  owner:
+    description: "The owner of the repository. Defaults to the current repository owner."
+    required: false
+  repository:
+    description: "The name of the repository. Defaults to the current repository name."
+    required: false
+outputs:
+  ghcr-packages:
+    value: ${{ steps.pkgs.outputs.ghcr-packages }}
+    description: "A JSON array of GitHub Container Registry packages for the specified repository."
+  has-packages:
+    value: ${{ steps.pkgs.outputs.has-packages }}
+    description: "True if repo has at least one GHCR package."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Show raw GHCR response
+      shell: bash
+      id: pkgs
+      env:
+        GH_TOKEN: ${{ env.GH_TOKEN || github.token }}
+        OWNER: ${{ inputs.owner || github.repository_owner }}
+        REPO: ${{ inputs.repository || github.event.repository.name }}
+      run: |
+        set -euo pipefail
+        per_page=100
+        page=1
+        filtered_packages='[]'
+        all_packages='[]'
+
+        echo "Fetching GHCR packages for owner: $OWNER, repo: $REPO"
+
+        while :; do
+          api_url="https://api.github.com/orgs/${OWNER}/packages?package_type=container&per_page=${per_page}&page=${page}"
+          echo "Request: $api_url"
+
+          response=$(curl -sS \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$api_url")
+
+          if ! echo "$response" | jq -e 'type == "array"' >/dev/null 2>&1; then
+            echo "Non-array response from GitHub API (maybe error):"
+            echo "$response"
+            break
+          fi
+
+          count=$(echo "$response" | jq 'length')
+          echo "Page $page: $count packages"
+
+          if [ "$count" -eq 0 ]; then
+            echo "No more pages."
+            break
+          fi
+
+          all_packages=$(printf '%s\n%s\n' "$all_packages" "$response" | jq -c -s 'add')
+
+          page_filtered=$(echo "$response" | jq -c --arg owner "$OWNER" --arg repo "$REPO" '
+            [.[]
+            | select(.repository.full_name == "\($owner)/\($repo)")
+            | {
+                name: .name,
+                repository: (.repository.name // null),
+                full_name: (.repository.full_name // null),
+                path: "ghcr.io/\($owner)/\(.name)"
+              }
+            ]
+          ')
+
+          echo "Page $page filtered packages:"
+          echo "$page_filtered" | jq '.'
+
+          filtered_packages=$(printf '%s\n%s\n' "$filtered_packages" "$page_filtered" | jq -c -s 'add')
+
+          page=$((page + 1))
+        done
+
+        echo "Final filtered packages for repo $REPO:"
+        echo "$filtered_packages" | jq '.'
+
+        echo "Total packages collected (all pages):"
+        echo "$all_packages" | jq 'length'
+
+        echo "$all_packages" > ghcr_all_packages.json
+        echo "$filtered_packages" > ghcr_filtered_packages.json
+
+        has_packages=$(echo "$filtered_packages" | jq 'length > 0')
+
+        echo "ghcr-packages=$filtered_packages" >> "$GITHUB_OUTPUT"
+        echo "has-packages=$has_packages" >> "$GITHUB_OUTPUT"
