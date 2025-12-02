@@ -7352,6 +7352,25 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
+/***/ 1736:
+/***/ ((module) => {
+
+"use strict";
+
+
+const matchOperatorsRegex = /[|\\{}()[\]^$+*?.-]/g;
+
+module.exports = string => {
+	if (typeof string !== 'string') {
+		throw new TypeError('Expected a string');
+	}
+
+	return string.replace(matchOperatorsRegex, '\\$&');
+};
+
+
+/***/ }),
+
 /***/ 3469:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -30478,7 +30497,7 @@ module.exports = { deletePackageVersion };
 /***/ 6540:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const escapeStringRegexp = __nccwpck_require__(7432);
+const escapeStringRegexp = __nccwpck_require__(1736);
 
 class WildcardMatcher {
   constructor() {
@@ -56462,14 +56481,6 @@ webidl.converters.WebSocketSendData = function (V) {
 module.exports = {
   WebSocket
 }
-
-
-/***/ }),
-
-/***/ 7432:
-/***/ ((module) => {
-
-module.exports = eval("require")("escape-string-regexp");
 
 
 /***/ }),
