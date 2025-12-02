@@ -117,7 +117,7 @@ runs:
         sudo chmod +x "${GITHUB_ACTION_PATH}/image-versions-replace.py"
         ${GITHUB_ACTION_PATH}/image-versions-replace.py \
           --config-file ${config_file} \
-          --tag ${release-version} \
+          --tag ${release_version} \
           --chart-version ${chart_version} \
           --version-replace-method ${version_replace_method}
 
