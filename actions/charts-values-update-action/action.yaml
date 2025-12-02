@@ -93,12 +93,13 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       env:
         release_version: ${{ inputs.release-version }}
+        ref_name: ${{ github.ref_name }}
       run: |
         git config --global user.name "qubership-actions[bot]"
         git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
         git checkout -b release-${release_version}
         git config pull.rebase false
-        git pull origin ${{ github.ref_name }}
+        git pull origin ${ref_name}
         git push --set-upstream origin release-${release_version}
 
     - name: "Update chart and images versions"
@@ -186,11 +187,7 @@ runs:
           chart_name=$(helm show chart ${chart} | grep "name: " | sed "s#^\s*name:\s*##" | tr -d '\r')
           chart_version=$(helm show chart ${chart} | grep "version: " | sed "s#^\s*version:\s*##" | tr -d '\r')
           chart_app_version=$(helm show chart ${chart} | grep "appVersion: " | sed "s#^\s*appVersion:\s*##" | tr -d '\r')
-          if [[ ${{ inputs.publish-charts }} == 'true' ]]; then
-            chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"reference\":\"oci://ghcr.io/${{ github.repository }}/${chart_name}:${chart_version}\"}"
-          else
-            chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\"}"
-          fi
+          chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"reference\":\"oci://ghcr.io/${{ github.repository }}/${chart_name}:${chart_version}\"}"
           mkdir -p ./charts_meta
           echo ${chart_meta} > ./charts_meta/${chart_name}-${chart_version}.json
           charts_metadata="${charts_metadata}${chart_meta},"
