@@ -32836,8 +32836,6 @@ async function run() {
   // strategy will start  here for different types of packages
   log.info(`Package type: ${package_type}, owner: ${owner}, repo: ${repo}`);
 
-  // let packages = await wrapper.listPackages(owner, 'container', isOrganization);
-
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
@@ -32877,12 +32875,10 @@ async function run() {
 
 
   const strategy = getStrategy(package_type);
-  // // let strategy = package_type === 'container' ? new ContainerStrategy() : new MavenStrategy();
 
   log.info(`Using strategy -> ${await strategy.toString()}`);
 
   const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
-  // core.info(`Filtered Packages with Versions for Delete: ${JSON.stringify(filteredPackagesWithVersionsForDelete, null, 2)}`);
 
   log.setDebug(isDebug);
   log.group('Delete versions Log')
