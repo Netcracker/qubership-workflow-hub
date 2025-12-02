@@ -1,13 +1,13 @@
 # Helm Charts values update Action
 
-This GitHub Action automates the process of updating docker images versions in `values.yaml` files. It ensures that the chart and image versions are updated consistently and commits the changes to a release branch.
+This GitHub Action automates the process of updating Docker images versions in `values.yaml` files. It ensures that the chart and image versions are updated consistently and commits the changes to a release branch.
 
 ## Inputs
 
 ### `release-version`
 
 **Required**  
-The release version to set for the Helm chart and for related docker images.
+The release version to set for the Helm chart and for related Docker images.
 
 ### `chart-version`
 
@@ -29,7 +29,7 @@ Whether to create a release branch. Defaults to `true`. If set to `false`, then 
 **Optional**  
 The method to replace the version in `values.yaml`.
 Can be `replace` or `parse`. Defaults to `parse`.
-If set to `replace` the action will just replace the versions of docker images with `release-version` value.
+If set to `replace` the action will just replace the versions of Docker images with `release-version` value.
 If set to `parse` the action read provided `config-file` and substitute any environment variables provided in the version part.
 For example if you have some 3-rd party image in `values.yaml` file and want to manage it's version, you can add repository level variable and use it in the config file: `some-third-party-image:${THIRD_PARTY_VERSION}`.
 Also if you want the action to find the latest version of some image (supplementary service for instance), you can set it to something like `#4\.\d+\.\d+` or `#latest`.
