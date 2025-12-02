@@ -110,7 +110,7 @@ async function run() {
   log.setDebug(isDebug);
   log.group('Delete versions Log')
   log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
-  log.groupEnd();
+  log.endGroup();
 
 
   const reportContext = {
