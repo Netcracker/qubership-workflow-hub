@@ -3,8 +3,9 @@
   "root": false,
   "files": {
     "includes": [
-      "**/*",
-      "!!**/**/dist/**"
+      "**",
+      "!dist",
+      "!**/dist"
     ],
     "ignoreUnknown": false,
     "maxSize": 6291456
