@@ -55,28 +55,33 @@ runs:
   steps:
     - name: "Check release-version is valid Docker image tag"
       id: check-release-version
+      shell: bash
+      env:
+        release_version: ${{ inputs.release-version }}
       run: |
-        tag="${{ inputs.release-version }}"
+        tag="${release_version}"
         # Docker tag regex: must be alphanumeric, '.', '_', or '-', and up to 128 characters
         if [[ "$tag" =~ ^[a-zA-Z0-9._-]{1,128}$ ]]; then
             echo "Valid Docker tag"
         else
-            echo "::error::Provided release-version: '${{ inputs.release-version }}' isn't a valid Docker tag." >> $GITHUB_STEP_SUMMARY
+            echo "::error::Provided release-version: '${release_version}' isn't a valid Docker tag." >> $GITHUB_STEP_SUMMARY
             echo "Valid Docker tag must be alphanumeric, '.', '_', or '-', and up to 128 characters" >> $GITHUB_STEP_SUMMARY
             echo "Please check the release-version and try again." >> $GITHUB_STEP_SUMMARY
             exit 1
         fi
-      shell: bash
+
     - name: Check configuration
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        config_file: ${{ inputs.config-file }}
       run: |
-        charts=$(grep "chart_file: " ${{ inputs.config-file }} | sed "s#^\s*chart_file:\s*##")
-        values=$(grep "values_file: " ${{ inputs.config-file }} | sed "s#^\s*values_file:\s*##")
+        charts=$(grep "chart_file: " ${config_file} | sed "s#^\s*chart_file:\s*##")
+        values=$(grep "values_file: " ${config_file} | sed "s#^\s*values_file:\s*##")
         for f in ${charts} ${values}; do
           if [[ ! -f ${f} ]]; then
             echo "::error::File $f does not exist!"
-            echo "Please check configuration in ${{ inputs.config-file }}"
+            echo "Please check configuration in ${config_file} and try again."
             exit 1
           fi
         done
@@ -84,81 +89,97 @@ runs:
     - name: "Create release branch"
       if: ${{ inputs.create-release-branch == 'true' }}
       id: create-release-branch
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        release_version: ${{ inputs.release-version }}
       run: |
         git config --global user.name "qubership-actions[bot]"
         git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
-        git checkout -b release-${{ inputs.release-version }}
+        git checkout -b release-${release_version}
         git config pull.rebase false
         git pull origin ${{ github.ref_name }}
-        git push --set-upstream origin release-${{ inputs.release-version }}
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
+        git push --set-upstream origin release-${release_version}
 
     - name: "Update chart and images versions"
       id: update-versions
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        release_version: ${{ inputs.release-version }}
+        chart_version: ${{ inputs.chart-version || inputs.release-version }}
+        version_replace_method: ${{ inputs.version-replace-method }}
+        config_file: ${{ inputs.config-file }}
       run: |
         sudo apt-get update
         sudo apt-get install -y skopeo
         sudo chmod +x "${GITHUB_ACTION_PATH}/image-versions-replace.py"
         ${GITHUB_ACTION_PATH}/image-versions-replace.py \
-          --config-file ${{ inputs.config-file }} \
-          --tag ${{ inputs.release-version }} \
-          --chart-version ${{ inputs.chart-version || inputs.release-version }} \
-          --version-replace-method ${{ inputs.version-replace-method }}
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
+          --config-file ${config_file} \
+          --tag ${release-version} \
+          --chart-version ${chart_version} \
+          --version-replace-method ${version_replace_method}
 
     - name: "Summary"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        release_version: ${{ inputs.release-version }}
+        chart_version: ${{ inputs.chart-version || inputs.release-version }}
       run: |
-        echo "## Release version ${{ inputs.release-version }}" >> $GITHUB_STEP_SUMMARY
-        echo "Chart version ${{ inputs.chart-version || inputs.release-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "## Release version ${release_version}" >> $GITHUB_STEP_SUMMARY
+        echo "Chart version ${chart_version}" >> $GITHUB_STEP_SUMMARY
         if [[ -f summary.md ]]; then
           cat summary.md >> $GITHUB_STEP_SUMMARY
           rm -f summary.md
         fi
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
 
     - name: "Commit changed files"
       if: ${{ inputs.create-release-branch == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        release_version: ${{ inputs.release-version }}
       run: |
         git config --global user.name "qubership-actions[bot]"
         git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
         git add .
-        git commit -m "release: Set chart and images versions to release ${{ inputs.release-version }}. [skip ci]"
+        git commit -m "release: Set chart and images versions to release ${release_version}. [skip ci]"
         git push
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
 
     - name: "Configure helm"
       if: ${{ inputs.package-charts == 'true' || inputs.publish-charts == 'true' }}
-      uses: azure/setup-helm@v4.3.0
+      uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
 
     - name: "Package helm charts"
       if: ${{ inputs.package-charts == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        config_file: ${{ inputs.config-file }}
       run: |
-        charts=$(grep "chart_file: " ${{ inputs.config-file }} | sed "s#^\s*chart_file:\s*##" | xargs dirname)
+        charts=$(grep "chart_file: " ${config_file} | sed "s#^\s*chart_file:\s*##" | xargs dirname)
         for chart in ${charts}; do
           echo "Packaging chart: ${chart}"
           helm package ${chart} --destination ${{ github.workspace }}/.cr-release-packages
         done
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
 
     - name: "Publish helm charts"
       if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
           helm push ${chart} oci://ghcr.io/${{ github.repository }}/
         done
         helm registry logout 'ghcr.io'
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
 
     - name: "Get chart metadata"
       if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
       id: metadata
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         charts_metadata=""
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
@@ -178,11 +199,9 @@ runs:
         charts_metadata="{\"charts\":[${charts_metadata}]}"
         echo "metadata=${charts_metadata}" >> $GITHUB_OUTPUT
         echo "metadata=${charts_metadata}" >> $GITHUB_STEP_SUMMARY
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
     - name: Upload charts meta
       if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4.6.2
       with:
         name: charts-meta.json
         path: "${{ inputs.working-directory }}/charts_meta/*.json"
