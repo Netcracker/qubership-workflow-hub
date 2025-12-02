@@ -1,4 +1,3 @@
-const core = require('@actions/core');
 const AbstractPackageStrategy = require("./abstractPackageStrategy");
 const WildcardMatcher = require("../utils/wildcardMatcher");
 

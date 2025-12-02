@@ -1,5 +1,3 @@
-const core = require("@actions/core");
-
 class MavenReport {
 
     /**

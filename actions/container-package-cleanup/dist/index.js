@@ -2,9 +2,9 @@
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 763:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((module) => {
 
-const core = __nccwpck_require__(958);
+
 class ContainerReport {
     async writeSummary(context) {
 
@@ -76,9 +76,7 @@ module.exports = ContainerReport;
 /***/ }),
 
 /***/ 751:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const core = __nccwpck_require__(958);
+/***/ ((module) => {
 
 class MavenReport {
 
@@ -198,7 +196,6 @@ module.exports = AbstractPackageStrategy;
 /***/ 245:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const core = __nccwpck_require__(958);
 const AbstractPackageStrategy = __nccwpck_require__(817);
 const WildcardMatcher = __nccwpck_require__(540);
 
@@ -383,7 +380,6 @@ module.exports = ContainerStrategy;
 /***/ 745:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const core = __nccwpck_require__(958);
 const WildcardMatcher = __nccwpck_require__(540);
 const AbstractPackageStrategy = __nccwpck_require__(817);
 
@@ -906,7 +902,7 @@ var __webpack_exports__ = {};
 // I'm-a keeping it alive and continue to be
 // Flying like an eagle to my destiny
 
-const core = __nccwpck_require__(958);
+const src_core = __nccwpck_require__(958);
 const OctokitWrapper = __nccwpck_require__(827);
 const ContainerReport = __nccwpck_require__(763);
 const MavenReport = __nccwpck_require__(751);
@@ -923,24 +919,24 @@ async function run() {
   //   configurationPath = "./.github/package-cleanup-config.yml";
   // }
 
-  const isDebug = core.getInput("debug").toLowerCase() === "true";
-  const dryRun = core.getInput("dry-run").toLowerCase() === "true";
+  const isDebug = src_core.getInput("debug").toLowerCase() === "true";
+  const dryRun = src_core.getInput("dry-run").toLowerCase() === "true";
 
-  const package_type = core.getInput("package-type").toLowerCase();
+  const package_type = src_core.getInput("package-type").toLowerCase();
 
   log.info(`Is debug? -> ${isDebug}`);
   log.info(`Dry run? -> ${dryRun}`);
 
-  const thresholdDays = parseInt(core.getInput('threshold-days'), 10);
+  const thresholdDays = parseInt(src_core.getInput('threshold-days'), 10);
 
   let excludedTags = [];
   let includedTags = [];
 
   if (package_type === "container") {
-    const rawIncludedTags = core.getInput('included-tags');
+    const rawIncludedTags = src_core.getInput('included-tags');
     includedTags = rawIncludedTags ? rawIncludedTags.split(",") : [];
 
-    const rawExcludedTags = core.getInput('excluded-tags');
+    const rawExcludedTags = src_core.getInput('excluded-tags');
     excludedTags = rawExcludedTags ? rawExcludedTags.split(",") : [];
   }
 
@@ -948,7 +944,7 @@ async function run() {
 
   const now = new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1000);
-  const thresholdVersions = parseInt(core.getInput('threshold-versions'), 10);
+  const thresholdVersions = parseInt(src_core.getInput('threshold-versions'), 10);
 
   log.info(`Threshold Days: ${thresholdDays}`);
   log.info(`Threshold Date: ${thresholdDate}`);
@@ -1037,7 +1033,7 @@ async function run() {
     }
 
   } catch (error) {
-    core.setFailed(error.message || String(error));
+    src_core.setFailed(error.message || String(error));
   }
 
   await showReport(reportContext, package_type);

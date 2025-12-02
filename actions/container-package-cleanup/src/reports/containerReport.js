@@ -1,4 +1,4 @@
-const core = require("@actions/core");
+
 class ContainerReport {
     async writeSummary(context) {
 
