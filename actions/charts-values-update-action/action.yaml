@@ -8,6 +8,10 @@ inputs:
     description: "Release version"
     required: true
     type: string
+  default-tag:
+    description: "Default image tag if tag is not found."
+    required: false
+    type: string
   chart-version:
     description: "Chart version. If not provided, the chart version will be set to the release version."
     required: false
@@ -111,6 +115,7 @@ runs:
         chart_version: ${{ inputs.chart-version || inputs.release-version }}
         version_replace_method: ${{ inputs.version-replace-method }}
         config_file: ${{ inputs.config-file }}
+        default_tag: ${{ inputs.default-tag }}
       run: |
         if [ ! $(which skopeo) ]; then
           echo "skopeo not found, installing..."
@@ -123,7 +128,7 @@ runs:
           --tag ${release_version} \
           --chart-version ${chart_version} \
           --version-replace-method ${version_replace_method} \
-          --default-tag main
+          --default-tag ${default_tag}
 
     - name: "Summary"
       shell: bash
