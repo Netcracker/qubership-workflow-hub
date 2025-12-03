@@ -119,7 +119,7 @@ runs:
           --config-file ${config_file} \
           --tag ${release_version} \
           --chart-version ${chart_version} \
-          --version-replace-method ${version_replace_method}
+          --version-replace-method ${version_replace_method} \
           --default-tag main
 
     - name: "Summary"

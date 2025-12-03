@@ -93,7 +93,7 @@ def create_summary(images_versions):
     print("Summary created in summary.md")
 
 def find_image_by_name_tag(image_str, tag, default_tag="main") -> str:
-    os.system("skopeo login -u $GITHUB_ACTOR -p $GITHUB_TOKEN ghcr.io")
+    # os.system("skopeo login -u $GITHUB_ACTOR -p $GITHUB_TOKEN ghcr.io")
     tag_count = subprocess.run(f"skopeo list-tags docker://{image_str} | jq -r '.Tags[] | select(. == \"{tag}\")' | wc -l", shell=True, text=True, check=True, capture_output=True).stdout.split()
     if int(tag_count[0]) > 0:
         return tag
