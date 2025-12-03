@@ -112,8 +112,11 @@ runs:
         version_replace_method: ${{ inputs.version-replace-method }}
         config_file: ${{ inputs.config-file }}
       run: |
-        sudo apt-get update
-        sudo apt-get install -y skopeo
+        if [ ! $(which skopeo) ]; then
+          echo "skopeo not found, installing..."
+          sudo apt-get update
+          sudo apt-get install -y skopeo
+        fi
         sudo chmod +x "${GITHUB_ACTION_PATH}/image-versions-replace.py"
         ${GITHUB_ACTION_PATH}/image-versions-replace.py \
           --config-file ${config_file} \
