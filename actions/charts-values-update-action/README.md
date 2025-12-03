@@ -9,6 +9,11 @@ This GitHub Action automates the process of updating Docker images versions in `
 **Required**  
 The release version to set for the Helm chart and for related Docker images.
 
+### `default-tag`
+
+**Optional**  
+The tag which will be used for an image if `release-version` tag does not exist.
+
 ### `chart-version`
 
 **Optional**  
