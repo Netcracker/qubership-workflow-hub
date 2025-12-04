@@ -303,27 +303,50 @@ runs:
       run: |
         set -euo pipefail
 
-        IMAGE_NAME_FULL=$(echo '${{ steps.dockerbuild.outputs.metadata }}' | jq -r '.["image.name"]' | cut -d',' -f1)
+        IMAGE_NAME_FULL="${{ fromJson(steps.dockerbuild.outputs.metadata)['image.name'] }}"
+        IMAGE_NAME_FULL="${IMAGE_NAME_FULL%%,*}"
+
+        if [ -z "$IMAGE_NAME_FULL" ]; then
+          echo "ERROR: IMAGE_NAME_FULL is empty. Check dockerbuild.outputs.metadata / image.name"
+          exit 1
+        fi
+
+        echo "IMAGE_NAME_FULL=$IMAGE_NAME_FULL"
+
         IMAGE_NAME="${IMAGE_NAME_FULL%%:*}"
         TAG="${IMAGE_NAME_FULL##*:}"
 
+        if [ -z "$IMAGE_NAME" ] || [ -z "$TAG" ]; then
+          echo "ERROR: IMAGE_NAME or TAG is empty. Got: IMAGE_NAME='$IMAGE_NAME', TAG='$TAG'"
+          exit 1
+        fi
+
         DIGEST="${{ steps.dockerbuild.outputs.digest }}"
+        if [ -z "$DIGEST" ]; then
+          echo "ERROR: DIGEST is empty. Check dockerbuild.outputs.digest"
+          exit 1
+        fi
+
         ALG="${DIGEST%%:*}"
         DIGEST_NO_PREFIX="${DIGEST##*:}"
         DIGEST_SHORT="${DIGEST_NO_PREFIX:0:12}"
 
-        GROUP="${{ inputs.app-manifest-group }}"
+        GROUP="${{ inputs.app-manifest-group || '' }}"
 
         VERSION="$TAG"
 
-        BASENAME=$(basename "$IMAGE_NAME")
+        BASENAME="$(basename "$IMAGE_NAME")"
         FILENAME="${BASENAME}-${TAG}-${DIGEST_SHORT}.json"
 
         echo ">>> IMAGE_NAME        = $IMAGE_NAME"
+        echo ">>> TAG               = $TAG"
         echo ">>> DIGEST            = $DIGEST"
         echo ">>> DIGEST_SHORT(12)  = $DIGEST_SHORT"
         echo ">>> FILENAME          = $FILENAME"
-        REFERENCE=${IMAGE_NAME}:${VERSION}
+
+        REFERENCE="${IMAGE_NAME}:${VERSION}"
+
+        # 5. Генерим JSON (переменные в кавычках и REFERENCE тоже в кавычках)
         cat <<EOF > "$FILENAME"
         {
           "type": "container",
@@ -331,15 +354,17 @@ runs:
           "name": "${CONTAINER_NAME}",
           "group": "${GROUP}",
           "version": "${VERSION}",
-          "hashes":[
+          "hashes": [
             {
               "alg": "${ALG}",
               "content": "${DIGEST_NO_PREFIX}"
-            }],
+            }
+          ],
           "reference": "${REFERENCE}"
         }
         EOF
 
+        echo "image_name=$IMAGE_NAME_FULL" >> "$GITHUB_OUTPUT"
         echo "metadata_path=$PWD/$FILENAME" >> "$GITHUB_OUTPUT"
         echo "metadata_filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
