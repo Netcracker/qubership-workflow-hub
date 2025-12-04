@@ -353,7 +353,6 @@ runs:
 
         REFERENCE="${IMAGE_NAME}:${VERSION}"
 
-        # 5. Генерим JSON (переменные в кавычках и REFERENCE тоже в кавычках)
         cat <<EOF > "$FILENAME"
         {
           "type": "container",
