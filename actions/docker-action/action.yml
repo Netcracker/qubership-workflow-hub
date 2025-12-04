@@ -105,7 +105,7 @@ runs:
         if [ -z "${REG+x}" ] || [ -z "${REG}" ]; then
           echo "REGISTRY='ghcr.io'" >> $GITHUB_ENV
         else
-          echo "REGISTRY=${{ inputs.registry }}" >> $GITHUB_ENV
+          echo "REGISTRY=$REG" >> $GITHUB_ENV
         fi
     - name: Validate docker.io login params
       if: ${{ contains(env.REGISTRY, 'docker.io') && (! inputs.docker-io-login || ! inputs.docker-io-token) && (inputs.dry-run != 'true') }}
@@ -117,9 +117,11 @@ runs:
     - name: Parse Component JSON
       id: parse_component
       shell: bash
+      env:
+        COMPONENT: ${{ inputs.component }}
       run: |
         # Parse the input JSON object directly
-        component='${{ inputs.component }}'
+        component="$COMPONENT"
         component_parsed=$(echo "$component" | jq 'if type=="array" then .[0] else . end')
         comp_name=$(echo "$component_parsed" | jq -r '.name')
         comp_file=$(echo "$component_parsed" | jq -r '.file')
@@ -132,19 +134,23 @@ runs:
 
     - name: Prepare Image Name
       shell: bash
+      env:
+        CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
+        COMPONENT_NAME: ${{ steps.parse_component.outputs.name }}
+        DOCKER_IO_LOGIN: ${{ inputs.docker-io-login }}
       run: |
         IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
-        if [ -n "${{ inputs.custom-image-name }}" ]; then
-            CONTAINER_NAME="${{ inputs.custom-image-name }}"
-        elif [ -n "${{ steps.parse_component.outputs.name }}" ] && [ "${{ steps.parse_component.outputs.name }}" != "default" ]; then
-          CONTAINER_NAME="${{ steps.parse_component.outputs.name }}"
+        if [ -n "$CUSTOM_IMAGE_NAME" ]; then
+            CONTAINER_NAME="$CUSTOM_IMAGE_NAME"
+        elif [ -n "$COMPONENT_NAME" ] && [ "COMPONENT_NAME" != "default" ]; then
+          CONTAINER_NAME="$COMPONENT_NAME"
         else
           CONTAINER_NAME="$repo"
         fi
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
         echo "GHCR_OWNER=$(echo "$owner" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
-        echo "DOCKER_OWNER=${{ inputs.docker-io-login }}" >> "$GITHUB_ENV"
+        echo "DOCKER_OWNER=$DOCKER_IO_LOGIN" >> "$GITHUB_ENV"
 
     - name: Prepare Image ghcr.io URL
       if: ${{ contains(env.REGISTRY, 'ghcr.io') }}
@@ -162,9 +168,10 @@ runs:
 
     - name: Checkout Repository
       if: ${{ inputs.checkout == 'true' }}
-      uses: actions/checkout@v5
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
       with:
         ref: ${{ inputs.ref }}
+        persist-credentials: false
 
     - name: Display Debug Information
       shell: bash
@@ -195,7 +202,7 @@ runs:
 
     - name: Download Artifact
       if: ${{ inputs.download-artifact == 'true' }}
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 #v6.0.0
       with:
         name: ${{ inputs.download-artifact-name }}
         path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '.' }}
