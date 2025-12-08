@@ -83,6 +83,25 @@ jobs:
           echo "Normalized IMAGE: $IMAGE_LOWER"
           echo "IMAGE=$IMAGE_LOWER" >> "$GITHUB_OUTPUT"
 
+      - name: Login to GHCR (for check)
+        if: ${{ inputs.target == 'docker' }}
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef #v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check that image exists in registry
+        if: ${{ inputs.target == 'docker' }}
+        run: |
+          IMAGE="${{ steps.normalize-image.outputs.IMAGE }}"
+          echo "Checking image in registry: $IMAGE"
+          if ! docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+            echo "❌ Image not found in registry: $IMAGE"
+            exit 1
+          fi
+          echo "✅ Image exists in registry: $IMAGE"
+
       - name: Prepare filenames
         id: prepare-outputs
         run: |
