@@ -1,0 +1,66 @@
+name: "Docker config resolver"
+description: "Loads docker components config, applies defaults and security, outputs flat config for CI"
+
+inputs:
+  file-path:
+    description: "Path to docker components config file"
+    required: false
+    default: ".qubership/docker.cfg"
+
+outputs:
+  config:
+    description: "Resolved docker components configuration in JSON format"
+    value: ${{ steps.normalize.outputs.normalized }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Resolve docker configuration
+      id: normalize
+      shell: bash
+      env:
+        FILE_PATH: ${{ inputs.file-path }}
+      run: |
+        set -euo pipefail
+
+        if [ ! -f "$FILE_PATH" ]; then
+          echo "Config file not found: $FILE_PATH" >&2
+          exit 1
+        fi
+        OWNER='${{ github.repository_owner }}'
+
+        CONFIG=$(jq -c --arg owner "$OWNER" '
+          (.registry // "") as $reg
+          | (.security // {}) as $globalSec
+          | (.defaults // {}) as $def
+          | [
+              (.components // [])[]
+              | . as $c
+              | if ($c | has("name") | not) or ($c.name == null) or ($c.name == "") then
+                  error("component.name is required")
+                else
+                  $c
+                end
+              | . as $c
+              | ($globalSec + ($c.security // {})) as $sec
+              | ($def + $c) as $merged
+              | {
+                  name: $c.name,
+                  image: (
+                     if $reg == "" then
+                       $owner + "/" + $c.name
+                     else
+                       $reg + "/" + $owner + "/" + $c.name
+                     end
+                  ),
+                  registry: $reg
+                }
+                + ($merged | del(.name, .security))
+                + ($sec | with_entries(.key = ("security_" + .key)))
+            ]
+        ' "$FILE_PATH")
+
+        echo "Resolved configuration (pretty):"
+        echo "$CONFIG" | jq .
+
+        echo "normalized=$CONFIG" >> "$GITHUB_OUTPUT"
