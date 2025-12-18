@@ -166,17 +166,20 @@ runs:
     - name: "Setup mvn additional args"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        ADDITIONAL_MVN_ARGS: ${{ inputs.additional-mvn-args }}
       run: |
-        if [[ "${{ inputs.additional-mvn-args }}" == "" ]]
+        if [[ "${ADDITIONAL_MVN_ARGS}" == "" ]]
         then
           echo "ℹ️ No additional mvn args provided." >> $GITHUB_STEP_SUMMARY
           echo "ℹ️ No additional mvn args provided."
         else
-          ADDITIONAL_MVN_ARGS=${{ inputs.additional-mvn-args }}
+          #ADDITIONAL_MVN_ARGS=${{ inputs.additional-mvn-args }}
           echo "✅ Additional mvn args provided: ${ADDITIONAL_MVN_ARGS}" >> $GITHUB_STEP_SUMMARY
           echo "✅ Additional mvn args provided: ${ADDITIONAL_MVN_ARGS}"
         fi
         echo "ADDITIONAL_MVN_ARGS=${ADDITIONAL_MVN_ARGS}" >> $GITHUB_ENV
+
     - name: Set up Maven
       if: ${{ inputs.maven-version != '' }}
       uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
