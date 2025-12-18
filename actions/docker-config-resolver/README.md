@@ -68,7 +68,7 @@ For example, if your configuration file defines two components, the output might
 ## 📤 Outputs
 
 | Name     | Description                                                                         | Example                                                             |
-|----------|-------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+|----------|-------------------------------------------------------------------------------------|--------------------------------------------------------------------- |
 | `config` | Resolved Docker components configuration in JSON format with all defaults applied. | `[{"name":"api","image":"ghcr.io/owner/api","registry":"ghcr.io"}]` |
 
 ### Configuration Object Structure
