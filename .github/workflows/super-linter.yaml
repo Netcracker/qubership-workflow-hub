@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: "Get the common linters configuration"
-      uses: actions/checkout@v6 # v5.0.0
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         ref: main # fix/superlinter-config
         repository: netcracker/.github
@@ -41,7 +41,7 @@ jobs:
         sparse-checkout: |
           config/linters
     - name: "Upload the common linters configuration"
-      uses: actions/upload-artifact@v5 # v4.6.2
+      uses: actions/upload-artifact@c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: linter-config
         path: "${{ github.workspace }}/config"
@@ -56,13 +56,13 @@ jobs:
       statuses: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6 # v5.0.0
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         # Full git history is needed to get a proper list of changed files within `super-linter`
         fetch-depth: 0
         persist-credentials: false
     - name: "Get the common linters configuration"
-      uses: actions/download-artifact@v7 # v5.0.0
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       id: download
       with:
         name: linter-config
@@ -89,7 +89,7 @@ jobs:
         fi
 
     - name: Lint Code Base
-      uses: super-linter/super-linter/slim@502f4fe48a81a392756e173e39a861f8c8efe056 # v8.3.0
+      uses: super-linter/super-linter/slim@47984f49b4e87383eed97890fe2dca6063bbd9c3 # v8.3.1
       env:
         VALIDATE_ALL_CODEBASE: ${{ inputs.full_scan || false }}
         # To report GitHub Actions status checks
