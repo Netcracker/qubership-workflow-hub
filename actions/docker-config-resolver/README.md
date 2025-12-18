@@ -59,24 +59,24 @@ For example, if your configuration file defines two components, the output might
 
 ## 📌 Inputs
 
-| Name        | Description                                             | Required | Default                    |
-|-------------|---------------------------------------------------------|----------|----------------------------|
-| `file-path` | Path to the Docker components configuration file.      | No       | `.qubership/docker.cfg`    |
+| Name        | Description                                          | Required | Default                 |
+|-------------|------------------------------------------------------|----------|-------------------------|
+| `file-path` | Path to the Docker components configuration file.    | No       | `.qubership/docker.cfg` |
 
 ---
 
 ## 📤 Outputs
 
-| Name     | Description                                                                    | Example |
-|----------|--------------------------------------------------------------------------------|---------|
+| Name     | Description                                                                         | Example                                                              |
+|----------|-------------------------------------------------------------------------------------|----------------------------------------------------------------------|
 | `config` | Resolved Docker components configuration in JSON format with all defaults applied. | `[{"name":"api","image":"ghcr.io/owner/api","registry":"ghcr.io"}]` |
 
 ### Configuration Object Structure
 
 Each component in the `config` output array contains:
 
-| Field               | Description                                              | Example                          |
-|---------------------|----------------------------------------------------------|----------------------------------|
+| Field               | Description                                              | Example                      |
+|---------------------|----------------------------------------------------------|------------------------------|
 | `name`              | Component name (user-defined, required)                 | `backend-api`                    |
 | `image`             | Auto-generated image path (cannot be overridden)        | `ghcr.io/my-org/backend-api`     |
 | `registry`          | Container registry URL                                   | `ghcr.io`                        |
@@ -323,6 +323,7 @@ If the matrix strategy doesn't expand correctly:
 ```
 
 **Conditional security scanning:**
+
 ```yaml
 - name: Security Scan
   if: matrix.component.security_scan == true
@@ -341,6 +342,7 @@ If the matrix strategy doesn't expand correctly:
 6. Outputs flat JSON array
 
 **Validation:**
+
 - Configuration file must exist
 - Each component must have non-empty `name`
 - File must be valid JSON/YAML
@@ -388,6 +390,7 @@ If the matrix strategy doesn't expand correctly:
 ```
 
 **Output:**
+
 ```json
 [
   {
@@ -425,7 +428,7 @@ If the matrix strategy doesn't expand correctly:
 ]
 ```
 
-## Notes
+## Technical Details
 
 - Uses `jq` for JSON processing (pre-installed on GitHub runners)
 - `image` field is auto-generated from `name` and cannot be overridden
