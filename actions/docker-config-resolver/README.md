@@ -67,25 +67,25 @@ For example, if your configuration file defines two components, the output might
 
 ## 📤 Outputs
 
-| Name     | Description                                                                         | Example                                                              |
-|----------|-------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| Name     | Description                                                                         | Example                                                             |
+|----------|-------------------------------------------------------------------------------------| --------------------------------------------------------------------|
 | `config` | Resolved Docker components configuration in JSON format with all defaults applied. | `[{"name":"api","image":"ghcr.io/owner/api","registry":"ghcr.io"}]` |
 
 ### Configuration Object Structure
 
 Each component in the `config` output array contains:
 
-| Field               | Description                                              | Example                      |
-|---------------------|----------------------------------------------------------|------------------------------|
-| `name`              | Component name (user-defined, required)                 | `backend-api`                    |
-| `image`             | Auto-generated image path (cannot be overridden)        | `ghcr.io/my-org/backend-api`     |
-| `registry`          | Container registry URL                                   | `ghcr.io`                        |
-| `dockerfile`        | Path to Dockerfile (from defaults or component)         | `Dockerfile`                     |
-| `context`           | Build context path (from defaults or component)         | `.`                              |
-| `tags`              | Image tags (from defaults or component)                 | `latest` or `1.0.0`              |
-| `platforms`         | Target platforms (from defaults or component)           | `linux/amd64, linux/arm64`       |
-| `security_*`        | Security settings (prefixed with `security_`)           | `security_scan: true`            |
-| Other fields        | Any additional custom fields from configuration         | Custom build args, etc.          |
+| Field        | Description                                              | Example                          |
+|--------------|----------------------------------------------------------|----------------------------------|
+| `name`       | Component name (user-defined, required)                  | `backend-api`                    |
+| `image`      | Auto-generated image path (cannot be overridden)         | `ghcr.io/my-org/backend-api`     |
+| `registry`   | Container registry URL                                   | `ghcr.io`                        |
+| `dockerfile` | Path to Dockerfile (from defaults or component)          | `Dockerfile`                     |
+| `context`    | Build context path (from defaults or component)          | `.`                              |
+| `tags`       | Image tags (from defaults or component)                  | `latest` or `1.0.0`              |
+| `platforms`  | Target platforms (from defaults or component)            | `linux/amd64, linux/arm64`       |
+| `security_*` | Security settings (prefixed with `security_`)            | `security_scan: true`            |
+| Other fields | Any additional custom fields from configuration          | Custom build args, etc.          |
 
 ---
 
@@ -311,15 +311,18 @@ If the matrix strategy doesn't expand correctly:
 - Any component has an empty or null `name` value.
 - The configuration file contains invalid JSON/YAML syntax.
 
---- steps:
-      - uses: actions/checkout@v4
-      - name: Build and Push
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ matrix.component.context }}
-          file: ${{ matrix.component.dockerfile }}
-          tags: ${{ matrix.component.image }}:${{ github.sha }}
-          platforms: ${{ matrix.component.platforms }}
+**Matrix build example:**
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+  - name: Build and Push
+    uses: docker/build-push-action@v5
+    with:
+      context: ${{ matrix.component.context }}
+      file: ${{ matrix.component.dockerfile }}
+      tags: ${{ matrix.component.image }}:${{ github.sha }}
+      platforms: ${{ matrix.component.platforms }}
 ```
 
 **Conditional security scanning:**
