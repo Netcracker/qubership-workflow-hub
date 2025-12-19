@@ -30134,12 +30134,14 @@ module.exports = AbstractPackageStrategy;
 const core = __nccwpck_require__(8335);
 const AbstractPackageStrategy = __nccwpck_require__(7817);
 const WildcardMatcher = __nccwpck_require__(6540);
+const log = __nccwpck_require__(2938);
 
 class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
         super();
         this.name = 'Container Strategy';
         this.wildcardMatcher = new WildcardMatcher();
+
     }
 
     async parse(raw) {
@@ -30184,7 +30186,6 @@ class ContainerStrategy extends AbstractPackageStrategy {
       */
     async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug = false }) {
         log.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : 'unknown'} packages.`);
-
         const excluded = excludedPatterns.map(p => p.toLowerCase());
         const included = includedPatterns.map(p => p.toLowerCase());
         const packages = await this.parse(packagesWithVersions);
@@ -30428,14 +30429,19 @@ module.exports = { getStrategy };
 /***/ }),
 
 /***/ 2591:
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const log = __nccwpck_require__(2938);
 
 /**
  *
  * @param {Array<{package:{id,name,type}, versions:Array<{id,name,metadata}>}>} filtered
  * @param {{ wrapper:any, owner:string, isOrganization?:boolean, dryRun?:boolean }} ctx
  */
-async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, dryRun = false } = {}) {
+async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, dryRun = false, debug = false } = {}) {
+  log.setDebug(debug);
+  log.setDryRun(dryRun);
+
   if (!Array.isArray(filtered) || filtered.length === 0) {
     log.warn("Nothing to delete.");
     return;
@@ -30495,10 +30501,13 @@ module.exports = { deletePackageVersion };
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const escapeStringRegexp = __nccwpck_require__(1736);
+const log = __nccwpck_require__(2938);
 
 class WildcardMatcher {
-  constructor() {
+  constructor(debug = false, dryRun = false) {
     this.name = 'WildcardMatcher';
+    log.setDebug(debug);
+    log.setDryRun(dryRun);
   }
 
   match(tag, pattern) {
@@ -30549,6 +30558,7 @@ const github = __nccwpck_require__(5355);
 const { exec } = __nccwpck_require__(1421);
 const util = __nccwpck_require__(7975);
 const execPromise = util.promisify(exec);
+const log = __nccwpck_require__(2938);
 
 class OctokitWrapper {
 
@@ -30556,8 +30566,9 @@ class OctokitWrapper {
    * Initializes the OctokitWrapper with an authentication token.
    * @param {string} authToken - The GitHub authentication token.
    */
-  constructor(authToken) {
+  constructor(authToken, debug = false) {
     this.octokit = github.getOctokit(authToken);
+    log.setDebug(debug);
   }
 
   /**
@@ -60042,7 +60053,7 @@ const ContainerReport = __nccwpck_require__(3763);
 const MavenReport = __nccwpck_require__(9751);
 const { getStrategy } = __nccwpck_require__(3602);
 const { deletePackageVersion } = __nccwpck_require__(2591);
-const src_log = __nccwpck_require__(2938);
+const log = __nccwpck_require__(2938);
 
 async function run() {
 
@@ -60058,11 +60069,11 @@ async function run() {
 
   const package_type = core.getInput("package-type").toLowerCase();
 
-  src_log.info(`Is debug? -> ${isDebug}`);
-  src_log.info(`Dry run? -> ${dryRun}`);
+  log.info(`Is debug? -> ${isDebug}`);
+  log.info(`Dry run? -> ${dryRun}`);
 
-  src_log.setDebug(isDebug);
-  src_log.setDryRun(dryRun);
+  log.setDebug(isDebug);
+  log.setDryRun(dryRun);
 
   const thresholdDays = parseInt(core.getInput('threshold-days'), 10);
 
@@ -60083,39 +60094,39 @@ async function run() {
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1000);
   const thresholdVersions = parseInt(core.getInput('threshold-versions'), 10);
 
-  src_log.info(`Threshold Days: ${thresholdDays}`);
-  src_log.info(`Threshold Date: ${thresholdDate}`);
+  log.info(`Threshold Days: ${thresholdDays}`);
+  log.info(`Threshold Date: ${thresholdDate}`);
 
-  excludedTags.length && src_log.info(`Excluded Tags: ${excludedTags}`);
-  includedTags.length && src_log.info(`Included Tags: ${includedTags}`);
+  excludedTags.length && log.info(`Excluded Tags: ${excludedTags}`);
+  includedTags.length && log.info(`Included Tags: ${includedTags}`);
 
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
-  const wrapper = new OctokitWrapper(process.env.PACKAGE_TOKEN);
+  const wrapper = new OctokitWrapper(process.env.PACKAGE_TOKEN, isDebug);
 
   const isOrganization = await wrapper.isOrganization(owner);
-  src_log.info(`Is Organization? -> ${isOrganization}`);
+  log.info(`Is Organization? -> ${isOrganization}`);
 
   // strategy will start  here for different types of packages
-  src_log.info(`Package type: ${package_type}, owner: ${owner}, repo: ${repo}`);
+  log.info(`Package type: ${package_type}, owner: ${owner}, repo: ${repo}`);
 
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  src_log.debug(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
+  log.debug(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
 
 
-  src_log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
+  log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
 
   if (packages.length === 0) {
-    src_log.warn("No packages found.");
+    log.warn("No packages found.");
     return;
   }
 
   const packagesWithVersions = await Promise.all(
     filteredPackages.map(async (pkg) => {
       const versionsForPkg = await wrapper.listVersionsForPackage(owner, pkg.package_type, pkg.name, isOrganization);
-      src_log.info(`Found ${versionsForPkg.length} versions for package: ${pkg.name}`);
+      log.info(`Found ${versionsForPkg.length} versions for package: ${pkg.name}`);
       // core.info(JSON.stringify(versionsForPkg, null, 2));
       return { package: pkg, versions: versionsForPkg };
     })
@@ -60139,13 +60150,13 @@ async function run() {
 
   const strategy = getStrategy(package_type);
 
-  src_log.info(`Using strategy -> ${await strategy.toString()}`);
+  log.info(`Using strategy -> ${await strategy.toString()}`);
 
   const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
 
-  src_log.setDebug(isDebug);
-  src_log.startGroup('Delete versions Log')
-  src_log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
+  log.setDebug(isDebug);
+  log.startGroup('Delete versions Log')
+  log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
 
 
   const reportContext = {
@@ -60158,7 +60169,7 @@ async function run() {
   };
 
   if (dryRun) {
-    src_log.warn("Dry run mode enabled. No versions will be deleted.");
+    log.warn("Dry run mode enabled. No versions will be deleted.");
     await showReport(reportContext, package_type);
     return;
   }
@@ -60171,10 +60182,10 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message || String(error));
   }
-  src_log.endGroup();
+  log.endGroup();
 
   await showReport(reportContext, package_type);
-  src_log.success("✅ Action completed.");
+  log.success("✅ Action completed.");
 }
 
 async function showReport(context, type = 'container') {

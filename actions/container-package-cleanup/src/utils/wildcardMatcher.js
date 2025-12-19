@@ -1,8 +1,11 @@
 const escapeStringRegexp = require('escape-string-regexp');
+const log = require("@netcracker/action-logger");
 
 class WildcardMatcher {
-  constructor() {
+  constructor(debug = false, dryRun = false) {
     this.name = 'WildcardMatcher';
+    log.setDebug(debug);
+    log.setDryRun(dryRun);
   }
 
   match(tag, pattern) {

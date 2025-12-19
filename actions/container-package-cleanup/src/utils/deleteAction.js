@@ -1,9 +1,14 @@
+const log = require("@netcracker/action-logger");
+
 /**
  *
  * @param {Array<{package:{id,name,type}, versions:Array<{id,name,metadata}>}>} filtered
  * @param {{ wrapper:any, owner:string, isOrganization?:boolean, dryRun?:boolean }} ctx
  */
-async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, dryRun = false } = {}) {
+async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, dryRun = false, debug = false } = {}) {
+  log.setDebug(debug);
+  log.setDryRun(dryRun);
+
   if (!Array.isArray(filtered) || filtered.length === 0) {
     log.warn("Nothing to delete.");
     return;

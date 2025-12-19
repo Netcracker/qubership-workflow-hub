@@ -1,12 +1,14 @@
 const core = require('@actions/core');
 const AbstractPackageStrategy = require("./abstractPackageStrategy");
 const WildcardMatcher = require("../utils/wildcardMatcher");
+const log = require("@netcracker/action-logger");
 
 class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
         super();
         this.name = 'Container Strategy';
         this.wildcardMatcher = new WildcardMatcher();
+
     }
 
     async parse(raw) {
@@ -51,7 +53,6 @@ class ContainerStrategy extends AbstractPackageStrategy {
       */
     async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug = false }) {
         log.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : 'unknown'} packages.`);
-
         const excluded = excludedPatterns.map(p => p.toLowerCase());
         const included = includedPatterns.map(p => p.toLowerCase());
         const packages = await this.parse(packagesWithVersions);

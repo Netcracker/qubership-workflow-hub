@@ -58,7 +58,7 @@ async function run() {
 
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
-  const wrapper = new OctokitWrapper(process.env.PACKAGE_TOKEN);
+  const wrapper = new OctokitWrapper(process.env.PACKAGE_TOKEN, isDebug);
 
   const isOrganization = await wrapper.isOrganization(owner);
   log.info(`Is Organization? -> ${isOrganization}`);
