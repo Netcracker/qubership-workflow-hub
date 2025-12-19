@@ -59,11 +59,10 @@ class ContainerStrategy extends AbstractPackageStrategy {
         const excluded = excludedPatterns.map(p => p.toLowerCase());
         const included = includedPatterns.map(p => p.toLowerCase());
         const packages = await this.parse(packagesWithVersions);
-        const result = [];
 
         const ownerLC = typeof owner === 'string' ? owner.toLowerCase() : owner;
 
-        for (const pkg of packages) {
+        const packagePromises = packages.map(async (pkg) => {
             log.debug(`[${pkg.name}] Total versions: ${pkg.versions.length}`, MODULE);
 
             // Protected tags: latest + those that match excludedPatterns
@@ -83,13 +82,21 @@ class ContainerStrategy extends AbstractPackageStrategy {
             const imageLC = pkg.name.toLowerCase();
             // Gathering digests of protected tags
             const protectedDigests = new Set();
-            for (const tag of protectedTags) {
+            const protectedDigestPromises = Array.from(protectedTags).map(async (tag) => {
                 try {
                     const ds = await wrapper.getManifestDigests(ownerLC, imageLC, tag);
-                    if (Array.isArray(ds)) ds.forEach(d => { protectedDigests.add(d) });
-                    else if (ds) protectedDigests.add(ds);
+                    return { success: true, digests: ds };
                 } catch (e) {
                     log.warn(`Failed to fetch manifest for ${pkg.name}:${tag} — ${e.message}`);
+                    return { success: false };
+                }
+            });
+            const protectedResults = await Promise.all(protectedDigestPromises);
+            for (const result of protectedResults) {
+                if (result.success) {
+                    const ds = result.digests;
+                    if (Array.isArray(ds)) ds.forEach(d => { protectedDigests.add(d) });
+                    else if (ds) protectedDigests.add(ds);
                 }
             }
 
@@ -137,18 +144,30 @@ class ContainerStrategy extends AbstractPackageStrategy {
 
             // 3) Gathering manifest digests for each tagged
             const digestMap = new Map();
-            for (const v of taggedToDelete) {
-                const digs = new Set();
-                for (const tag of v.metadata.container.tags) {
+            const digestPromises = taggedToDelete.map(async (v) => {
+                const tagPromises = v.metadata.container.tags.map(async (tag) => {
                     try {
                         const ds = await wrapper.getManifestDigests(ownerLC, pkg.name, tag);
-                        if (Array.isArray(ds)) ds.forEach(d => { digs.add(d) });
-                        else if (ds) digs.add(ds);
+                        return { success: true, digests: ds };
                     } catch (e) {
                         log.warn(`Failed to fetch manifest ${pkg.name}:${tag} — ${e.message}`);
+                        return { success: false };
+                    }
+                });
+                const results = await Promise.all(tagPromises);
+                const digs = new Set();
+                for (const result of results) {
+                    if (result.success) {
+                        const ds = result.digests;
+                        if (Array.isArray(ds)) ds.forEach(d => { digs.add(d) });
+                        else if (ds) digs.add(ds);
                     }
                 }
-                digestMap.set(v.name, digs);
+                return { versionName: v.name, digests: digs };
+            });
+            const digestResults = await Promise.all(digestPromises);
+            for (const result of digestResults) {
+                digestMap.set(result.versionName, result.digests);
             }
 
             // 4) Arch layers: from withoutExclude
@@ -196,12 +215,16 @@ class ContainerStrategy extends AbstractPackageStrategy {
 
             const toDelete = [...ordered, ...danglingLayers];
             if (toDelete.length > 0) {
-                result.push({
+                return {
                     package: { id: pkg.id, name: pkg.name, type: pkg.packageType },
                     versions: toDelete
-                });
+                };
             }
-        }
+            return null;
+        });
+
+        const packageResults = await Promise.all(packagePromises);
+        const result = packageResults.filter(r => r !== null);
 
         return result;
     }
