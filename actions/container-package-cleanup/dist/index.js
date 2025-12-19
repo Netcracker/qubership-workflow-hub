@@ -30140,8 +30140,6 @@ class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
         super();
         this.name = 'Container Strategy';
-        this.wildcardMatcher = new WildcardMatcher();
-
     }
 
     async parse(raw) {
@@ -30186,6 +30184,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
       */
     async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug = false }) {
         log.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : 'unknown'} packages.`);
+        log.setDebug(debug);
+
+        wildcardMatcher = new WildcardMatcher(debug);
         const excluded = excludedPatterns.map(p => p.toLowerCase());
         const included = includedPatterns.map(p => p.toLowerCase());
         const packages = await this.parse(packagesWithVersions);
@@ -30199,7 +30200,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             for (const v of pkg.versions) {
                 for (const tag of v.metadata.container.tags) {
                     const low = tag.toLowerCase();
-                    if (low === 'latest' || excluded.some(pat => this.wildcardMatcher.match(low, pat))) {
+                    if (low === 'latest' || excluded.some(pat => wildcardMatcher.match(low, pat))) {
                         protectedTags.add(tag);
                     }
                 }
