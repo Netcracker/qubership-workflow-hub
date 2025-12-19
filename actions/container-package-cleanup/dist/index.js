@@ -30497,7 +30497,7 @@ module.exports = { getStrategy };
 
 const log = __nccwpck_require__(2938);
 
-const MODULE = 'deleteAction.js';
+const _MODULE = 'deleteAction.js';
 
 /**
  *

@@ -1,6 +1,6 @@
 const log = require("@netcracker/action-logger");
 
-const MODULE = 'deleteAction.js';
+const _MODULE = 'deleteAction.js';
 
 /**
  *
