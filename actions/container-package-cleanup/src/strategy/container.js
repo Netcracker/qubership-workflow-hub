@@ -103,6 +103,16 @@ class ContainerStrategy extends AbstractPackageStrategy {
             });
             log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`);
 
+            // Show versions with their tags for debugging
+            if (withoutExclude.length > 0 && withoutExclude.length <= 10) {
+                withoutExclude.forEach(v => {
+                    const tagsStr = v.metadata.container.tags.length > 0 
+                        ? v.metadata.container.tags.join(', ') 
+                        : '<no tags>';
+                    log.debug(`   - ${v.name.substring(0, 20)}... tags: [${tagsStr}]`);
+                });
+            }
+
             // 2) Selecting tagged versions by includePatterns
             const taggedToDelete = included.length > 0
                 ? withoutExclude.filter(v =>
@@ -117,11 +127,14 @@ class ContainerStrategy extends AbstractPackageStrategy {
             }
 
             if (taggedToDelete.length > 0) {
-                const preview = taggedToDelete.slice(0, 5).map(v => v.name).join(', ');
+                const preview = taggedToDelete.slice(0, 5).map(v => {
+                    const tags = v.metadata.container.tags.join(', ');
+                    return `${v.name.substring(0, 12)}[${tags}]`;
+                }).join(', ');
                 const suffix = taggedToDelete.length > 5 ? ` ...and ${taggedToDelete.length - 5} more` : '';
                 log.debug(` [${pkg.name}] taggedToDelete (${taggedToDelete.length}): ${preview}${suffix}`);
             } else {
-                log.debug(` [${pkg.name}] taggedToDelete: none`);
+                log.debug(` [${pkg.name}] taggedToDelete: none (no versions matched include patterns)`);
             }
 
             // 3) Gathering manifest digests for each tagged
