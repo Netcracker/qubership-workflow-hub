@@ -30525,7 +30525,8 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     const imageLC = (pkg.name || "").toLowerCase();
     const type = pkg.type; // "container" | "maven" ...
 
-    for (const v of versions) {
+    // Parallel deletion of all versions within the package
+    await Promise.all(versions.map(async (v) => {
       const tags = v.metadata?.container?.tags ?? [];
       const detail = type === "maven" ? v.name : (tags.length ? tags.join(", ") : v.name);
 
@@ -30540,12 +30541,12 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
 
         if (/more than 5000 downloads/i.test(msg)) {
           log.warn(`Skipping ${imageLC} v:${v.id} (${detail}) - too many downloads.`);
-          continue;
+          return;
         }
 
         if (/404|not found/i.test(msg)) {
           log.warn(`Version not found: ${imageLC} v:${v.id} - probably already deleted.`);
-          continue;
+          return;
         }
 
         if (/403|rate.?limit|insufficient permissions/i.test(msg)) {
@@ -30555,7 +30556,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
 
         log.error(`Failed to delete ${imageLC} v:${v.id} (${detail}) — ${msg}`);
       }
-    }
+    }));
   }
 }
 
