@@ -60119,7 +60119,7 @@ async function run() {
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  log.startGroup('Filtered Packages')
+  log.startDebugGroup('Filtered Packages')
   log.debugJSON('💡 Filtered packages:', filteredPackages);
   log.endGroup();
 
@@ -60163,10 +60163,12 @@ async function run() {
   const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
 
   log.setDebug(isDebug);
-  log.startGroup('Delete versions Log')
+  log.startDebugGroup('Packages with versions for delete');
   log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
+  log.endGroup();
 
 
+  log.startGroup("🚀 Starting package version deletion process");
   const reportContext = {
     filteredPackagesWithVersionsForDelete,
     thresholdDays,
