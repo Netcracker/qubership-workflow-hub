@@ -28,21 +28,21 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       const detail = type === "maven" ? v.name : (tags.length ? tags.join(", ") : v.name);
 
       log.setDryRun(dryRun);
-      log.dryrun(`${ownerLC}/${imageLC} (${type}) — would delete version ${v.id} (${detail})`);
+      log.dryrun(`${ownerLC}/${imageLC} (${type}) - would delete version ${v.id} (${detail})`);
 
       try {
-        log.info(`Deleting ${ownerLC}/${imageLC} (${type}) — version ${v.id} (${detail})`);
+        log.info(`Deleting ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
         await wrapper.deletePackageVersion(ownerLC, type, imageLC, v.id, isOrganization);
       } catch (error) {
         const msg = String(error?.message || error);
 
         if (/more than 5000 downloads/i.test(msg)) {
-          log.warn(`Skipping ${imageLC} v:${v.id} (${detail}) — too many downloads.`);
+          log.warn(`Skipping ${imageLC} v:${v.id} (${detail}) - too many downloads.`);
           continue;
         }
 
         if (/404|not found/i.test(msg)) {
-          log.warn(`Version not found: ${imageLC} v:${v.id} — probably already deleted.`);
+          log.warn(`Version not found: ${imageLC} v:${v.id} - probably already deleted.`);
           continue;
         }
 
