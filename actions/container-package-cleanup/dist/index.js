@@ -30134,6 +30134,7 @@ module.exports = AbstractPackageStrategy;
 const core = __nccwpck_require__(8335);
 const AbstractPackageStrategy = __nccwpck_require__(7817);
 const WildcardMatcher = __nccwpck_require__(6540);
+const log = __nccwpck_require__(2938);
 
 class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
@@ -30167,7 +30168,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }))
             }));
         } catch (err) {
-            core.setFailed(`Action failed: ${err.message}`);
+            corine.setFailed(`Action failed: ${err.message}`);
         }
     }
 
@@ -30183,7 +30184,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
       * @returns {Promise<Array<{ package: Object, versions: Array }>>}
       */
     async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug = false }) {
-        core.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : 'unknown'} packages.`);
+        log.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : 'unknown'} packages.`);
 
         const excluded = excludedPatterns.map(p => p.toLowerCase());
         const included = includedPatterns.map(p => p.toLowerCase());
@@ -30213,7 +30214,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                     if (Array.isArray(ds)) ds.forEach(d => { protectedDigests.add(d) });
                     else if (ds) protectedDigests.add(ds);
                 } catch (e) {
-                    if (debug) core.warning(`Failed to fetch manifest for ${pkg.name}:${tag} — ${e.message}`);
+                    log.warn(`Failed to fetch manifest for ${pkg.name}:${tag} — ${e.message}`);
                 }
             }
 
@@ -30237,7 +30238,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 )
                 : withoutExclude.filter(v => v.metadata.container.tags.length > 0);
 
-            if (debug) core.info(` [${pkg.name}] taggedToDelete: ${taggedToDelete.map(v => v.name).join(', ')}`);
+            log.debug(` [${pkg.name}] taggedToDelete: ${taggedToDelete.map(v => v.name).join(', ')}`);
 
             // 3) Gathering manifest digests for each tagged
             const digestMap = new Map();
@@ -30249,7 +30250,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                         if (Array.isArray(ds)) ds.forEach(d => { digs.add(d) });
                         else if (ds) digs.add(ds);
                     } catch (e) {
-                        if (debug) core.warning(`Failed to fetch manifest ${pkg.name}:${tag} — ${e.message}`);
+                        log.warn(`Failed to fetch manifest ${pkg.name}:${tag} — ${e.message}`);
                     }
                 }
                 digestMap.set(v.name, digs);
@@ -30260,7 +30261,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 v.metadata.container.tags.length === 0 &&
                 Array.from(digestMap.values()).some(digs => digs.has(v.name))
             );
-            if (debug) core.info(` [${pkg.name}] archLayers: ${archLayers.map(v => v.name).join(', ')}`);
+            log.debug(` [${pkg.name}] archLayers: ${archLayers.map(v => v.name).join(', ')}`);
 
             // 5) Sorting tagged + their archLayers
             const ordered = [];
@@ -30285,7 +30286,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 !ordered.some(o => o.name === v.name)
             );
             if (debug && danglingLayers.length) {
-                core.info(` [${pkg.name}] danglingLayers: ${danglingLayers.map(v => v.name).join(', ')}`);
+                log.debug(` [${pkg.name}] danglingLayers: ${danglingLayers.map(v => v.name).join(', ')}`);
             }
 
             const toDelete = [...ordered, ...danglingLayers];
