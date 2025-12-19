@@ -30814,7 +30814,7 @@ class Logger {
   /** Enable or disable debug logging */
   setDebug(enabled) {
     this.debugMode = Boolean(enabled);
-    this.debug(`Debug mode ${this.debugMode ? "enabled" : "disabled"}`);
+    this.debug(`Debug mode ${this.debugMode ? "enabled" : "disabled"} module ${__filename}`);
   }
 
   setDryRun(enabled) {
