@@ -63,7 +63,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
 
         for (const pkg of packages) {
             log.debug(` [${pkg.name}] Total versions: ${pkg.versions.length}`);
-            
+
             // Protected tags: latest + those that match excludedPatterns
             const protectedTags = new Set();
             for (const v of pkg.versions) {
@@ -111,7 +111,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                         .some(t => included.some(pat => this.wildcardMatcher.match(t, pat)))
                 )
                 : withoutExclude.filter(v => v.metadata.container.tags.length > 0);
-            
+
             if (included.length > 0) {
                 log.debug(` [${pkg.name}] Include patterns: ${included.join(', ')}`);
             }
