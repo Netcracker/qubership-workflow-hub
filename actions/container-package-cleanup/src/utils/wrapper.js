@@ -4,6 +4,8 @@ const util = require("node:util");
 const execPromise = util.promisify(exec);
 const log = require("@netcracker/action-logger");
 
+const MODULE = 'wrapper.js';
+
 class OctokitWrapper {
 
   /**
@@ -106,7 +108,7 @@ class OctokitWrapper {
    */
   async getPackageVersionsForUser(owner, package_type, package_name) {
     try {
-      log.debug(`Owner: ${owner}, Package Type: ${package_type}, Package Name: ${package_name}`);
+      log.debug(`Owner: ${owner}, Package Type: ${package_type}, Package Name: ${package_name}`, MODULE);
       return await this.octokit.paginate(this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser,
         {
           package_type,
@@ -129,7 +131,7 @@ class OctokitWrapper {
    */
   async getPackageVersionsForOrganization(org, package_type, package_name) {
     try {
-       log.debug(`Owner: ${org}, Package Type: ${package_type}, Package Name: ${package_name}`);
+       log.debug(`Owner: ${org}, Package Type: ${package_type}, Package Name: ${package_name}`, MODULE);
       return await this.octokit.paginate(this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByOrg,
         {
           package_type,

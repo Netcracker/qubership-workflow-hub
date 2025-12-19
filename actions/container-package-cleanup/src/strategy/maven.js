@@ -1,6 +1,9 @@
 const core = require('@actions/core');
 const WildcardMatcher = require("../utils/wildcardMatcher");
 const AbstractPackageStrategy = require("./abstractPackageStrategy");
+const log = require("@netcracker/action-logger");
+
+const MODULE = 'maven.js';
 
 class MavenStrategy extends AbstractPackageStrategy {
     constructor() {
@@ -9,7 +12,7 @@ class MavenStrategy extends AbstractPackageStrategy {
     }
 
     async execute({ packagesWithVersions, excludedPatterns, includedPatterns, thresholdDate, thresholdVersions, debug = false }) {
-
+        log.setDebug(debug);
         // includedTags = ['*SNAPSHOT*', ...includedTags];
         const wildcardMatcher = new WildcardMatcher();
 
@@ -18,7 +21,7 @@ class MavenStrategy extends AbstractPackageStrategy {
 
             // if (versions.length === 1) return core.info(`Skipping package: ${pkg.name} because it has only 1 version.`), null;
             if (versions.length === 1) {
-                core.info(`Skipping package: ${pkg.name} because it has only 1 version.`);
+                log.info(`Skipping package: ${pkg.name} because it has only 1 version.`);
                 return null;
             }
 
@@ -26,7 +29,7 @@ class MavenStrategy extends AbstractPackageStrategy {
                 const createdAt = new Date(version.created_at);
                 const isOldEnough = createdAt <= thresholdDate;
 
-                debug && core.info(`Checking package: ${pkg.name} version: ${version.name}, created at: ${createdAt}, Threshold date: ${thresholdDate}, Is old enough: ${isOldEnough}`);
+               log.debug(`Checking package: ${pkg.name} version: ${version.name}, created at: ${createdAt}, Threshold date: ${thresholdDate}, Is old enough: ${isOldEnough}`, MODULE);
 
                 if (!isOldEnough) return false;
 
@@ -42,7 +45,7 @@ class MavenStrategy extends AbstractPackageStrategy {
                 return null;
             }
             if (versionForDelete.length <= thresholdVersions) {
-                debug && core.info(`Skipping package: ${pkg.name} because it has less than ${thresholdVersions} versions to delete.`);
+                log.debug(`Skipping package: ${pkg.name} because it has less than ${thresholdVersions} versions to delete.`, MODULE);
                 return null;
             }
 

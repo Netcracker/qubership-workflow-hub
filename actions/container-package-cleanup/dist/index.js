@@ -30358,6 +30358,9 @@ module.exports = ContainerStrategy;
 const core = __nccwpck_require__(8335);
 const WildcardMatcher = __nccwpck_require__(6540);
 const AbstractPackageStrategy = __nccwpck_require__(7817);
+const log = __nccwpck_require__(2938);
+
+const MODULE = 'maven.js';
 
 class MavenStrategy extends AbstractPackageStrategy {
     constructor() {
@@ -30366,7 +30369,7 @@ class MavenStrategy extends AbstractPackageStrategy {
     }
 
     async execute({ packagesWithVersions, excludedPatterns, includedPatterns, thresholdDate, thresholdVersions, debug = false }) {
-
+        log.setDebug(debug);
         // includedTags = ['*SNAPSHOT*', ...includedTags];
         const wildcardMatcher = new WildcardMatcher();
 
@@ -30375,7 +30378,7 @@ class MavenStrategy extends AbstractPackageStrategy {
 
             // if (versions.length === 1) return core.info(`Skipping package: ${pkg.name} because it has only 1 version.`), null;
             if (versions.length === 1) {
-                core.info(`Skipping package: ${pkg.name} because it has only 1 version.`);
+                log.info(`Skipping package: ${pkg.name} because it has only 1 version.`);
                 return null;
             }
 
@@ -30383,7 +30386,7 @@ class MavenStrategy extends AbstractPackageStrategy {
                 const createdAt = new Date(version.created_at);
                 const isOldEnough = createdAt <= thresholdDate;
 
-                debug && core.info(`Checking package: ${pkg.name} version: ${version.name}, created at: ${createdAt}, Threshold date: ${thresholdDate}, Is old enough: ${isOldEnough}`);
+               log.debug(`Checking package: ${pkg.name} version: ${version.name}, created at: ${createdAt}, Threshold date: ${thresholdDate}, Is old enough: ${isOldEnough}`, MODULE);
 
                 if (!isOldEnough) return false;
 
@@ -30399,7 +30402,7 @@ class MavenStrategy extends AbstractPackageStrategy {
                 return null;
             }
             if (versionForDelete.length <= thresholdVersions) {
-                debug && core.info(`Skipping package: ${pkg.name} because it has less than ${thresholdVersions} versions to delete.`);
+                log.debug(`Skipping package: ${pkg.name} because it has less than ${thresholdVersions} versions to delete.`, MODULE);
                 return null;
             }
 
@@ -30470,6 +30473,8 @@ module.exports = { getStrategy };
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const log = __nccwpck_require__(2938);
+
+const MODULE = 'deleteAction.js';
 
 /**
  *
@@ -30542,6 +30547,8 @@ module.exports = { deletePackageVersion };
 const escapeStringRegexp = __nccwpck_require__(1736);
 const log = __nccwpck_require__(2938);
 
+const MODULE = 'wildcardMatcher.js';
+
 class WildcardMatcher {
   constructor(debug = false, dryRun = false) {
     this.name = 'WildcardMatcher';
@@ -30572,13 +30579,13 @@ class WildcardMatcher {
     }
 
     // General case: build RegExp, escape special characters, then *→.* and ?→.
-    log.debug(`Matching tag "${t}" against pattern "${p}"`);
+    log.debug(`Matching tag "${t}" against pattern "${p}"`, MODULE);
     // First replace * and ? with unique markers, then escape, then return them as .*
     const wildcardPattern = p.replace(/\*/g, '__WILDCARD_STAR__').replace(/\?/g, '__WILDCARD_QM__');
     const escaped = escapeStringRegexp(wildcardPattern)
       .replace(/__WILDCARD_STAR__/g, '.*')
       .replace(/__WILDCARD_QM__/g, '.');
-    log.debug(`Transformed pattern: ${escaped}`);
+    log.debug(`Transformed pattern: ${escaped}`, MODULE);
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
@@ -30598,6 +30605,8 @@ const { exec } = __nccwpck_require__(1421);
 const util = __nccwpck_require__(7975);
 const execPromise = util.promisify(exec);
 const log = __nccwpck_require__(2938);
+
+const MODULE = 'wrapper.js';
 
 class OctokitWrapper {
 
@@ -30701,7 +30710,7 @@ class OctokitWrapper {
    */
   async getPackageVersionsForUser(owner, package_type, package_name) {
     try {
-      log.debug(`Owner: ${owner}, Package Type: ${package_type}, Package Name: ${package_name}`);
+      log.debug(`Owner: ${owner}, Package Type: ${package_type}, Package Name: ${package_name}`, MODULE);
       return await this.octokit.paginate(this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser,
         {
           package_type,
@@ -30724,7 +30733,7 @@ class OctokitWrapper {
    */
   async getPackageVersionsForOrganization(org, package_type, package_name) {
     try {
-       log.debug(`Owner: ${org}, Package Type: ${package_type}, Package Name: ${package_name}`);
+       log.debug(`Owner: ${org}, Package Type: ${package_type}, Package Name: ${package_name}`, MODULE);
       return await this.octokit.paginate(this.octokit.rest.packages.getAllPackageVersionsForPackageOwnedByOrg,
         {
           package_type,

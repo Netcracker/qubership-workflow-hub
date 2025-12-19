@@ -1,5 +1,7 @@
 const log = require("@netcracker/action-logger");
 
+const MODULE = 'deleteAction.js';
+
 /**
  *
  * @param {Array<{package:{id,name,type}, versions:Array<{id,name,metadata}>}>} filtered
