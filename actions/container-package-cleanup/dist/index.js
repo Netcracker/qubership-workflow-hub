@@ -30136,6 +30136,8 @@ const AbstractPackageStrategy = __nccwpck_require__(7817);
 const WildcardMatcher = __nccwpck_require__(6540);
 const log = __nccwpck_require__(2938);
 
+const MODULE = 'container.js';
+
 class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
         super();
@@ -30195,7 +30197,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
         const ownerLC = typeof owner === 'string' ? owner.toLowerCase() : owner;
 
         for (const pkg of packages) {
-            log.debug(`[${pkg.name}] Total versions: ${pkg.versions.length}`, 'container.js:65');
+            log.debug(`[${pkg.name}] Total versions: ${pkg.versions.length}`, MODULE);
 
             // Protected tags: latest + those that match excludedPatterns
             const protectedTags = new Set();
@@ -30208,7 +30210,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
             }
             if (protectedTags.size > 0) {
-                log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`, 'container.js:78');
+                log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`, MODULE);
             }
 
             const imageLC = pkg.name.toLowerCase();
@@ -30234,7 +30236,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
                 return true;
             });
-            log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`, 'container.js:104');
+            log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`, MODULE);
 
             // Show versions with their tags for debugging
             if (withoutExclude.length > 0 && withoutExclude.length <= 10) {
@@ -30242,7 +30244,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                     const tagsStr = v.metadata.container.tags.length > 0
                         ? v.metadata.container.tags.join(', ')
                         : '<no tags>';
-                    log.debug(`   - ${v.name.substring(0, 20)}... tags: [${tagsStr}]`);
+                    log.debug(`   - ${v.name.substring(0, 20)}... tags: [${tagsStr}]`, MODULE);
                 });
             }
 
@@ -30256,14 +30258,14 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 : withoutExclude.filter(v => v.metadata.container.tags.length > 0);
 
             if (included.length > 0) {
-                log.debug(` [${pkg.name}] Include patterns: ${included.join(', ')}`, 'container.js:126');
+                log.debug(` [${pkg.name}] Include patterns: ${included.join(', ')}`, MODULE);
             }
 
             if (taggedToDelete.length > 0) {
                 const preview = taggedToDelete.map(v => v.name).join(', ');
-                log.debug(` [${pkg.name}] taggedToDelete (${taggedToDelete.length}): ${preview}`);
+                log.debug(` [${pkg.name}] taggedToDelete (${taggedToDelete.length}): ${preview}`, MODULE);
             } else {
-                log.debug(` [${pkg.name}] taggedToDelete: none`);
+                log.debug(` [${pkg.name}] taggedToDelete: none`, MODULE);
             }
 
             // 3) Gathering manifest digests for each tagged
@@ -30289,9 +30291,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
             );
             if (archLayers.length > 0) {
                 const preview = archLayers.map(v => v.name).join(', ');
-                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}`, 'container.js:159');
+                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}`, MODULE);
             } else {
-                log.debug(` [${pkg.name}] archLayers: none`, 'container.js:161');
+                log.debug(` [${pkg.name}] archLayers: none`, MODULE);
             }
 
             // 5) Sorting tagged + their archLayers
@@ -30319,9 +30321,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
             if (debug) {
                 if (danglingLayers.length > 0) {
                     const preview = danglingLayers.map(v => v.name).join(', ');
-                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}`, 'container.js:189');
+                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}`, MODULE);
                 } else {
-                    log.debug(`[${pkg.name}] danglingLayers: none`, 'container.js:191');
+                    log.debug(`[${pkg.name}] danglingLayers: none`, MODULE);
                 }
             }
 
