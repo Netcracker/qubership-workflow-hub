@@ -64,6 +64,11 @@ class Logger {
     core.endGroup();
   }
 
+  startDebugGroup(title) {
+    if (!this.debugMode) return;
+    core.startGroup(`${COLORS.gray}[debug] ${title}${COLORS.reset}`);
+  }
+
   // --- Debug section ---
   debug(message) {
     if (!this.debugMode) return;

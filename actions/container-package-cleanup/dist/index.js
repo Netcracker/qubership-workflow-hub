@@ -30140,6 +30140,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
         super();
         this.name = 'Container Strategy';
+        this.wildcardMatcher = new WildcardMatcher();
     }
 
     async parse(raw) {
@@ -30186,7 +30187,6 @@ class ContainerStrategy extends AbstractPackageStrategy {
         log.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : 'unknown'} packages.`);
         log.setDebug(debug);
 
-        wildcardMatcher = new WildcardMatcher(debug);
         const excluded = excludedPatterns.map(p => p.toLowerCase());
         const included = includedPatterns.map(p => p.toLowerCase());
         const packages = await this.parse(packagesWithVersions);
@@ -30200,7 +30200,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             for (const v of pkg.versions) {
                 for (const tag of v.metadata.container.tags) {
                     const low = tag.toLowerCase();
-                    if (low === 'latest' || excluded.some(pat => wildcardMatcher.match(low, pat))) {
+                    if (low === 'latest' || excluded.some(pat => this.wildcardMatcher.match(low, pat))) {
                         protectedTags.add(tag);
                     }
                 }
@@ -30823,6 +30823,11 @@ class Logger {
 
   endGroup() {
     core.endGroup();
+  }
+
+  startDebugGroup(title) {
+    if (!this.debugMode) return;
+    core.startGroup(`${COLORS.gray}[debug] ${title}${COLORS.reset}`);
   }
 
   // --- Debug section ---
@@ -60114,7 +60119,9 @@ async function run() {
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  log.debug(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
+  log.startGroup('Filtered Packages')
+  log.debugJSON('💡 Filtered packages:', filteredPackages);
+  log.endGroup();
 
 
   log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
