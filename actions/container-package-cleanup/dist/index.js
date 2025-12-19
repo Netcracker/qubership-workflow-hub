@@ -30498,6 +30498,7 @@ module.exports = { deletePackageVersion };
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const escapeStringRegexp = __nccwpck_require__(1736);
+const log = __nccwpck_require__(2938);
 
 class WildcardMatcher {
   constructor() {
@@ -30527,13 +30528,13 @@ class WildcardMatcher {
     }
 
     // General case: build RegExp, escape special characters, then *→.* and ?→.
-    console.log(`Matching tag "${t}" against pattern "${p}"`);
+    log.debug(`Matching tag "${t}" against pattern "${p}"`);
     // First replace * and ? with unique markers, then escape, then return them as .*
     const wildcardPattern = p.replace(/\*/g, '__WILDCARD_STAR__').replace(/\?/g, '__WILDCARD_QM__');
     const escaped = escapeStringRegexp(wildcardPattern)
       .replace(/__WILDCARD_STAR__/g, '.*')
       .replace(/__WILDCARD_QM__/g, '.');
-    console.log(`Transformed pattern: ${escaped}`);
+    log.debug(`Transformed pattern: ${escaped}`);
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
@@ -30805,6 +30806,10 @@ class Logger {
 
   // --- Grouping ---
   group(title) {
+    core.startGroup(`${COLORS.blue}${title}${COLORS.reset}`);
+  }
+
+  startGroup(title) {
     core.startGroup(`${COLORS.blue}${title}${COLORS.reset}`);
   }
 
@@ -60098,7 +60103,7 @@ async function run() {
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  log.info(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
+  log.debug(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
 
 
   log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
@@ -60140,9 +60145,8 @@ async function run() {
   const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
 
   log.setDebug(isDebug);
-  log.group('Delete versions Log')
+  log.startGroup('Delete versions Log')
   log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
-  log.endGroup();
 
 
   const reportContext = {
@@ -60168,6 +60172,7 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message || String(error));
   }
+  log.endGroup();
 
   await showReport(reportContext, package_type);
   log.success("✅ Action completed.");
