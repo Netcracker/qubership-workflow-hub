@@ -2,6 +2,7 @@ const github = require("@actions/github");
 const { exec } = require("node:child_process");
 const util = require("node:util");
 const execPromise = util.promisify(exec);
+const log = require("@netcracker/action-logger");
 
 class OctokitWrapper {
 
@@ -9,8 +10,9 @@ class OctokitWrapper {
    * Initializes the OctokitWrapper with an authentication token.
    * @param {string} authToken - The GitHub authentication token.
    */
-  constructor(authToken) {
+  constructor(authToken, debug = false) {
     this.octokit = github.getOctokit(authToken);
+    log.setDebug(debug);
   }
 
   /**
