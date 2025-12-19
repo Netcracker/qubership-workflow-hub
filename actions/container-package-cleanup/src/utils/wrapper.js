@@ -2,7 +2,6 @@ const github = require("@actions/github");
 const { exec } = require("node:child_process");
 const util = require("node:util");
 const execPromise = util.promisify(exec);
-const log = require("@netcracker/action-logger");
 
 class OctokitWrapper {
 

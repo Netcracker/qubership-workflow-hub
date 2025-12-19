@@ -28,6 +28,9 @@ async function run() {
   log.info(`Is debug? -> ${isDebug}`);
   log.info(`Dry run? -> ${dryRun}`);
 
+  log.setDebug(isDebug);
+  log.setDryRun(dryRun);
+
   const thresholdDays = parseInt(core.getInput('threshold-days'), 10);
 
   let excludedTags = [];

@@ -1,7 +1,6 @@
 const core = require('@actions/core');
 const AbstractPackageStrategy = require("./abstractPackageStrategy");
 const WildcardMatcher = require("../utils/wildcardMatcher");
-const log = require("@netcracker/action-logger");
 
 class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
@@ -35,7 +34,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }))
             }));
         } catch (err) {
-            corine.setFailed(`Action failed: ${err.message}`);
+            core.setFailed(`Action failed: ${err.message}`);
         }
     }
 

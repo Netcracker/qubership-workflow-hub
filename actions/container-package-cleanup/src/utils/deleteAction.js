@@ -1,5 +1,3 @@
-const log = require("@netcracker/action-logger");
-
 /**
  *
  * @param {Array<{package:{id,name,type}, versions:Array<{id,name,metadata}>}>} filtered
@@ -27,7 +25,6 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       const tags = v.metadata?.container?.tags ?? [];
       const detail = type === "maven" ? v.name : (tags.length ? tags.join(", ") : v.name);
 
-      log.setDryRun(dryRun);
       log.dryrun(`${ownerLC}/${imageLC} (${type}) - would delete version ${v.id} (${detail})`);
 
       try {

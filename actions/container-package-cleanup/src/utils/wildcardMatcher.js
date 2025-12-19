@@ -1,5 +1,4 @@
 const escapeStringRegexp = require('escape-string-regexp');
-const log = require("@netcracker/action-logger");
 
 class WildcardMatcher {
   constructor() {
