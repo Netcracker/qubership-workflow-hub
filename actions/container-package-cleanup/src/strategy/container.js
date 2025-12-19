@@ -106,8 +106,8 @@ class ContainerStrategy extends AbstractPackageStrategy {
             // Show versions with their tags for debugging
             if (withoutExclude.length > 0 && withoutExclude.length <= 10) {
                 withoutExclude.forEach(v => {
-                    const tagsStr = v.metadata.container.tags.length > 0 
-                        ? v.metadata.container.tags.join(', ') 
+                    const tagsStr = v.metadata.container.tags.length > 0
+                        ? v.metadata.container.tags.join(', ')
                         : '<no tags>';
                     log.debug(`   - ${v.name.substring(0, 20)}... tags: [${tagsStr}]`);
                 });
