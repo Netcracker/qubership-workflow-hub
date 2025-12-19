@@ -56,6 +56,10 @@ class Logger {
     core.startGroup(`${COLORS.blue}${title}${COLORS.reset}`);
   }
 
+  startGroup(title) {
+    core.startGroup(`${COLORS.blue}${title}${COLORS.reset}`);
+  }
+
   endGroup() {
     core.endGroup();
   }

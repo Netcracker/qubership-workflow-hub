@@ -108,9 +108,8 @@ async function run() {
   const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
 
   log.setDebug(isDebug);
-  log.group('Delete versions Log')
+  log.startGroup('Delete versions Log')
   log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
-  log.endGroup();
 
 
   const reportContext = {
@@ -136,6 +135,7 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message || String(error));
   }
+  log.endGroup();
 
   await showReport(reportContext, package_type);
   log.success("✅ Action completed.");

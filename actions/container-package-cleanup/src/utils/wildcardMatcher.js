@@ -1,4 +1,5 @@
 const escapeStringRegexp = require('escape-string-regexp');
+const log = require("@netcracker/action-logger");
 
 class WildcardMatcher {
   constructor() {
@@ -28,13 +29,13 @@ class WildcardMatcher {
     }
 
     // General case: build RegExp, escape special characters, then *→.* and ?→.
-    console.log(`Matching tag "${t}" against pattern "${p}"`);
+    log.debug(`Matching tag "${t}" against pattern "${p}"`);
     // First replace * and ? with unique markers, then escape, then return them as .*
     const wildcardPattern = p.replace(/\*/g, '__WILDCARD_STAR__').replace(/\?/g, '__WILDCARD_QM__');
     const escaped = escapeStringRegexp(wildcardPattern)
       .replace(/__WILDCARD_STAR__/g, '.*')
       .replace(/__WILDCARD_QM__/g, '.');
-    console.log(`Transformed pattern: ${escaped}`);
+    log.debug(`Transformed pattern: ${escaped}`);
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
