@@ -33,7 +33,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       log.dryrun(`${ownerLC}/${imageLC} (${type}) - would delete version ${v.id} (${detail})`);
 
       try {
-        log.info(`Deleting ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
+        log.dim(`Deleting ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
         await wrapper.deletePackageVersion(ownerLC, type, imageLC, v.id, isOrganization);
         log.success(`✓ Deleted ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
       } catch (error) {
