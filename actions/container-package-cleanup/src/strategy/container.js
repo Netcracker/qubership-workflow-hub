@@ -127,14 +127,10 @@ class ContainerStrategy extends AbstractPackageStrategy {
             }
 
             if (taggedToDelete.length > 0) {
-                const preview = taggedToDelete.slice(0, 5).map(v => {
-                    const tags = v.metadata.container.tags.join(', ');
-                    return `${v.name.substring(0, 12)}[${tags}]`;
-                }).join(', ');
-                const suffix = taggedToDelete.length > 5 ? ` ...and ${taggedToDelete.length - 5} more` : '';
-                log.debug(` [${pkg.name}] taggedToDelete (${taggedToDelete.length}): ${preview}${suffix}`);
+                const preview = taggedToDelete.map(v => v.name).join(', ');
+                log.debug(` [${pkg.name}] taggedToDelete (${taggedToDelete.length}): ${preview}`);
             } else {
-                log.debug(` [${pkg.name}] taggedToDelete: none (no versions matched include patterns)`);
+                log.debug(` [${pkg.name}] taggedToDelete: none`);
             }
 
             // 3) Gathering manifest digests for each tagged
@@ -159,9 +155,8 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 Array.from(digestMap.values()).some(digs => digs.has(v.name))
             );
             if (archLayers.length > 0) {
-                const preview = archLayers.slice(0, 5).map(v => v.name).join(', ');
-                const suffix = archLayers.length > 5 ? ` ...and ${archLayers.length - 5} more` : '';
-                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}${suffix}`);
+                const preview = archLayers.map(v => v.name).join(', ');
+                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}`);
             } else {
                 log.debug(` [${pkg.name}] archLayers: none`);
             }
@@ -190,9 +185,8 @@ class ContainerStrategy extends AbstractPackageStrategy {
             );
             if (debug) {
                 if (danglingLayers.length > 0) {
-                    const preview = danglingLayers.slice(0, 5).map(v => v.name).join(', ');
-                    const suffix = danglingLayers.length > 5 ? ` ...and ${danglingLayers.length - 5} more` : '';
-                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}${suffix}`);
+                    const preview = danglingLayers.map(v => v.name).join(', ');
+                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}`);
                 } else {
                     log.debug(`[${pkg.name}] danglingLayers: none`);
                 }
