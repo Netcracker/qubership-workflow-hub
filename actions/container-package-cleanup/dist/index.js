@@ -30502,8 +30502,9 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       log.dryrun(`${ownerLC}/${imageLC} (${type}) - would delete version ${v.id} (${detail})`);
 
       try {
-        log.info(`Deleting ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
+        log.dim(`Deleting ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
         await wrapper.deletePackageVersion(ownerLC, type, imageLC, v.id, isOrganization);
+        log.success(`✓ Deleted ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
       } catch (error) {
         const msg = String(error?.message || error);
 
@@ -30800,6 +30801,7 @@ const COLORS = {
   reset: "\x1b[0m",
   blue: "\x1b[34m",
   green: "\x1b[32m",
+  lightGreen: "\x1b[92m",
   yellow: "\x1b[33m",
   red: "\x1b[31m",
   gray: "\x1b[90m",
@@ -30811,10 +30813,29 @@ class Logger {
     this.dryRunMode = false;
   }
 
+  // Get caller info from stack trace
+  _getCallerInfo() {
+    const stack = new Error().stack;
+    const lines = stack.split('\n');
+    // Skip first 3 lines: Error, _getCallerInfo, calling logger method
+    for (let i = 3; i < lines.length; i++) {
+      const line = lines[i];
+      // Match file path in stack trace
+      const match = line.match(/at\s+(?:.*\s+)?\(?([^:]+):(\d+):\d+\)?/);
+      if (match && !match[1].includes('node_modules')) {
+        const filePath = match[1].replace(/\\/g, '/');
+        const fileName = filePath.split('/').pop();
+        return `${fileName}:${match[2]}`;
+      }
+    }
+    return 'unknown';
+  }
+
   /** Enable or disable debug logging */
   setDebug(enabled) {
     this.debugMode = Boolean(enabled);
-    this.debug(`Debug mode ${this.debugMode ? "enabled" : "disabled"} module ${__filename}`);
+    const caller = this._getCallerInfo();
+    this.debug(`Debug mode ${this.debugMode ? "enabled" : "disabled"} (called from ${caller})`);
   }
 
   setDryRun(enabled) {
@@ -30868,20 +30889,25 @@ class Logger {
   // --- Debug section ---
   debug(message) {
     if (!this.debugMode) return;
-    const formatted = `${COLORS.gray}[debug] ${message}${COLORS.reset}`;
+    const caller = this._getCallerInfo();
+    const formatted = `${COLORS.gray}[debug][${caller}] ${message}${COLORS.reset}`;
     core.info(formatted);
     if (typeof core.debug === "function") core.debug(message); // for GitHub’s ACTIONS_STEP_DEBUG
   }
 
   debugJSON(label, obj) {
     if (!this.debugMode) return;
+    const caller = this._getCallerInfo();
     const formatted = JSON.stringify(obj, null, 2);
-    this.debug(`${label}:\n${formatted}`);
+    const message = `${COLORS.gray}[debug][${caller}] ${label}:\n${formatted}${COLORS.reset}`;
+    core.info(message);
+    if (typeof core.debug === "function") core.debug(`${label}: ${formatted}`);
   }
 
   dryrun(message) {
     if (!this.dryRunMode) return;
-    const formatted = `${COLORS.gray}[dry-run] ${message}${COLORS.reset}`;
+    const caller = this._getCallerInfo();
+    const formatted = `${COLORS.gray}[dry-run][${caller}] ${message}${COLORS.reset}`;
     core.info(formatted);
   }
 
