@@ -66,7 +66,7 @@ async function run() {
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
-  log.info(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
+  log.debug(`Filtered Packages: ${JSON.stringify(filteredPackages, null, 2)}`);
 
 
   log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
