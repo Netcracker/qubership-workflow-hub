@@ -55,6 +55,10 @@ class Logger {
     core.info(`${COLORS.green}${message}${COLORS.reset}`);
   }
 
+  lightSuccess(message) {
+    core.info(`${COLORS.lightGreen}${message}${COLORS.reset}`);
+  }
+
   warn(message) {
     core.warning(`${COLORS.yellow}${message}${COLORS.reset}`);
   }
@@ -90,27 +94,27 @@ class Logger {
   }
 
   // --- Debug section ---
-  debug(message) {
+  debug(message, caller = null) {
     if (!this.debugMode) return;
-    const caller = this._getCallerInfo();
-    const formatted = `${COLORS.gray}[debug][${caller}] ${message}${COLORS.reset}`;
+    const callerInfo = caller || this._getCallerInfo();
+    const formatted = `${COLORS.gray}[debug][${callerInfo}] ${message}${COLORS.reset}`;
     core.info(formatted);
     if (typeof core.debug === "function") core.debug(message); // for GitHub’s ACTIONS_STEP_DEBUG
   }
 
-  debugJSON(label, obj) {
+  debugJSON(label, obj, caller = null) {
     if (!this.debugMode) return;
-    const caller = this._getCallerInfo();
+    const callerInfo = caller || this._getCallerInfo();
     const formatted = JSON.stringify(obj, null, 2);
-    const message = `${COLORS.gray}[debug][${caller}] ${label}:\n${formatted}${COLORS.reset}`;
+    const message = `${COLORS.gray}[debug][${callerInfo}] ${label}:\n${formatted}${COLORS.reset}`;
     core.info(message);
     if (typeof core.debug === "function") core.debug(`${label}: ${formatted}`);
   }
 
-  dryrun(message) {
+  dryrun(message, caller = null) {
     if (!this.dryRunMode) return;
-    const caller = this._getCallerInfo();
-    const formatted = `${COLORS.gray}[dry-run][${caller}] ${message}${COLORS.reset}`;
+    const callerInfo = caller || this._getCallerInfo();
+    const formatted = `${COLORS.gray}[dry-run][${callerInfo}] ${message}${COLORS.reset}`;
     core.info(formatted);
   }
 

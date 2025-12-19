@@ -30195,7 +30195,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
         const ownerLC = typeof owner === 'string' ? owner.toLowerCase() : owner;
 
         for (const pkg of packages) {
-            log.debug(` [${pkg.name}] Total versions: ${pkg.versions.length}`);
+            log.debug(`[${pkg.name}] Total versions: ${pkg.versions.length}`, 'container.js:65');
 
             // Protected tags: latest + those that match excludedPatterns
             const protectedTags = new Set();
@@ -30208,7 +30208,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
             }
             if (protectedTags.size > 0) {
-                log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`);
+                log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`, 'container.js:78');
             }
 
             const imageLC = pkg.name.toLowerCase();
@@ -30234,7 +30234,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
                 return true;
             });
-            log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`);
+            log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`, 'container.js:104');
 
             // Show versions with their tags for debugging
             if (withoutExclude.length > 0 && withoutExclude.length <= 10) {
@@ -30256,7 +30256,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 : withoutExclude.filter(v => v.metadata.container.tags.length > 0);
 
             if (included.length > 0) {
-                log.debug(` [${pkg.name}] Include patterns: ${included.join(', ')}`);
+                log.debug(` [${pkg.name}] Include patterns: ${included.join(', ')}`, 'container.js:126');
             }
 
             if (taggedToDelete.length > 0) {
@@ -30289,9 +30289,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
             );
             if (archLayers.length > 0) {
                 const preview = archLayers.map(v => v.name).join(', ');
-                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}`);
+                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}`, 'container.js:159');
             } else {
-                log.debug(` [${pkg.name}] archLayers: none`);
+                log.debug(` [${pkg.name}] archLayers: none`, 'container.js:161');
             }
 
             // 5) Sorting tagged + their archLayers
@@ -30319,9 +30319,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
             if (debug) {
                 if (danglingLayers.length > 0) {
                     const preview = danglingLayers.map(v => v.name).join(', ');
-                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}`);
+                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}`, 'container.js:189');
                 } else {
-                    log.debug(`[${pkg.name}] danglingLayers: none`);
+                    log.debug(`[${pkg.name}] danglingLayers: none`, 'container.js:191');
                 }
             }
 
@@ -30504,7 +30504,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       try {
         log.dim(`Deleting ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
         await wrapper.deletePackageVersion(ownerLC, type, imageLC, v.id, isOrganization);
-        log.success(`✓ Deleted ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
+        log.lightSuccess(`✓ Deleted ${ownerLC}/${imageLC} (${type}) - version ${v.id} (${detail})`);
       } catch (error) {
         const msg = String(error?.message || error);
 
@@ -30852,6 +30852,10 @@ class Logger {
     core.info(`${COLORS.green}${message}${COLORS.reset}`);
   }
 
+  lightSuccess(message) {
+    core.info(`${COLORS.lightGreen}${message}${COLORS.reset}`);
+  }
+
   warn(message) {
     core.warning(`${COLORS.yellow}${message}${COLORS.reset}`);
   }
@@ -30887,27 +30891,27 @@ class Logger {
   }
 
   // --- Debug section ---
-  debug(message) {
+  debug(message, caller = null) {
     if (!this.debugMode) return;
-    const caller = this._getCallerInfo();
-    const formatted = `${COLORS.gray}[debug][${caller}] ${message}${COLORS.reset}`;
+    const callerInfo = caller || this._getCallerInfo();
+    const formatted = `${COLORS.gray}[debug][${callerInfo}] ${message}${COLORS.reset}`;
     core.info(formatted);
     if (typeof core.debug === "function") core.debug(message); // for GitHub’s ACTIONS_STEP_DEBUG
   }
 
-  debugJSON(label, obj) {
+  debugJSON(label, obj, caller = null) {
     if (!this.debugMode) return;
-    const caller = this._getCallerInfo();
+    const callerInfo = caller || this._getCallerInfo();
     const formatted = JSON.stringify(obj, null, 2);
-    const message = `${COLORS.gray}[debug][${caller}] ${label}:\n${formatted}${COLORS.reset}`;
+    const message = `${COLORS.gray}[debug][${callerInfo}] ${label}:\n${formatted}${COLORS.reset}`;
     core.info(message);
     if (typeof core.debug === "function") core.debug(`${label}: ${formatted}`);
   }
 
-  dryrun(message) {
+  dryrun(message, caller = null) {
     if (!this.dryRunMode) return;
-    const caller = this._getCallerInfo();
-    const formatted = `${COLORS.gray}[dry-run][${caller}] ${message}${COLORS.reset}`;
+    const callerInfo = caller || this._getCallerInfo();
+    const formatted = `${COLORS.gray}[dry-run][${callerInfo}] ${message}${COLORS.reset}`;
     core.info(formatted);
   }
 

@@ -62,7 +62,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
         const ownerLC = typeof owner === 'string' ? owner.toLowerCase() : owner;
 
         for (const pkg of packages) {
-            log.debug(` [${pkg.name}] Total versions: ${pkg.versions.length}`);
+            log.debug(`[${pkg.name}] Total versions: ${pkg.versions.length}`, 'container.js:65');
 
             // Protected tags: latest + those that match excludedPatterns
             const protectedTags = new Set();
@@ -75,7 +75,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
             }
             if (protectedTags.size > 0) {
-                log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`);
+                log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`, 'container.js:78');
             }
 
             const imageLC = pkg.name.toLowerCase();
@@ -101,7 +101,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
                 return true;
             });
-            log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`);
+            log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`, 'container.js:104');
 
             // Show versions with their tags for debugging
             if (withoutExclude.length > 0 && withoutExclude.length <= 10) {
@@ -123,7 +123,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 : withoutExclude.filter(v => v.metadata.container.tags.length > 0);
 
             if (included.length > 0) {
-                log.debug(` [${pkg.name}] Include patterns: ${included.join(', ')}`);
+                log.debug(` [${pkg.name}] Include patterns: ${included.join(', ')}`, 'container.js:126');
             }
 
             if (taggedToDelete.length > 0) {
@@ -156,9 +156,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
             );
             if (archLayers.length > 0) {
                 const preview = archLayers.map(v => v.name).join(', ');
-                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}`);
+                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}`, 'container.js:159');
             } else {
-                log.debug(` [${pkg.name}] archLayers: none`);
+                log.debug(` [${pkg.name}] archLayers: none`, 'container.js:161');
             }
 
             // 5) Sorting tagged + their archLayers
@@ -186,9 +186,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
             if (debug) {
                 if (danglingLayers.length > 0) {
                     const preview = danglingLayers.map(v => v.name).join(', ');
-                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}`);
+                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}`, 'container.js:189');
                 } else {
-                    log.debug(`[${pkg.name}] danglingLayers: none`);
+                    log.debug(`[${pkg.name}] danglingLayers: none`, 'container.js:191');
                 }
             }
 
