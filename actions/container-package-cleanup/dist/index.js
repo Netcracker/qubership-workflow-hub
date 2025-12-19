@@ -30239,7 +30239,13 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 )
                 : withoutExclude.filter(v => v.metadata.container.tags.length > 0);
 
-            log.debug(` [${pkg.name}] taggedToDelete: ${taggedToDelete.map(v => v.name).join(', ')}`);
+            if (taggedToDelete.length > 0) {
+                const preview = taggedToDelete.slice(0, 5).map(v => v.name).join(', ');
+                const suffix = taggedToDelete.length > 5 ? ` ...and ${taggedToDelete.length - 5} more` : '';
+                log.debug(` [${pkg.name}] taggedToDelete (${taggedToDelete.length}): ${preview}${suffix}`);
+            } else {
+                log.debug(` [${pkg.name}] taggedToDelete: none`);
+            }
 
             // 3) Gathering manifest digests for each tagged
             const digestMap = new Map();
@@ -30262,7 +30268,13 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 v.metadata.container.tags.length === 0 &&
                 Array.from(digestMap.values()).some(digs => digs.has(v.name))
             );
-            log.debug(` [${pkg.name}] archLayers: ${archLayers.map(v => v.name).join(', ')}`);
+            if (archLayers.length > 0) {
+                const preview = archLayers.slice(0, 5).map(v => v.name).join(', ');
+                const suffix = archLayers.length > 5 ? ` ...and ${archLayers.length - 5} more` : '';
+                log.debug(` [${pkg.name}] archLayers (${archLayers.length}): ${preview}${suffix}`);
+            } else {
+                log.debug(` [${pkg.name}] archLayers: none`);
+            }
 
             // 5) Sorting tagged + their archLayers
             const ordered = [];
@@ -30286,8 +30298,14 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 !protectedDigests.has(v.name) &&
                 !ordered.some(o => o.name === v.name)
             );
-            if (debug && danglingLayers.length) {
-                log.debug(` [${pkg.name}] danglingLayers: ${danglingLayers.map(v => v.name).join(', ')}`);
+            if (debug) {
+                if (danglingLayers.length > 0) {
+                    const preview = danglingLayers.slice(0, 5).map(v => v.name).join(', ');
+                    const suffix = danglingLayers.length > 5 ? ` ...and ${danglingLayers.length - 5} more` : '';
+                    log.debug(`[${pkg.name}] danglingLayers (${danglingLayers.length}): ${preview}${suffix}`);
+                } else {
+                    log.debug(`[${pkg.name}] danglingLayers: none`);
+                }
             }
 
             const toDelete = [...ordered, ...danglingLayers];
