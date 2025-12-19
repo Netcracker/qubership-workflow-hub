@@ -30195,6 +30195,8 @@ class ContainerStrategy extends AbstractPackageStrategy {
         const ownerLC = typeof owner === 'string' ? owner.toLowerCase() : owner;
 
         for (const pkg of packages) {
+            log.debug(` [${pkg.name}] Total versions: ${pkg.versions.length}`);
+            
             // Protected tags: latest + those that match excludedPatterns
             const protectedTags = new Set();
             for (const v of pkg.versions) {
@@ -30204,6 +30206,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
                         protectedTags.add(tag);
                     }
                 }
+            }
+            if (protectedTags.size > 0) {
+                log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`);
             }
 
             const imageLC = pkg.name.toLowerCase();
@@ -30229,6 +30234,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
                 return true;
             });
+            log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`);
 
             // 2) Selecting tagged versions by includePatterns
             const taggedToDelete = included.length > 0
@@ -30238,6 +30244,10 @@ class ContainerStrategy extends AbstractPackageStrategy {
                         .some(t => included.some(pat => this.wildcardMatcher.match(t, pat)))
                 )
                 : withoutExclude.filter(v => v.metadata.container.tags.length > 0);
+            
+            if (included.length > 0) {
+                log.debug(` [${pkg.name}] Include patterns: ${included.join(', ')}`);
+            }
 
             if (taggedToDelete.length > 0) {
                 const preview = taggedToDelete.slice(0, 5).map(v => v.name).join(', ');
