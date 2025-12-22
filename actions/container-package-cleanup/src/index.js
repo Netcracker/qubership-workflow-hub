@@ -137,10 +137,10 @@ async function run() {
   };
 
   // dryRun && await showReport(reportContext, package_type);
-
+  let deleteStatus = [];
   try {
     if (filteredPackagesWithVersionsForDelete.length > 0) {
-      await deletePackageVersion(filteredPackagesWithVersionsForDelete,
+      deleteStatus = await deletePackageVersion(filteredPackagesWithVersionsForDelete,
         { wrapper, owner, isOrganization, batchSize: 15, maxErrors: 5, dryRun, debug: isDebug });
     }
 
@@ -150,7 +150,10 @@ async function run() {
   log.endGroup();
 
   await showReport(reportContext, package_type);
-  log.success("✅ Action completed.");
+
+  deleteStatus.some(r => r.success === false) ?
+    core.setFailed("❗️ Action completed with errors. Please check the logs and the report above.") :
+    log.success("✅ Action completed.");
 }
 
 async function showReport(context, type = 'container') {

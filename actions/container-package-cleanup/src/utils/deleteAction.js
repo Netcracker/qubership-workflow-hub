@@ -20,6 +20,8 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   log.setDebug(debug);
   log.setDryRun(dryRun);
 
+  let resultStatus = [];
+
   if (!Array.isArray(filtered) || filtered.length === 0) {
     log.warn("Nothing to delete.");
     return;
@@ -68,12 +70,15 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
         } catch (error) {
           if (isSkippableError(error)) {
             log.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error.message}`);
+            resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: false });
             return { success: false, skipped: true };
           }
           if (isCriticalError(error)) {
+            resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: true   });
             return { success: false, critical: true, error };
           }
           log.error(`Failed ${normalizedPackageName} v:${version.id} - ${error.message}`);
+          resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: false });
           return { success: false, error };
         }
       });
@@ -95,6 +100,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       // Finished all versions for this package
     }
     // Finished all packages
+    return resultStatus;
   }
 }
 
