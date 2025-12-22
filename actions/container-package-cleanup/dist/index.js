@@ -30886,7 +30886,7 @@ class Logger {
 
   // --- Base color wrappers ---
   info(message) {
-    core.info(`${COLORS.blue}${message}${COLORS.reset}`);
+    core.info(`${COLORS.gray}${message}${COLORS.reset}`);
   }
 
   success(message) {
@@ -60235,7 +60235,8 @@ async function run() {
   log.endGroup();
 
 
-  log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
+  log.dim(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
+  // log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
 
   if (packages.length === 0) {
     log.warn("No packages found.");
