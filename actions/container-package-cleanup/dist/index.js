@@ -30886,7 +30886,7 @@ class Logger {
 
   // --- Base color wrappers ---
   info(message) {
-    core.info(`${COLORS.gray}${message}${COLORS.reset}`);
+    core.info(`${message}${COLORS.reset}`);
   }
 
   success(message) {
