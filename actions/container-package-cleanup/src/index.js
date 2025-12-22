@@ -13,13 +13,6 @@ const log = require("@netcracker/action-logger");
 
 async function run() {
 
-  // const configurationPath = core.getInput('config-file-path');
-
-  // if (configurationPath === "") {
-  //   core.info("❗️ Configuration file path is empty. Try to using default path: ./.github/package-cleanup-config.yml");
-  //   configurationPath = "./.github/package-cleanup-config.yml";
-  // }
-
   const isDebug = core.getInput("debug").toLowerCase() === "true";
   const dryRun = core.getInput("dry-run").toLowerCase() === "true";
 
