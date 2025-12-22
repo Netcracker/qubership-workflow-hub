@@ -35,7 +35,7 @@ async function deleteSinglePackageVersion({ wrapper, owner, packageType, package
 /**
  *
  * @param {Array<{package:{id,name,type}, versions:Array<{id,name,metadata}>}>} filtered
- * @param {{ wrapper:any, owner:string, isOrganization?:boolean, batchSize?:number, dryRun?:boolean }} ctx
+ * @param {{ wrapper:any, owner:string, isOrganization?:boolean, batchSize?:number, maxErrors?:number dryRun?:boolean }} ctx
  */
 async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, batchSize = 15, maxErrors = 5, dryRun = false, debug = false } = {}) {
   log.setDebug(debug);

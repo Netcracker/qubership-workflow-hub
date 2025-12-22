@@ -143,7 +143,8 @@ async function run() {
 
   try {
     if (filteredPackagesWithVersionsForDelete.length > 0) {
-      await deletePackageVersion(filteredPackagesWithVersionsForDelete, { wrapper, owner, isOrganization, dryRun, debug: isDebug });
+      await deletePackageVersion(filteredPackagesWithVersionsForDelete,
+        { wrapper, owner, isOrganization, batchSize: 15, maxErrors: 5, dryRun, debug: isDebug });
     }
 
   } catch (error) {
