@@ -75,6 +75,10 @@ class Logger {
     core.info(message);
   }
 
+  notice(message) {
+    core.notice(`${COLORS.gray}${message}${COLORS.reset}`);
+  }
+
   // --- Grouping ---
   group(title) {
     core.startGroup(`${COLORS.blue}${title}${COLORS.reset}`);
