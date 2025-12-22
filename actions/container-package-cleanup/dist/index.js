@@ -30543,21 +30543,19 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     const packageType = pkg.type; // "container" | "maven" ...
 
     log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
-    log.dryrun(`Would delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`);
-
+    log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) — ${versions.length} versions will NOT be deleted (dry-run mode)`);
     for (let i = 0; i < versions.length; i += batchSize) {
 
       const batch = versions.slice(i, i + batchSize);
-      log.debug(`Processing batch ${i / batchSize + 1} for ${normalizedPackageName}`, _MODULE);
-      log.dryrun(`Processing batch ${i / batchSize + 1} for ${normalizedPackageName}`);
+      const batchNumber = Math.floor(i / batchSize) + 1;
+      log.debug(`Processing batch ${batchNumber} for ${normalizedPackageName}`, _MODULE);
+      log.dryrun(`[DRY-RUN] ${normalizedPackageName}: batch ${batchNumber} — ${batch.length} versions will NOT be deleted (dry-run mode)`);
 
       const promises = batch.map(async (version) => {
-
         if (dryRun) {
           const tags = version.metadata?.container?.tags ?? [];
           const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
-          log.dryrun(`Would delete ${normalizedOwner}/${normalizedPackageName} (${packageType}) - would delete version ${versions.id} (${detail})`);
-          log.dryrun(`Would delete ${normalizedPackageName} v:${version.id}`);
+          log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) — version ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
           return { success: true, dryRun: true };
         }
 
