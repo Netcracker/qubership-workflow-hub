@@ -60241,14 +60241,18 @@ async function run() {
     return;
   }
 
+  let totalPackagesVersions = 0;
   const packagesWithVersions = await Promise.all(
     filteredPackages.map(async (pkg) => {
       const versionsForPkg = await wrapper.listVersionsForPackage(owner, pkg.package_type, pkg.name, isOrganization);
+      totalPackagesVersions += versionsForPkg.length;
       log.info(`Found ${versionsForPkg.length} versions for package: ${pkg.name}`);
       // core.info(JSON.stringify(versionsForPkg, null, 2));
       return { package: pkg, versions: versionsForPkg };
     })
   );
+
+  log.notice(`Total packages to process: ${filteredPackages.length}, total versions found: ${totalPackagesVersions}`);
 
 
   // core.info(JSON.stringify(packagesWithVersions, null, 2));
