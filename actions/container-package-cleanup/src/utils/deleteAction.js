@@ -9,27 +9,6 @@ async function deleteSinglePackageVersion({ wrapper, owner, packageType, package
   log.dim(`Deleting ${owner}/${packageName} (${packageType}) - version ${versionId}`);
   await wrapper.deletePackageVersion(owner, packageType, packageName, versionId, isOrganization);
   log.lightSuccess(`✓ Deleted ${owner}/${packageName} (${packageType}) - version ${versionId}`);
-  // try {
-  //   log.dim(`Deleting ${owner}/${packageName} (${packageType}) - version ${versionId}`);
-  //   await wrapper.deletePackageVersion(owner, packageType, packageName, versionId, isOrganization);
-  //   log.lightSuccess(`✓ Deleted ${owner}/${packageName} (${packageType}) - version ${versionId}`);
-  // }
-  // catch (error) {
-  //   const msg = String(error?.message || error);
-  //   if (/more than 5000 downloads/i.test(msg)) {
-  //     log.warn(`Skipping ${packageName} v:${versionId} - too many downloads.`);
-  //     return;
-  //   }
-  //   if (/404|not found/i.test(msg)) {
-  //     log.warn(`Version not found: ${packageName} v:${versionId} - probably already deleted.`);
-  //     return;
-  //   }
-  //   if (/403|rate.?limit|insufficient permissions/i.test(msg)) {
-  //     log.warn(`Permission/rate issue for ${packageName} v:${versionId}: ${msg}`);
-  //     throw error;
-  //   }
-  //   log.error(`Failed to delete ${packageName} v:${versionId} - ${msg}`);
-  // }
 }
 
 /**
@@ -72,6 +51,10 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       log.dryrun(`Processing batch ${i / batchSize + 1} for ${normalizedPackageName}`);
 
       const promises = batch.map(async (version) => {
+
+        const detail = packageType === "maven" ? v.name : (tags.length ? tags.join(", ") : v.name);
+        log.dryrun(`${normalizedOwner}/${normalizedPackageName} (${packageType}) - would delete version ${v.id} (${detail})`);
+
         try {
           await deleteSinglePackageVersion({
             wrapper,
