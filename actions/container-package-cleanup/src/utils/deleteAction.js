@@ -39,7 +39,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     const packageType = pkg.type; // "container" | "maven" ...
 
     log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
-    log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) — ${versions.length} versions will NOT be deleted (dry-run mode)`);
+    log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
     for (let i = 0; i < versions.length; i += batchSize) {
 
       const batch = versions.slice(i, i + batchSize);
@@ -51,7 +51,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
         if (dryRun) {
           const tags = version.metadata?.container?.tags ?? [];
           const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
-          log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) — version ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
+          log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
           return { success: true, dryRun: true };
         }
 
