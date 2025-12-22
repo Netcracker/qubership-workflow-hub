@@ -30547,9 +30547,9 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     for (let i = 0; i < versions.length; i += batchSize) {
 
       const batch = versions.slice(i, i + batchSize);
-      const batchNumber = Math.floor(i / batchSize) + 1;
-      log.debug(`Processing batch ${batchNumber} for ${normalizedPackageName}`, _MODULE);
-      log.dryrun(`[DRY-RUN] ${normalizedPackageName}: batch ${batchNumber} — ${batch.length} versions will NOT be deleted (dry-run mode)`);
+      // const batchNumber = Math.floor(i / batchSize) + 1;
+      // log.debug(`Processing batch ${batchNumber} for ${normalizedPackageName}`, _MODULE);
+      // log.dryrun(`[DRY-RUN] ${normalizedPackageName}: batch ${batchNumber} — ${batch.length} versions will NOT be deleted (dry-run mode)`);
 
       const promises = batch.map(async (version) => {
         if (dryRun) {
