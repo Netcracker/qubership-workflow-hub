@@ -60234,7 +60234,6 @@ async function run() {
   log.debugJSON('💡 Filtered packages:', filteredPackages);
   log.endGroup();
 
-
   log.dim(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
   log.endGroup();
 
@@ -60254,6 +60253,7 @@ async function run() {
     })
   );
 
+  log.endGroup();
   log.notice(`Total packages to process: ${filteredPackages.length}, total versions found: ${totalPackagesVersions}`);
   log.endGroup();
 
