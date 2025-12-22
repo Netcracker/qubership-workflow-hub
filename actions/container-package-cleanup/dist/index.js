@@ -60225,7 +60225,7 @@ async function run() {
   log.info(`Is Organization? -> ${isOrganization}`);
 
   // strategy will start  here for different types of packages
-  log.info(`Package type: ${package_type}, owner: ${owner}, repo: ${repo}`);
+  log.info(`Run for type: ${package_type}, owner: ${owner}, repo: ${repo}`);
   log.info
 
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
