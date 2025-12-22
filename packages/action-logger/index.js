@@ -38,12 +38,12 @@ class Logger {
   setDebug(enabled) {
     this.debugMode = Boolean(enabled);
     const caller = this._getCallerInfo();
-    this.debug(`Debug mode ${this.debugMode ? "enabled" : "disabled"} (called from ${caller})`);
+    this.debug(`[DEBUG] mode ${this.debugMode ? "enabled" : "disabled"} (called from ${caller})`);
   }
 
   setDryRun(enabled) {
     this.dryRunMode = Boolean(enabled);
-    this.debug(`Dry-run mode ${this.dryRunMode ? "enabled" : "disabled"}`);
+    this.debug(`[DRY-RUN] mode ${this.dryRunMode ? "enabled" : "disabled"}`);
   }
 
   // --- Base color wrappers ---
@@ -94,14 +94,14 @@ class Logger {
 
   startDebugGroup(title) {
     if (!this.debugMode) return;
-    core.startGroup(`${COLORS.gray}[debug] ${title}${COLORS.reset}`);
+    core.startGroup(`${COLORS.gray}[DEBUG] ${title}${COLORS.reset}`);
   }
 
   // --- Debug section ---
   debug(message, caller = null) {
     if (!this.debugMode) return;
     const callerInfo = caller || this._getCallerInfo();
-    const formatted = `${COLORS.gray}[debug][${callerInfo}] ${message}${COLORS.reset}`;
+    const formatted = `${COLORS.gray}[DEBUG][${callerInfo}] ${message}${COLORS.reset}`;
     core.info(formatted);
     if (typeof core.debug === "function") core.debug(message); // for GitHub’s ACTIONS_STEP_DEBUG
   }
@@ -110,7 +110,7 @@ class Logger {
     if (!this.debugMode) return;
     const callerInfo = caller || this._getCallerInfo();
     const formatted = JSON.stringify(obj, null, 2);
-    const message = `${COLORS.gray}[debug][${callerInfo}] ${label}:\n${formatted}${COLORS.reset}`;
+    const message = `${COLORS.gray}[DEBUG][${callerInfo}] ${label}:\n${formatted}${COLORS.reset}`;
     core.info(message);
     if (typeof core.debug === "function") core.debug(`${label}: ${formatted}`);
   }
@@ -118,7 +118,7 @@ class Logger {
   dryrun(message, caller = null) {
     if (!this.dryRunMode) return;
     const callerInfo = caller || this._getCallerInfo();
-    const formatted = `${COLORS.gray}[dry-run][${callerInfo}] ${message}${COLORS.reset}`;
+    const formatted = `${COLORS.gray}[DRY-RUN][${callerInfo}] ${message}${COLORS.reset}`;
     core.info(formatted);
   }
 
