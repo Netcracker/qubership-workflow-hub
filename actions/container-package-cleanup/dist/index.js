@@ -60185,6 +60185,7 @@ async function run() {
 
   const package_type = core.getInput("package-type").toLowerCase();
 
+  dryRun && log.warn("Dry run mode enabled. No versions will be deleted.");
   log.info(`Is debug? -> ${isDebug}`);
   log.info(`Dry run? -> ${dryRun}`);
 
@@ -60293,7 +60294,6 @@ async function run() {
   };
 
   if (dryRun) {
-    log.warn("Dry run mode enabled. No versions will be deleted.");
     await showReport(reportContext, package_type);
     return;
   }
