@@ -20,7 +20,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   log.setDebug(debug);
   log.setDryRun(dryRun);
 
-  let resultStatus = [];
+  const resultStatus = [];
 
   if (!Array.isArray(filtered) || filtered.length === 0) {
     log.warn("Nothing to delete.");

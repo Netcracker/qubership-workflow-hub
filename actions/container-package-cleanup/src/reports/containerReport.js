@@ -64,7 +64,7 @@ class ContainerReport {
         // core.summary.addRaw(`\n\n✅ Cleanup operation completed successfully.`);
 
         let finalMessage = "✅ Cleanup operation completed successfully.";
-        if (deleteStatus && deleteStatus.some(r => r.success === false || r.status === 'error' || r.status === 'critical')) {
+        if (deleteStatus.some(r => r.success === false || r.status === 'error' || r.status === 'critical')) {
             finalMessage = "❗️Cleanup operation completed with errors. See details above.";
         }
         core.summary.addRaw(`\n\n${finalMessage}`);
