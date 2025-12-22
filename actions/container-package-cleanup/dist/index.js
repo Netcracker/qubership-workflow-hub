@@ -30886,7 +30886,7 @@ class Logger {
 
   // --- Base color wrappers ---
   info(message) {
-    core.info(`${message}${COLORS.reset}`);
+    core.info(`${COLORS.gray}${message}${COLORS.reset}`);
   }
 
   success(message) {
@@ -30914,7 +30914,7 @@ class Logger {
   }
 
   notice(message) {
-    core.notice(`${COLORS.gray}${message}${COLORS.reset}`);
+    core.notice(`${message}${COLORS.reset}`);
   }
 
   // --- Grouping ---
@@ -60236,7 +60236,7 @@ async function run() {
 
 
   log.dim(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
-  // log.info(`Found ${packages.length} packages of type '${package_type}' for owner '${owner}'`);
+  log.endGroup();
 
   if (packages.length === 0) {
     log.warn("No packages found.");
@@ -60255,6 +60255,7 @@ async function run() {
   );
 
   log.notice(`Total packages to process: ${filteredPackages.length}, total versions found: ${totalPackagesVersions}`);
+  log.endGroup();
 
 
   // core.info(JSON.stringify(packagesWithVersions, null, 2));

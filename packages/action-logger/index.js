@@ -48,7 +48,7 @@ class Logger {
 
   // --- Base color wrappers ---
   info(message) {
-    core.info(`${message}${COLORS.reset}`);
+    core.info(`${COLORS.gray}${message}${COLORS.reset}`);
   }
 
   success(message) {
@@ -76,7 +76,7 @@ class Logger {
   }
 
   notice(message) {
-    core.notice(`${COLORS.gray}${message}${COLORS.reset}`);
+    core.notice(`${message}${COLORS.reset}`);
   }
 
   // --- Grouping ---
