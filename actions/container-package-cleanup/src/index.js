@@ -74,7 +74,7 @@ async function run() {
   log.debugJSON('💡 Filtered packages:', filteredPackages);
   log.endGroup();
 
-  log.dim(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
+  log.notice(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
   log.endGroup();
 
   if (packages.length === 0) {
