@@ -42,18 +42,20 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     log.dryrun(`Would delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`);
 
     for (let i = 0; i < versions.length; i += batchSize) {
-      if (dryRun) {
-        log.dryrun(`Would delete ${normalizedPackageName} v:${version.id}`);
-        return { success: true, dryRun: true };
-      }
+
       const batch = versions.slice(i, i + batchSize);
       log.debug(`Processing batch ${i / batchSize + 1} for ${normalizedPackageName}`, _MODULE);
       log.dryrun(`Processing batch ${i / batchSize + 1} for ${normalizedPackageName}`);
 
       const promises = batch.map(async (version) => {
 
-        const detail = packageType === "maven" ? v.name : (tags.length ? tags.join(", ") : v.name);
-        log.dryrun(`${normalizedOwner}/${normalizedPackageName} (${packageType}) - would delete version ${v.id} (${detail})`);
+        if (dryRun) {
+          const tags = version.metadata?.container?.tags ?? [];
+          const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
+          log.dryrun(`Would delete ${normalizedOwner}/${normalizedPackageName} (${packageType}) - would delete version ${versions.id} (${detail})`);
+          log.dryrun(`Would delete ${normalizedPackageName} v:${version.id}`);
+          return { success: true, dryRun: true };
+        }
 
         try {
           await deleteSinglePackageVersion({
