@@ -30578,7 +30578,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
             return { success: false, skipped: true };
           }
           if (isCriticalError(error)) {
-            resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: true   });
+            resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: true });
             return { success: false, critical: true, error };
           }
           log.error(`Failed ${normalizedPackageName} v:${version.id} - ${error.message}`);
@@ -30604,8 +30604,8 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       // Finished all versions for this package
     }
     // Finished all packages
-    return resultStatus;
   }
+  return resultStatus;
 }
 
 function isCriticalError(error) {
