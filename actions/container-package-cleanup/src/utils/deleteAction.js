@@ -38,7 +38,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     const normalizedPackageName = (pkg.name || "").toLowerCase();
     const packageType = pkg.type; // "container" | "maven" ...
 
-    log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`);
+    log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
     log.dryrun(`Would delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`);
 
     for (let i = 0; i < versions.length; i += batchSize) {
@@ -47,7 +47,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
         return { success: true, dryRun: true };
       }
       const batch = versions.slice(i, i + batchSize);
-      log.debug(`Processing batch ${i / batchSize + 1} for ${normalizedPackageName}`);
+      log.debug(`Processing batch ${i / batchSize + 1} for ${normalizedPackageName}`, _MODULE);
       log.dryrun(`Processing batch ${i / batchSize + 1} for ${normalizedPackageName}`);
 
       const promises = batch.map(async (version) => {

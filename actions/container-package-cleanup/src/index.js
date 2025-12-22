@@ -136,10 +136,8 @@ async function run() {
     excludedTags
   };
 
-  if (dryRun) {
-    await showReport(reportContext, package_type);
-    return;
-  }
+
+  dryRun && await showReport(reportContext, package_type);
 
   try {
     if (filteredPackagesWithVersionsForDelete.length > 0) {
