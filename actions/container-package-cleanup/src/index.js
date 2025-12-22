@@ -25,7 +25,7 @@ async function run() {
 
   const package_type = core.getInput("package-type").toLowerCase();
 
-  dryRun && log.warn("Dry run mode enabled. No versions will be deleted.");
+  dryRun && log.warn("Dry run mode is enabled, no version will be deleted.");
   log.info(`Is debug? -> ${isDebug}`);
   log.info(`Dry run? -> ${dryRun}`);
 
@@ -66,6 +66,7 @@ async function run() {
 
   // strategy will start  here for different types of packages
   log.info(`Package type: ${package_type}, owner: ${owner}, repo: ${repo}`);
+  log.info
 
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
