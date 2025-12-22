@@ -55,6 +55,9 @@ outputs:
   chart-metadata:
     description: "Chart metadata"
     value: ${{ steps.metadata.outputs.metadata }}
+  released-chart-atrifact:
+    description: "ID of uploaded charts artifact"
+    value: ${{ steps.upload-charts.outputs.artifact-id }}
 runs:
   using: "composite"
   steps:
@@ -206,9 +209,17 @@ runs:
         charts_metadata="{\"charts\":[${charts_metadata}]}"
         echo "metadata=${charts_metadata}" >> $GITHUB_OUTPUT
         echo "metadata=${charts_metadata}" >> $GITHUB_STEP_SUMMARY
-    - name: Upload charts meta
+    - name: "Upload charts meta"
       if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4.6.2
       with:
         name: charts-meta.json
         path: "${{ inputs.working-directory }}/charts_meta/*.json"
+    - name: "Upload released charts"
+      id: upload-charts
+      if: ${{ inputs.package-charts == 'true' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4.6.2
+      with:
+        name: released-charts
+        path: "${{ github.workspace }}/.cr-release-packages/*.tgz"
+        include-hidden-files: true
