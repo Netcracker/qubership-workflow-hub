@@ -11,6 +11,8 @@ class ContainerReport {
             excludedTags
         } = context;
 
+        const { deleteStatus } = context;
+
         if (!filteredPackagesWithVersionsForDelete || filteredPackagesWithVersionsForDelete.length === 0) {
             core.info("❗️No packages or versions to delete.");
             return;
@@ -59,7 +61,13 @@ class ContainerReport {
 
         core.summary.addRaw(`---\n\n`);
         core.summary.addTable(tableData);
-        core.summary.addRaw(`\n\n✅ Cleanup operation completed successfully.`);
+        // core.summary.addRaw(`\n\n✅ Cleanup operation completed successfully.`);
+
+        let finalMessage = "✅ Cleanup operation completed successfully.";
+        if (deleteStatus && deleteStatus.some(r => r.success === false || r.status === 'error' || r.status === 'critical')) {
+            finalMessage = "❗️Cleanup operation completed with errors. See details above.";
+        }
+        core.summary.addRaw(`\n\n${finalMessage}`);
 
         await core.summary.write();
     }

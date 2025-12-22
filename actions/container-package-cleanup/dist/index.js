@@ -29957,6 +29957,8 @@ class ContainerReport {
             excludedTags
         } = context;
 
+        const { deleteStatus } = context;
+
         if (!filteredPackagesWithVersionsForDelete || filteredPackagesWithVersionsForDelete.length === 0) {
             core.info("❗️No packages or versions to delete.");
             return;
@@ -30005,7 +30007,13 @@ class ContainerReport {
 
         core.summary.addRaw(`---\n\n`);
         core.summary.addTable(tableData);
-        core.summary.addRaw(`\n\n✅ Cleanup operation completed successfully.`);
+        // core.summary.addRaw(`\n\n✅ Cleanup operation completed successfully.`);
+
+        let finalMessage = "✅ Cleanup operation completed successfully.";
+        if (deleteStatus && deleteStatus.some(r => r.success === false || r.status === 'error' || r.status === 'critical')) {
+            finalMessage = "❗️Cleanup operation completed with errors. See details above.";
+        }
+        core.summary.addRaw(`\n\n${finalMessage}`);
 
         await core.summary.write();
     }
@@ -30039,6 +30047,8 @@ class MavenReport {
             includedTags,
             excludedTags
         } = context;
+
+        const { deleteStatus } = context;
 
         if (!filteredPackagesWithVersionsForDelete || filteredPackagesWithVersionsForDelete.length === 0) {
             core.info("❗️No packages or versions to delete.");
@@ -30083,7 +30093,13 @@ class MavenReport {
 
         core.summary.addRaw(`---\n\n`);
         core.summary.addTable(tableData);
-        core.summary.addRaw(`\n\n✅ Cleanup operation completed successfully.`);
+        // core.summary.addRaw(`\n\n✅ Cleanup operation completed successfully.`);
+
+        let finalMessage = "✅ Cleanup operation completed successfully.";
+        if (deleteStatus && deleteStatus.some(r => r.success === false || r.status === 'error' || r.status === 'critical')) {
+            finalMessage = "❗️Cleanup operation completed with errors. See details above.";
+        }
+        core.summary.addRaw(`\n\n${finalMessage}`);
 
         await core.summary.write();
     }
@@ -60247,6 +60263,9 @@ async function run() {
 
   const thresholdDays = parseInt(core.getInput('threshold-days'), 10);
 
+  const batchSize = parseInt(core.getInput('batch-size'), 10) || 15;
+  const maxErrors = parseInt(core.getInput('max-errors'), 10) || 5;
+
   let excludedTags = [];
   let includedTags = [];
 
@@ -60354,7 +60373,7 @@ async function run() {
   try {
     if (filteredPackagesWithVersionsForDelete.length > 0) {
       deleteStatus = await deletePackageVersion(filteredPackagesWithVersionsForDelete,
-        { wrapper, owner, isOrganization, batchSize: 15, maxErrors: 5, dryRun, debug: isDebug });
+        { wrapper, owner, isOrganization, batchSize, maxErrors, dryRun, debug: isDebug });
     }
 
   } catch (error) {
@@ -60362,7 +60381,7 @@ async function run() {
   }
   log.endGroup();
 
-  await showReport(reportContext, package_type);
+  await showReport({ ...reportContext, deleteStatus }, package_type);
 
   deleteStatus.some(r => r.success === false) ?
     core.setFailed("❗️ Action completed with errors. Please check the logs and the report above.") :

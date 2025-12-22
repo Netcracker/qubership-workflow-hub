@@ -28,6 +28,12 @@ inputs:
   excluded-patterns:
     description: "A comma-separated list of patterns to exclude from deletion."
     default: ""
+  batch-size:
+    description: "Number of items to delete in each batch."
+    default: "15"
+  max-errors:
+    description: "Maximum number of delete processing errors allowed before stopping."
+    default: "5"
 runs:
   using: "node20"
   main: "dist/index.js"

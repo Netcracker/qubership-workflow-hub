@@ -27,6 +27,9 @@ async function run() {
 
   const thresholdDays = parseInt(core.getInput('threshold-days'), 10);
 
+  const batchSize = parseInt(core.getInput('batch-size'), 10) || 15;
+  const maxErrors = parseInt(core.getInput('max-errors'), 10) || 5;
+
   let excludedTags = [];
   let includedTags = [];
 
@@ -134,7 +137,7 @@ async function run() {
   try {
     if (filteredPackagesWithVersionsForDelete.length > 0) {
       deleteStatus = await deletePackageVersion(filteredPackagesWithVersionsForDelete,
-        { wrapper, owner, isOrganization, batchSize: 15, maxErrors: 5, dryRun, debug: isDebug });
+        { wrapper, owner, isOrganization, batchSize, maxErrors, dryRun, debug: isDebug });
     }
 
   } catch (error) {
@@ -142,7 +145,7 @@ async function run() {
   }
   log.endGroup();
 
-  await showReport(reportContext, package_type);
+  await showReport({ ...reportContext, deleteStatus }, package_type);
 
   deleteStatus.some(r => r.success === false) ?
     core.setFailed("❗️ Action completed with errors. Please check the logs and the report above.") :
