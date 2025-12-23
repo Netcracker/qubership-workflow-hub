@@ -7,19 +7,19 @@ It supports both Docker/container images and Maven JAR files.
 
 ## Inputs
 
-| Name               | Description                                                                 | Required | Default                     |
-| ------------------ | --------------------------------------------------------------------------- | -------- | --------------------------- |
-| `threshold-days`   | The number of days to keep package versions. Older versions will be deleted. | No       | `7`                         |
-| `threshold-versions` | The number of versions to keep. Applicable for maven artifacts only. | No | `1` |
-| `included-tags`    | A comma-separated list of tags/versions to include for deletion. Wildcards (`*`) are supported. | No       | `""` (all tags included, or `*SNAPSHOT*` for Maven) |
-| `excluded-tags`    | A comma-separated list of tags/versions to exclude from deletion. Wildcards (`*`) are supported.| No       | `""` (no tags excluded)      |
-| `included-patterns`| A comma-separated list of patterns to include for deletion. Wildcards (`*`) are supported. | No       | `""`                       |
-| `excluded-patterns`| A comma-separated list of patterns to exclude from deletion. Wildcards (`*`) are supported. | No       | `""`                       |
-| `package-type`     | Type of package to clean up: `container` or `maven`.                        | No       | `container`                  |
-| `dry-run`          | Enable dry-run mode to preview deletions without making changes.            | No       | `false`                     |
-| `debug`            | Enable debug mode for detailed logging.                                     | No       | `false`                     |
-| `batch-size`       | Number of versions to delete in parallel per package.                       | No       | `15`                        |
-| `max-errors`       | Maximum number of errors allowed before stopping the process.               | No       | `5`                         |
+| Name                 | Description                                                                 | Required | Default                                             |
+| -------------------- | --------------------------------------------------------------------------- | -------- | --------------------------------------------------- |
+| `threshold-days`     | The number of days to keep package versions. Older versions will be deleted. | No       | `7`                                                 |
+| `threshold-versions` | The number of versions to keep. Applicable for maven artifacts only.        | No       | `1`                                                 |
+| `included-tags`      | A comma-separated list of tags/versions to include for deletion. Wildcards (`*`) are supported. | No       | `""` (all tags included, or `*SNAPSHOT*` for Maven) |
+| `excluded-tags`      | A comma-separated list of tags/versions to exclude from deletion. Wildcards (`*`) are supported. | No       | `""` (no tags excluded)                             |
+| `included-patterns`  | A comma-separated list of patterns to include for deletion. Wildcards (`*`) are supported. | No       | `""`                                                |
+| `excluded-patterns`  | A comma-separated list of patterns to exclude from deletion. Wildcards (`*`) are supported. | No       | `""`                                                |
+| `package-type`       | Type of package to clean up: `container` or `maven`.                        | No       | `container`                                         |
+| `dry-run`            | Enable dry-run mode to preview deletions without making changes.            | No       | `false`                                             |
+| `debug`              | Enable debug mode for detailed logging.                                     | No       | `false`                                             |
+| `batch-size`         | Number of versions to delete in parallel per package.                       | No       | `15`                                                |
+| `max-errors`         | Maximum number of errors allowed before stopping the process.               | No       | `5`                                                 |
 
 ---
 
@@ -193,16 +193,17 @@ The action filters tags/versions in the following order of priority:
 
 Supported patterns for tags/versions:
 
-| Pattern       | Matches                          | Does Not Match       |
-|---------------|----------------------------------|----------------------|
-| `release*`    | `release`, `release-v1`          | `v1-release`         |
-| `*release`    | `v1-release`, `candidate-release`| `release-v1`         |
-| `*release*`   | `v1-release-candidate`, `release-v1` | `v1-candidate`   |
-| `release*v1`  | `release-v1`, `release-candidate-v1` | `release-v2`     |
-| `release*v?`  | `release-v1`, `release_v1`, `releasev1` | `release-v21` |
-| **Special wildcards** | | |
-| `?*` | alphanum string: `SHA2430957234628737465`, `SHANGRILLA2` | `1.2.3`, `SHANGRILLA-2` |
-| `semver` | SemVer: `1.2.3`, `v1.2.3`, `v1.2.3-1`, `1.2.3-megafix` | `alpha-1.2.3`, `dependabot-1.2.3-update` |
+| Pattern               | Matches                                                                 | Does Not Match                           |
+| --------------------- | ----------------------------------------------------------------------- | ---------------------------------------- |
+| `release*`            | `release`, `release-v1`                                                 | `v1-release`                             |
+| `*release`            | `v1-release`, `candidate-release`                                       | `release-v1`                             |
+| `*release*`           | `v1-release-candidate`, `release-v1`                                    | `v1-candidate`                           |
+| `release*v1`          | `release-v1`, `release-candidate-v1`                                    | `release-v2`                             |
+| `release*v?`          | `release-v1`, `release_v1`, `releasev1`                                 | `release-v21`                            |
+| **Special wildcards** |                                                                         |                                          |
+| `?*`                  | alphanum string: `SHA2430957234628737465`, `SHANGRILLA2`                | `1.2.3`, `SHANGRILLA-2`                  |
+| `semver`              | SemVer: `1.2.3`, `v1.2.3`, `v1.2.3-1`, `1.2.3-megafix`                  | `alpha-1.2.3`, `dependabot-1.2.3-update` |
+
 
 ---
 
@@ -222,7 +223,7 @@ Supported patterns for tags/versions:
 
 ### Example Log Output
 
-```
+```text
 Total packages to process: 7
 Total versions to delete: 14
 Preparing to delete 2 versions of org/example (container)
