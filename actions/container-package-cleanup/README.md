@@ -20,7 +20,6 @@ It supports both Docker/container images and Maven JAR files.
 | `debug`              | If `true`, prints extra debug logs.                                                          | No       | `false`                                   |
 | `batch-size`         | Number of versions deleted in parallel per package.                                          | No       | `15`                                      |
 | `max-errors`         | Stop after this many errors.                                                                 | No       | `5`                                       |
-                                   |
 
 ---
 
