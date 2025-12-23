@@ -32,6 +32,7 @@ class WildcardMatcher {
       return t === p;
     }
 
+    log.startGroup(`Wildcard match for tag "${t}" with pattern "${p}"`);
     // General case: build RegExp, escape special characters, then *→.* and ?→.
     log.debug(`Matching tag "${t}" against pattern "${p}"`, MODULE);
     // First replace * and ? with unique markers, then escape, then return them as .*
@@ -40,6 +41,7 @@ class WildcardMatcher {
       .replace(/__WILDCARD_STAR__/g, '.*')
       .replace(/__WILDCARD_QM__/g, '.');
     log.debug(`Transformed pattern: ${escaped}`, MODULE);
+    log.endGroup();
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
