@@ -203,7 +203,6 @@ Supported patterns for tags/versions:
 | `?*`                  | `SHA2430957`, `SHANGRILLA2`                  | `1.2.3`, `SHANGRILLA-2`            |
 | `semver`              | `1.2.3`, `v1.2.3`, `1.2.3-beta`              | `alpha-1.2.3`, `dependabot-1.2.3`  |
 
-
 ---
 
 ## Debug & Dry-Run Modes
