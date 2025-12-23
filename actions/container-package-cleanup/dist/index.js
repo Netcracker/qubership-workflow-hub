@@ -30525,10 +30525,10 @@ const _MODULE = 'deleteAction.js';
  *
  * @param {{ wrapper:any, owner:string, packageType:string, packageName:string, versionId:string|number, isOrganization?:boolean }} param0
  */
-async function deleteSinglePackageVersion({ wrapper, owner, packageType, packageName, versionId, isOrganization }) {
-  log.dim(`Deleting ${owner}/${packageName} (${packageType}) - version ${versionId}`);
+async function deleteSinglePackageVersion({ wrapper, owner, packageType, packageName, versionId, isOrganization, detail }) {
+  log.dim(`Deleting ${owner}/${packageName} (${packageType}) - id: ${versionId}, (${detail})`);
   await wrapper.deletePackageVersion(owner, packageType, packageName, versionId, isOrganization);
-  log.lightSuccess(`✓ Deleted ${owner}/${packageName} (${packageType}) - version ${versionId}`);
+  log.lightSuccess(`✓ Deleted ${owner}/${packageName} (${packageType}) - id: ${versionId}, (${detail})`);
 }
 
 /**
@@ -30575,10 +30575,11 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
 
     for (let i = 0; i < versions.length; i += batchSize) {
       const batch = versions.slice(i, i + batchSize);
+
       const promises = batch.map(async (version) => {
+        const tags = version.metadata?.container?.tags ?? [];
+        const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
         if (dryRun) {
-          const tags = version.metadata?.container?.tags ?? [];
-          const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
           log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
           return { success: true, dryRun: true };
         }
@@ -30590,7 +30591,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
             packageType,
             packageName: normalizedPackageName,
             versionId: version.id,
-            isOrganization, dryRun, debug
+            isOrganization, dryRun, debug, detail
           });
           return { success: true };
 
