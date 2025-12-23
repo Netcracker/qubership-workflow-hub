@@ -40,6 +40,9 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
 
   log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
 
+  const totalDeletedVersions = filtered.reduce((sum, item) => sum + item.versions.length, 0);
+  log.info(`Total packages to process: ${filtered.length}`);
+  log.info(`Total versions to delete: ${totalDeletedVersions}`);
 
   for (const { package: pkg, versions } of filtered) {
     const normalizedPackageName = (pkg.name || "").toLowerCase();
@@ -47,13 +50,9 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
 
     log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
     log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
+
     for (let i = 0; i < versions.length; i += batchSize) {
-
       const batch = versions.slice(i, i + batchSize);
-      // const batchNumber = Math.floor(i / batchSize) + 1;
-      // log.debug(`Processing batch ${batchNumber} for ${normalizedPackageName}`, _MODULE);
-      // log.dryrun(`[DRY-RUN] ${normalizedPackageName}: batch ${batchNumber} — ${batch.length} versions will NOT be deleted (dry-run mode)`);
-
       const promises = batch.map(async (version) => {
         if (dryRun) {
           const tags = version.metadata?.container?.tags ?? [];
