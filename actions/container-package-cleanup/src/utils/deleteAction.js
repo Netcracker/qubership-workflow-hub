@@ -20,6 +20,12 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   log.setDebug(debug);
   log.setDryRun(dryRun);
 
+  const totalDeletedVersions = filtered.reduce((sum, item) => sum + item.versions.length, 0);
+  log.info(`Total packages to process: ${filtered.length}`);
+  log.info(`Total versions to delete: ${totalDeletedVersions}`);
+
+  log.endGroup();
+
   log.startGroup("🚀 Starting package version deletion process");
 
   const resultStatus = [];
@@ -39,10 +45,6 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   let errorCount = 0;
 
   log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
-
-  const totalDeletedVersions = filtered.reduce((sum, item) => sum + item.versions.length, 0);
-  log.info(`Total packages to process: ${filtered.length}`);
-  log.info(`Total versions to delete: ${totalDeletedVersions}`);
 
   for (const { package: pkg, versions } of filtered) {
     const normalizedPackageName = (pkg.name || "").toLowerCase();
