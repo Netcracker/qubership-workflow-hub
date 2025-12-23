@@ -65,6 +65,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
         const packagePromises = packages.map(async (pkg) => {
             log.debug(`[${pkg.name}] Total versions: ${pkg.versions.length}`, MODULE);
 
+            log.startDebugGroup(`Call Matching Logic`);
             // Protected tags: latest + those that match excludedPatterns
             const protectedTags = new Set();
             for (const v of pkg.versions) {
@@ -75,6 +76,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                     }
                 }
             }
+            log.endGroup();
             if (protectedTags.size > 0) {
                 log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`, MODULE);
             }

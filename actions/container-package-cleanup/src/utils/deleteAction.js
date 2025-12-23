@@ -36,6 +36,10 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   const normalizedOwner = owner.toLowerCase();
   let errorCount = 0;
 
+  log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
+
+  log.notice(`Total packages to process: ${filtered.length}`);
+
   for (const { package: pkg, versions } of filtered) {
     const normalizedPackageName = (pkg.name || "").toLowerCase();
     const packageType = pkg.type; // "container" | "maven" ...
@@ -67,6 +71,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
             isOrganization, dryRun, debug
           });
           return { success: true };
+
         } catch (error) {
           if (isSkippableError(error)) {
             log.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error.message}`);

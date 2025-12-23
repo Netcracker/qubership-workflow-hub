@@ -30221,6 +30221,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
         const packagePromises = packages.map(async (pkg) => {
             log.debug(`[${pkg.name}] Total versions: ${pkg.versions.length}`, MODULE);
 
+            log.startDebugGroup(`Call Matching Logic`);
             // Protected tags: latest + those that match excludedPatterns
             const protectedTags = new Set();
             for (const v of pkg.versions) {
@@ -30231,6 +30232,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                     }
                 }
             }
+            log.endGroup();
             if (protectedTags.size > 0) {
                 log.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(', ')}`, MODULE);
             }
@@ -30556,6 +30558,10 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   const normalizedOwner = owner.toLowerCase();
   let errorCount = 0;
 
+  log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
+
+  log.notice(`Total packages to process: ${filtered.length}`);
+
   for (const { package: pkg, versions } of filtered) {
     const normalizedPackageName = (pkg.name || "").toLowerCase();
     const packageType = pkg.type; // "container" | "maven" ...
@@ -30587,6 +30593,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
             isOrganization, dryRun, debug
           });
           return { success: true };
+
         } catch (error) {
           if (isSkippableError(error)) {
             log.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error.message}`);
@@ -30684,7 +30691,6 @@ class WildcardMatcher {
       return t === p;
     }
 
-    log.startGroup(`🔍Wildcard match for tag "${t}" with pattern "${p}"`);
     // General case: build RegExp, escape special characters, then *→.* and ?→.
     log.debug(`Matching tag "${t}" against pattern "${p}"`, MODULE);
     // First replace * and ? with unique markers, then escape, then return them as .*
@@ -30693,7 +30699,6 @@ class WildcardMatcher {
       .replace(/__WILDCARD_STAR__/g, '.*')
       .replace(/__WILDCARD_QM__/g, '.');
     log.debug(`Transformed pattern: ${escaped}`, MODULE);
-    log.endGroup();
 
     const re = new RegExp(`^${escaped}$`, 'i');
     return re.test(t);
