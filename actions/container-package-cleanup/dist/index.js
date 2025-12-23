@@ -30107,7 +30107,6 @@ class MavenReport {
 
 module.exports = MavenReport;
 
-
 /***/ }),
 
 /***/ 7817:
@@ -30525,10 +30524,10 @@ const _MODULE = 'deleteAction.js';
  *
  * @param {{ wrapper:any, owner:string, packageType:string, packageName:string, versionId:string|number, isOrganization?:boolean }} param0
  */
-async function deleteSinglePackageVersion({ wrapper, owner, packageType, packageName, versionId, isOrganization }) {
-  log.dim(`Deleting ${owner}/${packageName} (${packageType}) - version ${versionId}`);
+async function deleteSinglePackageVersion({ wrapper, owner, packageType, packageName, versionId, isOrganization, detail }) {
+  log.dim(`Deleting ${owner}/${packageName} (${packageType}) - id: ${versionId}, (${detail})`);
   await wrapper.deletePackageVersion(owner, packageType, packageName, versionId, isOrganization);
-  log.lightSuccess(`✓ Deleted ${owner}/${packageName} (${packageType}) - version ${versionId}`);
+  log.lightSuccess(`✓ Deleted ${owner}/${packageName} (${packageType}) - id: ${versionId}, (${detail})`);
 }
 
 /**
@@ -30539,6 +30538,14 @@ async function deleteSinglePackageVersion({ wrapper, owner, packageType, package
 async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, batchSize = 15, maxErrors = 5, dryRun = false, debug = false } = {}) {
   log.setDebug(debug);
   log.setDryRun(dryRun);
+
+  const totalDeletedVersions = filtered.reduce((sum, item) => sum + item.versions.length, 0);
+  log.info(`Total packages to process: ${filtered.length}`);
+  log.info(`Total versions to delete: ${totalDeletedVersions}`);
+
+  log.endGroup();
+
+  log.startGroup("🚀 Starting package version deletion process");
 
   const resultStatus = [];
 
@@ -30556,23 +30563,22 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   const normalizedOwner = owner.toLowerCase();
   let errorCount = 0;
 
+  log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
+
   for (const { package: pkg, versions } of filtered) {
     const normalizedPackageName = (pkg.name || "").toLowerCase();
     const packageType = pkg.type; // "container" | "maven" ...
 
     log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
     log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
-    for (let i = 0; i < versions.length; i += batchSize) {
 
+    for (let i = 0; i < versions.length; i += batchSize) {
       const batch = versions.slice(i, i + batchSize);
-      // const batchNumber = Math.floor(i / batchSize) + 1;
-      // log.debug(`Processing batch ${batchNumber} for ${normalizedPackageName}`, _MODULE);
-      // log.dryrun(`[DRY-RUN] ${normalizedPackageName}: batch ${batchNumber} — ${batch.length} versions will NOT be deleted (dry-run mode)`);
 
       const promises = batch.map(async (version) => {
+        const tags = version.metadata?.container?.tags ?? [];
+        const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
         if (dryRun) {
-          const tags = version.metadata?.container?.tags ?? [];
-          const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
           log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
           return { success: true, dryRun: true };
         }
@@ -30584,9 +30590,10 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
             packageType,
             packageName: normalizedPackageName,
             versionId: version.id,
-            isOrganization, dryRun, debug
+            isOrganization, dryRun, debug, detail
           });
           return { success: true };
+
         } catch (error) {
           if (isSkippableError(error)) {
             log.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error.message}`);
@@ -30621,6 +30628,8 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     }
     // Finished all packages
   }
+
+  log.endGroup();
   return resultStatus;
 }
 
@@ -60358,7 +60367,6 @@ async function run() {
   log.endGroup();
 
 
-  log.startGroup("🚀 Starting package version deletion process");
   const reportContext = {
     filteredPackagesWithVersionsForDelete,
     thresholdDays,
@@ -60379,7 +60387,6 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message || String(error));
   }
-  log.endGroup();
 
   await showReport({ ...reportContext, deleteStatus }, package_type);
 
@@ -60395,7 +60402,6 @@ async function showReport(context, type = 'container') {
 }
 
 run();
-
 module.exports = __webpack_exports__;
 /******/ })()
 ;

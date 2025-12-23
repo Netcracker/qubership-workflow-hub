@@ -18,6 +18,8 @@ It supports both Docker/container images and Maven JAR files.
 | `package-type`     | Type of package to clean up: `container` or `maven`.                        | No       | `container`                  |
 | `dry-run`          | Enable dry-run mode to preview deletions without making changes.            | No       | `false`                     |
 | `debug`            | Enable debug mode for detailed logging.                                     | No       | `false`                     |
+| `batch-size`       | Number of versions to delete in parallel per package.                       | No       | `15`                        |
+| `max-errors`       | Maximum number of errors allowed before stopping the process.               | No       | `5`                         |
 
 ---
 
@@ -208,6 +210,25 @@ Supported patterns for tags/versions:
 
 - **Debug Mode:** Set `debug: true` to log detailed information about the filtering and deletion process.
 - **Dry-Run Mode:** Set `dry-run: true` to simulate deletions without actually removing any versions.
+
+---
+
+## Logging and Error Handling (v2025-12)
+
+- The action now features improved, more informative logging for each step of the deletion process, including package and version details, error types, and dry-run simulation output.
+- Error handling distinguishes between critical errors (rate limits, permission issues) and skippable errors (not found, too many downloads), stopping or skipping as appropriate.
+- All logs are output to GitHub Actions via `stdout`/`stderr` (e.g., `console.log`), so messages from asynchronous operations are also visible in the workflow log in real time.
+- The log will show both the number of unique packages and the total number of versions to be processed, clarifying the difference between these counts.
+
+### Example Log Output
+
+```
+Total packages to process: 7
+Total versions to delete: 14
+Preparing to delete 2 versions of org/example (container)
+✓ Deleted org/example (container) - version 123
+Skipped example v:456 - not found
+```
 
 ---
 
