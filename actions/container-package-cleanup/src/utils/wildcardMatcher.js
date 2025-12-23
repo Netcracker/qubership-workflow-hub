@@ -32,7 +32,7 @@ class WildcardMatcher {
       return t === p;
     }
 
-    log.startGroup(`Wildcard match for tag "${t}" with pattern "${p}"`);
+    log.startGroup(`🔍Wildcard match for tag "${t}" with pattern "${p}"`);
     // General case: build RegExp, escape special characters, then *→.* and ?→.
     log.debug(`Matching tag "${t}" against pattern "${p}"`, MODULE);
     // First replace * and ? with unique markers, then escape, then return them as .*
