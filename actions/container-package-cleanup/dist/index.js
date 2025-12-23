@@ -30540,6 +30540,8 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   log.setDebug(debug);
   log.setDryRun(dryRun);
 
+  log.startGroup("🚀 Starting package version deletion process");
+
   const resultStatus = [];
 
   if (!Array.isArray(filtered) || filtered.length === 0) {
@@ -30558,7 +30560,6 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
 
   log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
 
-  log.notice(`Total packages to process: ${filtered.length}`);
 
   for (const { package: pkg, versions } of filtered) {
     const normalizedPackageName = (pkg.name || "").toLowerCase();
@@ -30626,6 +30627,8 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     }
     // Finished all packages
   }
+
+  log.endGroup();
   return resultStatus;
 }
 
@@ -60363,7 +60366,6 @@ async function run() {
   log.endGroup();
 
 
-  log.startGroup("🚀 Starting package version deletion process");
   const reportContext = {
     filteredPackagesWithVersionsForDelete,
     thresholdDays,
@@ -60384,7 +60386,6 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message || String(error));
   }
-  log.endGroup();
 
   await showReport({ ...reportContext, deleteStatus }, package_type);
 

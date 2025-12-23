@@ -122,7 +122,6 @@ async function run() {
   log.endGroup();
 
 
-  log.startGroup("🚀 Starting package version deletion process");
   const reportContext = {
     filteredPackagesWithVersionsForDelete,
     thresholdDays,
@@ -143,7 +142,6 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message || String(error));
   }
-  log.endGroup();
 
   await showReport({ ...reportContext, deleteStatus }, package_type);
 
