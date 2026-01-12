@@ -146,7 +146,7 @@ jobs:
       - name: "Grype scan (Docker: High+Critical)"
         if: ${{ inputs.target == 'docker' }}
         id: grype-docker
-        uses: anchore/scan-action@3c9a191a0fbab285ca6b8530b5de5a642cba332f #v7.2.2
+        uses: anchore/scan-action@62b74fb7bb810d2c45b1865f47a77655621862a5 #v7.2.3
         with:
           image: ${{ needs.init.outputs.IMAGE }}
           output-file: ${{ needs.init.outputs.GRYPE_FILENAME }}
@@ -159,7 +159,7 @@ jobs:
       - name: "Grype scan (Source: High+Critical)"
         if: ${{ inputs.target == 'source' }}
         id: grype-source
-        uses: anchore/scan-action@3c9a191a0fbab285ca6b8530b5de5a642cba332f #v7.2.2
+        uses: anchore/scan-action@62b74fb7bb810d2c45b1865f47a77655621862a5 #v7.2.3
         with:
           path: .
           output-file: ${{ needs.init.outputs.GRYPE_FILENAME }}
