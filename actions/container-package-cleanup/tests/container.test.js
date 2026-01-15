@@ -303,7 +303,7 @@ describe('ContainerStrategy', () => {
       ];
 
       // latest uses sha256:layer1
-      mockWrapper.getManifestDigests.mockImplementation((owner, image, tag) => {
+      mockWrapper.getManifestDigests.mockImplementation((_owner, _image, tag) => {
         if (tag === 'latest') {
           return Promise.resolve(['sha256:layer1']);
         }
@@ -498,7 +498,7 @@ describe('ContainerStrategy', () => {
       ];
 
       // v1.0.0 uses both arch layers
-      mockWrapper.getManifestDigests.mockImplementation((owner, image, tag) => {
+      mockWrapper.getManifestDigests.mockImplementation((_owner, _image, tag) => {
         if (tag === 'v1.0.0') {
           return Promise.resolve(['sha256:amd64-layer', 'sha256:arm64-layer']);
         }
@@ -517,7 +517,7 @@ describe('ContainerStrategy', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].versions).toHaveLength(3);
-      
+
       // Check ordering: tagged version first, then its arch layers
       expect(result[0].versions[0].id).toBe(101); // v1.0.0
       expect(result[0].versions[1].id).toBe(102); // amd64-layer
@@ -621,7 +621,7 @@ describe('ContainerStrategy', () => {
       ];
 
       // latest uses sha256:protected-layer
-      mockWrapper.getManifestDigests.mockImplementation((owner, image, tag) => {
+      mockWrapper.getManifestDigests.mockImplementation((_owner, _image, tag) => {
         if (tag === 'latest') {
           return Promise.resolve(['sha256:protected-layer']);
         }
@@ -738,7 +738,7 @@ describe('ContainerStrategy', () => {
         }
       ];
 
-      mockWrapper.getManifestDigests.mockImplementation((owner, image, tag) => {
+      mockWrapper.getManifestDigests.mockImplementation((_owner, _image, tag) => {
         if (tag === 'latest') {
           return Promise.resolve(['sha256:protected-layer']);
         }
