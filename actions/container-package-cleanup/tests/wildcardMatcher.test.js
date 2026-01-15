@@ -31,10 +31,12 @@ describe('WildcardMatcher — tag exclusion logic', () => {
     { tag: 'release-2025.6.15-94e641fa9a1',  expected: true },
     { tag: 'v2.0.0',                        expected: true },
     { tag: 'v2.0.0-beta',                   expected: true },
+    // Tags matching *.*.*-* pattern (three dots + dash)
+    { tag: 'dependabot-pip-integration-tests-certifi-2025.6.15-94e641fa9a1', expected: true },
 
     // should not be excluded
-    { tag: 'dependabot-pip-integration-tests-certifi-2025.6.15',            expected: false },
-    { tag: 'dependabot-pip-integration-tests-certifi-2025.6.15-94e641fa9a1', expected: false },
+    // Tags matching *.*.*  but not *.*.*-* (three dots, no dash after last dot)
+    { tag: 'dependabot-pip-integration-tests-certifi-2025.6.15',            expected: true },
     { tag: '94e641fa9a1',                     expected: false },
     { tag: 'deb7cf5c8af',                     expected: false },
     { tag: 'sha256:abc123',                   expected: false },
