@@ -170,10 +170,11 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 digestMap.set(result.versionName, result.digests);
             }
 
-            // 4) Arch layers: from withoutExclude
+            // 4) Arch layers: from withoutExclude, but not used by protected versions
             const archLayers = withoutExclude.filter(v =>
                 v.metadata.container.tags.length === 0 &&
-                Array.from(digestMap.values()).some(digs => digs.has(v.name))
+                Array.from(digestMap.values()).some(digs => digs.has(v.name)) &&
+                !protectedDigests.has(v.name)
             );
             if (archLayers.length > 0) {
                 const preview = archLayers.map(v => v.name).join(', ');
