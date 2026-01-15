@@ -266,8 +266,7 @@ function exportVariable(name, val) {
  * @example
  * ```typescript
  * // Register an API token as a secret
- * const apiToken = "abc123xyz456";
- * setSecret(apiToken);
+  * setSecret(apiToken);
  *
  * // Now any logs containing this value will show *** instead
  * console.log(`Using token: ${apiToken}`); // Outputs: "Using token: ***"
@@ -31603,8 +31602,7 @@ function exportVariable(name, val) {
  * @example
  * ```typescript
  * // Register an API token as a secret
- * const apiToken = "abc123xyz456";
- * setSecret(apiToken);
+  * setSecret(apiToken);
  *
  * // Now any logs containing this value will show *** instead
  * console.log(`Using token: ${apiToken}`); // Outputs: "Using token: ***"
