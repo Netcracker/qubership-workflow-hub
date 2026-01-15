@@ -11,7 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^2.0.2",
     "@actions/github": "^7.0.0",
     "@netcracker/action-logger": "file:../../packages/action-logger",
     "ajv": "^8.17.1",

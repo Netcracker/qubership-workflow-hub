@@ -5,7 +5,6 @@
   "scripts": {
     "test": "jest",
     "build": "ncc build "
-
   },
   "keywords": [],
   "author": "Pavel Anikin",
@@ -19,7 +18,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "dependencies": {
-    "@actions/core": "^1.11.1"
+    "@actions/core": "^2.0.2"
   },
   "devDependencies": {
     "jest": "^30.2.0"
