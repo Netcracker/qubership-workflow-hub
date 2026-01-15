@@ -93,8 +93,9 @@ jobs:
 
       - name: Check that image exists in registry
         if: ${{ inputs.target == 'docker' }}
+        env:
+          IMAGE: ${{ steps.normalize-image.outputs.IMAGE }}
         run: |
-          IMAGE="${{ steps.normalize-image.outputs.IMAGE }}"
           echo "Checking image in registry: $IMAGE"
           if ! docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
             echo "❌ Image not found in registry: $IMAGE"
