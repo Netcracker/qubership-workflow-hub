@@ -1,4 +1,4 @@
-name: "Docker Build and Publish Composite Action"
+name: "Docker Build and Publish Composite Action using Buildx"
 description: "Composite action for building and publishing Docker images using Docker Buildx."
 inputs:
   ref:
