@@ -1,0 +1,6 @@
+rules:
+  github-env:
+    disable: true
+  template-injection:
+    disable: true
+    
