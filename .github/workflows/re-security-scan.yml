@@ -36,6 +36,11 @@ on:
         required: false
         default: true
         type: boolean
+      upload-sarif-to-security:
+        description: "Upload SARIF files to repository's Security"
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: read
@@ -226,6 +231,7 @@ jobs:
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Grype SARIF
+        if: inputs.upload-sarif-to-security
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: |
@@ -319,6 +325,7 @@ jobs:
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Trivy SARIF
+        if: inputs.upload-sarif-to-security
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: ${{ needs.init.outputs.TRIVY_FILENAME }}
