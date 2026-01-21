@@ -1,0 +1,72 @@
+name: Test charts-values-update-action
+
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - "actions/charts-values-update-action"
+
+jobs:
+  test:
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create test data
+        run: |
+          mkdir -p ./tests/charts/test-chart
+          mkdir -p ./tests/config
+          echo """
+          apiVersion: v2
+          name: test-chart
+          version: 1.0.0
+          appVersion: 1.0.0
+          type: application
+          """ > ./tests/charts/test-chart/Chart.yaml
+          echo """
+          service-1:
+            serviceName: service-1
+            image: docker.io/alpine:latest
+          service-2:
+            serviceName: service-2
+            image: docker.io/nginx:latest
+          service-3:
+            serviceName: service-3
+            image: docker.io/python:latest
+          service-4:
+            serviceName: service-4
+            image: ghcr.io/super-linter/super-linter:latest
+          """ >> ./tests/charts/test-chart/values.yaml
+          echo '''
+          charts:
+            - name: test-chart
+              chart_file: charts/test-chart/Chart.yaml
+              values_file: charts/test-chart/values.yaml
+              image:
+                - docker.io/alpine:#latest
+                - docker.io/nginx:${release}
+                - docker.io/python:#\d+\.\d+\.\d+
+                - ghcr.io/super-linter/super-linter:${super_linter_version}
+          ''' > ./tests/config/charts-config.yaml
+
+      - name: Run charts-values-update-action
+        uses: netcracker/qubership-workflow-hub/actions/charts-values-update-action@fix/charts-versions-update-action
+        with:
+          release-version: '1.29.4'
+          chart-version: '2.0.0'
+          config-file: './config/charts-config.yaml'
+          create-release-branch: 'false'
+          version-replace-method: 'parse'
+          working-directory: './tests'
+          publish-charts: 'true'
+        env:
+          super_linter_version: slim-v8.3.2
+      - name: Getting published chart
+        run: |
+          helm pull oci://ghcr.io/${{ github.repository }}/test-chart:2.0.0
+      - name: Upload chart as an artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-chart
+          path: test-chart-2.0.0.tgz
