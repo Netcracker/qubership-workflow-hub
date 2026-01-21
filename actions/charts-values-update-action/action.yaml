@@ -172,6 +172,7 @@ runs:
       env:
         config_file: ${{ inputs.config-file }}
       run: |
+        ### 📦 Packaging Helm Charts
         charts=$(grep "chart_file: " ${config_file} | sed "s#^\s*chart_file:\s*##" | xargs dirname)
         for chart in ${charts}; do
           echo "Packaging chart: ${chart}"
@@ -183,6 +184,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
+        ### 🚢 Publishing Helm Charts to oci://ghcr.io/${{ github.repository }}/
         echo '${{ github.token }}' | helm registry login -u '${{ github.actor }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
           helm push ${chart} oci://ghcr.io/${{ github.repository }}/
@@ -195,6 +197,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
+        ### 💽 Creating Charts metadata file
         charts_metadata=""
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
           chart_name=$(helm show chart ${chart} | grep "name: " | sed "s#^\s*name:\s*##" | tr -d '\r')
