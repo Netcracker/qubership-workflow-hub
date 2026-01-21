@@ -116,6 +116,7 @@ runs:
         else
           echo "REGISTRY=$REG" >> $GITHUB_ENV
         fi
+
     - name: Validate docker.io login params
       if: ${{ contains(env.REGISTRY, 'docker.io') && (! inputs.docker-io-login || ! inputs.docker-io-token) && (inputs.dry-run != 'true') }}
       shell: bash
