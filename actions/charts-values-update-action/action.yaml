@@ -67,7 +67,7 @@ runs:
       env:
         release_version: ${{ inputs.release-version }}
       run: |
-        ### 🔎 Checking if provided version "${release_version}" is a valid Docker tag
+        ### 🔎 Checking if provided version "${{ inputs.release-version }}" is a valid Docker tag
         tag="${release_version}"
         # Docker tag regex: must be alphanumeric, '.', '_', or '-', and up to 128 characters
         if [[ "$tag" =~ ^[a-zA-Z0-9._-]{1,128}$ ]]; then
