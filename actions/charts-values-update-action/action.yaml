@@ -185,7 +185,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         ### 🚢 Publishing Helm Charts to oci://ghcr.io/${{ github.repository }}/
-        echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
+        echo '${{ github.token }}' | helm registry login -u '${{ github.actor }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
           helm push ${chart} oci://ghcr.io/${{ github.repository }}/
         done
