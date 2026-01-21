@@ -192,7 +192,7 @@ runs:
         helm registry logout 'ghcr.io'
 
     - name: "Get chart metadata"
-      if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
+      if: ${{ inputs.publish-charts == 'true' }}
       id: metadata
       shell: bash
       working-directory: ${{ inputs.working-directory }}
@@ -213,7 +213,7 @@ runs:
         echo "metadata=${charts_metadata}" >> $GITHUB_OUTPUT
         echo "metadata=${charts_metadata}" >> $GITHUB_STEP_SUMMARY
     - name: "Upload charts meta"
-      if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
+      if: ${{ inputs.publish-charts == 'true' }}
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4.6.2
       with:
         name: charts-meta.json
