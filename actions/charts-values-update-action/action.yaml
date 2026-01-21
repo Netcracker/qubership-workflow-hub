@@ -105,7 +105,7 @@ runs:
         release_version: ${{ inputs.release-version }}
         ref_name: ${{ github.ref_name }}
       run: |
-        ### 🎋 Creating release branch release-${release_version}
+        ### 🎋 Creating release branch release-${{ inputs.release-version }}
         git config --global user.name "qubership-actions[bot]"
         git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
         git checkout -b release-${release_version}
