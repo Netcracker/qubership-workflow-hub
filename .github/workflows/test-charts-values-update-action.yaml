@@ -21,7 +21,6 @@ jobs:
     steps:
       - name: Create test data
         run: |
-          # shellcheck disable=SC2016
           mkdir -p ./tests/charts/test-chart
           mkdir -p ./tests/config
           echo """
@@ -45,6 +44,7 @@ jobs:
             serviceName: service-4
             image: ghcr.io/super-linter/super-linter:latest
           """ >> ./tests/charts/test-chart/values.yaml
+          # shellcheck disable=SC2016
           echo '''
           charts:
             - name: test-chart
@@ -63,6 +63,7 @@ jobs:
           ref: ${{ github.event.inputs.action-branch || github.event.ref }}
           path: qubership-workflow-hub
           repository: netcracker/qubership-workflow-hub
+          persist-credentials: false
 
       - name: Run charts-values-update-action
         uses: ./qubership-workflow-hub/actions/charts-values-update-action
