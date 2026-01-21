@@ -67,6 +67,7 @@ runs:
       env:
         release_version: ${{ inputs.release-version }}
       run: |
+        ### 🔎 Checking if provided version "${release_version}" is a valid Docker tag
         tag="${release_version}"
         # Docker tag regex: must be alphanumeric, '.', '_', or '-', and up to 128 characters
         if [[ "$tag" =~ ^[a-zA-Z0-9._-]{1,128}$ ]]; then
@@ -84,6 +85,7 @@ runs:
       env:
         config_file: ${{ inputs.config-file }}
       run: |
+        ### 🔎 Checking configuration files
         charts=$(grep "chart_file: " ${config_file} | sed "s#^\s*chart_file:\s*##")
         values=$(grep "values_file: " ${config_file} | sed "s#^\s*values_file:\s*##")
         for f in ${charts} ${values}; do
@@ -103,6 +105,7 @@ runs:
         release_version: ${{ inputs.release-version }}
         ref_name: ${{ github.ref_name }}
       run: |
+        ### 🎋 Creating release branch release-${release_version}
         git config --global user.name "qubership-actions[bot]"
         git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
         git checkout -b release-${release_version}
@@ -121,6 +124,7 @@ runs:
         config_file: ${{ inputs.config-file }}
         default_tag: ${{ inputs.default-tag }}
       run: |
+        ### 🔃 Updating chart and images versions
         if [ ! $(which skopeo) ]; then
           echo "skopeo not found, installing..."
           sudo apt-get update
