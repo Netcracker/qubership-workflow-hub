@@ -3,6 +3,9 @@ name: Test metadata-action
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   test-default-template:
     name: Test Default Template
@@ -102,6 +105,7 @@ jobs:
         id: metadata
         uses: ./actions/metadata-action
         with:
+          ref: "refs/heads/feature/test-branch"
           default-template: "custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}"
           default-tag: "custom-tag"
           short-sha: "10"
@@ -113,6 +117,7 @@ jobs:
         run: |
           echo "=== Outputs ==="
           RESULT="${{ steps.metadata.outputs.result }}"
+          REF="${{ steps.metadata.outputs.ref }}"
           REF_NAME="${{ steps.metadata.outputs.ref-name }}"
           DATE="${{ steps.metadata.outputs.date }}"
           TIME="${{ steps.metadata.outputs.time }}"
@@ -123,6 +128,7 @@ jobs:
           PATCH="${{ steps.metadata.outputs.patch }}"
 
           echo "result: $RESULT"
+          echo "ref: $REF"
           echo "ref-name: $REF_NAME"
           echo "date: $DATE"
           echo "time: $TIME"
@@ -131,6 +137,24 @@ jobs:
           echo "major: $MAJOR (empty for non-semver branches)"
           echo "minor: $MINOR (empty for non-semver branches)"
           echo "patch: $PATCH (empty for non-semver branches)"
+
+          # Verify ref is normalized (should be "feature/test-branch")
+          if [ "$REF" != "feature/test-branch" ]; then
+            echo "❌ ERROR: ref should be normalized to 'feature/test-branch', got: $REF"
+            exit 1
+          fi
+
+          # Verify ref-name has '/' replaced with '_' (should be "feature_test-branch")
+          if [ "$REF_NAME" != "feature_test-branch" ]; then
+            echo "❌ ERROR: ref-name should be 'feature_test-branch' (with '/' replaced by '_'), got: $REF_NAME"
+            exit 1
+          fi
+
+          # Verify ref-name doesn't contain '/' (should be replaced with '_')
+          if [[ "$REF_NAME" == *"/"* ]]; then
+            echo "❌ ERROR: ref-name should not contain '/', replace symbol should be applied"
+            exit 1
+          fi
 
           # Verify result matches custom template: custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}
           EXPECTED_RESULT="custom-${REF_NAME}-${DATE}-${TIME}-${SHORT_SHA}"
@@ -153,17 +177,12 @@ jobs:
             exit 1
           fi
 
-          # Verify ref-name doesn't contain '/' (should be replaced with '_')
-          if [[ "$REF_NAME" == *"/"* ]]; then
-            echo "❌ ERROR: ref-name should not contain '/', replace symbol should be applied"
-            exit 1
-          fi
-
-          # Verify semver parts are empty for non-semver branch "main"
+          # Verify semver parts are empty for non-semver branch
           if [ -n "$MAJOR" ] || [ -n "$MINOR" ] || [ -n "$PATCH" ]; then
             echo "⚠️  WARNING: semver parts should be empty for non-semver branch, got: major=$MAJOR, minor=$MINOR, patch=$PATCH"
           fi
 
+          echo "✅ Replace symbol correctly applied: '/' -> '_'"
           echo "✅ Custom template test passed!"
 
   test-github-context:
