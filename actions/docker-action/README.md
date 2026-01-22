@@ -199,6 +199,7 @@ with:
 ```
 
 **Component Fields**:
+
 | Field           | Description                              | Default          |
 | --------------- | ---------------------------------------- | ---------------- |
 | `name`          | Component name (used for image naming)   | `"default"`      |
@@ -207,6 +208,7 @@ with:
 | `arguments`     | Build arguments (comma-separated format) | `""`             |
 
 **Notes**:
+
 - Deprecated keys: `file` and `context` are still supported for compatibility, but prefer `dockerfile` and `build_context`.
 - `component.build_context` is the Docker build context. It is different from the top-level `context` input, which controls the metadata-action context (e.g., `git`).
 - Component build arguments take precedence over the `build-args` input.
@@ -216,12 +218,14 @@ with:
 Pass build-time variables to Docker. The action supports two formats:
 
 **1. Comma-separated format** (simple, one-line):
+
 ```yaml
 with:
   build-args: NODE_VERSION=18,BUILD_DATE=2024-01-01,COMMIT_SHA=${{ github.sha }}
 ```
 
 **2. Newline-delimited format** (multi-line):
+
 ```yaml
 with:
   build-args: |
