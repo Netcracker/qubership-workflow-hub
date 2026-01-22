@@ -104,10 +104,10 @@ jobs:
           poetry install
           poetry run pytest ${{ inputs.pytest_params }}
 
-      # zizmor: ignore[use-trusted-publishing]
       - name: Publish to PyPi
         run: |
           poetry config pypi-token.pypi $PYPI_TOKEN
+          # zizmor: ignore[use-trusted-publishing]
           poetry publish --no-interaction -p test
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
