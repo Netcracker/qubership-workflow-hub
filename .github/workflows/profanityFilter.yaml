@@ -17,7 +17,7 @@
 #     uses: Netcracker/qubership-github-workflows/.github/workflows/profanityFilter.yaml@main
 # ###################################################
 
-name: Profanity filter
+name: "[REUSABLE] Profanity filter"
 on: [workflow_call]
 
 # Required permissions

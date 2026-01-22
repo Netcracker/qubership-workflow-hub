@@ -1,4 +1,4 @@
-name: GitHub Release Drafter
+name: "[REUSABLE] GitHub Release Drafter"
 
 on:
   workflow_call:

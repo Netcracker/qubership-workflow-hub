@@ -1,6 +1,6 @@
 ---
 
-name: license-check
+name: "[REUSABLE] Go modules license check"
 on:
   workflow_call:
 

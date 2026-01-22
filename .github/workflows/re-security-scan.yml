@@ -1,4 +1,4 @@
-name: On-demand Security Scan (Grype + Trivy)
+name: "[REUSABLE] On-demand Security Scan (Grype + Trivy)"
 on:
   workflow_call:
     inputs:
