@@ -1,4 +1,4 @@
-name: Python build
+name: "[REUSABLE] Python build"
 
 on:
   workflow_call:
@@ -107,6 +107,7 @@ jobs:
       - name: Publish to PyPi
         run: |
           poetry config pypi-token.pypi $PYPI_TOKEN
+          # zizmor: ignore[use-trusted-publishing]
           poetry publish --no-interaction -p test
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
