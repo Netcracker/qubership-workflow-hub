@@ -1,0 +1,285 @@
+name: TEST metadata-action
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test-default-template:
+    name: Test Default Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run Metadata Action
+        id: metadata
+        uses: ./actions/metadata-action
+        with:
+          show-report: "true"
+
+      - name: Verify Outputs
+        shell: bash
+        run: |
+          echo "=== Outputs ==="
+          RESULT="${{ steps.metadata.outputs.result }}"
+          REF="${{ steps.metadata.outputs.ref }}"
+          REF_NAME="${{ steps.metadata.outputs.ref-name }}"
+          DATE="${{ steps.metadata.outputs.date }}"
+          TIME="${{ steps.metadata.outputs.time }}"
+          TIMESTAMP="${{ steps.metadata.outputs.timestamp }}"
+          DIST_TAG="${{ steps.metadata.outputs.dist-tag }}"
+          SHORT_SHA="${{ steps.metadata.outputs.short-sha }}"
+          RUN_NUMBER="${{ github.run_number }}"
+
+          echo "result: $RESULT"
+          echo "ref: $REF"
+          echo "ref-name: $REF_NAME"
+          echo "date: $DATE"
+          echo "time: $TIME"
+          echo "timestamp: $TIMESTAMP"
+          echo "dist-tag: $DIST_TAG"
+          echo "short-sha: $SHORT_SHA"
+
+          # Verify result matches default template: {{ref-name}}-{{timestamp}}-{{runNumber}}
+          EXPECTED_RESULT="${REF_NAME}-${TIMESTAMP}-${RUN_NUMBER}"
+          if [ "$RESULT" != "$EXPECTED_RESULT" ]; then
+            echo "❌ ERROR: result doesn't match default template"
+            echo "   Expected: $EXPECTED_RESULT"
+            echo "   Got: $RESULT"
+            exit 1
+          fi
+
+          # Verify ref is normalized (without "refs/" prefix)
+          if [[ "$REF" == refs/* ]]; then
+            echo "❌ ERROR: ref should be normalized (without 'refs/' prefix), got: $REF"
+            exit 1
+          fi
+
+          # Verify date format (YYYYMMDD)
+          if ! [[ "$DATE" =~ ^[0-9]{8}$ ]]; then
+            echo "❌ ERROR: date format is invalid, expected YYYYMMDD, got: $DATE"
+            exit 1
+          fi
+
+          # Verify time format (HHMMSS)
+          if ! [[ "$TIME" =~ ^[0-9]{6}$ ]]; then
+            echo "❌ ERROR: time format is invalid, expected HHMMSS, got: $TIME"
+            exit 1
+          fi
+
+          # Verify timestamp format (YYYYMMDDHHMMSS)
+          if ! [[ "$TIMESTAMP" =~ ^[0-9]{14}$ ]]; then
+            echo "❌ ERROR: timestamp format is invalid, expected YYYYMMDDHHMMSS, got: $TIMESTAMP"
+            exit 1
+          fi
+
+          # Verify short-sha length (default is 7)
+          if [ ${#SHORT_SHA} -ne 7 ]; then
+            echo "❌ ERROR: short-sha length should be 7, got: ${#SHORT_SHA}"
+            exit 1
+          fi
+
+          # Verify default dist-tag
+          if [ "$DIST_TAG" != "latest" ]; then
+            echo "❌ ERROR: default dist-tag should be 'latest', got: $DIST_TAG"
+            exit 1
+          fi
+
+          echo "✅ Default template test passed!"
+
+  test-custom-template:
+    name: Test Custom Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run Metadata Action
+        id: metadata
+        uses: ./actions/metadata-action
+        with:
+          ref: "refs/heads/feature/test-branch"
+          default-template: "custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}"
+          default-tag: "custom-tag"
+          short-sha: "10"
+          replace-symbol: "_"
+          show-report: "true"
+
+      - name: Verify Outputs
+        shell: bash
+        run: |
+          echo "=== Input Transformation ==="
+          INPUT_REF="refs/heads/feature/test-branch"
+          REPLACE_SYMBOL="_"
+          echo "1. Input ref: $INPUT_REF"
+          echo "2. After removing 'refs/heads/': feature/test-branch"
+          echo "3. After applying replace-symbol '$REPLACE_SYMBOL': feature_test-branch"
+
+          echo ""
+          echo "=== Outputs ==="
+          RESULT="${{ steps.metadata.outputs.result }}"
+          REF="${{ steps.metadata.outputs.ref }}"
+          REF_NAME="${{ steps.metadata.outputs.ref-name }}"
+          DATE="${{ steps.metadata.outputs.date }}"
+          TIME="${{ steps.metadata.outputs.time }}"
+          DIST_TAG="${{ steps.metadata.outputs.dist-tag }}"
+          SHORT_SHA="${{ steps.metadata.outputs.short-sha }}"
+          MAJOR="${{ steps.metadata.outputs.major }}"
+          MINOR="${{ steps.metadata.outputs.minor }}"
+          PATCH="${{ steps.metadata.outputs.patch }}"
+
+          echo "result: $RESULT"
+          echo "ref: $REF"
+          echo "ref-name: $REF_NAME"
+          echo "date: $DATE"
+          echo "time: $TIME"
+          echo "dist-tag: $DIST_TAG"
+          echo "short-sha: $SHORT_SHA"
+          echo "major: $MAJOR (empty for non-semver branches)"
+          echo "minor: $MINOR (empty for non-semver branches)"
+          echo "patch: $PATCH (empty for non-semver branches)"
+
+          # Verify both ref and ref-name have '/' replaced with '_' (should be "feature_test-branch")
+          if [ "$REF" != "feature_test-branch" ]; then
+            echo "❌ ERROR: ref should be 'feature_test-branch' (with '/' replaced by '_'), got: $REF"
+            exit 1
+          fi
+
+          if [ "$REF_NAME" != "feature_test-branch" ]; then
+            echo "❌ ERROR: ref-name should be 'feature_test-branch' (with '/' replaced by '_'), got: $REF_NAME"
+            exit 1
+          fi
+
+          # Verify ref and ref-name are the same
+          if [ "$REF" != "$REF_NAME" ]; then
+            echo "❌ ERROR: ref and ref-name should be identical"
+            echo "   ref: $REF"
+            echo "   ref-name: $REF_NAME"
+            exit 1
+          fi
+
+          # Verify ref-name doesn't contain '/' (should be replaced with '_')
+          if [[ "$REF_NAME" == *"/"* ]]; then
+            echo "❌ ERROR: ref-name should not contain '/', replace symbol should be applied"
+            exit 1
+          fi
+
+          # Verify result matches custom template: custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}
+          EXPECTED_RESULT="custom-${REF_NAME}-${DATE}-${TIME}-${SHORT_SHA}"
+          if [ "$RESULT" != "$EXPECTED_RESULT" ]; then
+            echo "❌ ERROR: result doesn't match custom template"
+            echo "   Expected: $EXPECTED_RESULT"
+            echo "   Got: $RESULT"
+            exit 1
+          fi
+
+          # Verify custom dist-tag
+          if [ "$DIST_TAG" != "custom-tag" ]; then
+            echo "❌ ERROR: dist-tag should be 'custom-tag', got: $DIST_TAG"
+            exit 1
+          fi
+
+          # Verify short-sha length (set to 10)
+          if [ ${#SHORT_SHA} -ne 10 ]; then
+            echo "❌ ERROR: short-sha length should be 10, got: ${#SHORT_SHA}"
+            exit 1
+          fi
+
+          # Verify semver parts are empty for non-semver branch
+          if [ -n "$MAJOR" ] || [ -n "$MINOR" ] || [ -n "$PATCH" ]; then
+            echo "⚠️  WARNING: semver parts should be empty for non-semver branch, got: major=$MAJOR, minor=$MINOR, patch=$PATCH"
+          fi
+
+          echo "✅ Replace symbol correctly applied: '/' -> '_'"
+          echo "✅ Custom template test passed!"
+
+  test-github-context:
+    name: Test GitHub Context Variables
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run Metadata Action with GitHub Context
+        id: metadata
+        uses: ./actions/metadata-action
+        with:
+          default-template: "build-{{github.context.workflow}}-{{github.context.sha}}-run{{github.context.runNumber}}"
+          default-tag: "context-tag"
+          show-report: "true"
+
+      - name: Display GitHub Context Values
+        shell: bash
+        run: |
+          echo "=== Available GitHub Context Values ==="
+          echo "workflow: ${{ github.workflow }}"
+          echo "actor: ${{ github.actor }}"
+          echo "event_name: ${{ github.event_name }}"
+          echo "repository: ${{ github.repository }}"
+          echo "ref: ${{ github.ref }}"
+          echo "sha: ${{ github.sha }}"
+          echo "run_number: ${{ github.run_number }}"
+          echo "run_id: ${{ github.run_id }}"
+          echo "job: ${{ github.job }}"
+
+      - name: Verify GitHub Context Outputs
+        shell: bash
+        run: |
+          echo "=== Action Output ==="
+          RESULT="${{ steps.metadata.outputs.result }}"
+          GITHUB_SHA="${{ github.sha }}"
+          SHORT_SHA="${{ steps.metadata.outputs.short-sha }}"
+
+          echo "result: $RESULT"
+          echo "github.sha: $GITHUB_SHA"
+          echo "short-sha output: $SHORT_SHA"
+
+          # Verify that placeholders were replaced (should NOT contain {{}})
+          if [[ "$RESULT" == *"{{"* ]] || [[ "$RESULT" == *"}}"* ]]; then
+            echo "❌ ERROR: result still contains template placeholders, GitHub context not processed"
+            echo "   Got: $RESULT"
+            exit 1
+          fi
+
+          # Verify result starts with "build-" prefix
+          if [[ ! "$RESULT" == build-* ]]; then
+            echo "❌ ERROR: result should start with 'build-'"
+            echo "   Got: $RESULT"
+            exit 1
+          fi
+
+          # Verify result contains the full SHA from GitHub context
+          if [[ ! "$RESULT" == *"$GITHUB_SHA"* ]]; then
+            echo "❌ ERROR: result should contain full GitHub SHA from context"
+            echo "   Expected SHA: $GITHUB_SHA"
+            echo "   Got: $RESULT"
+            exit 1
+          fi
+
+          # Verify short-sha is the first 7 characters of the full SHA
+          EXPECTED_SHORT_SHA="${GITHUB_SHA:0:7}"
+          if [ "$SHORT_SHA" != "$EXPECTED_SHORT_SHA" ]; then
+            echo "❌ ERROR: short-sha should be first 7 chars of full SHA"
+            echo "   Expected: $EXPECTED_SHORT_SHA"
+            echo "   Got: $SHORT_SHA"
+            exit 1
+          fi
+
+          # Verify result format: build-{workflow}-{sha}-run{number}
+          if [[ ! "$RESULT" =~ -run[0-9]+$ ]]; then
+            echo "❌ ERROR: result should end with '-run{number}'"
+            echo "   Got: $RESULT"
+            exit 1
+          fi
+
+          echo "✅ GitHub context SHA successfully interpolated into template"
+          echo "✅ GitHub context test passed!"
