@@ -257,4 +257,3 @@ If using Docker Hub (`docker.io`), ensure you have:
 ### Permission Errors
 
 Ensure your workflow has the required permissions, especially `packages: write` for registry operations.
-
