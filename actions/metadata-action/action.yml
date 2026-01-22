@@ -1,5 +1,5 @@
 name: "Metadata Action"
-description: ""
+description: "Generate metadata strings based on Git refs, timestamps, SHA, and configurable templates for CI/CD workflows"
 inputs:
     ref:
         description: "Git ref (branch or tag)."
