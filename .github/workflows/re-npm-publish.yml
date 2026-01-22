@@ -1,4 +1,4 @@
-name: Reusable NPM Publish
+name: "[REUSABLE] NPM Publish"
 
 on:
   workflow_call:
