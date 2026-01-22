@@ -77,10 +77,10 @@ jobs:
       shell: bash
       run: |
         # shellcheck disable=2086
-        if [ -f "${GITHUB_WORKSPACE}/.github/super-linter.env" ]; then
+        if [ -f "${GITHUB_WORKSPACE}/.qubership/super-linter.env" ]; then
           echo "Applying local linter environment:"
-          grep "\S" ${GITHUB_WORKSPACE}/.github/super-linter.env | grep -v "^#"
-          grep "\S" ${GITHUB_WORKSPACE}/.github/super-linter.env | grep -v "^#" >> $GITHUB_ENV
+          grep "\S" ${GITHUB_WORKSPACE}/.qubership/super-linter.env | grep -v "^#"
+          grep "\S" ${GITHUB_WORKSPACE}/.qubership/super-linter.env | grep -v "^#" >> $GITHUB_ENV
         elif [ -f "/tmp/linter-config/linters/super-linter.env" ]; then
           echo "::warning:: Local linter environment file .github/super-linter.env is not found"
           echo "Applying common linter environment:"
