@@ -1,0 +1,58 @@
+---
+
+name: "[REUSABLE] Go modules license check"
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check-license:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+        with:
+          persist-credentials: false
+
+      - name: Find go.mod files
+        id: find
+        run: |
+          GO_MOD_FILE=$(find . -name go.mod | head -n 1)
+          if [ -f ${GO_MOD_FILE} ]; then
+            echo "GO_MOD_FILE=${GO_MOD_FILE}" >> $GITHUB_ENV
+            echo "GO_MOD_DIR=$(dirname ${GO_MOD_FILE})" >> $GITHUB_ENV
+            MODULE=$(cat ${GO_MOD_FILE} | grep -e "^module " | awk '{print $2}')
+            echo "MODULE=${MODULE}" >> $GITHUB_ENV
+          else
+            echo "No go.mod file found"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          #go-version: stable
+          cache: true
+          cache-dependency-path: "**/*.sum"
+          go-version-file: "${{ env.GO_MOD_FILE }}"
+
+      - name: Get GO modules
+        continue-on-error: true
+        run: |
+          go get ${MODULE}/... || true
+          go mod vendor -e | grep "go get" | bash
+          go mod vendor -e | grep "go get" | bash
+          go mod vendor -e | grep "go get" | bash
+        working-directory: "${{ github.workspace }}/${{ env.GO_MOD_DIR }}"
+
+      - name: Check License
+        continue-on-error: true
+        run: |
+          which wwhrd || go install github.com/frapposelli/wwhrd@latest
+          wwhrd check -f ${{ github.workspace }}/.wwhrd.yml
+        working-directory: "${{ github.workspace }}/${{ env.GO_MOD_DIR }}"
