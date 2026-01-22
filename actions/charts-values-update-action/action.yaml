@@ -67,6 +67,7 @@ runs:
       env:
         release_version: ${{ inputs.release-version }}
       run: |
+        ### 🔎 Checking if provided version "${{ inputs.release-version }}" is a valid Docker tag
         tag="${release_version}"
         # Docker tag regex: must be alphanumeric, '.', '_', or '-', and up to 128 characters
         if [[ "$tag" =~ ^[a-zA-Z0-9._-]{1,128}$ ]]; then
@@ -84,6 +85,7 @@ runs:
       env:
         config_file: ${{ inputs.config-file }}
       run: |
+        ### 🔎 Checking configuration files
         charts=$(grep "chart_file: " ${config_file} | sed "s#^\s*chart_file:\s*##")
         values=$(grep "values_file: " ${config_file} | sed "s#^\s*values_file:\s*##")
         for f in ${charts} ${values}; do
@@ -103,6 +105,7 @@ runs:
         release_version: ${{ inputs.release-version }}
         ref_name: ${{ github.ref_name }}
       run: |
+        ### 🎋 Creating release branch release-${{ inputs.release-version }}
         git config --global user.name "qubership-actions[bot]"
         git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
         git checkout -b release-${release_version}
@@ -121,6 +124,7 @@ runs:
         config_file: ${{ inputs.config-file }}
         default_tag: ${{ inputs.default-tag }}
       run: |
+        ### 🔃 Updating chart and images versions
         if [ ! $(which skopeo) ]; then
           echo "skopeo not found, installing..."
           sudo apt-get update
@@ -166,12 +170,13 @@ runs:
       uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
 
     - name: "Package helm charts"
-      if: ${{ inputs.package-charts == 'true' }}
+      if: ${{ inputs.package-charts == 'true' || inputs.publish-charts == 'true' }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:
         config_file: ${{ inputs.config-file }}
       run: |
+        ### 📦 Packaging Helm Charts
         charts=$(grep "chart_file: " ${config_file} | sed "s#^\s*chart_file:\s*##" | xargs dirname)
         for chart in ${charts}; do
           echo "Packaging chart: ${chart}"
@@ -179,28 +184,30 @@ runs:
         done
 
     - name: "Publish helm charts"
-      if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
+      if: ${{ inputs.publish-charts == 'true' }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        echo '${{ github.token }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin 'ghcr.io'
+        ### 🚢 Publishing Helm Charts to oci://ghcr.io/${GITHUB_REPOSITORY,,}/
+        echo '${{ github.token }}' | helm registry login -u '${{ github.actor }}' --password-stdin 'ghcr.io'
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
-          helm push ${chart} oci://ghcr.io/${{ github.repository }}/
+          helm push ${chart} oci://ghcr.io/${GITHUB_REPOSITORY,,}/
         done
         helm registry logout 'ghcr.io'
 
     - name: "Get chart metadata"
-      if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
+      if: ${{ inputs.publish-charts == 'true' }}
       id: metadata
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
+        ### 💽 Creating Charts metadata file
         charts_metadata=""
         for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
           chart_name=$(helm show chart ${chart} | grep "name: " | sed "s#^\s*name:\s*##" | tr -d '\r')
           chart_version=$(helm show chart ${chart} | grep "version: " | sed "s#^\s*version:\s*##" | tr -d '\r')
           chart_app_version=$(helm show chart ${chart} | grep "appVersion: " | sed "s#^\s*appVersion:\s*##" | tr -d '\r')
-          chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"reference\":\"oci://ghcr.io/${{ github.repository }}/${chart_name}:${chart_version}\"}"
+          chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"reference\":\"oci://ghcr.io/${GITHUB_REPOSITORY,,}/${chart_name}:${chart_version}\"}"
           mkdir -p ./charts_meta
           echo ${chart_meta} > ./charts_meta/${chart_name}-${chart_version}.json
           charts_metadata="${charts_metadata}${chart_meta},"
@@ -210,7 +217,7 @@ runs:
         echo "metadata=${charts_metadata}" >> $GITHUB_OUTPUT
         echo "metadata=${charts_metadata}" >> $GITHUB_STEP_SUMMARY
     - name: "Upload charts meta"
-      if: ${{ inputs.package-charts == 'true' && inputs.publish-charts == 'true' }}
+      if: ${{ inputs.publish-charts == 'true' }}
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4.6.2
       with:
         name: charts-meta.json

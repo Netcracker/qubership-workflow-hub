@@ -121,6 +121,7 @@ def set_image_versions(config_file, tag, chart_version,  method, default_tag):
         # If method is 'replace', replace the image version with the tag version as is
         image_ver = tag # Image version for method 'replace'
         for image in chart['image']:
+            print(f"Processing image: {image}")
             search_str = image.split(':')[0] # Full image name, e.g. ghcr.io/myorg/myimage
             # If ${owner} in image name, replace it with GITHUB_REPOSITORY_OWNER variable
             # for substitution, but for search replace it with "netcracker"
