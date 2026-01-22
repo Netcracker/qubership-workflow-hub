@@ -24,7 +24,7 @@ inputs:
   component:
     description: "Component configuration in JSON format (an array with a single object)."
     required: false
-    default: '[{"name": "default", "file": "./Dockerfile", "context": "."}]'
+    default: '[{"name": "default", "dockerfile": "./Dockerfile", "build_context": "."}]'
   platforms:
     description: "Platforms for which the Docker image will be built."
     required: false
@@ -58,17 +58,13 @@ inputs:
     required: false
     default: "false"
   build-args:
-    description: "Build arguments for the Docker image, in JSON format."
+    description: "Build arguments for the Docker image. Supports comma-separated or newline-delimited format."
     required: false
     default: ""
   checkout:
     description: "Flag to enable repository checkout."
     required: false
     default: "true"
-  debug:
-    description: "Flag to enable debug mode."
-    required: false
-    default: "false"
   registry:
     description: "Registry name docker.io or ghcr.io or both"
     required: false
@@ -96,12 +92,36 @@ outputs:
   image-name:
     description: "The name of the built Docker image."
     value: "${{ steps.output_result.outputs.image_name }}"
-  metadata-json:
+  metadata_path:
     description: "Path to the generated metadata file."
     value: "${{ steps.output_result.outputs.metadata_path }}"
   metadata-filename:
     description: "Name of the generated metadata file."
     value: "${{ steps.output_result.outputs.metadata_filename }}"
+  component-name:
+    description: "The name of the component being built."
+    value: "${{ steps.extract_component.outputs.name }}"
+  component-file:
+    description: "The Dockerfile used for the build."
+    value: "${{ steps.extract_component.outputs.file }}"
+  component-context:
+    description: "The build context used for the build."
+    value: "${{ steps.extract_component.outputs.ctx }}"
+  component-build-args:
+    description: "The build arguments used for the build."
+    value: "${{ steps.extract_component.outputs.build_args }}"
+  final-tags:
+    description: "The final tags applied to the Docker image."
+    value: "${{ steps.prepare-final-params.outputs.tags }}"
+  final-labels:
+    description: "The final labels applied to the Docker image."
+    value: "${{ steps.prepare-final-params.outputs.labels }}"
+  final-build-args:
+    description: "The final build arguments applied to the Docker image."
+    value: "${{ steps.prepare-final-params.outputs.build_args }}"
+  final-platforms:
+    description: "The final platforms for which the Docker image was built."
+    value: "${{ steps.prepare-final-params.outputs.platforms }}"
 
 runs:
   using: "composite"
@@ -116,6 +136,7 @@ runs:
         else
           echo "REGISTRY=$REG" >> $GITHUB_ENV
         fi
+
     - name: Validate docker.io login params
       if: ${{ contains(env.REGISTRY, 'docker.io') && (! inputs.docker-io-login || ! inputs.docker-io-token) && (inputs.dry-run != 'true') }}
       shell: bash
@@ -124,39 +145,51 @@ runs:
         exit 1
 
     - name: Parse Component JSON
-      id: parse_component
+      id: extract_component
       shell: bash
       env:
         COMPONENT: ${{ inputs.component }}
       run: |
         # Parse the input JSON object directly
-        component="$COMPONENT"
-        component_parsed=$(echo "$component" | jq 'if type=="array" then .[0] else . end')
-        comp_name=$(echo "$component_parsed" | jq -r '.name')
-        comp_file=$(echo "$component_parsed" | jq -r '.file')
-        comp_ctx=$(echo "$component_parsed" | jq -r '.context')
-        comp_build_args=$(echo "$component_parsed" | jq -r '.arguments // empty')
-        echo "name=$comp_name" >> "$GITHUB_OUTPUT"
-        echo "file=$comp_file" >> "$GITHUB_OUTPUT"
-        echo "ctx=$comp_ctx" >> "$GITHUB_OUTPUT"
-        echo "build_args=$comp_build_args" >> "$GITHUB_OUTPUT"
+        component_from_json=$(echo "$COMPONENT" | jq 'if type=="array" then .[0] else . end')
+
+        component_name=$(echo "$component_from_json" | jq -r '.name // "default"')
+        component_file=$(echo "$component_from_json" | jq -r '.dockerfile // .file // "./Dockerfile"')
+        component_context=$(echo "$component_from_json" | jq -r '.build_context // .context // "."')
+        component_build_args=$(echo "$component_from_json" | jq -r '.arguments // empty')
+
+        # Convert comma-separated build args to newline-separated
+        if [ -n "$component_build_args" ] && [[ "$component_build_args" == *","* ]]; then
+          component_build_args=$(echo "$component_build_args" | tr ',' '\n')
+        fi
+
+        {
+          echo "name=$component_name"
+          echo "file=$component_file"
+          echo "ctx=$component_context"
+          echo "build_args=$component_build_args"
+        } >> "$GITHUB_OUTPUT"
 
     - name: Prepare Image Name
       shell: bash
       env:
         CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
-        COMPONENT_NAME: ${{ steps.parse_component.outputs.name }}
+        COMPONENT_NAME: ${{ steps.extract_component.outputs.name }}
         DOCKER_IO_LOGIN: ${{ inputs.docker-io-login }}
       run: |
         IFS='/' read -r owner repo <<< "$GITHUB_REPOSITORY"
-        if [ -n "$CUSTOM_IMAGE_NAME" ]; then
-            CONTAINER_NAME="$CUSTOM_IMAGE_NAME"
-        elif [ -n "$COMPONENT_NAME" ] && [ "$COMPONENT_NAME" != "default" ]; then
+
+        CONTAINER_NAME="$repo"
+
+        if [ -n "$COMPONENT_NAME" ] && [ "$COMPONENT_NAME" != "default" ]; then
           CONTAINER_NAME="$COMPONENT_NAME"
-        else
-          CONTAINER_NAME="$repo"
         fi
+        if [ -n "$CUSTOM_IMAGE_NAME" ]; then
+          CONTAINER_NAME="$CUSTOM_IMAGE_NAME"
+        fi
+
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_OUTPUT"
+
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
         echo "GHCR_OWNER=$(echo "$owner" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
         echo "DOCKER_OWNER=$DOCKER_IO_LOGIN" >> "$GITHUB_ENV"
@@ -193,6 +226,7 @@ runs:
       run: |
         echo "custom-image-name: ${CUSTOM_IMAGE_NAME:-empty}"
         echo "env CONTAINER_NAME: ${{ env.CONTAINER_NAME }}"
+
         if [ -n "${DOCKER_OWNER}" ]; then
           echo "env DOCKER_OWNER: ${DOCKER_OWNER}"
         fi
@@ -210,7 +244,7 @@ runs:
         fi
 
         echo "::group::🐋 MANAGEMENT Dockerfile (alpine)"
-        cat ${{ steps.parse_component.outputs.file }}
+        cat ${{ steps.extract_component.outputs.file }}
         echo "::endgroup::"
 
     - name: Download Artifact
@@ -220,18 +254,6 @@ runs:
         name: ${{ inputs.download-artifact-name }}
         path: ${{ inputs.download-artifact-path != '' && inputs.download-artifact-path || '.' }}
         merge-multiple: ${{ inputs.download-artifact-merge-multiple == 'true' }}
-
-    - name: Debug ls
-      if: ${{ inputs.debug == 'true' }}
-      shell: bash
-      env:
-        DL_PATH: ${{ inputs.download-artifact-path }}
-        CONTEXT_DIR: ${{ steps.parse_component.outputs.ctx }}
-      run: |
-        echo "🔍 Current directory:"
-        pwd
-        echo "📂 Full workspace tree:"
-        ls -R -la ${{ github.workspace }}
 
     - name: Set up QEMU
       if: ${{ inputs.setup-qemu == 'true' && inputs.skip-qemu-buildx != 'true' }}
@@ -257,7 +279,6 @@ runs:
         password: ${{ inputs.docker-io-token }}
 
     - name: Extract Docker Metadata
-      if: ${{ inputs.tags == '' }}
       id: meta
       uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
       with:
@@ -271,36 +292,82 @@ runs:
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
 
-    - name: Create Image Refs (docker ghcr.io/owner/name:tag)
-      if: ${{ inputs.tags != '' }}
-      id: create-image-refs
+    - name: Prepare Final Build Parameters
+      id: prepare-final-params
       shell: bash
       env:
         TAGS_INPUT: ${{ inputs.tags }}
+        META_TAGS: ${{ steps.meta.outputs.tags }}
+        META_LABELS: ${{ steps.meta.outputs.labels }}
+        BUILD_ARGS_INPUT: ${{ inputs.build-args }}
+        BUILD_ARGS_META: ${{ steps.extract_component.outputs.build_args }}
+        PLATFORMS_INPUT: ${{ inputs.platforms }}
+        GHCR_URL: ${{ env.GHCR_URL }}
+        DOCKER_URL: ${{ env.DOCKER_URL }}
       run: |
-        echo "Create Image Refs (docker ghcr.io/owner/name:tag)"
-        TAGS_INPUT="${{ inputs.tags }}"
+        set -euo pipefail
 
-        IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
+        # Prepare tags
+        if [ -z "$TAGS_INPUT" ]; then
+          echo "Using auto-generated tags from metadata-action"
+          FINAL_TAGS="$META_TAGS"
+        else
+          echo "Using custom tags from inputs"
+          IFS=',' read -ra TAGS <<< "$TAGS_INPUT"
 
-        IMAGE_REFS=""
-        if [ -n "${GHCR_URL}" ]; then
-          for TAG in "${TAGS[@]}"; do
-            TAG=$(echo "$TAG" | xargs)
-            IMAGE_REFS="$IMAGE_REFS,$GHCR_URL:$TAG"
-          done
+          FINAL_TAGS=""
+          if [ -n "${GHCR_URL:-}" ]; then
+            for TAG in "${TAGS[@]}"; do
+              TAG=$(echo "$TAG" | xargs)
+              FINAL_TAGS="$FINAL_TAGS,$GHCR_URL:$TAG"
+            done
+          fi
+          if [ -n "${DOCKER_URL:-}" ]; then
+            for TAG in "${TAGS[@]}"; do
+              TAG=$(echo "$TAG" | xargs)
+              FINAL_TAGS="$FINAL_TAGS,$DOCKER_URL:$TAG"
+            done
+          fi
+          FINAL_TAGS="${FINAL_TAGS#,}"
+          FINAL_TAGS=$(echo "$FINAL_TAGS" | tr '[:upper:]' '[:lower:]')
         fi
-        if [ -n "${DOCKER_URL}" ]; then
-          for TAG in "${TAGS[@]}"; do
-            TAG=$(echo "$TAG" | xargs)
-            IMAGE_REFS="$IMAGE_REFS,$DOCKER_URL:$TAG"
-          done
-        fi
-        IMAGE_REFS="${IMAGE_REFS#,}"
-        IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')
 
-        echo "Image refs: $IMAGE_REFS"
-        echo "IMAGE_REFS=$(echo "$IMAGE_REFS" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+        # Prepare build-args
+        FINAL_BUILD_ARGS="${BUILD_ARGS_META:-$BUILD_ARGS_INPUT}"
+
+        # Convert comma-separated build args to newline-separated
+        if [[ "$FINAL_BUILD_ARGS" == *","* ]] && [[ "$FINAL_BUILD_ARGS" != *$'\n'* ]]; then
+          echo "Converting comma-separated build-args to newline-separated"
+          FINAL_BUILD_ARGS=$(echo "$FINAL_BUILD_ARGS" | tr ',' '\n')
+        fi
+
+        echo "Using build-args: ${BUILD_ARGS_META:+from component metadata}${BUILD_ARGS_META:-from inputs}"
+
+        # Prepare platforms
+        FINAL_PLATFORMS="$PLATFORMS_INPUT"
+
+        echo "Final tags: $FINAL_TAGS"
+        echo "Final labels: $META_LABELS"
+        echo "Final build-args: $FINAL_BUILD_ARGS"
+        echo "Final platforms: $FINAL_PLATFORMS"
+
+        echo "FINAL_TAGS=$FINAL_TAGS" >> "$GITHUB_ENV"
+        echo "FINAL_LABELS=$META_LABELS" >> "$GITHUB_ENV"
+        echo "FINAL_BUILD_ARGS=$FINAL_BUILD_ARGS" >> "$GITHUB_ENV"
+        echo "FINAL_PLATFORMS=$FINAL_PLATFORMS" >> "$GITHUB_ENV"
+
+        echo "tags=$FINAL_TAGS" >> "$GITHUB_OUTPUT"
+        {
+          echo "labels<<EOF"
+          echo "$META_LABELS"
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+        {
+          echo "build_args<<EOF"
+          echo "$FINAL_BUILD_ARGS"
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+        echo "platforms=$FINAL_PLATFORMS" >> "$GITHUB_OUTPUT"
 
     - name: Build and Push Docker Image
       uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
@@ -308,13 +375,13 @@ runs:
       with:
         provenance: false
         sbom: ${{ inputs.sbom == 'true' && 'true' || 'false' }}
-        context: ${{ steps.parse_component.outputs.ctx }}
-        file: ${{ steps.parse_component.outputs.file }}
+        context: ${{ steps.extract_component.outputs.ctx }}
+        file: ${{ steps.extract_component.outputs.file }}
         push: ${{ inputs.dry-run == 'true' && 'false' || 'true' }}
-        tags: ${{ inputs.tags != '' && env.IMAGE_REFS || steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        platforms: ${{ inputs.platforms }}
-        build-args: ${{ steps.parse_component.outputs.build_args != '' && steps.parse_component.outputs.build_args || inputs.build-args }}
+        tags: ${{ env.FINAL_TAGS }}
+        labels: ${{ env.FINAL_LABELS }}
+        platforms: ${{ env.FINAL_PLATFORMS }}
+        build-args: ${{ env.FINAL_BUILD_ARGS }}
 
     - name: Output result
       if: ${{ ! (inputs.dry-run == 'true') }}
@@ -351,7 +418,7 @@ runs:
         DIGEST_NO_PREFIX="${DIGEST##*:}"
         DIGEST_SHORT="${DIGEST_NO_PREFIX:0:12}"
 
-        GROUP="${{ inputs.app-manifest-group || '' }}"
+        GROUP=""
 
         VERSION="$TAG"
 

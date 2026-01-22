@@ -1,0 +1,17 @@
+# Test Dockerfile for docker-action tests
+FROM alpine:3.19
+
+# Accept build arguments for testing
+ARG ARG1
+ARG ARG2
+ARG INPUT_ARG1
+ARG INPUT_ARG2
+
+# Create a simple test file
+RUN echo "Test Docker Image" > /test.txt && \
+    echo "ARG1=${ARG1}" >> /test.txt && \
+    echo "ARG2=${ARG2}" >> /test.txt && \
+    echo "INPUT_ARG1=${INPUT_ARG1}" >> /test.txt && \
+    echo "INPUT_ARG2=${INPUT_ARG2}" >> /test.txt
+
+CMD ["cat", "/test.txt"]
