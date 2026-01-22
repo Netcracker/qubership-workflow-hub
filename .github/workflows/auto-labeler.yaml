@@ -7,7 +7,7 @@
 #         [opened, reopened]
 #
 
-name: "[REUSABLE] Automatic PR Labeler"
+name: "[REUSABLE] PR auto-labeler"
 on:
   workflow_call:
     inputs:
