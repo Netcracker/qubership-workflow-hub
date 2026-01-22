@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+
 jobs:
   test-default-template:
     name: Test Default Template
@@ -114,6 +115,14 @@ jobs:
       - name: Verify Outputs
         shell: bash
         run: |
+          echo "=== Input Transformation ==="
+          INPUT_REF="refs/heads/feature/test-branch"
+          REPLACE_SYMBOL="_"
+          echo "1. Input ref: $INPUT_REF"
+          echo "2. After removing 'refs/heads/': feature/test-branch"
+          echo "3. After applying replace-symbol '$REPLACE_SYMBOL': feature_test-branch"
+
+          echo ""
           echo "=== Outputs ==="
           RESULT="${{ steps.metadata.outputs.result }}"
           REF="${{ steps.metadata.outputs.ref }}"
@@ -137,15 +146,22 @@ jobs:
           echo "minor: $MINOR (empty for non-semver branches)"
           echo "patch: $PATCH (empty for non-semver branches)"
 
-          # Verify ref is normalized (should be "feature/test-branch")
-          if [ "$REF" != "feature/test-branch" ]; then
-            echo "❌ ERROR: ref should be normalized to 'feature/test-branch', got: $REF"
+          # Verify both ref and ref-name have '/' replaced with '_' (should be "feature_test-branch")
+          if [ "$REF" != "feature_test-branch" ]; then
+            echo "❌ ERROR: ref should be 'feature_test-branch' (with '/' replaced by '_'), got: $REF"
             exit 1
           fi
 
-          # Verify ref-name has '/' replaced with '_' (should be "feature_test-branch")
           if [ "$REF_NAME" != "feature_test-branch" ]; then
             echo "❌ ERROR: ref-name should be 'feature_test-branch' (with '/' replaced by '_'), got: $REF_NAME"
+            exit 1
+          fi
+
+          # Verify ref and ref-name are the same
+          if [ "$REF" != "$REF_NAME" ]; then
+            echo "❌ ERROR: ref and ref-name should be identical"
+            echo "   ref: $REF"
+            echo "   ref-name: $REF_NAME"
             exit 1
           fi
 
