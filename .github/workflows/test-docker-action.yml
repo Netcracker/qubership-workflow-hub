@@ -1,4 +1,4 @@
-name: Test docker-action
+name: TEST docker-action
 
 on:
   workflow_dispatch: {}

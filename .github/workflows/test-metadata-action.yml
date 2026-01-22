@@ -1,4 +1,4 @@
-name: Test metadata-action
+name: TEST metadata-action
 
 on:
   workflow_dispatch: {}
