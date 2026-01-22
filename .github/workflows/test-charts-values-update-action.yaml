@@ -1,4 +1,4 @@
-name: Test charts-values-update-action
+name: TEST charts-values-update-action
 
 on:
   workflow_dispatch:
