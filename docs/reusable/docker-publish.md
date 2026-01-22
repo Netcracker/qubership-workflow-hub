@@ -65,7 +65,7 @@ permissions:
 
 jobs:
   call-docker-publish:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/docker-publish.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/docker-publish.yml@v2.0.8
     with:
       ref: "main"
       artifact-id: "my-artifact"

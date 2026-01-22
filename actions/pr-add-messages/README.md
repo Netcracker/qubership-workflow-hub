@@ -33,4 +33,4 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Update PR body
-        uses: netcracker/qubership-workflow-hub/actions/pr-add-messages@main
+        uses: netcracker/qubership-workflow-hub/actions/pr-add-messages@v2.0.8

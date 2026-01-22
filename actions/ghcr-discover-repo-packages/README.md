@@ -94,7 +94,7 @@ jobs:
     steps:
       - name: Discover GHCR Packages
         id: discover
-        uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@main
+        uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@v2.0.8
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -114,7 +114,7 @@ jobs:
 ```yaml
 - name: Discover Packages for Another Repo
   id: discover
-  uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@main
+  uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@v2.0.8
   with:
     owner: my-organization
     repository: my-other-repo
@@ -127,7 +127,7 @@ jobs:
 ```yaml
 - name: Discover GHCR Packages
   id: discover
-  uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@main
+  uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@v2.0.8
   env:
     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -158,7 +158,7 @@ jobs:
     steps:
       - name: Discover GHCR Packages
         id: discover
-        uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@main
+        uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@v2.0.8
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -188,7 +188,7 @@ jobs:
     steps:
       - name: Discover Packages
         id: discover
-        uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@main
+        uses: netcracker/qubership-workflow-hub/actions/ghcr-discover-repo-packages@v2.0.8
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

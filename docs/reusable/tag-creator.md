@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   call-tag-creator:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/tag-creator.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/tag-creator.yml@v2.0.8
     with:
       tag-name: "v1.0.0"
       ref: "main"

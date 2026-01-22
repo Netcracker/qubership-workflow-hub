@@ -63,7 +63,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
        steps:
          - uses: actions/checkout@v3
          - name: Create a Git Tag
-           uses: netcracker/qubership-workflow-hub/actions/tag-action@main
+           uses: netcracker/qubership-workflow-hub/actions/tag-action@v2.0.8
            with:
              tag-prefix: "v"
              tag-message: "Release {{version}}"
@@ -75,7 +75,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
    ```yaml
    jobs:
      release:
-       uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
+       uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@v2.0.8
        with:
          config-file: ".github/release-drafter.yml"
    ```

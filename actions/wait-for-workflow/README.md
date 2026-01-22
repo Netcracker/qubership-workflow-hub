@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for build.yml to complete
-        uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@main
+        uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@v2.0.8
         with:
           workflow: build.yml
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for workflow run
-        uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@main
+        uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@v2.0.8
         with:
           workflow: ${{ inputs.run-id }}
           token: ${{ secrets.GITHUB_TOKEN }}
