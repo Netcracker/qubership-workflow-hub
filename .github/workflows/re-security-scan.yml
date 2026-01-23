@@ -41,6 +41,10 @@ on:
         type: boolean
         required: false
         default: true
+      runner:
+        description: "runs-on runner"
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -57,7 +61,7 @@ env:
 
 jobs:
   init:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     outputs:
       GRYPE_FILENAME: ${{ steps.prepare-outputs.outputs.GRYPE_FILENAME }}
       TRIVY_FILENAME: ${{ steps.prepare-outputs.outputs.TRIVY_FILENAME }}
@@ -110,6 +114,8 @@ jobs:
 
       - name: Prepare filenames
         id: prepare-outputs
+        env:
+          RUNNER: "${{ inputs.runner }}"
         run: |
           if [ "${TARGET}" = "docker" ]; then
             SHORT_NAME=${INCOMMING_IMAGE##*/}
@@ -117,6 +123,9 @@ jobs:
             SAFE_NAME=${SHORT_NAME//:/_}
             SAFE_NAME=${SAFE_NAME//\//_}
             SAFE_NAME=${SAFE_NAME//-/_}
+            if [ "${RUNNER}" != "" ]; then
+              SAFE_NAME=${SAFE_NAME}_${RUNNER}
+            fi
 
             echo "GRYPE_FILENAME=grype-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
             echo "TRIVY_FILENAME=trivy-${SAFE_NAME}.sarif" >> "$GITHUB_OUTPUT"
@@ -132,7 +141,7 @@ jobs:
 
   grype-scan:
     if: ${{ inputs.grype-scan }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     needs: [init]
     steps:
       - name: Login to GHCR (docker target)
@@ -247,7 +256,7 @@ jobs:
             *.csv
 
   trivy-scan:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     if: ${{ inputs.trivy-scan }}
     needs: [init]
     steps:
