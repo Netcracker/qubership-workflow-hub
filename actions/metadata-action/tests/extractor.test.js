@@ -18,6 +18,7 @@ describe("RefNormalizer", () => {
         expect(result.rawName).toBe("feature/awesome/path");
         expect(result.normalizedName).toBe("feature-awesome-path");
         expect(result.isTag).toBe(false);
+        expect(result.isBranch).toBe(true);
         expect(result.type).toBe("branch");
 
         // Check that there are no '/' characters
@@ -40,6 +41,7 @@ describe("RefNormalizer", () => {
         expect(result.normalizedName).toBe("release-v1.0.0");
         expect(result.type).toBe("tag");
         expect(result.isTag).toBe(true);
+        expect(result.isBranch).toBe(false);
     });
 
     test("should handle refs without prefix as unknown", () => {
@@ -49,6 +51,7 @@ describe("RefNormalizer", () => {
         expect(result.normalizedName).toBe("custom-branch-name");
         expect(result.type).toBe("unknown");
         expect(result.isTag).toBe(false);
+        expect(result.isBranch).toBe(false);
     });
 
     test("should normalize deeply nested branch names", () => {
