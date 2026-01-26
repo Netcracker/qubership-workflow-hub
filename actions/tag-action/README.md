@@ -93,7 +93,7 @@ jobs:
           ref: main
 
       - name: Create a New Tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-action@main
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@v2.0.9
         with:
           ref: main
           tag-name: v1.0.0
@@ -106,7 +106,7 @@ jobs:
           switch-to-tag: false
 
       - name: Delete an Existing Tag (Dry Run)
-        uses: netcracker/qubership-workflow-hub/actions/tag-action@main
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@v2.0.9
         with:
           ref: main
           tag-name: v1.0.0
@@ -114,7 +114,7 @@ jobs:
           dry-run: true
 
       - name: Force Create Tag and Switch
-        uses: netcracker/qubership-workflow-hub/actions/tag-action@main
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@v2.0.9
         with:
           ref: main
           tag-name: v1.0.1
@@ -123,7 +123,7 @@ jobs:
           switch-to-tag: true
 
       - name: Create Tag Without Checkout
-        uses: netcracker/qubership-workflow-hub/actions/tag-action@main
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@v2.0.9
         with:
           skip-checkout: true
           tag-name: v1.0.2

@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Release Maven Artifact
-        uses: netcracker/qubership-workflow-hub/actions/maven-release@main
+        uses: netcracker/qubership-workflow-hub/actions/maven-release@v2.0.9
         with:
           version-type: 'minor'
           module: 'my-module'

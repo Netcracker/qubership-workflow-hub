@@ -34,7 +34,7 @@ permissions:
 
 jobs:
   call-release-drafter:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@v2.0.9
     with:
       version: "1.0.0"
       ref: "main"
