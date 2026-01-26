@@ -167,7 +167,11 @@ runs:
           echo "name=$component_name"
           echo "file=$component_file"
           echo "ctx=$component_context"
-          echo "build_args=$component_build_args"
+        } >> "$GITHUB_OUTPUT"
+        {
+          echo "build_args<<EOF"
+          echo "$component_build_args"
+          echo "EOF"
         } >> "$GITHUB_OUTPUT"
 
     - name: Prepare Image Name
