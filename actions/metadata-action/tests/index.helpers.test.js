@@ -1,4 +1,4 @@
-const log = require("@netcracker/action-logger");
+const _log = require("@netcracker/action-logger");
 
 jest.mock("@netcracker/action-logger", () => ({
   dim: jest.fn(),

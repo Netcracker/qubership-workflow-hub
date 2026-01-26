@@ -53,7 +53,7 @@ Or triggered on the `release/1.2.3` branch, resulting in `release-1.2.3-20250313
 | `minor`     | Minor version number extracted from semantic versioning.                                                                            | 2               |
 | `patch`     | Patch version number extracted from semantic versioning.                                                                            | 3               |
 | `short-sha` | Shortened SHA of the current commit.                                                                                                | abc1234         |
-| `runNumber` | The unique number for each run of a particular workflow in a repository.                                                           | 123             |
+| `runNumber` | The unique number for each run of a particular workflow in a repository.                                                            | 123             |
 | `commit`    | The full SHA of the current commit.                                                                                                 | abc123456789    |
 | `ref-type`  | The type of the reference (e.g., branch or tag).                                                                                    | branch          |
 
@@ -139,6 +139,7 @@ Supported placeholders include (not exhaustive):
 `ref-name`, `short-sha`, `sha`, `major`, `minor`, `patch`, `date`, `time`, `timestamp`, `dist-tag`, `github.repository`, `github.ref`, `github.sha`, `github.actor`, `github.workflow`, `github.run_id`, `github.run_number`, `github.event_name`, `runNumber`.
 
 Aliases for template compatibility:
+
 - `ref_name`, `refName`
 - `short_sha`, `shortSha`
 - `dist_tag`, `distTag`
@@ -146,6 +147,7 @@ Aliases for template compatibility:
 
 Length modifiers are supported for any placeholder, e.g. `{{short-sha:4}}`.
 Example:
+
 - Template: `{{ref-name}}-{{short-sha:4}}`
 - Result: `main-8c3c`
 
@@ -216,5 +218,3 @@ The configuration file for this action must adhere to [the schema defined](https
 - **Missing outputs:** Check if the action ran successfully; use `debug: true` for logs.
 - **Configuration errors:** Validate your YAML against the schema at [config.schema.json](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json).
 - **Branch/tag name issues:** Use `replace-symbol` to customize how '/' is replaced in names (default is `-`).
-
-
