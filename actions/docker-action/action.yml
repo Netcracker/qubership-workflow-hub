@@ -360,16 +360,19 @@ runs:
           echo "$FINAL_TAGS"
           echo "EOF"
         } >> "$GITHUB_ENV"
+
         {
           echo "FINAL_LABELS<<EOF"
           echo "$META_LABELS"
           echo "EOF"
         } >> "$GITHUB_ENV"
+
         {
           echo "FINAL_BUILD_ARGS<<EOF"
           echo "$FINAL_BUILD_ARGS"
           echo "EOF"
         } >> "$GITHUB_ENV"
+
         echo "FINAL_PLATFORMS=$FINAL_PLATFORMS" >> "$GITHUB_ENV"
 
         {
@@ -377,16 +380,19 @@ runs:
           echo "$FINAL_TAGS"
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
+
         {
           echo "labels<<EOF"
           echo "$META_LABELS"
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
+
         {
           echo "build_args<<EOF"
           echo "$FINAL_BUILD_ARGS"
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
+
         echo "platforms=$FINAL_PLATFORMS" >> "$GITHUB_OUTPUT"
 
     - name: Build and Push Docker Image
