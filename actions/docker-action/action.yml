@@ -167,7 +167,11 @@ runs:
           echo "name=$component_name"
           echo "file=$component_file"
           echo "ctx=$component_context"
-          echo "build_args=$component_build_args"
+        } >> "$GITHUB_OUTPUT"
+        {
+          echo "build_args<<EOF"
+          echo "$component_build_args"
+          echo "EOF"
         } >> "$GITHUB_OUTPUT"
 
     - name: Prepare Image Name
@@ -351,22 +355,44 @@ runs:
         echo "Final build-args: $FINAL_BUILD_ARGS"
         echo "Final platforms: $FINAL_PLATFORMS"
 
-        echo "FINAL_TAGS=$FINAL_TAGS" >> "$GITHUB_ENV"
-        echo "FINAL_LABELS=$META_LABELS" >> "$GITHUB_ENV"
-        echo "FINAL_BUILD_ARGS=$FINAL_BUILD_ARGS" >> "$GITHUB_ENV"
+        {
+          echo "FINAL_TAGS<<EOF"
+          echo "$FINAL_TAGS"
+          echo "EOF"
+        } >> "$GITHUB_ENV"
+
+        {
+          echo "FINAL_LABELS<<EOF"
+          echo "$META_LABELS"
+          echo "EOF"
+        } >> "$GITHUB_ENV"
+
+        {
+          echo "FINAL_BUILD_ARGS<<EOF"
+          echo "$FINAL_BUILD_ARGS"
+          echo "EOF"
+        } >> "$GITHUB_ENV"
+
         echo "FINAL_PLATFORMS=$FINAL_PLATFORMS" >> "$GITHUB_ENV"
 
-        echo "tags=$FINAL_TAGS" >> "$GITHUB_OUTPUT"
+        {
+          echo "tags<<EOF"
+          echo "$FINAL_TAGS"
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+
         {
           echo "labels<<EOF"
           echo "$META_LABELS"
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
+
         {
           echo "build_args<<EOF"
           echo "$FINAL_BUILD_ARGS"
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
+
         echo "platforms=$FINAL_PLATFORMS" >> "$GITHUB_OUTPUT"
 
     - name: Build and Push Docker Image
