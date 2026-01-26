@@ -30,9 +30,9 @@ Or triggered on the `release/1.2.3` branch, resulting in `release-1.2.3-20250313
 | `default-template`   | Default template for version generation.       | No       | `{{ref-name}}-{{timestamp}}-{{runNumber}}` |
 | `default-tag`        | Default distribution tag.                      | No       | `latest`                                   |
 | `extra-tags`         | Additional tags to append to the result.       | No       | `""`                                       |
-| `merge-tags`         | Whether to merge `extra-tags` with the result. | No       | `true`                                     |
+| `merge-tags`         | Whether to merge `extra-tags` with the result. | No       | `false`                                    |
 | `debug`              | Enable debug mode for detailed logging.        | No       | `false`                                    |
-| `show-report`        | Whether to display a summary report.           | No       | `true`                                     |
+| `show-report`        | Whether to display a summary report.           | No       | `false`                                    |
 | `dry-run`            | Enable dry-run mode to simulate the action.    | No       | `false`                                    |
 | `replace-symbol`     | Symbol to replace '/' in branch or tag names.  | No       | `-`                                        |
 
@@ -133,9 +133,31 @@ This action uses the `@netcracker/action-logger` package for enhanced logging ca
 The GitHub context is available, allowing you to access properties such as the current branch, tag, and other metadata. This context can be used within the action to dynamically generate version strings and tailor behavior based on the repository state.
 [More information](https://docs.github.com/ru/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs).
 
+### Template Placeholders
+
+Supported placeholders include (not exhaustive):
+`ref-name`, `short-sha`, `sha`, `major`, `minor`, `patch`, `date`, `time`, `timestamp`, `dist-tag`, `github.repository`, `github.ref`, `github.sha`, `github.actor`, `github.workflow`, `github.run_id`, `github.run_number`, `github.event_name`, `runNumber`.
+
+Aliases for template compatibility:
+- `ref_name`, `refName`
+- `short_sha`, `shortSha`
+- `dist_tag`, `distTag`
+- `run_number`
+
+Length modifiers are supported for any placeholder, e.g. `{{short-sha:4}}`.
+Example:
+- Template: `{{ref-name}}-{{short-sha:4}}`
+- Result: `main-8c3c`
+
+Unknown placeholders are kept as-is and a warning is logged.
+
 ### Semantic Version Parsing Contract
 
-The variables `major`, `minor`, and `patch` are parsed only from a branch or tag that follows the format `vMAJOR.MINOR.PATCH` (for example, `v1.0.1`). This format is a strict contract; only tags or branch names matching this pattern will be correctly parsed to extract the semantic version components.
+The variables `major`, `minor`, and `patch` are parsed from refs matching `vMAJOR.MINOR.PATCH` and also accept prerelease/build suffixes (e.g. `v1.2.3-rc.1`, `v1.2.3+meta`).
+
+### Report Output
+
+When `show-report: true`, the report includes a compact `github` object with selected fields only (repository, ref, sha, actor, workflow, run_id, run_number, event_name) rather than the full `github.context`.
 
 ### Configuration File Schema
 
@@ -190,7 +212,9 @@ The configuration file for this action must adhere to [the schema defined](https
 
 ## Troubleshooting
 
-- **Template not rendering correctly:** Ensure your configuration file matches the schema and that variables like `{{major}}` are used only on semantic version refs (e.g., `v1.2.3`).
+- **Template not rendering correctly:** Ensure your configuration file matches the schema and that variables like `{{major}}` are used only on semantic version refs (e.g., `v1.2.3` or `v1.2.3-rc.1`).
 - **Missing outputs:** Check if the action ran successfully; use `debug: true` for logs.
 - **Configuration errors:** Validate your YAML against the schema at [config.schema.json](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json).
 - **Branch/tag name issues:** Use `replace-symbol` to customize how '/' is replaced in names (default is `-`).
+
+

@@ -20,7 +20,7 @@ class Report {
         ];
 
         const rows = fields
-            .filter(([_, value]) => value != null && value !== "" && value !== "..")
+            .filter(([_, value]) => value != null && value !== "")
             .map(([label, value]) => [
                 { data: label },
                 { data: String(value) }
