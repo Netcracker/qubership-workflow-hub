@@ -220,14 +220,14 @@ jobs:
           if [ "${ONLY_HIGH_CRITICAL}" = "true" ]; then
             SECURITY_SEVERITY_THRESHOLD='7'
           fi
-          jq --raw-output --arg sst "$SECURITY_SEVERITY_THRESHOLD" '["CVE", "Severity", "Provider Severity", "Type", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
+          jq --raw-output --arg sst "$SECURITY_SEVERITY_THRESHOLD" '["Tool", "Image", "CVE", "Severity", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
               $headers, (
                   .runs[0].results[] as $result | if ($result.security_severity | tonumber) >= ($sst | tonumber) then
                   [
+                      ("grype"),
+                      ("${{ needs.init.outputs.IMAGE }}"),
                       ($result.info | capture("Vulnerability (?<cve>.*)"; "n") | .cve),
-                      ($result.security_severity | tonumber | if . < 4 then "Low" elif . < 7 then "Medium" elif . < 9 then "High" else "Critical" end),
-                      ($result.info | capture("Severity: (?<severity>\\w+)"; "n") | .severity),
-                      ($result.info | capture("Type: (?<type>\\w+)"; "n") | .type),
+                      ($result.security_severity | tonumber | if . < 4 then "LOW" elif . < 7 then "MEDIUM" elif . < 9 then "HIGH" else "CRITICAL" end),
                       ($result.info | capture("Package: (?<package>.*)"; "n") | .package),
                       ($result.info | capture("Version: (?<version>.*)"; "n") | .version),
                       ($result.info | capture("Fix Version: (?<fix_version>.*)"; "n") | .fix_version),
@@ -317,9 +317,11 @@ jobs:
               | $rule.fullDescription.text | gsub("\n"; " ")
               )})' "$SARIF_FILE"  > "${SARIF_FILE%.sarif}.ext.sarif"
 
-          jq --raw-output '["CVE", "Severity", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
+          jq --raw-output '["Tool", "Image", "CVE", "Severity", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
               $headers, (
                   .runs[0].results[] as $result | [
+                      ("trivy"),
+                      ("${{ needs.init.outputs.IMAGE }}"),
                       ($result.ruleId),
                       ($result.message.text | capture("Severity: (?<severity>\\w+)"; "n") | .severity),
                       ($result.message.text | capture("Package: (?<package>.*)"; "n") | .package),
