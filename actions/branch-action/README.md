@@ -67,7 +67,7 @@ Assume `source-ref` is `v1.2.3` (tag) or `main` (branch).
 | ------------------------------------------------------ | ----------------- | ---------------------------------- |
 | `auto`                                                 | `v1.2.3` (tag)    | `release/v1.2.3`                   |
 | `auto`                                                 | `main` (branch)   | `feature/main`                     |
-| `auto` + `branch-prefix=hotfix` + `branch-separator=-` | `v1.2.3` (tag)    | `hotfix-v1.2.3`                    |
+| `auto` + `branch-prefix=hotfix`                        | `v1.2.3` (tag)    | `hotfix/v1.2.3`                    |
 | `auto` + `branch-prefix=hotfix` + `branch-separator=-` | `main` (branch)   | `hotfix-main`                      |
 | `release`                                              | `v1.2.3`          | `release/1.2.3`                    |
 | `release`                                              | `release-2024-01` | `branch-from-release-2024-01`      |
