@@ -64,17 +64,18 @@ If `branch-prefix` is provided, it overrides the default prefix for the strategy
 
 Assume `source-ref` is `v1.2.3` (tag), `main` (branch), or a commit SHA.
 
-| Strategy                                               | Source            | Example result                     |
-| ------------------------------------------------------ | ----------------- | ---------------------------------- |
-| `auto`                                                 | `v1.2.3` (tag)    | `release/v1.2.3`                   |
-| `auto`                                                 | `main` (branch)   | `feature/main`                     |
-| `auto` + `branch-prefix=hotfix`                        | `v1.2.3` (tag)    | `hotfix/v1.2.3`                    |
-| `auto` + `branch-prefix=hotfix` + `branch-separator=-` | `main` (branch)   | `hotfix-main`                      |
-| `release`                                              | `v1.2.3`          | `release/1.2.3`                    |
-| `release`                                              | `release-2024-01` | `branch-from-release-2024-01`      |
-| `timestamp`                                            | `main`            | `branch-from-main-20240126-143022` |
-| `short-sha`                                            | `main`            | `branch-from-main-a1b2c3d`         |
-| `source-only`                                          | `develop`         | `develop-branch`                   |
+| Strategy                                               | Source             | Example result                        |
+| ------------------------------------------------------ | ------------------ | ------------------------------------- |
+| `auto`                                                 | `v1.2.3` (tag)     | `release/v1.2.3`                      |
+| `auto`                                                 | `main` (branch)    | `feature/main`                        |
+| `auto`                                                 | `9fceb02` (commit) | `feature/9fceb02`                     |
+| `auto` + `branch-prefix=hotfix`                        | `v1.2.3` (tag)     | `hotfix/v1.2.3`                       |
+| `auto` + `branch-prefix=hotfix` + `branch-separator=-` | `main` (branch)    | `hotfix-main`                         |
+| `release`                                              | `v1.2.3`           | `release/1.2.3`                       |
+| `release`                                              | `release-2024-01`  | `branch-from-release-2024-01`         |
+| `timestamp`                                            | `main`             | `branch-from-main-20240126-143022`    |
+| `short-sha`                                            | `main`             | `branch-from-main-a1b2c3d`            |
+| `source-only`                                          | `develop`          | `develop-branch`                      |
 | `timestamp`                                            | `9fceb02` (commit) | `branch-from-9fceb02-20240126-143022` |
 
 If `branch-prefix=hotfix` and `branch-separator=-`, then `auto` + `main` becomes `hotfix-main`.
