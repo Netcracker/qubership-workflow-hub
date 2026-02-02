@@ -66,6 +66,7 @@ jobs:
       GRYPE_FILENAME: ${{ steps.prepare-outputs.outputs.GRYPE_FILENAME }}
       TRIVY_FILENAME: ${{ steps.prepare-outputs.outputs.TRIVY_FILENAME }}
       IMAGE: ${{ steps.normalize-image.outputs.IMAGE }}
+      SHORT_IMAGE_NAME: ${{ steps.prepare-outputs.outputs.SHORT_IMAGE_NAME }}
     steps:
       - name: Scan plan
         run: |
@@ -88,7 +89,7 @@ jobs:
         id: normalize-image
         run: |
           IMAGE="$INCOMMING_IMAGE"
-          IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          IMAGE_LOWER="${IMAGE,,}"
           echo "Normalized IMAGE: $IMAGE_LOWER"
           echo "IMAGE=$IMAGE_LOWER" >> "$GITHUB_OUTPUT"
 
@@ -120,7 +121,8 @@ jobs:
           if [ "${TARGET}" = "docker" ]; then
             SHORT_NAME=${INCOMMING_IMAGE##*/}
 
-            SAFE_NAME=${SHORT_NAME//:/_}
+            SAFE_NAME=${SHORT_NAME%:*}
+            echo "IMAGE_SHORT_NAME=${SAFE_NAME}" >> "$GITHUB_OUTPUT"
             SAFE_NAME=${SAFE_NAME//\//_}
             SAFE_NAME=${SAFE_NAME//-/_}
             if [ "${RUNNER}" != "" ]; then
@@ -153,7 +155,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout repository (source target)
-        if: ${{ inputs.target == 'source' }}
         uses: actions/checkout@v6
         with:
           persist-credentials: false
@@ -245,10 +246,10 @@ jobs:
         with:
           sarif_file: |
             ${{ needs.init.outputs.GRYPE_FILENAME }}
-          category: ${{ needs.init.outputs.GRYPE_FILENAME }}
+          category: ${{ needs.init.outputs.SHORT_IMAGE_NAME }}
 
       - name: Upload all scan artifacts
-        uses: actions/upload-artifact@v6 #330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: ${{ needs.init.outputs.GRYPE_FILENAME }}
           path: |
@@ -269,7 +270,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout repository (source target)
-        if: ${{ inputs.target == 'source' }}
         uses: actions/checkout@v6
         with:
           persist-credentials: false
@@ -340,9 +340,10 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: ${{ needs.init.outputs.TRIVY_FILENAME }}
+          category: ${{ needs.init.outputs.SHORT_IMAGE_NAME }}
 
       - name: Upload all scan artifacts
-        uses: actions/upload-artifact@v6 #330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: ${{ needs.init.outputs.TRIVY_FILENAME }}
           path: |
