@@ -147,6 +147,7 @@ jobs:
 ```
 
 What will happen:
+
 - If `source-ref` is a tag like `v1.2.3`, the branch name will be `hotfix-v1.2.3`.
 - If `source-ref` is a branch like `main`, the branch name will be `hotfix-main`.
 
@@ -155,6 +156,7 @@ What will happen:
 ## Permissions
 
 Minimum recommended permissions for the job:
+
 ```yaml
 permissions:
   contents: write
