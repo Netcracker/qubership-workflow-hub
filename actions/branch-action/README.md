@@ -24,7 +24,7 @@ For example, if `source-ref` is `v1.2.3` and strategy is `release`, the output c
 | Name                 | Description                                                                                                                                | Required | Default |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------- |
 | `branch-name`        | Name of the branch to create. If empty, the name is auto-generated.                                                                        | No       | `""`    |
-| `source-ref`         | Source tag or branch to create from. If empty, uses current `GITHUB_REF_NAME`.                                                             | No       | `""`    |
+| `source-ref`         | Source tag, branch, or commit SHA to create from. If empty, uses current `GITHUB_REF_NAME`.                                                | No       | `""`    |
 | `auto-name-strategy` | Strategy for auto-generating branch name when `branch-name` is empty. Options: `auto`, `release`, `timestamp`, `short-sha`, `source-only`. | No       | `auto`  |
 | `branch-prefix`      | Custom prefix for auto-generated branch names (overrides strategy prefix).                                                                 | No       | `""`    |
 | `branch-separator`   | Separator between prefix and name (used with `branch-prefix` and `auto`).                                                                  | No       | `/`     |
@@ -48,6 +48,7 @@ For example, if `source-ref` is `v1.2.3` and strategy is `release`, the output c
 ### Source Ref Resolution
 
 If `source-ref` is empty, the action uses `GITHUB_REF_NAME` from the workflow context. That means the branch or tag that triggered the workflow will be used as the source.
+You can also pass a commit SHA directly.
 
 ### Auto Name Strategy
 
@@ -61,7 +62,7 @@ If `branch-prefix` is provided, it overrides the default prefix for the strategy
 
 #### What You Get (Examples)
 
-Assume `source-ref` is `v1.2.3` (tag) or `main` (branch).
+Assume `source-ref` is `v1.2.3` (tag), `main` (branch), or a commit SHA.
 
 | Strategy                                               | Source            | Example result                     |
 | ------------------------------------------------------ | ----------------- | ---------------------------------- |
@@ -74,6 +75,7 @@ Assume `source-ref` is `v1.2.3` (tag) or `main` (branch).
 | `timestamp`                                            | `main`            | `branch-from-main-20240126-143022` |
 | `short-sha`                                            | `main`            | `branch-from-main-a1b2c3d`         |
 | `source-only`                                          | `develop`         | `develop-branch`                   |
+| `timestamp`                                            | `9fceb02` (commit) | `branch-from-9fceb02-20240126-143022` |
 
 If `branch-prefix=hotfix` and `branch-separator=-`, then `auto` + `main` becomes `hotfix-main`.
 
