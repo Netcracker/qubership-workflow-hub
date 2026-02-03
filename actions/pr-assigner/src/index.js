@@ -26,14 +26,18 @@ function getUsersFromCodeowners(codeownersPath) {
     log.info(`🔍 CODEOWNERS file found on: ${codeownersPath}`);
     const codeownersContent = fs.readFileSync(codeownersPath, 'utf8');
     const lines = codeownersContent.split('\n');
-    const userLine = lines.find(line => line.trim().startsWith('*'));
-    if (!userLine) {
+
+    const cleanedLines = lines
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith('#'));
+    const userLine = cleanedLines.find(line => line.startsWith('*'));
+    const targetLine = userLine ?? cleanedLines[cleanedLines.length - 1];
+    if (!targetLine) {
         log.fail(`❗️ No user found in CODEOWNERS file`);
         return [];
     }
-    return userLine.split(/\s+/).slice(1).filter(user => user.trim() !== '').map(user => user.replace('@', ''));
+    return targetLine.split(/\s+/).slice(1).filter(user => user.trim() !== '').map(user => user.replace('@', ''));
 }
-
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));

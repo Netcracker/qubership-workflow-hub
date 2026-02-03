@@ -9,16 +9,16 @@ This **PR Assigner** GitHub Action automatically assigns a pull request to users
 
 ## 📌 Inputs
 
-| Name                  | Description                                      | Required | Default                          |
-| --------------------- | ------------------------------------------------ | -------- | -------------------------------- |
-| `shuffle`             | Number of assignees to assign (overrides config `count`). | No       | `1`                              |
-| `configuration-path`  | Path to the configuration file.                  | No       | `.github/pr-assigner-config.yml` |
+| Name                 | Description                                                                  | Required | Default                          |
+| -------------------- | ---------------------------------------------------------------------------- | -------- | -------------------------------- |
+| `shuffle`            | Number of assignees to assign (overrides config `count`).                    | No       | `1`                              |
+| `configuration-path` | Path to the configuration file.                                              | No       | `.github/pr-assigner-config.yml` |
 | `env.GITHUB_TOKEN`   | GitHub token used to call API and assign PRs; must be provided via step env. | Yes      | `${{ secrets.GITHUB_TOKEN }}`    |
 
 ## Usage Example
 
-
 ```yaml
+
 # Example 1 — No config file, fallback to CODEOWNERS and use input for count
 name: Assign PR (CODEOWNERS only)
 on:
@@ -44,6 +44,7 @@ jobs:
 ```
 
 ```yaml
+
 # Example 2 — Use config file and (optionally) override count via input
 name: Assign PR
 on:
@@ -88,7 +89,9 @@ count: 2
 
 - Source of assignees:
   1) If `configuration-path` file exists and is valid — use its `assignees`.
-  2) Else — fallback to owners from `.github/CODEOWNERS` (pattern `*` line).
+  2) Else ? fallback to owners from `.github/CODEOWNERS`:
+     - Prefer the line starting with `*` if present.
+     - Otherwise use the last non-empty, non-comment line.
 - How many assignees:
   - `shuffle` input takes precedence when provided.
   - Otherwise use `count` from config file.
@@ -98,6 +101,7 @@ count: 2
 ## Permissions
 
 Minimum recommended permissions for the job:
+
 ```yaml
 permissions:
   pull-requests: write   # required to assign users
@@ -112,12 +116,13 @@ permissions:
 
 - If the configuration file is not found, the action will attempt to use the CODEOWNERS file to determine the assignees.
 - If the CODEOWNERS file is not found or cannot be processed, the action will fail.
-- The action will look for a line starting with `*` in the CODEOWNERS file and use the users listed there as assignees.
+- Empty lines and comments (`# ...`) in CODEOWNERS are ignored.
+- The action prefers a line starting with `*`; if none exists, it uses the last non-empty, non-comment line.
 - The assignees array is shuffled using the Fisher-Yates algorithm to ensure even distribution of assignments.
 
 ### Configuration File Schema
 
-The configuration file for this action must adhere to the schema defined [here](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/pr-assigner/config.schema.json). This ensures that all templates, distribution tags, and other configuration options follow the required structure for correct parsing and execution.
+The configuration file for this action must adhere to the [pr-assigner config schema](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/pr-assigner/config.schema.json). This ensures that all templates, distribution tags, and other configuration options follow the required structure for correct parsing and execution.
 
 ```json
 {
