@@ -88,7 +88,9 @@ count: 2
 
 - Source of assignees:
   1) If `configuration-path` file exists and is valid — use its `assignees`.
-  2) Else — fallback to owners from `.github/CODEOWNERS` (pattern `*` line).
+  2) Else ? fallback to owners from `.github/CODEOWNERS`:
+     - Prefer the line starting with `*` if present.
+     - Otherwise use the last non-empty, non-comment line.
 - How many assignees:
   - `shuffle` input takes precedence when provided.
   - Otherwise use `count` from config file.
@@ -112,7 +114,8 @@ permissions:
 
 - If the configuration file is not found, the action will attempt to use the CODEOWNERS file to determine the assignees.
 - If the CODEOWNERS file is not found or cannot be processed, the action will fail.
-- The action will look for a line starting with `*` in the CODEOWNERS file and use the users listed there as assignees.
+- Empty lines and comments (`# ...`) in CODEOWNERS are ignored.
+- The action prefers a line starting with `*`; if none exists, it uses the last non-empty, non-comment line.
 - The assignees array is shuffled using the Fisher-Yates algorithm to ensure even distribution of assignments.
 
 ### Configuration File Schema
