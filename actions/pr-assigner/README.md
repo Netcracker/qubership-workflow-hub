@@ -9,10 +9,10 @@ This **PR Assigner** GitHub Action automatically assigns a pull request to users
 
 ## 📌 Inputs
 
-| Name                  | Description                                      | Required | Default                          |
-| --------------------- | ------------------------------------------------ | -------- | -------------------------------- |
-| `shuffle`             | Number of assignees to assign (overrides config `count`). | No       | `1`                              |
-| `configuration-path`  | Path to the configuration file.                  | No       | `.github/pr-assigner-config.yml` |
+| Name                 | Description                                                                  | Required | Default                          |
+| -------------------- | ---------------------------------------------------------------------------- | -------- | -------------------------------- |
+| `shuffle`            | Number of assignees to assign (overrides config `count`).                    | No       | `1`                              |
+| `configuration-path` | Path to the configuration file.                                              | No       | `.github/pr-assigner-config.yml` |
 | `env.GITHUB_TOKEN`   | GitHub token used to call API and assign PRs; must be provided via step env. | Yes      | `${{ secrets.GITHUB_TOKEN }}`    |
 
 ## Usage Example
