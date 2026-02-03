@@ -155,7 +155,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout repository (source target)
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
 
@@ -242,7 +242,7 @@ jobs:
 
       - name: Upload Grype SARIF
         if: inputs.upload-sarif-to-security
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@6bc82e05fd0ea64601dd4b465378bbcf57de0314  # v4.32.1
         with:
           sarif_file: |
             ${{ needs.init.outputs.GRYPE_FILENAME }}
@@ -270,7 +270,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout repository (source target)
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
 
@@ -337,7 +337,7 @@ jobs:
 
       - name: Upload Trivy SARIF
         if: inputs.upload-sarif-to-security
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@6bc82e05fd0ea64601dd4b465378bbcf57de0314  # v4.32.1
         with:
           sarif_file: ${{ needs.init.outputs.TRIVY_FILENAME }}
           category: ${{ needs.init.outputs.SHORT_IMAGE_NAME }}
