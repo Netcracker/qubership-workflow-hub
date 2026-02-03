@@ -121,7 +121,7 @@ jobs:
           if [ "${TARGET}" = "docker" ]; then
             SHORT_NAME=${INCOMMING_IMAGE##*/}
 
-            SAFE_NAME=${SHORT_NAME%:*}
+            IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
             echo "IMAGE_SHORT_NAME=${SAFE_NAME}" >> "$GITHUB_OUTPUT"
             SAFE_NAME=${SAFE_NAME//\//_}
             SAFE_NAME=${SAFE_NAME//-/_}
