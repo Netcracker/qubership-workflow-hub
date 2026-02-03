@@ -116,7 +116,7 @@ jobs:
           fetch-depth: 0
 
       - name: Create branch
-        uses: netcracker/qubership-workflow-hub/actions/create-branch@main
+        uses: netcracker/qubership-workflow-hub/actions/create-branch@v2.0.10
         with:
           source-ref: ${{ inputs.tag }}
           branch-name: ${{ inputs.branch }}
@@ -143,7 +143,7 @@ jobs:
           fetch-depth: 0
 
       - name: Create branch
-        uses: netcracker/qubership-workflow-hub/actions/create-branch@main
+        uses: netcracker/qubership-workflow-hub/actions/create-branch@v2.0.10
         with:
           source-ref: ${{ inputs.source }}
           auto-name-strategy: auto

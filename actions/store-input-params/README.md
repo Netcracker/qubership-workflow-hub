@@ -33,7 +33,7 @@ jobs:
   store-params:
     runs-on: ubuntu-latest
     steps:
-      - uses: Netcracker/qubership-workflow-hub/actions/store-input-params@main
+      - uses: netcracker/qubership-workflow-hub/actions/store-input-params@v2.0.10
         with:
           input: ${{ toJSON(inputs) }}
 ```

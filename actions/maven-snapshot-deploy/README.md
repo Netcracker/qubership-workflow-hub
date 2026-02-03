@@ -97,7 +97,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Code quality/security scan on SonarQube
-        uses: netcracker/qubership-workflow-hub/actions/maven-snapshot-deploy@main
+        uses: netcracker/qubership-workflow-hub/actions/maven-snapshot-deploy@v2.0.10
         with:
           java-version: '17'
           target-store: 'github'
@@ -110,7 +110,7 @@ jobs:
           sonar-token: ${{ secrets.SONAR_TOKEN }} # Organization level secret. Already set for Netcracker.
 
       - name: Deploy Maven Snapshot
-        uses: netcracker/qubership-workflow-hub/actions/maven-snapshot-deploy@main
+        uses: netcracker/qubership-workflow-hub/actions/maven-snapshot-deploy@v2.0.10
         with:
           java-version: '17'
           target-store: 'github'

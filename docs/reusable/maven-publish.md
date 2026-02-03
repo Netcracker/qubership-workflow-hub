@@ -47,7 +47,7 @@ permissions:
 
 jobs:
   call-maven-publish:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/maven-publish.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/maven-publish.yml@v2.0.10
     with:
       maven-command: "--batch-mode deploy"
       java-version: "21"

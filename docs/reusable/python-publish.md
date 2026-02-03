@@ -42,7 +42,7 @@ permissions:
 
 jobs:
   call-python-publish:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/python-publish.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/python-publish.yml@v2.0.10
     with:
       version: "1.0.0"
       poetry_version_options: "patch"

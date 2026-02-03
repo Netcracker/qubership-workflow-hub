@@ -146,7 +146,7 @@ jobs:
 
       - name: Resolve Docker Configuration
         id: resolver
-        uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@main
+        uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@v2.0.10
 
   build:
     needs: resolve
@@ -196,7 +196,7 @@ scan:
 ~~~yaml
 - name: Resolve Docker Configuration
   id: resolver
-  uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@main
+  uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@v2.0.10
   with:
     file-path: .config/docker-components.json
 ~~~

@@ -75,7 +75,7 @@ jobs:
         run: |
           # shellcheck disable=2038
           find . -type f \( -name '*.yaml' -o -name '*.yml' -o -name '*.md' \) ! -name 'github-release.yml' \
-          | xargs sed -i "s|uses: netcracker/qubership-workflow-hub/\(.*\)@main|uses: netcracker/qubership-workflow-hub/\1@v${VERSION}|gi"
+          | xargs sed -i "s|uses: netcracker/qubership-workflow-hub/\(.*\)@v2.0.10|uses: netcracker/qubership-workflow-hub/\1@v${VERSION}|gi"
 
       - name: Commit and push changes
         env:
@@ -94,7 +94,7 @@ jobs:
     needs: [release-preparation]
     permissions:
       contents: write
-    uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@v2.0.10
     with:
       version: ${{ inputs.version }}
       publish: false
