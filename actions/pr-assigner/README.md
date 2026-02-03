@@ -19,6 +19,7 @@ This **PR Assigner** GitHub Action automatically assigns a pull request to users
 
 
 ```yaml
+
 # Example 1 — No config file, fallback to CODEOWNERS and use input for count
 name: Assign PR (CODEOWNERS only)
 on:
@@ -44,6 +45,7 @@ jobs:
 ```
 
 ```yaml
+
 # Example 2 — Use config file and (optionally) override count via input
 name: Assign PR
 on:
@@ -100,6 +102,7 @@ count: 2
 ## Permissions
 
 Minimum recommended permissions for the job:
+
 ```yaml
 permissions:
   pull-requests: write   # required to assign users
@@ -120,7 +123,7 @@ permissions:
 
 ### Configuration File Schema
 
-The configuration file for this action must adhere to the schema defined [here](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/pr-assigner/config.schema.json). This ensures that all templates, distribution tags, and other configuration options follow the required structure for correct parsing and execution.
+The configuration file for this action must adhere to the [pr-assigner config schema](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/pr-assigner/config.schema.json). This ensures that all templates, distribution tags, and other configuration options follow the required structure for correct parsing and execution.
 
 ```json
 {
