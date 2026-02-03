@@ -89,7 +89,7 @@ jobs:
         id: normalize-image
         run: |
           IMAGE="$INCOMMING_IMAGE"
-          IMAGE_LOWER="${IMAGE,,}"
+          IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
           echo "Normalized IMAGE: $IMAGE_LOWER"
           echo "IMAGE=$IMAGE_LOWER" >> "$GITHUB_OUTPUT"
 
@@ -121,7 +121,7 @@ jobs:
           if [ "${TARGET}" = "docker" ]; then
             SHORT_NAME=${INCOMMING_IMAGE##*/}
 
-            IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+            SAFE_NAME=${SHORT_NAME%:*}
             echo "IMAGE_SHORT_NAME=${SAFE_NAME}" >> "$GITHUB_OUTPUT"
             SAFE_NAME=${SAFE_NAME//\//_}
             SAFE_NAME=${SAFE_NAME//-/_}
