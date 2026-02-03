@@ -17,7 +17,6 @@ This **PR Assigner** GitHub Action automatically assigns a pull request to users
 
 ## Usage Example
 
-
 ```yaml
 
 # Example 1 — No config file, fallback to CODEOWNERS and use input for count
