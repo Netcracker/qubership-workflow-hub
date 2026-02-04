@@ -66,7 +66,7 @@ jobs:
       GRYPE_FILENAME: ${{ steps.prepare-outputs.outputs.GRYPE_FILENAME }}
       TRIVY_FILENAME: ${{ steps.prepare-outputs.outputs.TRIVY_FILENAME }}
       IMAGE: ${{ steps.normalize-image.outputs.IMAGE }}
-      SHORT_IMAGE_NAME: ${{ steps.prepare-outputs.outputs.SHORT_IMAGE_NAME }}
+      IMAGE_SHORT_NAME: ${{ steps.prepare-outputs.outputs.IMAGE_SHORT_NAME }}
     steps:
       - name: Scan plan
         run: |
@@ -265,7 +265,7 @@ jobs:
         with:
           sarif_file: |
             ${{ needs.init.outputs.GRYPE_FILENAME }}
-          category: ${{ needs.init.outputs.SHORT_IMAGE_NAME || 'source' }}
+          category: ${{ needs.init.outputs.IMAGE_SHORT_NAME || 'source' }}
 
       - name: Upload all scan artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
@@ -375,7 +375,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@6bc82e05fd0ea64601dd4b465378bbcf57de0314  # v4.32.1
         with:
           sarif_file: ${{ needs.init.outputs.TRIVY_FILENAME }}
-          category: ${{ needs.init.outputs.SHORT_IMAGE_NAME || 'source' }}
+          category: ${{ needs.init.outputs.IMAGE_SHORT_NAME || 'source' }}
 
       - name: Upload all scan artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
