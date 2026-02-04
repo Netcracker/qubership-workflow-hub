@@ -120,9 +120,9 @@ jobs:
         run: |
           if [ "${TARGET}" = "docker" ]; then
             SHORT_NAME=${INCOMMING_IMAGE##*/}
+            echo "IMAGE_SHORT_NAME=${SHORT_NAME%:*}" >> "$GITHUB_OUTPUT"
 
-            SAFE_NAME=${SHORT_NAME%:*}
-            echo "IMAGE_SHORT_NAME=${SAFE_NAME}" >> "$GITHUB_OUTPUT"
+            SAFE_NAME=${SHORT_NAME//:/_}
             SAFE_NAME=${SAFE_NAME//\//_}
             SAFE_NAME=${SAFE_NAME//-/_}
             if [ "${RUNNER}" != "" ]; then
