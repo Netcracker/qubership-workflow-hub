@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       target:
-        description: "Scan part"
+        description: "Scan part 'docker' or 'source'"
         default: "docker"
         type: string
       image:
@@ -66,7 +66,7 @@ jobs:
       GRYPE_FILENAME: ${{ steps.prepare-outputs.outputs.GRYPE_FILENAME }}
       TRIVY_FILENAME: ${{ steps.prepare-outputs.outputs.TRIVY_FILENAME }}
       IMAGE: ${{ steps.normalize-image.outputs.IMAGE }}
-      SHORT_IMAGE_NAME: ${{ steps.prepare-outputs.outputs.SHORT_IMAGE_NAME }}
+      IMAGE_SHORT_NAME: ${{ steps.prepare-outputs.outputs.IMAGE_SHORT_NAME }}
     steps:
       - name: Scan plan
         run: |
@@ -120,9 +120,9 @@ jobs:
         run: |
           if [ "${TARGET}" = "docker" ]; then
             SHORT_NAME=${INCOMMING_IMAGE##*/}
+            echo "IMAGE_SHORT_NAME=${SHORT_NAME%:*}" >> "$GITHUB_OUTPUT"
 
-            SAFE_NAME=${SHORT_NAME%:*}
-            echo "IMAGE_SHORT_NAME=${SAFE_NAME}" >> "$GITHUB_OUTPUT"
+            SAFE_NAME=${SHORT_NAME//:/_}
             SAFE_NAME=${SAFE_NAME//\//_}
             SAFE_NAME=${SAFE_NAME//-/_}
             if [ "${RUNNER}" != "" ]; then
@@ -155,6 +155,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout repository (source target)
+        if: ${{ inputs.target == 'source' }}
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
@@ -221,6 +222,7 @@ jobs:
           if [ "${ONLY_HIGH_CRITICAL}" = "true" ]; then
             SECURITY_SEVERITY_THRESHOLD='7'
           fi
+          if [ "${TARGET}" = "docker" ]; then
           jq --raw-output --arg sst "$SECURITY_SEVERITY_THRESHOLD" '["Tool", "Image", "CVE", "Severity", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
               $headers, (
                   .runs[0].results[] as $result | if ($result.security_severity | tonumber) >= ($sst | tonumber) then
@@ -237,7 +239,24 @@ jobs:
                   ] else empty end
               )
           ) | @csv' "${SARIF_FILE%.sarif}.ext.sarif" > "${SARIF_FILE%.sarif}.csv"
-          ls -la
+          fi
+          if [ "${TARGET}" = "source" ]; then
+          jq --raw-output --arg sst "$SECURITY_SEVERITY_THRESHOLD" '["Tool", "CVE", "Severity", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
+              $headers, (
+                  .runs[0].results[] as $result | if ($result.security_severity | tonumber) >= ($sst | tonumber) then
+                  [
+                      ("grype"),
+                      ($result.info | capture("Vulnerability (?<cve>.*)"; "n") | .cve),
+                      ($result.security_severity | tonumber | if . < 4 then "LOW" elif . < 7 then "MEDIUM" elif . < 9 then "HIGH" else "CRITICAL" end),
+                      ($result.info | capture("Package: (?<package>.*)"; "n") | .package),
+                      ($result.info | capture("Version: (?<version>.*)"; "n") | .version),
+                      ($result.info | capture("Fix Version: (?<fix_version>.*)"; "n") | .fix_version),
+                      $result.message.text
+
+                  ] else empty end
+              )
+          ) | @csv' "${SARIF_FILE%.sarif}.ext.sarif" > "${SARIF_FILE%.sarif}.csv"
+          fi
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Grype SARIF
@@ -246,7 +265,7 @@ jobs:
         with:
           sarif_file: |
             ${{ needs.init.outputs.GRYPE_FILENAME }}
-          category: ${{ needs.init.outputs.SHORT_IMAGE_NAME }}
+          category: ${{ needs.init.outputs.IMAGE_SHORT_NAME || 'source' }}
 
       - name: Upload all scan artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
@@ -270,6 +289,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout repository (source target)
+        if: ${{ inputs.target == 'source' }}
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
@@ -317,6 +337,7 @@ jobs:
               | $rule.fullDescription.text | gsub("\n"; " ")
               )})' "$SARIF_FILE"  > "${SARIF_FILE%.sarif}.ext.sarif"
 
+          if [ "${TARGET}" = "docker" ]; then
           jq --raw-output '["Tool", "Image", "CVE", "Severity", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
               $headers, (
                   .runs[0].results[] as $result | [
@@ -331,8 +352,22 @@ jobs:
                   ]
               )
           ) | @csv' "${SARIF_FILE%.sarif}.ext.sarif" > "${SARIF_FILE%.sarif}.csv"
-
-          ls -la
+          fi
+          if [ "${TARGET}" = "source" ]; then
+          jq --raw-output '["Tool", "CVE", "Severity", "Package", "Affected Version", "Fix Version", "Summary"] as $headers | (
+              $headers, (
+                  .runs[0].results[] as $result | [
+                      ("trivy"),
+                      ($result.ruleId),
+                      ($result.message.text | capture("Severity: (?<severity>\\w+)"; "n") | .severity),
+                      ($result.message.text | capture("Package: (?<package>.*)"; "n") | .package),
+                      ($result.message.text | capture("Installed Version: (?<version>.*)"; "n") | .version),
+                      ($result.message.text | capture("Fixed Version: (?<fix_version>.*)"; "n") | .fix_version),
+                      ($result.info)
+                  ]
+              )
+          ) | @csv' "${SARIF_FILE%.sarif}.ext.sarif" > "${SARIF_FILE%.sarif}.csv"
+          fi
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Trivy SARIF
@@ -340,7 +375,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@6bc82e05fd0ea64601dd4b465378bbcf57de0314  # v4.32.1
         with:
           sarif_file: ${{ needs.init.outputs.TRIVY_FILENAME }}
-          category: ${{ needs.init.outputs.SHORT_IMAGE_NAME }}
+          category: ${{ needs.init.outputs.IMAGE_SHORT_NAME || 'source' }}
 
       - name: Upload all scan artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
