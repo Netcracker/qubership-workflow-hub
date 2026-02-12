@@ -202,20 +202,9 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         ### 💽 Creating Charts metadata file
-        charts_metadata=""
-        for chart in ${{ github.workspace }}/.cr-release-packages/*.tgz; do
-          chart_name=$(helm show chart ${chart} | grep "name: " | sed "s#^\s*name:\s*##" | tr -d '\r')
-          chart_version=$(helm show chart ${chart} | grep "version: " | sed "s#^\s*version:\s*##" | tr -d '\r')
-          chart_app_version=$(helm show chart ${chart} | grep "appVersion: " | sed "s#^\s*appVersion:\s*##" | tr -d '\r')
-          chart_meta="{\"name\":\"${chart_name}\",\"version\":\"${chart_version}\",\"appVersion\":\"${chart_app_version}\",\"type\":\"application\",\"mime-type\":\"application/vnd.qubership.helm.chart\",\"reference\":\"oci://ghcr.io/${GITHUB_REPOSITORY,,}/${chart_name}:${chart_version}\"}"
-          mkdir -p ./charts_meta
-          echo ${chart_meta} > ./charts_meta/${chart_name}-${chart_version}.json
-          charts_metadata="${charts_metadata}${chart_meta},"
-        done
-        charts_metadata=${charts_metadata%,}  # Remove trailing comma
-        charts_metadata="{\"charts\":[${charts_metadata}]}"
-        echo "metadata=${charts_metadata}" >> $GITHUB_OUTPUT
-        echo "metadata=${charts_metadata}" >> $GITHUB_STEP_SUMMARY
+        chmod +x "${GITHUB_ACTION_PATH}/chart-metadata.sh"
+        ${GITHUB_ACTION_PATH}/chart-metadata.sh "${{ github.workspace }}/.cr-release-packages" "${{ inputs.working-directory }}/charts_meta"
+
     - name: "Upload charts meta"
       if: ${{ inputs.publish-charts == 'true' }}
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4.6.2
