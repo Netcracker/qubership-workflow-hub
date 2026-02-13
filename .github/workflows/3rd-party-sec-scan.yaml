@@ -130,10 +130,10 @@ jobs:
           mkdir -p $report_dir
           report_file_path=${report_dir}/${report_file_name}
           echo "Report file path: ${report_file_path}"
-          for component in $(yq 'keys | .[]' ${CONFIG_FILE//*\//} | paste -sd ' ' -); do
+          for component in $(yq 'keys | .[]' ${CONFIG_FILE} | paste -sd ' ' -); do
             echo "[INFO]: Processing $component's images..."
-            images=$(yq -r '.["'${component}'"] | join(" ")' ${CONFIG_FILE//*\//})
-            #images=$(yq e ".${component}[]" ${CONFIG_FILE//*\//})
+            images=$(yq -r '.["'${component}'"] | join(" ")' ${CONFIG_FILE})
+            #images=$(yq e ".${component}[]" ${CONFIG_FILE})
             for image in $images; do
               echo "Image: $image"
               SHORT_NAME=${image##*/}
