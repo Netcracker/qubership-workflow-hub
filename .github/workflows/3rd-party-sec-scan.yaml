@@ -143,7 +143,7 @@ jobs:
               SAFE_NAME=${SAFE_NAME//-/_}
               echo "Safe name: $SAFE_NAME"
               echo "[DEBUG]: find ./sarif -name grype-${SAFE_NAME}*.csv -o -name trivy-${SAFE_NAME}*.csv"
-              find ./sarif -name "grype-${SAFE_NAME}*.csv" -o -name "trivy-${SAFE_NAME}*.csv" -print0 | while IFS= read -r -d '' f
+              find ./sarif \( -name "grype-${SAFE_NAME}*.csv" -o -name "trivy-${SAFE_NAME}*.csv" \) -print0 | while IFS= read -r -d '' f
               do
                 echo "File: $f"
                 echo "\"Component\",$(head -n 1 "$f")" > "${f}__new"
@@ -153,7 +153,7 @@ jobs:
           done
           :> ${report_file_path}
           i=0
-          find ./sarif -name "*.csv__new" | sort | while IFS= read -r -d '' f
+          find ./sarif -name "*.csv__new" -print0 | while IFS= read -r -d '' f
           do
             if [ $i -eq 0 ]; then
               cat $f >> ${report_file_path}
