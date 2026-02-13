@@ -1,0 +1,166 @@
+---
+
+# Workflow to scan Docker images vulnerabilities by Grape and Trivy
+# To make it work create a configuration file .qubership/3rd-party-sec-scan-config.yaml
+# Example configuration file can be found there: config/examples/3rd-party-sec-scan-config.yaml
+name: Security Scan 3rd-party Docker images
+run-name: >
+  Security Scan
+on:
+  workflow_dispatch:
+    inputs:
+      only-high-critical:
+        description: "Scope only HIGH + CRITICAL"
+        required: false
+        default: true
+        type: boolean
+      trivy-scan:
+        description: "Trivy scan"
+        required: false
+        default: true
+        type: boolean
+      grype-scan:
+        description: "Grype scan"
+        required: false
+        default: true
+        type: boolean
+      continue-on-error:
+        description: "Continue on error"
+        required: false
+        default: true
+        type: boolean
+      only-fixed:
+        description: "Ignore unfixed vulnerabilities"
+        required: false
+        default: true
+        type: boolean
+  schedule:
+    - cron: "0 3 * * 0" # every Sunday at 03:00 UTC
+permissions:
+  contents: read
+
+env:
+  CONFIG_FILE: .qubership/3rd-party-sec-scan-config.yaml
+  REPORT_BRANCH: reports
+jobs:
+  load-config:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.config.outputs.packages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Read config
+        id: config
+        run: |
+          echo "only-high-critical: ${{ inputs.only-high-critical }}"
+          echo "trivy-scan: ${{ inputs.trivy-scan }}"
+          echo "grype-scan: ${{ inputs.grype-scan }}"
+          echo "continue-on-error: ${{ inputs.continue-on-error }}"
+          echo "only-fixed: ${{ inputs.only-fixed }}"
+          echo "1. ==================================================================================="
+          yq -oj '.' $CONFIG_FILE
+          echo "2. ==================================================================================="
+          yq -oj '.' $CONFIG_FILE | jq -c 'to_entries | map({repo: .key, image: .value[]}) | {packages: .}'
+          echo "3. ==================================================================================="
+
+          packages=$(yq -oj '.' $CONFIG_FILE | jq -c 'to_entries | map({repo: .key, image: .value[]})')
+          echo "packages=$packages" >> $GITHUB_OUTPUT
+
+  security-scan-matrix:
+    needs: load-config
+    permissions:
+      security-events: write
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        package: "${{ fromJson(needs.load-config.outputs.packages) }}"
+    name: "${{ matrix.package.image }}"
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@main
+    with:
+      target: 'docker'
+      image: ${{ matrix.package.image }}
+      only-high-critical: ${{ (github.event_name == 'schedule' && true) || inputs.only-high-critical }}
+      trivy-scan: ${{ (github.event_name == 'schedule' && true) || inputs.trivy-scan }}
+      grype-scan: ${{ (github.event_name == 'schedule' && true) || inputs.grype-scan }}
+      continue-on-error: ${{ (github.event_name == 'schedule' && true) || inputs.continue-on-error }}
+      only-fixed: ${{ (github.event_name == 'schedule' && true) || inputs.only-fixed }}
+      upload-sarif-to-security: false
+
+  create-report:
+    needs: [security-scan-matrix]
+    if: always()
+    env:
+      S3_BUCKET: cve-reports-dev  # arn:aws:s3:::cve-reports-dev
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: '*.sarif'
+          path: ./sarif
+          merge-multiple: true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Generate report
+        env:
+          ACTOR: ${{ github.actor }}
+        run: |
+          ### Generating CSV report
+          # mkdir -p repo
+          cur_date=$(date +%Y-%m-%d)
+          cur_time=$(date +%H-%M-%S)
+          cur_date_time=${cur_date}_${cur_time}
+          report_file_name=report-${cur_date_time}.csv
+          report_dir=reports/${cur_date}
+          mkdir -p $report_dir
+          report_file_path=${report_dir}/${report_file_name}
+          echo "Report file path: ${report_file_path}"
+          for component in $(yq 'keys | .[]' ${CONFIG_FILE//*\//} | paste -sd ' ' -); do
+            echo "[INFO]: Processing $component's images..."
+            images=$(yq -r '.["'${component}'"] | join(" ")' ${CONFIG_FILE//*\//})
+            #images=$(yq e ".${component}[]" ${CONFIG_FILE//*\//})
+            for image in $images; do
+              echo "Image: $image"
+              SHORT_NAME=${image##*/}
+              SAFE_NAME=${SHORT_NAME//:/_}
+              SAFE_NAME=${SAFE_NAME//\//_}
+              SAFE_NAME=${SAFE_NAME//-/_}
+              echo "Safe name: $SAFE_NAME"
+              # ls -la ./sarif
+              echo "[DEBUG]: find ./sarif -name grype-${SAFE_NAME}*.csv -o -name trivy-${SAFE_NAME}*.csv"
+
+              for f in $(find ./sarif -name grype-${SAFE_NAME}*.csv -o -name trivy-${SAFE_NAME}*.csv); do
+                echo "File: $f"
+                echo "\"Component\",$(head -n 1 "$f")" > "${f}__new"
+                tail -n +2 "$f" | sed "s/^/\"${component}\",/" >> "${f}__new"
+              done
+            done
+          done
+          :> ${report_file_path}
+          i=0
+          for f in $(find ./sarif -name *.csv__new | sort); do
+            if [ $i -eq 0 ]; then
+              cat $f >> ${report_file_path}
+            else
+              tail -n +2 $f >> ${report_file_path}
+            fi
+            i=$((i + 1))
+          done
+          echo "Report file path: ${report_file_path}"
+          echo "REPORT_FILE_PATH=${report_file_path}" >> $GITHUB_ENV
+          aws s3 cp "${report_file_path}" "s3://$S3_BUCKET/${report_file_path}" --quiet
