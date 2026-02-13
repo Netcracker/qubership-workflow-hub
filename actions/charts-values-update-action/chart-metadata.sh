@@ -39,8 +39,6 @@ mkdir -p "$OUTPUT_DIR"
 
 echo "Source directory:     $SOURCE_DIR"
 echo "Output directory:     $OUTPUT_DIR"
-echo "Reference:            $CHART_REFERENCE"
-echo ""
 
 # Change to source directory to find .tgz files
 cd "$SOURCE_DIR" || exit 1
