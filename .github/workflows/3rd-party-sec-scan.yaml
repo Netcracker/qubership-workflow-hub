@@ -49,7 +49,9 @@ jobs:
       packages: ${{ steps.config.outputs.packages }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
       - name: Read config
         id: config
         run: |
@@ -78,7 +80,7 @@ jobs:
       matrix:
         package: "${{ fromJson(needs.load-config.outputs.packages) }}"
     name: "${{ matrix.package.image }}"
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@8dcca236b2ba574bec6cc1aedad5d81fa526e654 # main
     with:
       target: 'docker'
       image: ${{ matrix.package.image }}
@@ -98,19 +100,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Download artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: '*.sarif'
           path: ./sarif
           merge-multiple: true
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -121,7 +123,6 @@ jobs:
           ACTOR: ${{ github.actor }}
         run: |
           ### Generating CSV report
-          # mkdir -p repo
           cur_date=$(date +%Y-%m-%d)
           cur_time=$(date +%H-%M-%S)
           cur_date_time=${cur_date}_${cur_time}
@@ -130,10 +131,10 @@ jobs:
           mkdir -p $report_dir
           report_file_path=${report_dir}/${report_file_name}
           echo "Report file path: ${report_file_path}"
-          for component in $(yq 'keys | .[]' ${CONFIG_FILE//*\//} | paste -sd ' ' -); do
+          for component in $(yq 'keys | .[]' ${CONFIG_FILE} | paste -sd ' ' -); do
             echo "[INFO]: Processing $component's images..."
-            images=$(yq -r '.["'${component}'"] | join(" ")' ${CONFIG_FILE//*\//})
-            #images=$(yq e ".${component}[]" ${CONFIG_FILE//*\//})
+            images=$(yq -r '.["'${component}'"] | join(" ")' ${CONFIG_FILE})
+            #images=$(yq e ".${component}[]" ${CONFIG_FILE})
             for image in $images; do
               echo "Image: $image"
               SHORT_NAME=${image##*/}
@@ -141,10 +142,9 @@ jobs:
               SAFE_NAME=${SAFE_NAME//\//_}
               SAFE_NAME=${SAFE_NAME//-/_}
               echo "Safe name: $SAFE_NAME"
-              # ls -la ./sarif
               echo "[DEBUG]: find ./sarif -name grype-${SAFE_NAME}*.csv -o -name trivy-${SAFE_NAME}*.csv"
-
-              for f in $(find ./sarif -name grype-${SAFE_NAME}*.csv -o -name trivy-${SAFE_NAME}*.csv); do
+              find ./sarif \( -name "grype-${SAFE_NAME}*.csv" -o -name "trivy-${SAFE_NAME}*.csv" \) -print0 | while IFS= read -r -d '' f
+              do
                 echo "File: $f"
                 echo "\"Component\",$(head -n 1 "$f")" > "${f}__new"
                 tail -n +2 "$f" | sed "s/^/\"${component}\",/" >> "${f}__new"
@@ -153,7 +153,8 @@ jobs:
           done
           :> ${report_file_path}
           i=0
-          for f in $(find ./sarif -name *.csv__new | sort); do
+          find ./sarif -name "*.csv__new" -print0 | while IFS= read -r -d '' f
+          do
             if [ $i -eq 0 ]; then
               cat $f >> ${report_file_path}
             else
@@ -163,4 +164,6 @@ jobs:
           done
           echo "Report file path: ${report_file_path}"
           echo "REPORT_FILE_PATH=${report_file_path}" >> $GITHUB_ENV
-          aws s3 cp "${report_file_path}" "s3://$S3_BUCKET/${report_file_path}" --quiet
+          echo "Uploading report to s3://$S3_BUCKET/${report_file_path}"
+          aws s3 cp "${report_file_path}" "s3://$S3_BUCKET/${report_file_path}"
+          # --quiet
