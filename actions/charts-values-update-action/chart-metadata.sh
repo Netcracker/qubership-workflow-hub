@@ -27,6 +27,7 @@ MIME_TYPE="application/vnd.qubership.helm.chart"
 # Determine input/output directories
 SOURCE_DIR="${1:-$(pwd)}"
 OUTPUT_DIR="${2:-$(pwd)}"
+OUTPUT_DIR=$(realpath -m -- "$OUTPUT_DIR")
 
 # Verify source directory exists
 if [[ ! -d "$SOURCE_DIR" ]]; then
