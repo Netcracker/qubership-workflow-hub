@@ -163,4 +163,5 @@ jobs:
           done
           echo "Report file path: ${report_file_path}"
           echo "REPORT_FILE_PATH=${report_file_path}" >> $GITHUB_ENV
-          aws s3 cp "${report_file_path}" "s3://$S3_BUCKET/${report_file_path}" --quiet
+          aws s3 cp "${report_file_path}" "s3://$S3_BUCKET/${report_file_path}"
+          # --quiet
