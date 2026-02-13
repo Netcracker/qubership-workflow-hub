@@ -1,0 +1,52 @@
+---
+
+qubership-jaeger:
+  - envoyproxy/envoy:v1.35.2
+  - ghcr.io/jaegertracing/spark-dependencies/spark-dependencies:latest
+  - jaegertracing/example-hotrod:1.74.0
+  - jaegertracing/jaeger:2.11.0
+  - jaegertracing/jaeger-cassandra-schema:1.74.0
+  - jaegertracing/jaeger-es-index-cleaner:1.74.0
+  - jaegertracing/jaeger-es-rollover:1.74.0
+qubership-logging-operator:
+  - docker.io/alpine:3.21.3
+  - docker.io/fluent/fluent-bit:4.0.1
+  - docker.io/graylog/graylog:5.2.12
+  - docker.io/mongo:5.0.31
+  - fluent/fluent-bit:3.0.6
+  - ghcr.io/jimmidyson/configmap-reload:v0.13.1
+  - ghcr.io/jimmidyson/configmap-reload:v0.15.0
+  - graylog/graylog:5.2.7
+  - mongo:5.0.19
+qubership-monitoring-operator:
+  - docker.io/bloomberg/goldpinger:3.10.2
+  - docker.io/grafana/grafana-image-renderer:3.12.9
+  - docker.io/grafana/grafana:11.6.5
+  - docker.io/jimmidyson/configmap-reload:v0.5.0
+  - docker.io/joeelliott/cert-exporter:v2.14.0
+  - docker.io/prom/alertmanager:v0.28.1
+  - docker.io/prom/blackbox-exporter:v0.27.0
+  - docker.io/prom/cloudwatch-exporter:v0.16.0
+  - docker.io/prom/node-exporter:v1.9.0
+  - docker.io/prom/prometheus:v3.2.1
+  - docker.io/prom/pushgateway:v1.11.0
+  - docker.io/prometheuscommunity/json-exporter:v0.7.0
+  - docker.io/prometheuscommunity/stackdriver-exporter:v0.18.0
+  - docker.io/victoriametrics/operator:config-reloader-v0.63.0
+  - docker.io/victoriametrics/operator:v0.63.0
+  - docker.io/victoriametrics/victoria-metrics:v1.126.0
+  - docker.io/victoriametrics/vmagent:v1.126.0
+  - docker.io/victoriametrics/vmalert:v1.126.0
+  - docker.io/victoriametrics/vmauth:v1.126.0
+  - docker.io/victoriametrics/vminsert:v1.126.0-cluster
+  - docker.io/victoriametrics/vmselect:v1.126.0-cluster
+  - docker.io/victoriametrics/vmstorage:v1.126.0-cluster
+  - gcr.io/stackdriver-prometheus/stackdriver-prometheus-sidecar:0.8.0
+  - ghcr.io/jimmidyson/configmap-reload:v0.14.0
+  - ghcr.io/tomkerkhove/promitor-agent-resource-discovery:0.13.0
+  - ghcr.io/tomkerkhove/promitor-agent-scraper:2.13.0
+  - quay.io/grafana-operator/grafana-operator:v4.9.0
+  - quay.io/jacksontj/promxy:v0.0.92
+  - quay.io/prometheus-operator/prometheus-config-reloader:v0.80.1
+  - quay.io/prometheus-operator/prometheus-operator:v0.80.1
+  - registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0
