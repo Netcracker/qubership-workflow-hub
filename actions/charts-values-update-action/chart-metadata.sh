@@ -10,7 +10,6 @@
 #   OUTPUT_DIR  — directory to save generated .json files (default: current)
 #
 # name, version, appVersion are obtained via: helm show chart
-# reference — from environment variable CHART_REFERENCE
 # =============================================================================
 
 set -euo pipefail
@@ -20,9 +19,6 @@ if ! command -v helm >/dev/null 2>&1; then
     echo "Error: command 'helm' not found in the system"
     exit 1
 fi
-
-# Check required environment variable
-: "${CHART_REFERENCE:?Error: environment variable CHART_REFERENCE is not set. Example: oci://ghcr.io/org/chart:1.2.3}"
 
 # Fixed values
 CHART_TYPE="application"
@@ -69,7 +65,9 @@ for tgz in "${tgz_files[@]}"; do
     CHART_NAME=$(echo "$helm_output"     | grep '^name:'     | sed 's/^name:[[:space:]]*//; s/"//g')
     CHART_VERSION=$(echo "$helm_output"  | grep '^version:'  | sed 's/^version:[[:space:]]*//; s/"//g')
     APP_VERSION=$(echo "$helm_output"    | grep '^appVersion:' | sed 's/^appVersion:[[:space:]]*//; s/"//g' || echo "")
-
+    if [ -z "$CHART_REFERENCE" ]; then
+        CHART_REFERENCE="oci://ghcr.io/${GITHUB_REPOSITORY,,}/${CHART_NAME}:${CHART_VERSION}"
+    fi
     if [[ -z "$CHART_NAME" || -z "$CHART_VERSION" ]]; then
         echo "  → Error: failed to extract name or version"
         continue
