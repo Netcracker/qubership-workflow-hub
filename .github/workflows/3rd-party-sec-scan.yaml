@@ -49,7 +49,9 @@ jobs:
       packages: ${{ steps.config.outputs.packages }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
       - name: Read config
         id: config
         run: |
@@ -98,19 +100,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Download artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: '*.sarif'
           path: ./sarif
           merge-multiple: true
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -144,7 +146,7 @@ jobs:
               # ls -la ./sarif
               echo "[DEBUG]: find ./sarif -name grype-${SAFE_NAME}*.csv -o -name trivy-${SAFE_NAME}*.csv"
 
-              for f in $(find ./sarif -name grype-${SAFE_NAME}*.csv -o -name trivy-${SAFE_NAME}*.csv); do
+              for f in $(find ./sarif -name "grype-${SAFE_NAME}*.csv" -o -name "trivy-${SAFE_NAME}*.csv"); do
                 echo "File: $f"
                 echo "\"Component\",$(head -n 1 "$f")" > "${f}__new"
                 tail -n +2 "$f" | sed "s/^/\"${component}\",/" >> "${f}__new"
@@ -153,7 +155,7 @@ jobs:
           done
           :> ${report_file_path}
           i=0
-          for f in $(find ./sarif -name *.csv__new | sort); do
+          for f in $(find ./sarif -name "*.csv__new" | sort); do
             if [ $i -eq 0 ]; then
               cat $f >> ${report_file_path}
             else
@@ -163,5 +165,6 @@ jobs:
           done
           echo "Report file path: ${report_file_path}"
           echo "REPORT_FILE_PATH=${report_file_path}" >> $GITHUB_ENV
+          echo "Uploading report to s3://$S3_BUCKET/${report_file_path}"
           aws s3 cp "${report_file_path}" "s3://$S3_BUCKET/${report_file_path}"
           # --quiet
