@@ -42,7 +42,7 @@ permissions:
 env:
   CONFIG_FILE: .qubership/3rd-party-sec-scan-config.yaml
   IMAGES_CONFIG_FILE: final-output/final-3rd-party-images.yaml
-  ORG_PREFIXES: 'ghcr.io/netcracker'
+  ORG_PREFIX: 'ghcr.io/netcracker'
 jobs:
   init:
     runs-on: ubuntu-24.04
@@ -106,7 +106,7 @@ jobs:
           OWNER: Netcracker
         run: |
           # Loading prefixes → array
-          IFS=',' read -ra PREFIXES <<< "$(echo "$ORG_PREFIXES" | tr -d ' ')"
+          # IFS=',' read -ra PREFIXES <<< "$(echo "$ORG_PREFIXES" | tr -d ' ')"
 
           # Extracting charts for the repo from config
           CHARTS=$(yq e ".repositories[] | select(.name == \"$REPO_NAME\") | .charts[]" ${CONFIG_FILE} -r | grep -v '^null$')
@@ -203,14 +203,9 @@ jobs:
             while IFS= read -r img; do
               echo "Image: $img"
               [[ -z "$img" ]] && continue
-              is_internal=false
-              for prefix in "${PREFIXES[@]}"; do
-                if [[ "$img" == ${prefix}* ]]; then
-                  is_internal=true
-                  break
-                fi
-              done
-              if ! $is_internal; then
+              if [[ "$img" == ${ORG_PREFIX}* ]]; then
+                continue
+              else
                 THIRD_PARTY_ALL+=("$img")
               fi
             done <<< "$IMAGES"
