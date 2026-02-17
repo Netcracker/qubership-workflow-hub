@@ -152,7 +152,8 @@ jobs:
                 yaml_line=""
                 for i in "${!parts[@]}"; do
                   if (( i < ${#parts[@]}-1 )); then
-                    yaml_line+="${parts[i]}:\n  "
+                    spaces=$(printf '%*s' "$i" '')
+                    yaml_line+="${parts[i]}:\n ${spaces}"
                   else
                     yaml_line+="${parts[i]}: true"
                   fi
@@ -169,6 +170,11 @@ jobs:
             (cd "$CHART_DIR" && helm dependency build) || echo "::warning::helm dependency build failed for $chart_rel_path"
 
             # Running helm template
+            echo "  → Running helm template"
+            helm template "release-$REPO_NAME" "$CHART_DIR" -f "$DEBUG_VALUES" --debug
+            helm template "release-$REPO_NAME" "$CHART_DIR" \
+              -f "$DEBUG_VALUES" \
+              --debug | yq ' .. | .image? | select(.) ' -   | sort -u
             helm template "release-$REPO_NAME" "$CHART_DIR" \
               -f "$DEBUG_VALUES" \
               --debug > "$TMP_DIR/rendered.yaml" 2> "$TMP_DIR/helm-debug.log" || {
