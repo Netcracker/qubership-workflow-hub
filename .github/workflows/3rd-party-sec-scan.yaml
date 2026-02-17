@@ -123,7 +123,7 @@ jobs:
 
           mkdir -p output
           # Array to hold all 3rd-party images for the repo
-          THIRD_PARTY_ALL=()
+          # THIRD_PARTY_ALL=()
           echo "$CHARTS" | while read -r chart_rel_path; do
             CHART_PATH="$TMP_DIR/$chart_rel_path"
 
@@ -196,11 +196,13 @@ jobs:
               else
                 echo "   Adding 3rd-party image: $img"
                 THIRD_PARTY_ALL+=("$img")
+                echo "$img" >> "$TMP_DIR/3rd-party-images.txt"
                 echo "[DEBUG]: ${#THIRD_PARTY_ALL[*]}"
               fi
             done <<< "$IMAGES"
 
           done  # End of the loop over charts
+          mapfile -t THIRD_PARTY_ALL < "$TMP_DIR/3rd-party-images.txt"
           echo "Number of All 3rd-party images for $REPO_NAME: ${#THIRD_PARTY_ALL[*]}"
 
           rm -rf "$TMP_DIR"
