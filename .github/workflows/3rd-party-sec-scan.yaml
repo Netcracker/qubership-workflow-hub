@@ -125,8 +125,7 @@ jobs:
           }
 
           mkdir -p output
-          THIRD_PARTY_ALL=()  # Массив для всех уникальных 3rd-party images из всех charts
-
+          THIRD_PARTY_ALL=() # Array to hold all 3rd-party images for the repo
           echo "$CHARTS" | while read -r chart_rel_path; do
             CHART_PATH="$TMP_DIR/$chart_rel_path"
 
@@ -202,10 +201,11 @@ jobs:
             # Filter internal images.
             while IFS= read -r img; do
               echo "Image: $img"
-              [[ -z "$img" ]] && continue
+              echo "ORG_PREFIX: $ORG_PREFIX"
               if [[ "$img" == "${ORG_PREFIX}"* ]]; then
                 continue
               else
+                echo "   Adding 3rd-party image: $img"
                 THIRD_PARTY_ALL+=("$img")
               fi
             done <<< "$IMAGES"
