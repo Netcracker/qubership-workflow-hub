@@ -182,6 +182,8 @@ jobs:
                 cat "$TMP_DIR/helm-debug.log" | tail -n 30
                 continue
               }
+            echo "[DEBUG]: $(cat $TMP_DIR/helm-debug.log)"
+            echo "[DEBUG]: $(cat $TMP_DIR/rendered.yaml)"
 
             # Extracting images from rendered manifests
             # IMAGES=$(yq e '.. | (
