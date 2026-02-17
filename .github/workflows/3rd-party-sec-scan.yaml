@@ -41,17 +41,243 @@ permissions:
 
 env:
   CONFIG_FILE: .qubership/3rd-party-sec-scan-config.yaml
-  REPORT_BRANCH: reports
+  IMAGES_CONFIG_FILE: final-output/final-3rd-party-images.yaml
+  ORG_PREFIXES: 'ghcr.io/netcracker'
 jobs:
+  init:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      # - name: Install yq and jq
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y jq
+
+      # - name: Install yq
+      #   uses: frenck/action-yq@v1
+      #   with:
+      #     version: '4.44.3'
+
+      - name: Generate matrix from config
+        id: set-matrix
+        run: |
+          if [[ ! -f "${CONFIG_FILE}" ]]; then
+            echo "::error::Config file not found"
+            exit 1
+          fi
+
+          REPOS=$(yq e '.repositories[].name' "${CONFIG_FILE}" -r | jq -R . | jq -s .)
+          MATRIX_JSON=$(echo "{\"repo\": $REPOS}")
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+          echo "Generated matrix: $MATRIX_JSON"
+
+  process-repos:
+    needs: init
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.init.outputs.matrix) }}
+
+    steps:
+      # - name: Set up tools
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y jq
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16
+
+      # - name: Install yq
+      #   uses: frenck/action-yq@v1
+      #   with:
+      #     version: '4.44.3'
+
+      - name: Checkout current repository (for config)
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Process repository ${{ matrix.repo }}
+        env:
+          # ORG_PREFIXES: ${{ github.event.inputs.org_image_prefix || 'ghcr.io/qubership/,registry.qubership.io/' }}
+          REPO_NAME: ${{ matrix.repo }}
+          OWNER: Netcracker  # Измените, если owner другой
+        run: |
+          # Префиксы → массив
+          IFS=',' read -ra PREFIXES <<< "$(echo "$ORG_PREFIXES" | tr -d ' ')"
+
+          # Извлекаем charts для этого repo из конфига
+          CHARTS=$(yq e ".repositories[] | select(.name == \"$REPO_NAME\") | .charts[]" ${CONFIG_FILE} -r | grep -v '^null$')
+
+          if [[ -z "$CHARTS" ]]; then
+            echo "::warning::No charts found for $REPO_NAME"
+            exit 0
+          fi
+
+          # Клонируем репозиторий
+          TMP_DIR="temp-$REPO_NAME"
+          rm -rf "$TMP_DIR"
+          git clone --depth=1 "https://github.com/$OWNER/$REPO_NAME.git" "$TMP_DIR" || {
+            echo "::warning::Cannot clone $OWNER/$REPO_NAME"
+            exit 0
+          }
+
+          mkdir -p output
+          THIRD_PARTY_ALL=()  # Массив для всех уникальных 3rd-party images из всех charts
+
+          echo "$CHARTS" | while read -r chart_rel_path; do
+            CHART_PATH="$TMP_DIR/$chart_rel_path"
+
+            if [[ ! -f "$CHART_PATH" ]]; then
+              echo "::warning::$chart_rel_path not found in $REPO_NAME"
+              continue
+            fi
+
+            CHART_DIR=$(dirname "$CHART_PATH")
+
+            echo "→ Processing chart: $chart_rel_path"
+
+            # Ищем все condition из dependencies
+            CONDITIONS=$(yq e '.dependencies[] | select(has("condition")) | .condition' "$CHART_PATH" -r | grep -v '^null$')
+
+            DEBUG_VALUES="$TMP_DIR/debug-values.yaml"
+            : > "$DEBUG_VALUES"
+
+            if [[ -n "$CONDITIONS" ]]; then
+              while IFS= read -r cond; do
+                IFS='.' read -ra parts <<< "$cond"
+                yaml_line=""
+                for i in "${!parts[@]}"; do
+                  if (( i < ${#parts[@]}-1 )); then
+                    yaml_line+="${parts[i]}:\n  "
+                  else
+                    yaml_line+="${parts[i]}: true"
+                  fi
+                done
+                echo -e "$yaml_line" >> "$DEBUG_VALUES"
+                echo "" >> "$DEBUG_VALUES"
+              done <<< "$CONDITIONS"
+            else
+              echo "# No conditional dependencies" > "$DEBUG_VALUES"
+            fi
+
+            # Helm dependency build (если нужно)
+            (cd "$CHART_DIR" && helm dependency build) || echo "::warning::helm dependency build failed for $chart_rel_path"
+
+            # Запускаем helm template
+            helm template "release-$REPO_NAME" "$CHART_DIR" \
+              -f "$DEBUG_VALUES" \
+              --debug > "$TMP_DIR/rendered.yaml" 2> "$TMP_DIR/helm-debug.log" || {
+                echo "::warning::helm template failed for $chart_rel_path"
+                cat "$TMP_DIR/helm-debug.log" | tail -n 30
+                continue
+              }
+
+            # Извлекаем образы
+            IMAGES=$(yq e '.. | (
+                .image?,
+                (.spec?.template?.spec?.containers // [] | .[].image?),
+                (.spec?.template?.spec?.initContainers // [] | .[].image?)
+              ) | select(.)' "$TMP_DIR/rendered.yaml" -r | \
+              sort -u | grep -v '^null$')
+
+            if [[ -z "$IMAGES" ]]; then
+              echo "  No images found in $chart_rel_path"
+              continue
+            fi
+
+            # Фильтруем только внешние образы и добавляем в общий массив
+            while IFS= read -r img; do
+              [[ -z "$img" ]] && continue
+              is_internal=false
+              for prefix in "${PREFIXES[@]}"; do
+                if [[ "$img" == ${prefix}* ]]; then
+                  is_internal=true
+                  break
+                fi
+              done
+              if ! $is_internal; then
+                THIRD_PARTY_ALL+=("$img")
+              fi
+            done <<< "$IMAGES"
+
+          done  # конец цикла по charts
+
+          rm -rf "$TMP_DIR"
+
+          # Сохраняем уникальные images для repo
+          if (( ${#THIRD_PARTY_ALL[@]} > 0 )); then
+            UNIQUE_IMAGES=$(printf "%s\n" "${THIRD_PARTY_ALL[@]}" | sort -u)
+            OUTPUT_FILE="output/$REPO_NAME-3rd-party-images.yaml"
+            echo "$REPO_NAME:" > "$OUTPUT_FILE"
+            while IFS= read -r img; do
+              echo "  - $img" >> "$OUTPUT_FILE"
+            done <<< "$UNIQUE_IMAGES"
+            cat "$OUTPUT_FILE"
+          else
+            echo "No 3rd-party images for $REPO_NAME"
+          fi
+
+      - name: Upload artifact for ${{ matrix.repo }}
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: images-${{ matrix.repo }}
+          path: output/*.yaml
+          if-no-files-found: ignore
+
+  combine-results:
+    needs: process-repos
+    runs-on: ubuntu-24.04
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: images-*
+
+      - name: Combine into final file
+        run: |
+          mkdir -p final-output
+          echo "repositories:" > ${IMAGES_CONFIG_FILE}
+
+          for dir in artifacts/images-*; do
+            if [[ ! -d "$dir" ]]; then continue; fi
+            file=$(find "$dir" -name '*-3rd-party-images.yaml' -print -quit)
+            if [[ -f "$file" ]]; then
+              cat "$file" | sed 's/^/  /' >> ${IMAGES_CONFIG_FILE}
+            fi
+          done
+
+          echo ""
+          echo "Final combined file:"
+          cat ${IMAGES_CONFIG_FILE} || echo "(empty)"
+
+      - name: Upload final artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3rd-party-images
+          path: ${{ env.IMAGES_CONFIG_FILE }}
+          if-no-files-found: warn
+
   load-config:
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.config.outputs.packages }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      # - name: Checkout
+      #   uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      #   with:
+      #     persist-credentials: false
+      - name: Download config artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          persist-credentials: false
+          name: 3rd-party-images
       - name: Read config
         id: config
         run: |
@@ -61,12 +287,12 @@ jobs:
           echo "continue-on-error: ${{ inputs.continue-on-error }}"
           echo "only-fixed: ${{ inputs.only-fixed }}"
           echo "1. ==================================================================================="
-          yq -oj '.' $CONFIG_FILE
+          yq -oj '.' ${IMAGES_CONFIG_FILE}
           echo "2. ==================================================================================="
-          yq -oj '.' $CONFIG_FILE | jq -c 'to_entries | map({repo: .key, image: .value[]}) | {packages: .}'
+          yq -oj '.' ${IMAGES_CONFIG_FILE} | jq -c 'to_entries | map({repo: .key, image: .value[]}) | {packages: .}'
           echo "3. ==================================================================================="
 
-          packages=$(yq -oj '.' $CONFIG_FILE | jq -c 'to_entries | map({repo: .key, image: .value[]})')
+          packages=$(yq -oj '.' ${IMAGES_CONFIG_FILE} | jq -c 'to_entries | map({repo: .key, image: .value[]})')
           echo "packages=$packages" >> $GITHUB_OUTPUT
 
   security-scan-matrix:
