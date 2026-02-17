@@ -211,12 +211,12 @@ jobs:
             done <<< "$IMAGES"
 
           done  # End of the loop over charts
-          echo "All 3rd-party images for $REPO_NAME: ${THIRD_PARTY_ALL[*]}"
+          # echo "All 3rd-party images for $REPO_NAME: ${THIRD_PARTY_ALL[*]}"
 
           rm -rf "$TMP_DIR"
 
           # Saving unique images for the repo
-          if (( ${#THIRD_PARTY_ALL[@]} > 0 )); then
+          if (( ${#THIRD_PARTY_ALL[*]} > 0 )); then
             UNIQUE_IMAGES=$(printf "%s\n" "${THIRD_PARTY_ALL[@]}" | sort -u)
             OUTPUT_FILE="output/$REPO_NAME-3rd-party-images.yaml"
             echo "$REPO_NAME:" > "$OUTPUT_FILE"
