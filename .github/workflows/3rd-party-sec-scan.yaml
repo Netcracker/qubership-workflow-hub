@@ -203,7 +203,7 @@ jobs:
             while IFS= read -r img; do
               echo "Image: $img"
               [[ -z "$img" ]] && continue
-              if [[ "$img" == ${ORG_PREFIX}* ]]; then
+              if [[ "$img" == "${ORG_PREFIX}"* ]]; then
                 continue
               else
                 THIRD_PARTY_ALL+=("$img")
@@ -211,6 +211,7 @@ jobs:
             done <<< "$IMAGES"
 
           done  # End of the loop over charts
+          echo "All 3rd-party images for $REPO_NAME: ${THIRD_PARTY_ALL[*]}"
 
           rm -rf "$TMP_DIR"
 
