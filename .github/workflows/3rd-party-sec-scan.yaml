@@ -174,16 +174,15 @@ jobs:
             # helm template "release-$REPO_NAME" "$CHART_DIR" -f "$DEBUG_VALUES" --debug
             helm template "release-$REPO_NAME" "$CHART_DIR" \
               -f "$DEBUG_VALUES" \
-              --debug | yq ' .. | .image? | select(.) ' -   | sort -u
+              | yq ' .. | .image? | select(.) ' -   | sort -u
             helm template "release-$REPO_NAME" "$CHART_DIR" \
-              -f "$DEBUG_VALUES" \
-              --debug > "$TMP_DIR/rendered.yaml" 2> "$TMP_DIR/helm-debug.log" || {
+              -f "$DEBUG_VALUES" > "$TMP_DIR/rendered.yaml" 2> "$TMP_DIR/helm-debug.log" || {
                 echo "::warning::helm template failed for $chart_rel_path"
                 cat "$TMP_DIR/helm-debug.log" | tail -n 30
                 continue
               }
-            echo "[DEBUG]: $(cat $TMP_DIR/helm-debug.log)"
-            echo "[DEBUG]: $(cat $TMP_DIR/rendered.yaml)"
+            # echo "[DEBUG]: $(cat $TMP_DIR/helm-debug.log)"
+            # echo "[DEBUG]: $(cat $TMP_DIR/rendered.yaml)"
 
             # Extracting images from rendered manifests
             # IMAGES=$(yq e '.. | (
@@ -192,8 +191,9 @@ jobs:
             #     (.spec?.template?.spec?.initContainers // [] | .[].image?)
             #   ) | select(.)' "$TMP_DIR/rendered.yaml" -r | \
             #   sort -u | grep -v '^null$')
-            IMAGES=$(cat "$TMP_DIR/rendered.yaml" | yq ' .. | .image? | select(.) ' -   | sort -u)
-            if [[ -z "$IMAGES" ]]; then
+            IMAGES=$(cat "$TMP_DIR/rendered.yaml" | yq '.. | .image? | select(.)' - | grep -v -- '---' | sort -u)
+            echo "  Found images: $IMAGES"
+            if [[ -z "${IMAGES}" ]]; then
               echo "  No images found in $chart_rel_path"
               continue
             fi
