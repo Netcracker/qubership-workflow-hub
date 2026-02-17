@@ -192,7 +192,8 @@ jobs:
             #   ) | select(.)' "$TMP_DIR/rendered.yaml" -r | \
             #   sort -u | grep -v '^null$')
             IMAGES=$(cat "$TMP_DIR/rendered.yaml" | yq '.. | .image? | select(.)' - | grep -v -- '---' | sort -u)
-            echo "  Found images: $IMAGES"
+            echo "  Found images:"
+            echo "$IMAGES"
             if [[ -z "${IMAGES}" ]]; then
               echo "  No images found in $chart_rel_path"
               continue
@@ -200,6 +201,7 @@ jobs:
 
             # Filter internal images.
             while IFS= read -r img; do
+              echo "Image: $img"
               [[ -z "$img" ]] && continue
               is_internal=false
               for prefix in "${PREFIXES[@]}"; do
