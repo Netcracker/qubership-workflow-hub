@@ -140,7 +140,7 @@ jobs:
             echo "→ Processing chart: $chart_rel_path"
 
             # Searching for condition
-            CONDITIONS=$(yq e '.dependencies[] // [] | select(has("condition")) | .condition' "$CHART_PATH" -r | grep -v '^null$')
+            CONDITIONS=$(yq e '.dependencies[] // [] | select(has("condition")) | .condition' "$CHART_PATH" -r | grep -v '^null$' || true)
             echo "  Found conditions: $CONDITIONS"
 
             DEBUG_VALUES="$TMP_DIR/debug-values.yaml"
@@ -171,7 +171,7 @@ jobs:
 
             # Running helm template
             echo "  → Running helm template"
-            helm template "release-$REPO_NAME" "$CHART_DIR" -f "$DEBUG_VALUES" --debug
+            # helm template "release-$REPO_NAME" "$CHART_DIR" -f "$DEBUG_VALUES" --debug
             helm template "release-$REPO_NAME" "$CHART_DIR" \
               -f "$DEBUG_VALUES" \
               --debug | yq ' .. | .image? | select(.) ' -   | sort -u
@@ -184,13 +184,13 @@ jobs:
               }
 
             # Extracting images from rendered manifests
-            IMAGES=$(yq e '.. | (
-                .image?,
-                (.spec?.template?.spec?.containers // [] | .[].image?),
-                (.spec?.template?.spec?.initContainers // [] | .[].image?)
-              ) | select(.)' "$TMP_DIR/rendered.yaml" -r | \
-              sort -u | grep -v '^null$')
-
+            # IMAGES=$(yq e '.. | (
+            #     .image?,
+            #     (.spec?.template?.spec?.containers // [] | .[].image?),
+            #     (.spec?.template?.spec?.initContainers // [] | .[].image?)
+            #   ) | select(.)' "$TMP_DIR/rendered.yaml" -r | \
+            #   sort -u | grep -v '^null$')
+            IMAGES=$(cat "$TMP_DIR/rendered.yaml" | yq ' .. | .image? | select(.) ' -   | sort -u)
             if [[ -z "$IMAGES" ]]; then
               echo "  No images found in $chart_rel_path"
               continue
