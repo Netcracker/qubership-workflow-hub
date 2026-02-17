@@ -188,6 +188,7 @@ jobs:
             fi
 
             # Filter internal images.
+            :> "$TMP_DIR/3rd-party-images.txt"
             while IFS= read -r img; do
               echo "Image: $img"
               echo "ORG_PREFIX: $ORG_PREFIX"
