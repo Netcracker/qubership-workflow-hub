@@ -103,12 +103,12 @@ jobs:
         env:
           # ORG_PREFIXES: ${{ github.event.inputs.org_image_prefix || 'ghcr.io/qubership/,registry.qubership.io/' }}
           REPO_NAME: ${{ matrix.repo }}
-          OWNER: Netcracker  # Измените, если owner другой
+          OWNER: Netcracker
         run: |
-          # Префиксы → массив
+          # Loading prefixes → array
           IFS=',' read -ra PREFIXES <<< "$(echo "$ORG_PREFIXES" | tr -d ' ')"
 
-          # Извлекаем charts для этого repo из конфига
+          # Extracting charts for the repo from config
           CHARTS=$(yq e ".repositories[] | select(.name == \"$REPO_NAME\") | .charts[]" ${CONFIG_FILE} -r | grep -v '^null$')
 
           if [[ -z "$CHARTS" ]]; then
@@ -116,7 +116,7 @@ jobs:
             exit 0
           fi
 
-          # Клонируем репозиторий
+          # Cloning repository
           TMP_DIR="temp-$REPO_NAME"
           rm -rf "$TMP_DIR"
           git clone --depth=1 "https://github.com/$OWNER/$REPO_NAME.git" "$TMP_DIR" || {
@@ -140,7 +140,7 @@ jobs:
             echo "→ Processing chart: $chart_rel_path"
 
             # Ищем все condition из dependencies
-            CONDITIONS=$(yq e '.dependencies[] | select(has("condition")) | .condition' "$CHART_PATH" -r | grep -v '^null$')
+            CONDITIONS=$(yq e '.dependencies[] // []| select(has("condition")) | .condition' "$CHART_PATH" -r | grep -v '^null$')
 
             DEBUG_VALUES="$TMP_DIR/debug-values.yaml"
             : > "$DEBUG_VALUES"
@@ -163,10 +163,10 @@ jobs:
               echo "# No conditional dependencies" > "$DEBUG_VALUES"
             fi
 
-            # Helm dependency build (если нужно)
+            # Helm dependency build
             (cd "$CHART_DIR" && helm dependency build) || echo "::warning::helm dependency build failed for $chart_rel_path"
 
-            # Запускаем helm template
+            # Running helm template
             helm template "release-$REPO_NAME" "$CHART_DIR" \
               -f "$DEBUG_VALUES" \
               --debug > "$TMP_DIR/rendered.yaml" 2> "$TMP_DIR/helm-debug.log" || {
@@ -175,7 +175,7 @@ jobs:
                 continue
               }
 
-            # Извлекаем образы
+            # Extracting images from rendered manifests
             IMAGES=$(yq e '.. | (
                 .image?,
                 (.spec?.template?.spec?.containers // [] | .[].image?),
@@ -188,7 +188,7 @@ jobs:
               continue
             fi
 
-            # Фильтруем только внешние образы и добавляем в общий массив
+            # Filter internal images.
             while IFS= read -r img; do
               [[ -z "$img" ]] && continue
               is_internal=false
@@ -203,11 +203,11 @@ jobs:
               fi
             done <<< "$IMAGES"
 
-          done  # конец цикла по charts
+          done  # End of the loop over charts
 
           rm -rf "$TMP_DIR"
 
-          # Сохраняем уникальные images для repo
+          # Saving unique images for the repo
           if (( ${#THIRD_PARTY_ALL[@]} > 0 )); then
             UNIQUE_IMAGES=$(printf "%s\n" "${THIRD_PARTY_ALL[@]}" | sort -u)
             OUTPUT_FILE="output/$REPO_NAME-3rd-party-images.yaml"
@@ -222,7 +222,7 @@ jobs:
 
       - name: Upload artifact for ${{ matrix.repo }}
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: images-${{ matrix.repo }}
           path: output/*.yaml
@@ -257,7 +257,7 @@ jobs:
           cat ${IMAGES_CONFIG_FILE} || echo "(empty)"
 
       - name: Upload final artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: 3rd-party-images
           path: ${{ env.IMAGES_CONFIG_FILE }}
