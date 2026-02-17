@@ -139,8 +139,9 @@ jobs:
 
             echo "→ Processing chart: $chart_rel_path"
 
-            # Ищем все condition из dependencies
-            CONDITIONS=$(yq e '.dependencies[] // []| select(has("condition")) | .condition' "$CHART_PATH" -r | grep -v '^null$')
+            # Searching for condition
+            CONDITIONS=$(yq e '.dependencies[] // [] | select(has("condition")) | .condition' "$CHART_PATH" -r | grep -v '^null$')
+            echo "  Found conditions: $CONDITIONS"
 
             DEBUG_VALUES="$TMP_DIR/debug-values.yaml"
             : > "$DEBUG_VALUES"
@@ -162,6 +163,7 @@ jobs:
             else
               echo "# No conditional dependencies" > "$DEBUG_VALUES"
             fi
+            echo "[DEBUG]: Generated debug values for conditions: $(cat "$DEBUG_VALUES")"
 
             # Helm dependency build
             (cd "$CHART_DIR" && helm dependency build) || echo "::warning::helm dependency build failed for $chart_rel_path"
