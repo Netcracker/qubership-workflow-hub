@@ -196,7 +196,7 @@ jobs:
               else
                 echo "   Adding 3rd-party image: $img"
                 THIRD_PARTY_ALL+=("$img")
-                echo "[DEBUG]: ${THIRD_PARTY_ALL[*]}"
+                echo "[DEBUG]: ${#THIRD_PARTY_ALL[*]}"
               fi
             done <<< "$IMAGES"
 
