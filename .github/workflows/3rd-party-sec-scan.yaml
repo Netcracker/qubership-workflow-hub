@@ -289,10 +289,10 @@ jobs:
           echo "1. ==================================================================================="
           yq -oj '.' ${IMAGES_CONFIG_FILE}
           echo "2. ==================================================================================="
-          yq -oj '.' ${IMAGES_CONFIG_FILE} | jq -c 'to_entries | map({repo: .key, image: .value[]}) | {packages: .}'
+          yq -oj '.' ${IMAGES_CONFIG_FILE} | jq -c '.repositories | map({repo: .key, image: .value[]}) | {packages: .}'
           echo "3. ==================================================================================="
 
-          packages=$(yq -oj '.' ${IMAGES_CONFIG_FILE} | jq -c 'to_entries | map({repo: .key, image: .value[]})')
+          packages=$(yq -oj '.' ${IMAGES_CONFIG_FILE} | jq -c '.repositories | map({repo: .key, image: .value[]})')
           echo "packages=$packages" >> $GITHUB_OUTPUT
 
   security-scan-matrix:
