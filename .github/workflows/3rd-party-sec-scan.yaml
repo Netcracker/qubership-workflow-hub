@@ -106,7 +106,7 @@ jobs:
           OWNER: Netcracker
         run: |
           # Extracting charts for the repo from config
-          CHARTS=$(yq e ".repositories[] | select(.name == \"$REPO_NAME\") | .charts[]" ${CONFIG_FILE} -r | grep -v '^null$')
+          CHARTS=$(yq e ".repositories[] | select(.name == \"$REPO_NAME\") | .charts[].path" ${CONFIG_FILE} -r | grep -v '^null$')
 
           if [[ -z "$CHARTS" ]]; then
             echo "::warning::No charts found for $REPO_NAME"
