@@ -319,6 +319,27 @@ jobs:
           name: 3rd-party-images
           path: final-output
 
+      - name: Create summary
+        run: |
+          yq -r '
+            to_entries[] as $entry |
+
+            "### \($entry.key)\n\n" +
+
+            "| image | tag |\n|---|----|\n" +
+
+            ($entry.value |
+              map(
+                split(":") as $p |
+                "| \($p[0]) | \($p[1] // \"latest\") |"
+              ) |
+              join("\n")
+            ) +
+
+            "\n---\n"
+          ' "${IMAGES_CONFIG_FILE}" > all-components.md
+          cat all-components.md >> $GITHUB_STEP_SUMMARY
+
       - name: Download artifacts
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
