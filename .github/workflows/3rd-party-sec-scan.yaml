@@ -179,9 +179,10 @@ jobs:
             echo "  → Running helm template"
             helm template "release-$REPO_NAME" "$CHART_DIR" \
               -f "$DEBUG_VALUES" \
-              $SET_VARS \
+              --debug $SET_VARS \
               | yq ' .. | .image? | select(.) ' -   | sort -u
             helm template "release-$REPO_NAME" "$CHART_DIR" \
+              $SET_VARS --debug \
               -f "$DEBUG_VALUES" > "$TMP_DIR/rendered.yaml" 2> "$TMP_DIR/helm-debug.log" || {
                 echo "::warning::helm template failed for $chart_rel_path"
                 cat "$TMP_DIR/helm-debug.log" | tail -n 30
