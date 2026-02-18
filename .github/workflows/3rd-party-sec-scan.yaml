@@ -166,10 +166,20 @@ jobs:
             # Helm dependency build
             (cd "$CHART_DIR" && helm dependency build) || echo "::warning::helm dependency build failed for $chart_rel_path"
 
+            # Building --set arguments for chart
+            SET_VARS=$(yq e ".repositories[] | select(.name == \"qubership-jaeger\") | .charts[] | select(.path == \"$chart\") | .set // [] | join(\" --set \")" ./3rd-party-sec-scan-config.yaml -r)
+            if [[ -z "${SET_VARS}" ]]; then
+              echo "Set vars: none"
+            else
+              SET_VARS="--set ${SET_VARS}"
+              echo "Set vars: $SET_VARS"
+            fi
+
             # Running helm template
             echo "  → Running helm template"
             helm template "release-$REPO_NAME" "$CHART_DIR" \
               -f "$DEBUG_VALUES" \
+              $SET_VARS \
               | yq ' .. | .image? | select(.) ' -   | sort -u
             helm template "release-$REPO_NAME" "$CHART_DIR" \
               -f "$DEBUG_VALUES" > "$TMP_DIR/rendered.yaml" 2> "$TMP_DIR/helm-debug.log" || {
