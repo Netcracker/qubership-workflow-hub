@@ -46,3 +46,5 @@ repositories:
   - name: qubership-env-checker
     charts:
       - path: charts/env-checker/Chart.yaml
+        set:
+          - OPS_IDP_URL=https://keycloak.k8s.qubership.org
