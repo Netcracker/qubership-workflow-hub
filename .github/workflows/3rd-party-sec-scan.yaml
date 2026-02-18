@@ -167,7 +167,7 @@ jobs:
             (cd "$CHART_DIR" && helm dependency build) || echo "::warning::helm dependency build failed for $chart_rel_path"
 
             # Building --set arguments for chart
-            SET_VARS=$(yq e ".repositories[] | select(.name == \"qubership-jaeger\") | .charts[] | select(.path == \"$chart\") | .set // [] | join(\" --set \")" ./3rd-party-sec-scan-config.yaml -r)
+            SET_VARS=$(yq e ".repositories[] | select(.name == \"$REPO_NAME\") | .charts[] | select(.path == \"$chart_rel_path\") | .set // [] | join(\" --set \")" ${CONFIG_FILE} -r)
             if [[ -z "${SET_VARS}" ]]; then
               echo "Set vars: none"
             else
