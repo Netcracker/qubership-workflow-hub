@@ -63,16 +63,17 @@ jobs:
           fi
 
           REPOS=$(yq e '.repositories[].name' "${CONFIG_FILE}" -r | jq -R . | jq -s -c .)
-          MATRIX_JSON="\"repo\": $REPOS"
+          MATRIX_JSON="{\"repo\": $REPOS}"
           echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
           echo "Generated matrix: $MATRIX_JSON"
 
   process-repos:
     needs: init
     runs-on: ubuntu-24.04
+    name: "${{ matrix.repo }}"
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.init.outputs.matrix).repo }}
+      matrix: ${{ fromJson(needs.init.outputs.matrix) }}
 
     steps:
       - name: Install Helm
