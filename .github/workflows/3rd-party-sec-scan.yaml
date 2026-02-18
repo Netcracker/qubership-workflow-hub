@@ -51,16 +51,8 @@ jobs:
     steps:
       - name: Checkout current repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      # - name: Install yq and jq
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y jq
-
-      # - name: Install yq
-      #   uses: frenck/action-yq@v1
-      #   with:
-      #     version: '4.44.3'
+        with:
+          persist-credentials: true
 
       - name: Generate matrix from config
         id: set-matrix
@@ -71,7 +63,7 @@ jobs:
           fi
 
           REPOS=$(yq e '.repositories[].name' "${CONFIG_FILE}" -r | jq -R . | jq -s -c .)
-          MATRIX_JSON=$(echo "{\"repo\": $REPOS}")
+          MATRIX_JSON="\"repo\": $REPOS}"
           echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
           echo "Generated matrix: $MATRIX_JSON"
 
@@ -83,25 +75,16 @@ jobs:
       matrix: ${{ fromJson(needs.init.outputs.matrix) }}
 
     steps:
-      # - name: Set up tools
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y jq
-
       - name: Install Helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
 
-      # - name: Install yq
-      #   uses: frenck/action-yq@v1
-      #   with:
-      #     version: '4.44.3'
-
       - name: Checkout current repository (for config)
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: true
 
       - name: Process repository ${{ matrix.repo }}
         env:
-          # ORG_PREFIXES: ${{ github.event.inputs.org_image_prefix || 'ghcr.io/qubership/,registry.qubership.io/' }}
           REPO_NAME: ${{ matrix.repo }}
           OWNER: Netcracker
         run: |
@@ -278,10 +261,6 @@ jobs:
     outputs:
       packages: ${{ steps.config.outputs.packages }}
     steps:
-      # - name: Checkout
-      #   uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      #   with:
-      #     persist-credentials: false
       - name: Download config artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
@@ -370,7 +349,6 @@ jobs:
           for component in $(yq 'keys | .[]' ${IMAGES_CONFIG_FILE} | paste -sd ' ' -); do
             echo "[INFO]: Processing $component's images..."
             images=$(yq -r '.["'${component}'"] | join(" ")' ${IMAGES_CONFIG_FILE})
-            #images=$(yq e ".${component}[]" ${IMAGES_CONFIG_FILE})
             for image in $images; do
               echo "Image: $image"
               SHORT_NAME=${image##*/}
@@ -402,4 +380,3 @@ jobs:
           echo "REPORT_FILE_PATH=${report_file_path}" >> $GITHUB_ENV
           echo "Uploading report to s3://$S3_BUCKET/${report_file_path}"
           aws s3 cp "${report_file_path}" "s3://$S3_BUCKET/${report_file_path}"
-          # --quiet
