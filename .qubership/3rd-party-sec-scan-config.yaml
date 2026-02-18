@@ -43,3 +43,6 @@ repositories:
   - name: qubership-monitoring-operator
     charts:
       - path: charts/qubership-monitoring-operator/Chart.yaml
+  - name: qubership-env-checker
+    charts:
+      - path: charts/env-checker/Chart.yaml
