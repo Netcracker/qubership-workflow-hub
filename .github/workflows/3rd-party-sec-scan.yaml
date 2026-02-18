@@ -322,6 +322,7 @@ jobs:
 
       - name: Create summary
         run: |
+          # shellcheck disable=SC2016
           yq -r '
             to_entries[] as $entry |
 
