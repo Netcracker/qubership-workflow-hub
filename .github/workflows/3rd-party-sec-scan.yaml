@@ -63,7 +63,7 @@ jobs:
           fi
 
           REPOS=$(yq e '.repositories[].name' "${CONFIG_FILE}" -r | jq -R . | jq -s -c .)
-          MATRIX_JSON="\"repo\": $REPOS}"
+          MATRIX_JSON="\"repo\": $REPOS"
           echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
           echo "Generated matrix: $MATRIX_JSON"
 
