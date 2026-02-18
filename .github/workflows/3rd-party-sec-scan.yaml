@@ -235,22 +235,18 @@ jobs:
     if: always()
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           path: artifacts
           pattern: images-*
+          merge-multiple: true
 
       - name: Combine into final file
         run: |
           mkdir -p final-output
-          echo "repositories:" > ${IMAGES_CONFIG_FILE}
 
-          for dir in artifacts/images-*; do
-            if [[ ! -d "$dir" ]]; then continue; fi
-            file=$(find "$dir" -name '*-3rd-party-images.yaml' -print -quit)
-            if [[ -f "$file" ]]; then
-              cat "$file" | sed 's/^/  /' >> ${IMAGES_CONFIG_FILE}
-            fi
+          for f in artifacts/*.yaml; do
+              cat "$file" >> ${IMAGES_CONFIG_FILE}
           done
 
           echo ""
@@ -289,10 +285,10 @@ jobs:
           echo "1. ==================================================================================="
           yq -oj '.' $(basename ${IMAGES_CONFIG_FILE})
           echo "2. ==================================================================================="
-          yq -oj '.' $(basename ${IMAGES_CONFIG_FILE}) | jq -c '.repositories | map({repo: .key, image: .value[]}) | {packages: .}'
+          yq -oj '.' $(basename ${IMAGES_CONFIG_FILE}) | jq -c 'to_entries | map({repo: .key, image: .value[]}) | {packages: .}'
           echo "3. ==================================================================================="
 
-          packages=$(yq -oj '.' $(basename ${IMAGES_CONFIG_FILE}) | jq -c '.repositories | map({repo: .key, image: .value[]})')
+          packages=$(yq -oj '.' $(basename ${IMAGES_CONFIG_FILE}) | jq -c 'to_entries | map({repo: .key, image: .value[]})')
           echo "packages=$packages" >> $GITHUB_OUTPUT
 
   security-scan-matrix:
