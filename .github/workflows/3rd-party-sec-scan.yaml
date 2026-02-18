@@ -275,6 +275,7 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: 3rd-party-images
+          path: final-output
       - name: Read config
         id: config
         run: |
@@ -284,12 +285,12 @@ jobs:
           echo "continue-on-error: ${{ inputs.continue-on-error }}"
           echo "only-fixed: ${{ inputs.only-fixed }}"
           echo "1. ==================================================================================="
-          yq -oj '.' $(basename ${IMAGES_CONFIG_FILE})
+          yq -oj '.' ${IMAGES_CONFIG_FILE}
           echo "2. ==================================================================================="
-          yq -oj '.' $(basename ${IMAGES_CONFIG_FILE}) | jq -c 'to_entries | map({repo: .key, image: .value[]}) | {packages: .}'
+          yq -oj '.' ${IMAGES_CONFIG_FILE} | jq -c 'to_entries | map({repo: .key, image: .value[]}) | {packages: .}'
           echo "3. ==================================================================================="
 
-          packages=$(yq -oj '.' $(basename ${IMAGES_CONFIG_FILE}) | jq -c 'to_entries | map({repo: .key, image: .value[]})')
+          packages=$(yq -oj '.' ${IMAGES_CONFIG_FILE} | jq -c 'to_entries | map({repo: .key, image: .value[]})')
           echo "packages=$packages" >> $GITHUB_OUTPUT
 
   security-scan-matrix:
@@ -322,10 +323,11 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - name: Download config artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          persist-credentials: false
+          name: 3rd-party-images
+          path: final-output
 
       - name: Download artifacts
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
@@ -354,10 +356,10 @@ jobs:
           mkdir -p $report_dir
           report_file_path=${report_dir}/${report_file_name}
           echo "Report file path: ${report_file_path}"
-          for component in $(yq 'keys | .[]' ${CONFIG_FILE} | paste -sd ' ' -); do
+          for component in $(yq 'keys | .[]' ${IMAGES_CONFIG_FILE} | paste -sd ' ' -); do
             echo "[INFO]: Processing $component's images..."
-            images=$(yq -r '.["'${component}'"] | join(" ")' ${CONFIG_FILE})
-            #images=$(yq e ".${component}[]" ${CONFIG_FILE})
+            images=$(yq -r '.["'${component}'"] | join(" ")' ${IMAGES_CONFIG_FILE})
+            #images=$(yq e ".${component}[]" ${IMAGES_CONFIG_FILE})
             for image in $images; do
               echo "Image: $image"
               SHORT_NAME=${image##*/}
