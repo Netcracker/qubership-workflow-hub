@@ -246,8 +246,8 @@ jobs:
           mkdir -p final-output
           ls -la artifacts
 
-          for f in artifacts/*/*.yaml; do
-              cat "$file" >> ${IMAGES_CONFIG_FILE}
+          for f in artifacts/*.yaml; do
+              cat "$f" >> ${IMAGES_CONFIG_FILE}
           done
 
           echo ""
