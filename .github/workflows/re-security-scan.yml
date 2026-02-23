@@ -261,7 +261,7 @@ jobs:
 
       - name: Upload Grype SARIF
         if: inputs.upload-sarif-to-security
-        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2  # v4.32.2
+        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e  # v4.32.4
         with:
           sarif_file: |
             ${{ needs.init.outputs.GRYPE_FILENAME }}
@@ -372,7 +372,7 @@ jobs:
 
       - name: Upload Trivy SARIF
         if: inputs.upload-sarif-to-security
-        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2  # v4.32.2
+        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e  # v4.32.4
         with:
           sarif_file: ${{ needs.init.outputs.TRIVY_FILENAME }}
           category: ${{ needs.init.outputs.IMAGE_SHORT_NAME || 'source' }}
