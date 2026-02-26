@@ -244,8 +244,8 @@ runs:
         MAVEN_USERNAME: ${{ inputs.maven-username }}
         MAVEN_PASSWORD: ${{ inputs.maven-token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
-        GITHUB_ACTOR: ${{ github.actor }}
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_ACTOR: ${{ inputs.maven-username || github.actor }}
+        GITHUB_TOKEN: ${{ inputs.maven-token || github.token }}
         SONAR_TOKEN: ${{ inputs.sonar-token }}
     - name: "Upload artifact to GitHub Actions artifacts"
       if: ${{ inputs.upload-artifact != 'false' && inputs.artifact-id != '' }}
