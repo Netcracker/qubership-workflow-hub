@@ -182,11 +182,11 @@ runs:
 
     - name: Set up Maven
       if: ${{ inputs.maven-version != '' }}
-      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
+      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
       with:
         maven-version: ${{ inputs.maven-version }}
     - name: Cache local Maven repository
-      uses: actions/cache@v4
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
       with:
         path: ~/.m2/repository
         key: maven-${{ runner.os }}
@@ -195,7 +195,7 @@ runs:
 
     - name: "Set up JDK for deployment"
       if: ${{ inputs.maven-command == 'deploy' }}
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
       with:
         java-version: ${{ inputs.java-version }}
         distribution: "temurin"
@@ -206,7 +206,7 @@ runs:
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
     - name: "Set up JDK for any other Maven command"
       if: ${{ inputs.maven-command != 'deploy' }}
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
       with:
         java-version: ${{ inputs.java-version }}
         distribution: "temurin"
@@ -249,7 +249,7 @@ runs:
         SONAR_TOKEN: ${{ inputs.sonar-token }}
     - name: "Upload artifact to GitHub Actions artifacts"
       if: ${{ inputs.upload-artifact != 'false' && inputs.artifact-id != '' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: ${{ inputs.artifact-id }}
         path: '**/target'
