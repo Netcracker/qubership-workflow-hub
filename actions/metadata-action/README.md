@@ -170,11 +170,13 @@ Unknown placeholders are kept as-is and a warning is logged.
 Docker image tags have a maximum length of **128 characters** and must end with an alphanumeric character (`[a-zA-Z0-9]`).
 
 This action automatically:
+
 - Truncates the generated tag to `tag-max-length` characters (default: `128`)
 - Strips trailing non-alphanumeric characters after truncation
 
 When truncation occurs, a warning is logged:
-```
+
+```text
 ⚠ Tag was truncated from 145 to 128 characters: "very-long-branch-..." -> "very-long-branch"
 ```
 
