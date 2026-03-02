@@ -221,3 +221,8 @@ The configuration file for this action must adhere to [the schema defined](https
 - **Configuration errors:** Validate your YAML against the schema at [config.schema.json](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json).
 - **Branch/tag name issues:** Use `replace-symbol` to customize how '/' is replaced in names (default is `-`).
 - **Tag too long:** Use `tag-max-length` to limit the generated tag length. Trailing non-alphanumeric characters are automatically removed after truncation to ensure Docker compatibility.
+  If truncation cuts off important parts like `timestamp`, use the length modifier on `ref-name` to reserve space for the rest:
+  ```
+  {{ref-name:80}}-{{timestamp}}-{{runNumber}}
+  ```
+  This limits `ref-name` to 80 characters, ensuring `timestamp` and `runNumber` are always included in the result.
