@@ -41403,10 +41403,20 @@ async function run() {
 
     log.debugJSON("Template Values", values);
 
-    let result = truncateTag(fillTemplate(selectedTemplateAndTag.template, values, true), tagMaxLength);
+    const rendered = fillTemplate(selectedTemplateAndTag.template, values, true);
+    let result = truncateTag(rendered, tagMaxLength);
+    if (result !== rendered) {
+      log.warn(`Tag was truncated from ${rendered.length} to ${result.length} characters: "${rendered}" -> "${result}"`);
+    }
 
     if (inputs.mergeTags && inputs.extraTags) {
-      const normalizedExtraTags = normalizeExtraTags(inputs.extraTags).map((tag) => truncateTag(tag, tagMaxLength));
+      const normalizedExtraTags = normalizeExtraTags(inputs.extraTags).map((tag) => {
+        const truncated = truncateTag(tag, tagMaxLength);
+        if (truncated !== tag) {
+          log.warn(`Extra tag was truncated from ${tag.length} to ${truncated.length} characters: "${tag}" -> "${truncated}"`);
+        }
+        return truncated;
+      });
       log.info(`Merging extra tags: ${inputs.extraTags}`);
       if (normalizedExtraTags.length > 0) {
         result = [result, ...normalizedExtraTags].join(", ");
