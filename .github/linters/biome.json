@@ -2,12 +2,10 @@
   "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
   "root": false,
   "files": {
-    "includes": [
-      "**",
-      "!dist",
-      "!dist/**",
-      "!**/dist",
-      "!**/dist/**"
+    "includes": ["**"],
+    "ignore": [
+      "**/dist",
+      "**/dist/**"
     ],
     "ignoreUnknown": false,
     "maxSize": 10485760
