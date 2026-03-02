@@ -147,13 +147,51 @@ Aliases for template compatibility:
 - `dist_tag`, `distTag`
 - `run_number`
 
-Length modifiers are supported for any placeholder, e.g. `{{short-sha:4}}`.
-Example:
+#### Length Modifiers
 
-- Template: `{{ref-name}}-{{short-sha:4}}`
-- Result: `main-8c3c`
+Any placeholder supports an optional length modifier using the syntax `{{key:N}}`, where `N` is the maximum number of characters to keep from the start of the value.
+
+Syntax: `{{key:N}}`
+
+Examples:
+
+| Template                                      | ref-name value                  | Result                                          |
+| --------------------------------------------- | ------------------------------- | ----------------------------------------------- |
+| `{{ref-name:10}}-{{timestamp}}`               | `feature-very-long-branch-name` | `feature-br-20250313235959`                     |
+| `{{short-sha:4}}`                             | `abc12345`                      | `abc1`                                          |
+| `{{ref-name:80}}-{{timestamp}}-{{runNumber}}` | `dependabot-very-long-branch`   | `dependabot-very-long-branch-20250313235959-42` |
+
+This is especially useful to prevent long branch names from consuming the full tag length budget. See [Tag Length Limiting](#tag-length-limiting) for more context.
 
 Unknown placeholders are kept as-is and a warning is logged.
+
+### Tag Length Limiting
+
+Docker image tags have a maximum length of **128 characters** and must end with an alphanumeric character (`[a-zA-Z0-9]`).
+
+This action automatically:
+- Truncates the generated tag to `tag-max-length` characters (default: `128`)
+- Strips trailing non-alphanumeric characters after truncation
+
+When truncation occurs, a warning is logged:
+```
+⚠ Tag was truncated from 145 to 128 characters: "very-long-branch-..." -> "very-long-branch"
+```
+
+**Important:** truncation always cuts from the end of the rendered string. For a template like `{{ref-name}}-{{timestamp}}-{{runNumber}}`, if `ref-name` is very long, the `timestamp` and `runNumber` parts may be cut off entirely.
+
+To avoid this, use the length modifier `{{key:N}}` to limit specific placeholders:
+
+```yaml
+# Limits ref-name to 80 chars, ensuring timestamp and runNumber are always present
+branches-template:
+  - "dependabot/*": "{{ref-name:80}}-{{timestamp}}-{{runNumber}}"
+```
+
+| Scenario      | Template                        | Result (ref-name = 120 chars)                    |
+| ------------- | ------------------------------- | ------------------------------------------------ |
+| No limit      | `{{ref-name}}-{{timestamp}}`    | `<first 113 chars of ref-name>` (timestamp lost) |
+| With modifier | `{{ref-name:80}}-{{timestamp}}` | `<80 chars of ref-name>-20250313235959`          |
 
 ### Semantic Version Parsing Contract
 
@@ -220,9 +258,4 @@ The configuration file for this action must adhere to [the schema defined](https
 - **Missing outputs:** Check if the action ran successfully; use `debug: true` for logs.
 - **Configuration errors:** Validate your YAML against the schema at [config.schema.json](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json).
 - **Branch/tag name issues:** Use `replace-symbol` to customize how '/' is replaced in names (default is `-`).
-- **Tag too long:** Use `tag-max-length` to limit the generated tag length. Trailing non-alphanumeric characters are automatically removed after truncation to ensure Docker compatibility.
-  If truncation cuts off important parts like `timestamp`, use the length modifier on `ref-name` to reserve space for the rest:
-  ```
-  {{ref-name:80}}-{{timestamp}}-{{runNumber}}
-  ```
-  This limits `ref-name` to 80 characters, ensuring `timestamp` and `runNumber` are always included in the result.
+- **Tag too long:** Use `tag-max-length` to limit the generated tag length. If important parts like `timestamp` get cut off, use length modifiers in the template (e.g. `{{ref-name:80}}-{{timestamp}}`). See [Tag Length Limiting](#tag-length-limiting) for details.
