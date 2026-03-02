@@ -153,7 +153,7 @@ async function run() {
     let tagMaxLength = parseInt(inputs.tagMaxLength, 10);
     if (Number.isNaN(tagMaxLength) || tagMaxLength < 1) {
       if (inputs.tagMaxLength) {
-        log.notice(`Invalid tag-max-length value: ${inputs.tagMaxLength}, fallback to ${DEFAULT_MAX_TAG_LENGTH}`);
+        log.warn(`Invalid tag-max-length value: ${inputs.tagMaxLength}, fallback to ${DEFAULT_MAX_TAG_LENGTH}`);
       }
       tagMaxLength = DEFAULT_MAX_TAG_LENGTH;
     }
@@ -162,7 +162,7 @@ async function run() {
     let shortShaLength = parseInt(core.getInput("short-sha"), 10);
 
     if (Number.isNaN(shortShaLength) || shortShaLength < 1 || shortShaLength > 40) {
-      log.notice(`Invalid short-sha value: ${shortShaLength}, fallback to ${DEFAULT_SHORT_SHA_LENGTH}`);
+      log.warn(`Invalid short-sha value: ${shortShaLength}, fallback to ${DEFAULT_SHORT_SHA_LENGTH}`);
       shortShaLength = DEFAULT_SHORT_SHA_LENGTH;
     }
 
@@ -193,12 +193,12 @@ async function run() {
     }
 
     if (!selectedTemplateAndTag.template) {
-      log.warn(`No template found for ref: ${refData.normalizedName}, using default -> ${defaultTemplate}`);
+      log.notice(`No template found for ref: ${refData.normalizedName}, using default -> ${defaultTemplate}`);
       selectedTemplateAndTag.template = defaultTemplate;
     }
 
     if (!selectedTemplateAndTag.distTag) {
-      log.warn(`No dist-tag found for ref: ${refData.normalizedName}, using default -> ${defaultTag}`);
+      log.notice(`No dist-tag found for ref: ${refData.normalizedName}, using default -> ${defaultTag}`);
       selectedTemplateAndTag.distTag = defaultTag;
     }
 
