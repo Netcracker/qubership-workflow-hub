@@ -23,20 +23,20 @@ Or triggered on the `release/1.2.3` branch, resulting in `release-1.2.3-20250313
 
 ## 📌 Inputs
 
-| Name                 | Description                                    | Required | Default                                    |
-| -------------------- | ---------------------------------------------- | -------- | ------------------------------------------ |
-| `ref`                | Branch or tag ref.                             | No       | `github.context.ref`                       |
-| `configuration-path` | Path to the configuration file.                | No       | `./.github/metadata-action-config.yml`     |
-| `short-sha`          | Depth of the short SHA.                        | No       | `7`                                        |
-| `default-template`   | Default template for version generation.       | No       | `{{ref-name}}-{{timestamp}}-{{runNumber}}` |
-| `default-tag`        | Default distribution tag.                      | No       | `latest`                                   |
-| `extra-tags`         | Additional tags to append to the result.       | No       | `""`                                       |
-| `merge-tags`         | Whether to merge `extra-tags` with the result. | No       | `true`                                     |
-| `debug`              | Enable debug mode for detailed logging.        | No       | `false`                                    |
-| `show-report`        | Whether to display a summary report.           | No       | `true`                                     |
-| `dry-run`            | Enable dry-run mode to simulate the action.    | No       | `false`                                    |
-| `replace-symbol`     | Symbol to replace '/' in branch or tag names.  | No       | `-`                                        |
-| `tag-max-length`     | Maximum length for generated tags. Tags are truncated to this length and trailing non-alphanumeric characters are removed. | No | `128` |
+| Name                 | Description                                                                                                                | Required | Default                                    |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
+| `ref`                | Branch or tag ref.                                                                                                         | No       | `github.context.ref`                       |
+| `configuration-path` | Path to the configuration file.                                                                                            | No       | `./.github/metadata-action-config.yml`     |
+| `short-sha`          | Depth of the short SHA.                                                                                                    | No       | `7`                                        |
+| `default-template`   | Default template for version generation.                                                                                   | No       | `{{ref-name}}-{{timestamp}}-{{runNumber}}` |
+| `default-tag`        | Default distribution tag.                                                                                                  | No       | `latest`                                   |
+| `extra-tags`         | Additional tags to append to the result.                                                                                   | No       | `""`                                       |
+| `merge-tags`         | Whether to merge `extra-tags` with the result.                                                                             | No       | `true`                                     |
+| `debug`              | Enable debug mode for detailed logging.                                                                                    | No       | `false`                                    |
+| `show-report`        | Whether to display a summary report.                                                                                       | No       | `true`                                     |
+| `dry-run`            | Enable dry-run mode to simulate the action.                                                                                | No       | `false`                                    |
+| `replace-symbol`     | Symbol to replace '/' in branch or tag names.                                                                              | No       | `-`                                        |
+| `tag-max-length`     | Maximum length for generated tags. Tags are truncated to this length and trailing non-alphanumeric characters are removed. | No       | `128`                                      |
 
 ---
 
