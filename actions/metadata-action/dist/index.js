@@ -41165,7 +41165,7 @@ const Report = __nccwpck_require__(8709);
 
 // --- constants ---
 
-const DEFAULT_MAX_TAG_LENGTH = 100;
+const DEFAULT_MAX_TAG_LENGTH = 128;
 const DEFAULT_SHORT_SHA_LENGTH = 7;
 const DEFAULT_TEMPLATE = "{{ref-name}}-{{timestamp}}-{{runNumber}}";
 const DEFAULT_DIST_TAG = "latest";

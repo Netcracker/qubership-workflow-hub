@@ -46,7 +46,7 @@ inputs:
         required: false
     tag-max-length:
         description: "Maximum length for generated tags."
-        default: "100"
+        default: "128"
         required: false
 outputs:
     result:
