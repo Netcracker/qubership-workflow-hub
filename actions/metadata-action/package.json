@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --verbose",
-    "build": "esbuild src/index.js --bundle --platform=node --target=node20 --outfile=dist/index.js"
+    "build": "esbuild src/index.js --bundle --platform=node --target=node20 --external:undici --outfile=dist/index.js"
   },
   "keywords": [],
   "author": "",
