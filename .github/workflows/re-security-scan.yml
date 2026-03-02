@@ -58,6 +58,7 @@ env:
     ${{ inputs['only-high-critical'] && 'HIGH,CRITICAL' || 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL' }}
   INCOMMING_IMAGE: >-
     ${{ inputs.target == 'docker' && (inputs.image != '' && inputs.image || format('ghcr.io/{0}:latest', github.repository)) || '' }}
+  TEST: ${{ inputs.continue-on-error}}
 
 jobs:
   init:
@@ -305,7 +306,7 @@ jobs:
           format: "sarif"
           ignore-unfixed: ${{ inputs.only-fixed }}
           limit-severities-for-sarif: true
-        continue-on-error: true
+        continue-on-error:  ${{ env.TEST }}
 
       - name: "Trivy scan (Source: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'source' }}
@@ -318,7 +319,7 @@ jobs:
           format: "sarif"
           ignore-unfixed: ${{ inputs.only-fixed }}
           limit-severities-for-sarif: true
-        continue-on-error: true
+        continue-on-error: ${{ env.TEST }}
 
       - name: "Convert Trivy SARIF to CSV"
         env:
