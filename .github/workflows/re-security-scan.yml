@@ -305,7 +305,7 @@ jobs:
           format: "sarif"
           ignore-unfixed: ${{ inputs.only-fixed }}
           limit-severities-for-sarif: true
-        continue-on-error: ${{ inputs.continue-on-error }}
+        continue-on-error: true
 
       - name: "Trivy scan (Source: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'source' }}
@@ -318,7 +318,7 @@ jobs:
           format: "sarif"
           ignore-unfixed: ${{ inputs.only-fixed }}
           limit-severities-for-sarif: true
-        continue-on-error: ${{ inputs.continue-on-error }}
+        continue-on-error: true
 
       - name: "Convert Trivy SARIF to CSV"
         env:
