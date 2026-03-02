@@ -7,6 +7,8 @@ const RefNormalizer = require("./extractor");
 const Report = require("./report");
 
 // --- constants ---
+
+const DEFAULT_MAX_TAG_LENGTH = 128;
 const DEFAULT_SHORT_SHA_LENGTH = 7;
 const DEFAULT_TEMPLATE = "{{ref-name}}-{{timestamp}}-{{runNumber}}";
 const DEFAULT_DIST_TAG = "latest";
@@ -100,6 +102,13 @@ function fillTemplate(template, values, warnOnMissing = false) {
   return result;
 }
 
+function truncateTag(tag, maxLen = DEFAULT_MAX_TAG_LENGTH) {
+  let truncated = tag.slice(0, maxLen);
+  // Docker tag must end with alphanumeric character
+  truncated = truncated.replace(/[^a-zA-Z0-9]+$/, "");
+  return truncated;
+}
+
 function normalizeExtraTags(extraTags) {
   if (!extraTags) return [];
   return extraTags
@@ -123,6 +132,7 @@ async function run() {
       configPath: core.getInput("configuration-path") || DEFAULT_CONFIG_PATH,
       defaultTemplate: core.getInput("default-template"),
       defaultTag: core.getInput("default-tag"),
+      tagMaxLength: core.getInput("tag-max-length"),
     };
 
     log.setDebug(inputs.debug);
@@ -138,6 +148,15 @@ async function run() {
     log.info(`Ref: ${ref}`);
 
     const refData = new RefNormalizer().extract(ref, inputs.replaceSymbol);
+
+    // --- tag-max-length logic ---
+    let tagMaxLength = parseInt(inputs.tagMaxLength, 10);
+    if (Number.isNaN(tagMaxLength) || tagMaxLength < 1) {
+      if (inputs.tagMaxLength) {
+        log.warn(`Invalid tag-max-length value: ${inputs.tagMaxLength}, fallback to ${DEFAULT_MAX_TAG_LENGTH}`);
+      }
+      tagMaxLength = DEFAULT_MAX_TAG_LENGTH;
+    }
 
     // --- short-sha logic ---
     let shortShaLength = parseInt(core.getInput("short-sha"), 10);
@@ -227,10 +246,10 @@ async function run() {
 
     log.debugJSON("Template Values", values);
 
-    let result = fillTemplate(selectedTemplateAndTag.template, values, true);
+    let result = truncateTag(fillTemplate(selectedTemplateAndTag.template, values, true), tagMaxLength);
 
     if (inputs.mergeTags && inputs.extraTags) {
-      const normalizedExtraTags = normalizeExtraTags(inputs.extraTags);
+      const normalizedExtraTags = normalizeExtraTags(inputs.extraTags).map((tag) => truncateTag(tag, tagMaxLength));
       log.info(`Merging extra tags: ${inputs.extraTags}`);
       if (normalizedExtraTags.length > 0) {
         result = [result, ...normalizedExtraTags].join(", ");
@@ -307,6 +326,7 @@ module.exports.__testables = {
   findTemplate,
   fillTemplate,
   normalizeExtraTags,
+  truncateTag,
   _patternCache: patternCache,
   _PATTERN_CACHE_MAX: PATTERN_CACHE_MAX,
 };

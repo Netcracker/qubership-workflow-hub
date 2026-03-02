@@ -44,6 +44,10 @@ inputs:
         description: "Symbol to replace '/' in branch or tag names."
         default: "-"
         required: false
+    tag-max-length:
+        description: "Maximum length for generated tags."
+        default: ""
+        required: false
 outputs:
     result:
         description: "Current timestamp."
