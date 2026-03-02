@@ -50,11 +50,11 @@ inputs:
         required: false
 outputs:
     result:
-        description: "Current timestamp."
+        description: "Rendered version string based on the template."
     ref:
-        description: "Current branch or tag ref."
+        description: "Normalized branch or tag name (deprecated, use ref-name)."
     ref-name:
-        description: "Current branch or tag name."
+        description: "Normalized branch or tag name."
     date:
         description: "Current date."
     time:
@@ -71,6 +71,12 @@ outputs:
         description: "Patch version."
     short-sha:
         description: "Short SHA."
+    commit:
+        description: "Full SHA of the current commit."
+    runNumber:
+        description: "The run number of the workflow."
+    ref-type:
+        description: "The type of the reference (branch or tag)."
 runs:
   using: "node20"
   main: "dist/index.js"

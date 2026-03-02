@@ -11,6 +11,7 @@ This **GitHub Metadata** GitHub Action extracts metadata from the current GitHub
 - Dynamically adapts to branches, tags, and pull requests.
 - Supports additional tags and merging options.
 - Includes dry-run mode for testing without making changes.
+- Enforces configurable maximum tag length (default 128 characters, Docker-compatible).
 
 ### Action Result
 
@@ -30,11 +31,12 @@ Or triggered on the `release/1.2.3` branch, resulting in `release-1.2.3-20250313
 | `default-template`   | Default template for version generation.       | No       | `{{ref-name}}-{{timestamp}}-{{runNumber}}` |
 | `default-tag`        | Default distribution tag.                      | No       | `latest`                                   |
 | `extra-tags`         | Additional tags to append to the result.       | No       | `""`                                       |
-| `merge-tags`         | Whether to merge `extra-tags` with the result. | No       | `false`                                    |
+| `merge-tags`         | Whether to merge `extra-tags` with the result. | No       | `true`                                     |
 | `debug`              | Enable debug mode for detailed logging.        | No       | `false`                                    |
-| `show-report`        | Whether to display a summary report.           | No       | `false`                                    |
+| `show-report`        | Whether to display a summary report.           | No       | `true`                                     |
 | `dry-run`            | Enable dry-run mode to simulate the action.    | No       | `false`                                    |
 | `replace-symbol`     | Symbol to replace '/' in branch or tag names.  | No       | `-`                                        |
+| `tag-max-length`     | Maximum length for generated tags. Tags are truncated to this length and trailing non-alphanumeric characters are removed. | No | `128` |
 
 ---
 
@@ -43,7 +45,7 @@ Or triggered on the `release/1.2.3` branch, resulting in `release-1.2.3-20250313
 | Name        | Description                                                                                                                         | Example         |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | `result`    | Rendered template with metadata based on template rules (e.g. using `v{{major}}.{{minor}}.{{patch}}-{{date}}` for the main branch). | v1.2.3-20250313 |
-| `ref`       | The current branch or tag reference (e.g. `refs/heads/main`).                                                                       | refs/heads/main |
+| `ref`       | Normalized branch or tag name. Deprecated — use `ref-name` instead.                                                                 | main            |
 | `ref-name`  | The name of the current branch or tag.                                                                                              | main            |
 | `date`      | Current date in `YYYYMMDD` format.                                                                                                  | 20250313        |
 | `time`      | Current time in `HHMMSS` format.                                                                                                    | 235959          |
@@ -218,3 +220,4 @@ The configuration file for this action must adhere to [the schema defined](https
 - **Missing outputs:** Check if the action ran successfully; use `debug: true` for logs.
 - **Configuration errors:** Validate your YAML against the schema at [config.schema.json](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json).
 - **Branch/tag name issues:** Use `replace-symbol` to customize how '/' is replaced in names (default is `-`).
+- **Tag too long:** Use `tag-max-length` to limit the generated tag length. Trailing non-alphanumeric characters are automatically removed after truncation to ensure Docker compatibility.
