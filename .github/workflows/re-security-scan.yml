@@ -34,8 +34,8 @@ on:
       only-fixed:
         description: "Ignore unfixed vulnerabilities"
         required: false
-        default: "true"
-        type: string
+        default: true
+        type: boolean
       upload-sarif-to-security:
         description: "Upload SARIF files to repository's Security"
         type: boolean
@@ -58,7 +58,6 @@ env:
     ${{ inputs['only-high-critical'] && 'HIGH,CRITICAL' || 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL' }}
   INCOMMING_IMAGE: >-
     ${{ inputs.target == 'docker' && (inputs.image != '' && inputs.image || format('ghcr.io/{0}:latest', github.repository)) || '' }}
-  
 
 jobs:
   init:
@@ -306,7 +305,8 @@ jobs:
           format: "sarif"
           ignore-unfixed: ${{ inputs.only-fixed }}
           limit-severities-for-sarif: true
-        continue-on-error:  ${{ env.TEST }}
+          version: "0.69.2"
+        continue-on-error: true
 
       - name: "Trivy scan (Source: ${{ env.TRIVY_SEVERITY }})"
         if: ${{ inputs.target == 'source' }}
@@ -319,7 +319,8 @@ jobs:
           format: "sarif"
           ignore-unfixed: ${{ inputs.only-fixed }}
           limit-severities-for-sarif: true
-        continue-on-error: ${{ inputs.continue-on-error }}
+          version: "0.69.2"
+        continue-on-error: true
 
       - name: "Convert Trivy SARIF to CSV"
         env:
