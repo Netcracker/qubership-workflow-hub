@@ -41310,7 +41310,7 @@ async function run() {
     let tagMaxLength = parseInt(inputs.tagMaxLength, 10);
     if (Number.isNaN(tagMaxLength) || tagMaxLength < 1) {
       if (inputs.tagMaxLength) {
-        log.warn(`Invalid tag-max-length value: ${inputs.tagMaxLength}, fallback to ${DEFAULT_MAX_TAG_LENGTH}`);
+        log.notice(`Invalid tag-max-length value: ${inputs.tagMaxLength}, fallback to ${DEFAULT_MAX_TAG_LENGTH}`);
       }
       tagMaxLength = DEFAULT_MAX_TAG_LENGTH;
     }
@@ -41319,7 +41319,7 @@ async function run() {
     let shortShaLength = parseInt(core.getInput("short-sha"), 10);
 
     if (Number.isNaN(shortShaLength) || shortShaLength < 1 || shortShaLength > 40) {
-      log.warn(`Invalid short-sha value: ${shortShaLength}, fallback to ${DEFAULT_SHORT_SHA_LENGTH}`);
+      log.notice(`Invalid short-sha value: ${shortShaLength}, fallback to ${DEFAULT_SHORT_SHA_LENGTH}`);
       shortShaLength = DEFAULT_SHORT_SHA_LENGTH;
     }
 
@@ -41557,7 +41557,7 @@ class ConfigLoader {
     log.dim(`Try to reading configuration ${configPath}`);
 
     if (!fs.existsSync(configPath)) {
-      log.warn(`Configuration file not found: ${configPath}`);
+      log.notice(`Configuration file not found: ${configPath}`);
       this._configExists = false;
       return null;
     }

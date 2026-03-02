@@ -49,7 +49,7 @@ class ConfigLoader {
     log.dim(`Try to reading configuration ${configPath}`);
 
     if (!fs.existsSync(configPath)) {
-      log.warn(`Configuration file not found: ${configPath}`);
+      log.notice(`Configuration file not found: ${configPath}`);
       this._configExists = false;
       return null;
     }
