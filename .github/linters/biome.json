@@ -5,7 +5,9 @@
     "includes": [
       "**",
       "!dist",
-      "!**/dist"
+      "!dist/**",
+      "!**/dist",
+      "!**/dist/**"
     ],
     "ignoreUnknown": false,
     "maxSize": 10485760
