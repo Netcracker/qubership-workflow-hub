@@ -1,28 +1,58 @@
-const core = require("@actions/core");
-const github = require("@actions/github");
-const log = require("@netcracker/action-logger");
-const ConfigLoader = require("../src/loader");
-const RefNormalizer = require("../src/extractor");
-const Report = require("../src/report");
+import { jest } from "@jest/globals";
 
-jest.mock("@actions/core");
-jest.mock("@actions/github");
-jest.mock("@netcracker/action-logger", () => ({
-    group: jest.fn(),
-    endGroup: jest.fn(),
+jest.unstable_mockModule("@actions/core", () => ({
+    getInput: jest.fn(),
+    setOutput: jest.fn(),
+    setFailed: jest.fn(),
     info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    success: jest.fn(),
-    dim: jest.fn(),
-    setDebug: jest.fn(),
-    debugJSON: jest.fn()
+    warning: jest.fn(),
+    notice: jest.fn(),
+    summary: { addRaw: jest.fn(), addTable: jest.fn(), write: jest.fn() },
 }));
-jest.mock("../src/loader");
-jest.mock("../src/extractor");
-jest.mock("../src/report");
+jest.unstable_mockModule("@actions/github", () => ({
+    context: {
+        eventName: "push",
+        ref: "refs/heads/main",
+        sha: "8c3c6b66a6af28f66b17eb5190458d04a2a62e34",
+        runNumber: 42,
+        runId: 12345,
+        actor: "test-actor",
+        workflow: "test-workflow",
+        payload: {},
+        repo: { owner: "test-owner", repo: "test-repo" }
+    }
+}));
+jest.unstable_mockModule("@netcracker/action-logger", () => ({
+    default: {
+        group: jest.fn(),
+        endGroup: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        success: jest.fn(),
+        dim: jest.fn(),
+        setDebug: jest.fn(),
+        debugJSON: jest.fn(),
+        notice: jest.fn(),
+    },
+}));
+jest.unstable_mockModule("../src/loader.js", () => ({
+    default: jest.fn(),
+}));
+jest.unstable_mockModule("../src/extractor.js", () => ({
+    default: jest.fn(),
+}));
+jest.unstable_mockModule("../src/report.js", () => ({
+    default: jest.fn(),
+}));
 
-const run = require("../src/index");
+const core = await import("@actions/core");
+const github = await import("@actions/github");
+const { default: log } = await import("@netcracker/action-logger");
+const { default: ConfigLoader } = await import("../src/loader.js");
+const { default: RefNormalizer } = await import("../src/extractor.js");
+const { default: Report } = await import("../src/report.js");
+const { default: run } = await import("../src/index.js");
 
 describe("index.js (main action)", () => {
     let mockConfigLoader;
@@ -32,17 +62,15 @@ describe("index.js (main action)", () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        github.context = {
-            eventName: "push",
-            ref: "refs/heads/main",
-            sha: "8c3c6b66a6af28f66b17eb5190458d04a2a62e34",
-            runNumber: 42,
-            runId: 12345,
-            actor: "test-actor",
-            workflow: "test-workflow",
-            payload: {},
-            repo: { owner: "test-owner", repo: "test-repo" }
-        };
+        github.context.eventName = "push";
+        github.context.ref = "refs/heads/main";
+        github.context.sha = "8c3c6b66a6af28f66b17eb5190458d04a2a62e34";
+        github.context.runNumber = 42;
+        github.context.runId = 12345;
+        github.context.actor = "test-actor";
+        github.context.workflow = "test-workflow";
+        github.context.payload = {};
+        github.context.repo = { owner: "test-owner", repo: "test-repo" };
 
         mockConfigLoader = {
             load: jest.fn().mockReturnValue({
@@ -80,10 +108,6 @@ describe("index.js (main action)", () => {
             return map[name];
         });
 
-        core.info = jest.fn();
-        core.warning = jest.fn();
-        core.setOutput = jest.fn();
-        core.setFailed = jest.fn();
     });
 
     test("should complete successfully and set expected outputs", async () => {
@@ -144,7 +168,7 @@ describe("index.js (main action)", () => {
         await run();
 
         // Even without configuration, default templates should be applied
-        expect(log.warn).toHaveBeenCalledWith(
+        expect(log.notice).toHaveBeenCalledWith(
             expect.stringContaining("using default")
         );
     });

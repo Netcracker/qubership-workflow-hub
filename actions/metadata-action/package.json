@@ -4,8 +4,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "jest --verbose",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose",
     "build": "esbuild src/index.js --bundle --platform=node --format=esm --outfile=dist/index.js --preserve-symlinks"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",

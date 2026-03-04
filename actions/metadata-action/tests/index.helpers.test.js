@@ -1,21 +1,67 @@
-const _log = require("@netcracker/action-logger");
+import { jest } from "@jest/globals";
 
-jest.mock("@netcracker/action-logger", () => ({
-  dim: jest.fn(),
-  warn: jest.fn(),
+jest.unstable_mockModule("@actions/core", () => ({
+  getInput: jest.fn().mockReturnValue(""),
+  setOutput: jest.fn(),
+  setFailed: jest.fn(),
+  info: jest.fn(),
+  warning: jest.fn(),
+  notice: jest.fn(),
+  summary: { addRaw: jest.fn(), addTable: jest.fn(), write: jest.fn() },
+}));
+jest.unstable_mockModule("@actions/github", () => ({
+  context: {
+    eventName: "push",
+    ref: "refs/heads/main",
+    sha: "abc1234",
+    runNumber: 1,
+    runId: 1,
+    actor: "test",
+    workflow: "test",
+    payload: {},
+    repo: { owner: "o", repo: "r" },
+  },
+}));
+jest.unstable_mockModule("@netcracker/action-logger", () => ({
+  default: {
+    dim: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    error: jest.fn(),
+    success: jest.fn(),
+    group: jest.fn(),
+    endGroup: jest.fn(),
+    setDebug: jest.fn(),
+    debugJSON: jest.fn(),
+    notice: jest.fn(),
+  },
+}));
+jest.unstable_mockModule("../src/loader.js", () => ({
+  default: jest.fn().mockImplementation(() => ({ load: jest.fn().mockReturnValue(null) })),
+}));
+jest.unstable_mockModule("../src/extractor.js", () => ({
+  default: jest.fn().mockImplementation(() => ({
+    extract: jest.fn().mockReturnValue({
+      rawName: "main", normalizedName: "main", isTag: false, isBranch: true, type: "branch",
+    }),
+  })),
+}));
+jest.unstable_mockModule("../src/report.js", () => ({
+  default: jest.fn().mockImplementation(() => ({ writeSummary: jest.fn().mockResolvedValue(true) })),
 }));
 
-const run = require("../src/index");
 const {
-  generateSnapshotVersionParts,
-  extractSemverParts,
-  matchesPattern,
-  findTemplate,
-  fillTemplate,
-  normalizeExtraTags,
-  _patternCache,
-  _PATTERN_CACHE_MAX,
-} = run.__testables;
+  __testables: {
+    generateSnapshotVersionParts,
+    extractSemverParts,
+    matchesPattern,
+    findTemplate,
+    fillTemplate,
+    normalizeExtraTags,
+    _patternCache,
+    _PATTERN_CACHE_MAX,
+  },
+} = await import("../src/index.js");
 
 describe("index.js helper functions", () => {
   beforeEach(() => {

@@ -1,7 +1,16 @@
-const core = require("@actions/core");
-const RefNormalizer = require("../src/extractor");
+import { jest } from "@jest/globals";
 
-jest.mock("@actions/core");
+jest.unstable_mockModule("@actions/core", () => ({
+  setFailed: jest.fn(),
+  info: jest.fn(),
+  warning: jest.fn(),
+}));
+jest.unstable_mockModule("@netcracker/action-logger", () => ({
+  default: { warn: jest.fn(), dim: jest.fn() },
+}));
+
+const { default: RefNormalizer } = await import("../src/extractor.js");
+const core = await import("@actions/core");
 
 describe("RefNormalizer", () => {
     let normalizer;
