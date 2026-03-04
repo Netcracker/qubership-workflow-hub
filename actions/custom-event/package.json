@@ -3,16 +3,20 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "ncc build"
+    "build": "esbuild index.js --bundle --platform=node --outfile=dist/index.js --preserve-symlinks"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
     "@netcracker/action-logger": "file:../../packages/action-logger"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.3"
   }
 }

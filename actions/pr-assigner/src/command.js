@@ -1,4 +1,4 @@
-const { execSync } = require("child_process");
+import { execSync } from "child_process";
 
 class GhCommand {
     getAssigneesCommand(prNumber) {
@@ -12,4 +12,4 @@ class GhCommand {
     }
 }
 
-module.exports = GhCommand;
+export default GhCommand;

@@ -1,10 +1,12 @@
-const fs = require("fs");
-const yaml = require("js-yaml");
-const core = require("@actions/core");
-const Ajv = require("ajv");
-const path = require("path");
+import fs from "fs";
+import yaml from "js-yaml";
+import * as core from "@actions/core";
+import { createRequire } from "module";
+import path from "path";
+import log from "@netcracker/action-logger";
 
-const log = require("@netcracker/action-logger");
+const require = createRequire(import.meta.url);
+const Ajv = require("ajv");
 
 // Cache schema and validator for performance
 let cachedValidator = null;
@@ -14,7 +16,7 @@ function getValidator() {
     return cachedValidator;
   }
 
-  const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
+  const schemaPath = path.resolve(new URL('.', import.meta.url).pathname, '..', 'config.schema.json');
   if (!fs.existsSync(schemaPath)) {
     core.setFailed(`❗️ Schema file not found: ${schemaPath}`);
     return null;
@@ -85,4 +87,4 @@ class ConfigLoader {
   }
 }
 
-module.exports = ConfigLoader;
+export default ConfigLoader;

@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/index.js --bundle --platform=node --outfile=dist/index.js --preserve-symlinks",
+    "build": "esbuild src/index.js --bundle --platform=node --format=esm --outfile=dist/index.js --preserve-symlinks",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

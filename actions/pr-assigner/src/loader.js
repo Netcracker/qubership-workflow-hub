@@ -1,9 +1,11 @@
-const fs = require("node:fs");
-const yaml = require("js-yaml");
-const Ajv = require("ajv");
-const path = require("node:path");
+import fs from "node:fs";
+import yaml from "js-yaml";
+import { createRequire } from "module";
+import path from "node:path";
+import log from '@netcracker/action-logger';
 
-const log = require('@netcracker/action-logger');
+const require = createRequire(import.meta.url);
+const Ajv = require("ajv");
 
 class ConfigLoader {
   load(filePath) {
@@ -26,7 +28,7 @@ class ConfigLoader {
       return;
     }
 
-    const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
+    const schemaPath = path.resolve(new URL('.', import.meta.url).pathname, '..', 'config.schema.json');
     if (!fs.existsSync(schemaPath)) {
       log.fail(`❗️ JSON schema file not found: ${schemaPath}`);
       return;
@@ -56,4 +58,4 @@ class ConfigLoader {
   }
 }
 
-module.exports = ConfigLoader;
+export default ConfigLoader;

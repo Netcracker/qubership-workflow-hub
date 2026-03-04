@@ -1,10 +1,10 @@
-const core = require("@actions/core");
-const github = require("@actions/github");
-const log = require("@netcracker/action-logger");
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import log from "@netcracker/action-logger";
 
-const ConfigLoader = require("./loader");
-const RefNormalizer = require("./extractor");
-const Report = require("./report");
+import ConfigLoader from "./loader.js";
+import RefNormalizer from "./extractor.js";
+import Report from "./report.js";
 
 // --- constants ---
 
@@ -323,13 +323,10 @@ async function run() {
   }
 }
 
-if (require.main === module) {
-  run();
-}
+run();
 
-module.exports = run;
-// Expose internals for unit tests without changing the default export behavior.
-module.exports.__testables = {
+export default run;
+export const __testables = {
   generateSnapshotVersionParts,
   extractSemverParts,
   matchesPattern,

@@ -1,10 +1,10 @@
-const core = require("@actions/core");
-const github = require("@actions/github");
-const fs = require("fs");
-const path = require("path");
-const ConfigLoader = require("./loader");
-const GhCommand = require("./command");
-const log = require("@netcracker/action-logger");
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import fs from "fs";
+import path from "path";
+import ConfigLoader from "./loader.js";
+import GhCommand from "./command.js";
+import log from "@netcracker/action-logger";
 
 function findCodeowners(startDir = process.cwd()) {
     const repoRoot = startDir;

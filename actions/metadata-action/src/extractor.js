@@ -1,5 +1,5 @@
-const core = require("@actions/core");
-const log = require("@netcracker/action-logger");
+import * as core from "@actions/core";
+import log from "@netcracker/action-logger";
 
 const REF_PATTERN = /^refs\/(heads|tags)\/(.+)$/;
 
@@ -33,4 +33,4 @@ class RefNormalizer {
   }
 }
 
-module.exports = RefNormalizer;
+export default RefNormalizer;

@@ -2,16 +2,17 @@
   "name": "meta-extractor",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "jest --verbose",
-    "build": "ncc build src/index.js --license licenses.txt"
+    "build": "esbuild src/index.js --bundle --platform=node --format=esm --outfile=dist/index.js --preserve-symlinks"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@actions/core": "^2.0.2",
+    "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
     "@netcracker/action-logger": "file:../../packages/action-logger",
     "ajv": "^8.17.1",
@@ -22,7 +23,7 @@
     "semver": "^7.7.3"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.4",
+    "esbuild": "^0.27.3",
     "jest": "^30.2.0"
   }
 }

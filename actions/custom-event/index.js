@@ -1,6 +1,6 @@
-const core = require("@actions/core");
-const github = require("@actions/github");
-const log = require("@netcracker/action-logger");
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import log from "@netcracker/action-logger";
 
 function parseClientPayload(input) {
   try {

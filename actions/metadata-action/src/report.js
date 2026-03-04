@@ -1,4 +1,4 @@
-const core = require("@actions/core");
+import * as core from "@actions/core";
 
 class Report {
     async writeSummary(reportItem, dryRun = false) {
@@ -37,4 +37,4 @@ class Report {
     }
 }
 
-module.exports = Report;
+export default Report;
