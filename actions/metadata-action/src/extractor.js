@@ -23,7 +23,7 @@ class RefNormalizer {
       isTag = refType === "tags";
     } else {
       rawName = ref;
-      log.warn(`Cant detect type ref: ${ref}`);
+      log.warn(`Can't detect type ref: ${ref}`);
     }
 
     const normalizedName = rawName.replace(/\//g, replaceSymbol);
