@@ -1,14 +1,15 @@
 // actions/assets-action/src/index.js
-const core = require("@actions/core");
-const github = require("@actions/github");
-const fs = require("fs");
-const path = require("path");
-const { addToArchive } = require("./archiveUtils");
-const AssetUploader = require("./assetsUploader");
-const { retryAsync } = require("./retry");
-const Report = require("./report");
-const glob = require("@actions/glob");
-const { promises: fsPromises } = require('fs');
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import fs from "fs";
+import path from "path";
+import { addToArchive } from "./archiveUtils.js";
+import AssetUploader from "./assetsUploader.js";
+import { retryAsync } from "./retry.js";
+import Report from "./report.js";
+import * as glob from "@actions/glob";
+
+const { promises: fsPromises } = fs;
 
 
 async function getInput() {

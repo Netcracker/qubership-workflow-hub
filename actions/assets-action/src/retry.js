@@ -1,4 +1,4 @@
-const log = require("@netcracker/action-logger");
+import log from "@netcracker/action-logger";
 
    async function retryAsync(fn, options = {}) {
     let { retries = 3, delay = 1000, factor = 1 } = options;
@@ -20,4 +20,4 @@ const log = require("@netcracker/action-logger");
     throw new Error("❗️ Unknow error. All retries failed.");
 }
 
-exports.retryAsync = retryAsync;
+export { retryAsync };

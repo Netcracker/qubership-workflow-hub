@@ -2,7 +2,9 @@
   "name": "assets",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "build": "esbuild src/index.js --bundle --platform=node --outfile=dist/index.js --preserve-symlinks",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -10,9 +12,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@actions/github": "8.0.1",
-    "@actions/glob": "0.5.1",
+    "@actions/core": "^3.0.0",
+    "@actions/github": "^9.0.0",
+    "@actions/glob": "^0.6.1",
     "@netcracker/action-logger": "file:../../packages/action-logger",
     "ajv": "^8.17.1",
     "archiver": "^7.0.1",
@@ -23,5 +25,8 @@
   },
   "overrides": {
     "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.3"
   }
 }

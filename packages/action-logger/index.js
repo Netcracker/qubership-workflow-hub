@@ -1,4 +1,4 @@
-const core = require("@actions/core");
+import * as core from "@actions/core";
 
 const COLORS = {
   reset: "\x1b[0m",
@@ -128,4 +128,4 @@ class Logger {
   }
 }
 
-module.exports = new Logger();
+export default new Logger();

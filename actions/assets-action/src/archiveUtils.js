@@ -1,7 +1,7 @@
-const core = require("@actions/core");
-const fs = require("fs");
-const path = require("path");
-const archiver = require("archiver");
+import * as core from "@actions/core";
+import fs from "fs";
+import path from "path";
+import archiver from "archiver";
 
 
 async function addToArchive(itemPath, archiveType, compressionLevel) {
@@ -47,7 +47,4 @@ async function createDir(name) {
     return dirPath;
 }
 
-module.exports = {
-    addToArchive,
-    createDir,
-};
+export { addToArchive, createDir };

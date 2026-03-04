@@ -1,9 +1,12 @@
-const path = require("path");
+import path from "path";
+import { createRequire } from "module";
+import yaml from 'js-yaml';
+import fs from "fs";
+import core from "@actions/core";
+import log from "@netcracker/action-logger";
+
+const require = createRequire(import.meta.url);
 const Ajv = require('ajv');
-const yaml = require('js-yaml');
-const fs = require("fs");
-const core = require("@actions/core");
-const log = require("@netcracker/action-logger");
 
 class Loader {
     async loadConfig(jsonPath) {
@@ -29,7 +32,7 @@ class Loader {
             return;
         }
 
-        const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
+        const schemaPath = path.resolve(new URL('.', import.meta.url).pathname, '..', 'config.schema.json');
         if (!fs.existsSync(schemaPath)) {
             core.setFailed(`❗️ Schema file not found: ${schemaPath}`);
             return;
@@ -59,4 +62,4 @@ class Loader {
     }
 }
 
-module.exports = Loader;
+export default Loader;

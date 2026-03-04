@@ -2,6 +2,7 @@
   "name": "@netcracker/action-logger",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "jest",
     "build": "ncc build "
@@ -18,7 +19,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "dependencies": {
-    "@actions/core": "^2.0.2"
+    "@actions/core": "^3.0.0"
   },
   "devDependencies": {
     "jest": "^30.2.0"
