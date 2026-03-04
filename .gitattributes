@@ -1,4 +1,11 @@
 ###############################
+# Generated files             #
+###############################
+
+# Mark bundled dist files as generated so CodeQL and Linguist skip them
+actions/*/dist/** linguist-generated=true
+
+###############################
 # Qubership common            #
 ###############################
 .editorconfig text
