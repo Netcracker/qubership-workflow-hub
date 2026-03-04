@@ -44,7 +44,7 @@ jest.unstable_mockModule("../src/command.js", () => ({
 }));
 
 const log = (await import("@netcracker/action-logger")).default;
-const github = await import("@actions/github");
+const _github = await import("@actions/github");
 
 // Import once — run() is called on module load
 await import("../src/index.js");
