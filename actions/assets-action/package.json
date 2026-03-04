@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "build": "esbuild src/index.js --bundle --platform=node --format=esm --outfile=dist/index.js --preserve-symlinks",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +27,7 @@
     "path": "^0.12.7"
   },
   "devDependencies": {
-    "esbuild": "^0.27.3"
+    "esbuild": "^0.27.3",
+    "jest": "^30.2.0"
   }
 }

@@ -5,8 +5,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose",
     "build": "esbuild index.js --bundle --platform=node --outfile=dist/index.js --preserve-symlinks"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +20,7 @@
     "@netcracker/action-logger": "file:../../packages/action-logger"
   },
   "devDependencies": {
-    "esbuild": "^0.27.3"
+    "esbuild": "^0.27.3",
+    "jest": "^30.2.0"
   }
 }
