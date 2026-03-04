@@ -50153,7 +50153,7 @@ async function retryAsync(fn, options = {}) {
       await new Promise((resolve) => setTimeout(resolve, constDelay));
     }
   }
-  throw new Error("\u2757\uFE0F Unknow error. All retries failed.");
+  throw new Error("\u2757\uFE0F Unknown error. All retries failed.");
 }
 
 // src/report.js

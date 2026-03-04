@@ -17,7 +17,7 @@ import log from "@netcracker/action-logger";
             await new Promise(resolve => setTimeout(resolve, constDelay));
         }
     }
-    throw new Error("❗️ Unknow error. All retries failed.");
+    throw new Error("❗️ Unknown error. All retries failed.");
 }
 
 export { retryAsync };
