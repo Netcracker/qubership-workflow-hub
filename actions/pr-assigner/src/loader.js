@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import yaml from "js-yaml";
-import { createRequire } from "module";
+import { createRequire } from "node:module";
 import path from "node:path";
 import log from '@netcracker/action-logger';
 

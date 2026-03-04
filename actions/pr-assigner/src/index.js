@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import ConfigLoader from "./loader.js";
 import GhCommand from "./command.js";
 import log from "@netcracker/action-logger";

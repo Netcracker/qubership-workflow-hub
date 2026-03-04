@@ -1,8 +1,8 @@
-import fs from "fs";
+import fs from "node:fs";
 import yaml from "js-yaml";
 import * as core from "@actions/core";
-import { createRequire } from "module";
-import path from "path";
+import { createRequire } from "node:module";
+import path from "node:path";
 import log from "@netcracker/action-logger";
 
 const require = createRequire(import.meta.url);
