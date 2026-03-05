@@ -78,7 +78,7 @@ outputs:
     ref-type:
         description: "The type of the reference (branch or tag)."
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.js"
 
 branding:
