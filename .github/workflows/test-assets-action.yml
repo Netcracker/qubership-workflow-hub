@@ -71,7 +71,7 @@ jobs:
             --prerelease || true
 
       - name: Run Assets Action
-        uses: ./actions/assets-action@main
+        uses: ./actions/assets-action
         with:
           tag: test-assets-action-${{ github.run_id }}
           item-path: /tmp/test-assets

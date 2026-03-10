@@ -49,7 +49,7 @@ jobs:
 
       - name: Run Custom Event Action
         id: dispatch
-        uses: ./actions/custom-event@main
+        uses: ./actions/custom-event
         with:
           event-type: test-event
           client-payload: '{"triggered-by": "test-custom-event workflow", "run-id": "${{ github.run_id }}"}'

@@ -18,7 +18,7 @@ jobs:
 
       - name: Run Metadata Action
         id: metadata
-        uses: ./actions/metadata-action@main
+        uses: ./actions/metadata-action
         with:
           show-report: "true"
 
@@ -103,7 +103,7 @@ jobs:
 
       - name: Run Metadata Action
         id: metadata
-        uses: ./actions/metadata-action@main
+        uses: ./actions/metadata-action
         with:
           ref: "refs/heads/feature/test-branch"
           default-template: "custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}"
@@ -187,7 +187,7 @@ jobs:
 
       - name: Run Metadata Action with GitHub Context
         id: metadata
-        uses: ./actions/metadata-action@main
+        uses: ./actions/metadata-action
         with:
           default-template: "build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}"
           default-tag: "context-tag"
@@ -238,7 +238,7 @@ jobs:
 
       - name: Run Metadata Action with inline length modifier
         id: metadata
-        uses: ./actions/metadata-action@main
+        uses: ./actions/metadata-action
         with:
           ref: "refs/heads/feature/my-long-branch-name"
           default-template: "{{ref-name:7}}-{{short-sha:4}}"
