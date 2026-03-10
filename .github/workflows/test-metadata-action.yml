@@ -189,7 +189,7 @@ jobs:
         id: metadata
         uses: ./actions/metadata-action
         with:
-          default-template: "build-{{github.context.workflow}}-{{github.context.sha}}-run{{github.context.runNumber}}"
+          default-template: "build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}"
           default-tag: "context-tag"
           show-report: "true"
 
@@ -226,6 +226,37 @@ jobs:
           fi
 
           echo "✅ GitHub context test passed!"
+
+  test-inline-length-modifier:
+    name: Test Inline Length Modifier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run Metadata Action with inline length modifier
+        id: metadata
+        uses: ./actions/metadata-action
+        with:
+          ref: "refs/heads/feature/my-long-branch-name"
+          default-template: "{{ref-name:7}}-{{short-sha:4}}"
+          show-report: "true"
+
+      - name: Verify inline length modifier
+        shell: bash
+        run: |
+          RESULT="${{ steps.metadata.outputs.result }}"
+          echo "result: $RESULT"
+
+          # ref-name:7 → 7 chars, short-sha:4 → 4 chars, separator "-" → total 12
+          if [ ${#RESULT} -ne 12 ]; then
+            echo "❌ ERROR: expected length 12 (7+1+4), got: ${#RESULT} ('$RESULT')"
+            exit 1
+          fi
+
+          echo "✅ Inline length modifier test passed!"
 
   unit-tests:
     name: Unit Tests
