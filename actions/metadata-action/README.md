@@ -81,7 +81,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Metadata
-        uses: netcracker/qubership-workflow-hub/actions/metadata-action@main
+        uses: netcracker/qubership-workflow-hub/actions/metadata-action@v2.1.1
         with:
           configuration-path: './.github/metadata-action-config.yml'
           default-template: '{{ref-name}}-{{timestamp}}-{{runNumber}}'
