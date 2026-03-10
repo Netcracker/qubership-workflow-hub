@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose",
-    "build": "esbuild index.js --bundle --platform=node --outfile=dist/index.js --preserve-symlinks"
+    "build": "esbuild index.js --bundle --platform=node --format=cjs --outfile=dist/index.js --preserve-symlinks"
   },
   "jest": {
     "testEnvironment": "node"

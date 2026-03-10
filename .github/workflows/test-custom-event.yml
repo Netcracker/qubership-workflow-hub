@@ -1,0 +1,66 @@
+name: TEST custom-event
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: actions/custom-event
+        run: npm install
+
+      - name: Run unit tests
+        working-directory: actions/custom-event
+        run: npm test
+
+      - name: Build dist
+        working-directory: actions/custom-event
+        run: npm run build
+
+      - name: Verify dist exists
+        run: test -f actions/custom-event/dist/index.js && echo "✅ dist/index.js exists"
+
+  test-dispatch:
+    name: Test Dispatch Event
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run Custom Event Action
+        id: dispatch
+        uses: ./actions/custom-event
+        with:
+          event-type: test-event
+          client-payload: '{"triggered-by": "test-custom-event workflow", "run-id": "${{ github.run_id }}"}'
+          github-token: ${{ github.token }}
+
+      - name: Verify output
+        run: |
+          STATUS="${{ steps.dispatch.outputs.status }}"
+          echo "Dispatch status: $STATUS"
+          if [ "$STATUS" != "204" ]; then
+            echo "❌ ERROR: expected status 204, got: $STATUS"
+            exit 1
+          fi
+          echo "✅ Custom event dispatched successfully"

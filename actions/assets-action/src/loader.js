@@ -1,12 +1,11 @@
 import path from "node:path";
-import { createRequire } from "node:module";
+
 import yaml from 'js-yaml';
 import fs from "node:fs";
 import core from "@actions/core";
 import log from "@qubership/action-logger";
 
-const require = createRequire(import.meta.url);
-const Ajv = require('ajv');
+import Ajv from "ajv";
 
 class Loader {
     async loadConfig(jsonPath) {
@@ -32,7 +31,7 @@ class Loader {
             return;
         }
 
-        const schemaPath = path.resolve(new URL('.', import.meta.url).pathname, '..', 'config.schema.json');
+        const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
         if (!fs.existsSync(schemaPath)) {
             core.setFailed(`❗️ Schema file not found: ${schemaPath}`);
             return;

@@ -1,12 +1,9 @@
 import fs from "node:fs";
 import yaml from "js-yaml";
 import * as core from "@actions/core";
-import { createRequire } from "node:module";
 import path from "node:path";
 import log from "@qubership/action-logger";
-
-const require = createRequire(import.meta.url);
-const Ajv = require("ajv");
+import Ajv from "ajv";
 
 // Cache schema and validator for performance
 let cachedValidator = null;
@@ -16,7 +13,7 @@ function getValidator() {
     return cachedValidator;
   }
 
-  const schemaPath = path.resolve(new URL('.', import.meta.url).pathname, '..', 'config.schema.json');
+  const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
   if (!fs.existsSync(schemaPath)) {
     core.setFailed(`❗️ Schema file not found: ${schemaPath}`);
     return null;

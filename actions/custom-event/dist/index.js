@@ -23514,7 +23514,7 @@ function getOctokit(token, options, ...additionalPlugins) {
   return new GitHubWithPlugins(getOctokitOptions(token, options));
 }
 
-// node_modules/@netcracker/action-logger/index.js
+// node_modules/@qubership/action-logger/index.js
 var COLORS = {
   reset: "\x1B[0m",
   blue: "\x1B[34m",

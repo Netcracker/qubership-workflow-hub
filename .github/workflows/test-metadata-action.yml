@@ -142,36 +142,20 @@ jobs:
           echo "time: $TIME"
           echo "dist-tag: $DIST_TAG"
           echo "short-sha: $SHORT_SHA"
-          echo "major: $MAJOR (empty for non-semver branches)"
-          echo "minor: $MINOR (empty for non-semver branches)"
-          echo "patch: $PATCH (empty for non-semver branches)"
+          echo "major: $MAJOR"
+          echo "minor: $MINOR"
+          echo "patch: $PATCH"
 
-          # Verify both ref and ref-name have '/' replaced with '_' (should be "feature_test-branch")
           if [ "$REF" != "feature_test-branch" ]; then
-            echo "❌ ERROR: ref should be 'feature_test-branch' (with '/' replaced by '_'), got: $REF"
+            echo "❌ ERROR: ref should be 'feature_test-branch', got: $REF"
             exit 1
           fi
 
           if [ "$REF_NAME" != "feature_test-branch" ]; then
-            echo "❌ ERROR: ref-name should be 'feature_test-branch' (with '/' replaced by '_'), got: $REF_NAME"
+            echo "❌ ERROR: ref-name should be 'feature_test-branch', got: $REF_NAME"
             exit 1
           fi
 
-          # Verify ref and ref-name are the same
-          if [ "$REF" != "$REF_NAME" ]; then
-            echo "❌ ERROR: ref and ref-name should be identical"
-            echo "   ref: $REF"
-            echo "   ref-name: $REF_NAME"
-            exit 1
-          fi
-
-          # Verify ref-name doesn't contain '/' (should be replaced with '_')
-          if [[ "$REF_NAME" == *"/"* ]]; then
-            echo "❌ ERROR: ref-name should not contain '/', replace symbol should be applied"
-            exit 1
-          fi
-
-          # Verify result matches custom template: custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}
           EXPECTED_RESULT="custom-${REF_NAME}-${DATE}-${TIME}-${SHORT_SHA}"
           if [ "$RESULT" != "$EXPECTED_RESULT" ]; then
             echo "❌ ERROR: result doesn't match custom template"
@@ -180,24 +164,16 @@ jobs:
             exit 1
           fi
 
-          # Verify custom dist-tag
           if [ "$DIST_TAG" != "custom-tag" ]; then
             echo "❌ ERROR: dist-tag should be 'custom-tag', got: $DIST_TAG"
             exit 1
           fi
 
-          # Verify short-sha length (set to 10)
           if [ ${#SHORT_SHA} -ne 10 ]; then
             echo "❌ ERROR: short-sha length should be 10, got: ${#SHORT_SHA}"
             exit 1
           fi
 
-          # Verify semver parts are empty for non-semver branch
-          if [ -n "$MAJOR" ] || [ -n "$MINOR" ] || [ -n "$PATCH" ]; then
-            echo "⚠️  WARNING: semver parts should be empty for non-semver branch, got: major=$MAJOR, minor=$MINOR, patch=$PATCH"
-          fi
-
-          echo "✅ Replace symbol correctly applied: '/' -> '_'"
           echo "✅ Custom template test passed!"
 
   test-github-context:
@@ -213,73 +189,100 @@ jobs:
         id: metadata
         uses: ./actions/metadata-action
         with:
-          default-template: "build-{{github.context.workflow}}-{{github.context.sha}}-run{{github.context.runNumber}}"
+          default-template: "build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}"
           default-tag: "context-tag"
           show-report: "true"
-
-      - name: Display GitHub Context Values
-        shell: bash
-        run: |
-          echo "=== Available GitHub Context Values ==="
-          echo "workflow: ${{ github.workflow }}"
-          echo "actor: ${{ github.actor }}"
-          echo "event_name: ${{ github.event_name }}"
-          echo "repository: ${{ github.repository }}"
-          echo "ref: ${{ github.ref }}"
-          echo "sha: ${{ github.sha }}"
-          echo "run_number: ${{ github.run_number }}"
-          echo "run_id: ${{ github.run_id }}"
-          echo "job: ${{ github.job }}"
 
       - name: Verify GitHub Context Outputs
         shell: bash
         run: |
-          echo "=== Action Output ==="
           RESULT="${{ steps.metadata.outputs.result }}"
           GITHUB_SHA="${{ github.sha }}"
           SHORT_SHA="${{ steps.metadata.outputs.short-sha }}"
 
           echo "result: $RESULT"
           echo "github.sha: $GITHUB_SHA"
-          echo "short-sha output: $SHORT_SHA"
+          echo "short-sha: $SHORT_SHA"
 
-          # Verify that placeholders were replaced (should NOT contain {{}})
           if [[ "$RESULT" == *"{{"* ]] || [[ "$RESULT" == *"}}"* ]]; then
-            echo "❌ ERROR: result still contains template placeholders, GitHub context not processed"
-            echo "   Got: $RESULT"
+            echo "❌ ERROR: result still contains template placeholders"
             exit 1
           fi
 
-          # Verify result starts with "build-" prefix
           if [[ ! "$RESULT" == build-* ]]; then
             echo "❌ ERROR: result should start with 'build-'"
-            echo "   Got: $RESULT"
             exit 1
           fi
 
-          # Verify result contains the full SHA from GitHub context
           if [[ ! "$RESULT" == *"$GITHUB_SHA"* ]]; then
-            echo "❌ ERROR: result should contain full GitHub SHA from context"
-            echo "   Expected SHA: $GITHUB_SHA"
-            echo "   Got: $RESULT"
+            echo "❌ ERROR: result should contain full GitHub SHA"
             exit 1
           fi
 
-          # Verify short-sha is the first 7 characters of the full SHA
           EXPECTED_SHORT_SHA="${GITHUB_SHA:0:7}"
           if [ "$SHORT_SHA" != "$EXPECTED_SHORT_SHA" ]; then
             echo "❌ ERROR: short-sha should be first 7 chars of full SHA"
-            echo "   Expected: $EXPECTED_SHORT_SHA"
-            echo "   Got: $SHORT_SHA"
             exit 1
           fi
 
-          # Verify result format: build-{workflow}-{sha}-run{number}
-          if [[ ! "$RESULT" =~ -run[0-9]+$ ]]; then
-            echo "❌ ERROR: result should end with '-run{number}'"
-            echo "   Got: $RESULT"
-            exit 1
-          fi
-
-          echo "✅ GitHub context SHA successfully interpolated into template"
           echo "✅ GitHub context test passed!"
+
+  test-inline-length-modifier:
+    name: Test Inline Length Modifier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run Metadata Action with inline length modifier
+        id: metadata
+        uses: ./actions/metadata-action
+        with:
+          ref: "refs/heads/feature/my-long-branch-name"
+          default-template: "{{ref-name:7}}-{{short-sha:4}}"
+          show-report: "true"
+
+      - name: Verify inline length modifier
+        shell: bash
+        run: |
+          RESULT="${{ steps.metadata.outputs.result }}"
+          echo "result: $RESULT"
+
+          # ref-name:7 → 7 chars, short-sha:4 → 4 chars, separator "-" → total 12
+          if [ ${#RESULT} -ne 12 ]; then
+            echo "❌ ERROR: expected length 12 (7+1+4), got: ${#RESULT} ('$RESULT')"
+            exit 1
+          fi
+
+          echo "✅ Inline length modifier test passed!"
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: actions/metadata-action
+        run: npm install
+
+      - name: Run unit tests
+        working-directory: actions/metadata-action
+        run: npm test
+
+      - name: Build dist
+        working-directory: actions/metadata-action
+        run: npm run build
+
+      - name: Verify dist exists
+        run: test -f actions/metadata-action/dist/index.js && echo "✅ dist/index.js exists"

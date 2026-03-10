@@ -1,11 +1,9 @@
 import fs from "node:fs";
 import yaml from "js-yaml";
-import { createRequire } from "node:module";
 import path from "node:path";
 import log from '@qubership/action-logger';
 
-const require = createRequire(import.meta.url);
-const Ajv = require("ajv");
+import Ajv from "ajv";
 
 class ConfigLoader {
   load(filePath) {
@@ -28,7 +26,7 @@ class ConfigLoader {
       return;
     }
 
-    const schemaPath = path.resolve(new URL('.', import.meta.url).pathname, '..', 'config.schema.json');
+    const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
     if (!fs.existsSync(schemaPath)) {
       log.fail(`❗️ JSON schema file not found: ${schemaPath}`);
       return;

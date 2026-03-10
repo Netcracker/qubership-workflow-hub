@@ -1,0 +1,98 @@
+name: TEST assets-action
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: actions/assets-action
+        run: npm install
+
+      - name: Run unit tests
+        working-directory: actions/assets-action
+        run: npm test
+
+      - name: Build dist
+        working-directory: actions/assets-action
+        run: npm run build
+
+      - name: Verify dist exists
+        run: test -f actions/assets-action/dist/index.js && echo "✅ dist/index.js exists"
+
+  test-upload:
+    name: Test Upload Assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: true
+
+      - name: Create test files
+        run: |
+          mkdir -p /tmp/test-assets
+          echo "test content 1" > /tmp/test-assets/file1.txt
+          echo "test content 2" > /tmp/test-assets/file2.txt
+          echo "✅ Test assets created"
+
+      - name: Create test release tag
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git tag test-assets-action-${{ github.run_id }} || true
+          git push origin test-assets-action-${{ github.run_id }} || true
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create test-assets-action-${{ github.run_id }} \
+            --title "Test release for assets-action" \
+            --notes "Automated test release" \
+            --prerelease || true
+
+      - name: Run Assets Action
+        uses: ./actions/assets-action
+        with:
+          tag: test-assets-action-${{ github.run_id }}
+          item-path: /tmp/test-assets
+          archive-type: zip
+
+      - name: Verify upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ASSETS=$(gh release view test-assets-action-${{ github.run_id }} --json assets --jq '.assets | length')
+          echo "Uploaded assets count: $ASSETS"
+          if [ "$ASSETS" -eq 0 ]; then
+            echo "❌ ERROR: no assets uploaded"
+            exit 1
+          fi
+          echo "✅ Assets uploaded successfully"
+
+      - name: Cleanup release
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete test-assets-action-${{ github.run_id }} --yes || true
+          git push origin --delete test-assets-action-${{ github.run_id }} || true

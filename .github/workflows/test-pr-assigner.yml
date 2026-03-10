@@ -1,0 +1,59 @@
+name: TEST pr-assigner
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: actions/pr-assigner
+        run: npm install
+
+      - name: Run unit tests
+        working-directory: actions/pr-assigner
+        run: npm test
+
+      - name: Build dist
+        working-directory: actions/pr-assigner
+        run: npm run build
+
+      - name: Verify dist exists
+        run: test -f actions/pr-assigner/dist/index.js && echo "✅ dist/index.js exists"
+
+  test-assign:
+    name: Test PR Assign
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run PR Assigner
+        uses: ./actions/pr-assigner
+        with:
+          configuration-path: .github/pr-assigner-config.yml
+          shuffle: "1"
+          self-assign: "true"
+        env:
+          GH_TOKEN: ${{ github.token }}
