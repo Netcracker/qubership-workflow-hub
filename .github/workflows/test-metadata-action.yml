@@ -238,7 +238,7 @@ jobs:
 
       - name: Run Metadata Action with inline length modifier
         id: metadata
-        uses: ./actions/metadata-action
+        uses: ./actions/metadata-action@main
         with:
           ref: "refs/heads/feature/my-long-branch-name"
           default-template: "{{ref-name:7}}-{{short-sha:4}}"
@@ -268,7 +268,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
         with:
           node-version: '24'
 
