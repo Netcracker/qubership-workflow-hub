@@ -61,6 +61,7 @@ runs:
       with:
         ref: ${{ inputs.ref }}
         fetch-depth: 0
+        persist-credentials: true
 
     - name: Configure Git
       shell: bash
