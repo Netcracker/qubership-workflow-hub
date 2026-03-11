@@ -25,7 +25,9 @@ runs:
   steps:
 
     - name: "Checkout code"
-      uses: actions/checkout@v4
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+      with:
+        persist-credentials: false
 
     - name: "Check input"
       shell: bash
@@ -52,7 +54,7 @@ runs:
       shell: bash
 
     - name: "Upload SBOM file"
-      uses: actions/upload-artifact@v4.6.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f #v7.0.0
       with:
         name: "BOM file"
         path: ${{ github.workspace }}/**/${{ github.event.repository.name }}_sbom.json
@@ -107,7 +109,7 @@ runs:
 
     - name: "Upload Depscan report"
       if: ${{ inputs.generate_cdx_report == 'true' }}
-      uses: actions/upload-artifact@v4.6.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f #v7.0.0
       with:
         name: "DEPSCAN report"
         path: ${{ github.workspace }}/reports/*
@@ -116,7 +118,7 @@ runs:
     - name: Upload static files as artifact
       if: ${{ inputs.generate_cdx_report == 'true' }}
       id: upload
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b #v4.0.0
       with:
         path: ${{ github.workspace }}/output/
 
