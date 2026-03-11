@@ -57,7 +57,7 @@ runs:
   steps:
     - name: Checkout code
       if: ${{ inputs.skip-checkout != 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ inputs.ref }}
         fetch-depth: 0
