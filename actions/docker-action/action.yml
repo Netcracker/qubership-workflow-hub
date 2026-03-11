@@ -482,7 +482,7 @@ runs:
 
     - name: "Upload metadata file"
       if: ${{ ! (inputs.dry-run == 'true') }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ steps.output_result.outputs.metadata_filename }}
         path: ${{ steps.output_result.outputs.metadata_path }}
