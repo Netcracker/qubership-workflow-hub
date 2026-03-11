@@ -43,6 +43,7 @@ updates:
     schedule:
       interval: "weekly"
     cooldown:
+      default-days: 7
       # Wait 14 days for a major version update (e.g., 1.x.x to 2.x.x)
       semver-major-days: 14 
       # Wait 7 days for a minor version update (e.g., 1.1.x to 1.2.x)
