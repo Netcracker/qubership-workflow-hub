@@ -6,18 +6,47 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/actions/assets-action"
+      - "/actions/branch-action"
+      - "/actions/cdxgen"
+      - "/actions/charts-values-update-action"
+      - "/actions/chart-version"
+      - "/actions/container-package-cleanup"
+      - "/actions/custom-event"
+      - "/actions/docker-action"
+      - "/actions/docker-config-resolver"
+      - "/actions/ghcr-discover-repo-packages"
+      - "/actions/maven-release"
+      - "/actions/maven-snapshot-deploy"
+      - "/actions/metadata-action"
+      - "/actions/poetry-publisher"
+      - "/actions/pr-add-messages"
+      - "/actions/pr-assigner"
+      - "/actions/smart-download"
+      - "/actions/store-input-params"
+      - "/actions/tag-action"
+      - "/actions/verify-json"
+      - "/actions/wait-for-workflow"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "npm"
     directories:
-      - "/actions/archive-and-upload-assets"
       - "/actions/assets-action"
       - "/actions/container-package-cleanup"
       - "/actions/custom-event"
       - "/actions/metadata-action"
-      - "/actions/pom-updater"
       - "/actions/pr-assigner"
-      - "/actions/tag-checker"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+      # Wait 14 days for a major version update (e.g., 1.x.x to 2.x.x)
+      semver-major-days: 14
+      # Wait 7 days for a minor version update (e.g., 1.1.x to 1.2.x)
+      semver-minor-days: 7
+      # Wait 3 days for a patch version update (e.g., 1.1.1 to 1.1.2)
+      semver-patch-days: 3
