@@ -11,7 +11,7 @@ updates:
       - "/actions/assets-action"
       - "/actions/branch-action"
       - "/actions/cdxgen"
-      - "/actions/charts-values-update-action
+      - "/actions/charts-values-update-action"
       - "/actions/chart-version"
       - "/actions/container-package-cleanup"
       - "/actions/custom-event"
