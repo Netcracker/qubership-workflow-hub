@@ -122,6 +122,7 @@ runs:
         path: ${{ inputs.module }}
         repository: ${{ github.repository_owner }}/${{ inputs.module }}
         token: ${{ inputs.token }}
+        persist-credentials: true
     - name: Validate Maven groupId policy
       shell: bash
       run: |
@@ -182,6 +183,7 @@ runs:
         path: ${{ inputs.module }}
         repository: ${{ github.repository_owner }}/${{ inputs.module }}
         token: ${{ inputs.token }}
+        persist-credentials: true
     - name: "Bump dependencies versions to next snapshot"
       if: ${{ inputs.dry-run == 'false' && inputs.bump-dependencies-after-release == 'true' }}
       run: |
