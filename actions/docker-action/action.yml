@@ -269,7 +269,7 @@ runs:
 
     - name: Log in to GitHub Container Registry
       if: ${{ contains(env.REGISTRY, 'ghcr.io') }}
-      uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+      uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
@@ -277,7 +277,7 @@ runs:
 
     - name: Login to Docker Hub
       if: ${{ contains(env.REGISTRY, 'docker.io') }}
-      uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+      uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
       with:
         username: ${{ inputs.docker-io-login }}
         password: ${{ inputs.docker-io-token }}
