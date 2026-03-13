@@ -189,9 +189,9 @@ runs:
       uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
       with:
         path: ~/.m2/repository
-        key: maven-${{ runner.os }}
+        key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
-          maven-${{ runner.os }}
+          maven-${{ runner.os }}-
 
     - name: "Set up JDK for deployment"
       if: ${{ inputs.maven-command == 'deploy' }}
