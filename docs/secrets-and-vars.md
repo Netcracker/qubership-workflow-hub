@@ -2,26 +2,26 @@
 
 Organization-level secrets and variables referenced across actions and reusable workflows.
 
-| Name | Purpose |
-|------|---------|
-| `secrets.AWS_S3_ACCESS_KEY_ID` | Specific AWS S3 access key ID for S3-specific operations in AT cases. |
-| `secrets.AWS_S3_ACCESS_KEY_SECRET` | Secret key paired with `AWS_S3_ACCESS_KEY_ID` for S3-specific operations in AT cases. |
-| `secrets.CLA_ACCESS_TOKEN` | Token for CLA workflow to read/write contributor license agreement storage. |
-| `secrets.DOCKERHUB_RW_TOKEN` | Access token / password for the Docker Hub user with read/write (and possibly delete) permissions; used for `docker login` prior to build & push steps. Rotate if leaked. |
-| `secrets.DOCKERHUB_USER` | Docker Hub account username used for authenticating when pushing images or increasing anonymous pull rate limits. |
-| `secrets.GH_ACCESS_TOKEN` | PAT for a technical (service) user with extended repository / package permissions beyond `GITHUB_TOKEN`. |
-| `secrets.GH_BUMP_VERSION_APP_KEY` | GitHub App Key used for automated version bumping processes. Can bypass branch protection rules. |  
-| `secrets.GH_RWD_PACKAGE_TOKEN` | PAT with read / write / delete permissions for GitHub Packages (publishing & cleanup). |
-| `secrets.GITHUB_TOKEN` | Ephemeral GitHub-provided token (scoped to repository). Used for checkout, pushing commits/tags, creating releases. |
-| `secrets.MAVEN_GPG_PASSPHRASE` | Passphrase unlocking the GPG private key. |
-| `secrets.MAVEN_GPG_PRIVATE_KEY` | ASCII‑armored GPG private key used to sign Maven artifacts (JAR, POM, etc.). |
-| `secrets.MAVEN_PASSWORD` | Password / token paired with `MAVEN_USER` for Maven Central publishing. |
-| `secrets.MAVEN_RELEASE_DEV_TOKEN` | GitHub token with packages write permissions. USed in `semantic-release` process by cloud core |
-| `secrets.MAVEN_USER` | Username for authenticating to Maven Central when publishing release artifacts. |
-| `secrets.PYPI_API_TOKEN` | API token for publishing Python packages to PyPI. |
-| `secrets.PYPI_API_USER` | API user name for publishing Python packages to PyPI. |
-| `secrets.SONAR_TOKEN` | Token to authenticate with SonarQube / SonarCloud for code quality analysis. |
-| `secrets.WORKFLOWS_TOKEN` | Classic PAT including `workflow` scope (needed to trigger/modify workflows or dispatch across repository). Deprecated. Replaced by `secrets.GH_ACCESS_TOKEN`. |
+| Name | Purpose | Owner |
+|------|---------|-------|
+| `secrets.AWS_S3_ACCESS_KEY_ID` | Specific AWS S3 access key ID for S3-specific operations in AT cases. | Qubership |
+| `secrets.AWS_S3_ACCESS_KEY_SECRET` | Secret key paired with `AWS_S3_ACCESS_KEY_ID` for S3-specific operations in AT cases. | Qubership |
+| `secrets.CLA_ACCESS_TOKEN` | Token for CLA workflow to read/write contributor license agreement storage. | Company |
+| `secrets.DOCKERHUB_RW_TOKEN` | Access token / password for the Docker Hub user with read/write (and possibly delete) permissions; used for `docker login` prior to build & push steps. Rotate if leaked. | Company |
+| `secrets.DOCKERHUB_USER` | Docker Hub account username used for authenticating when pushing images or increasing anonymous pull rate limits. | Company |
+| `secrets.GH_ACCESS_TOKEN` | PAT for a technical (service) user with extended repository / package permissions beyond `GITHUB_TOKEN`. | Company |
+| `secrets.GH_BUMP_VERSION_APP_KEY` | GitHub App Key used for automated version bumping processes. Can bypass branch protection rules. | Company |
+| `secrets.GH_RWD_PACKAGE_TOKEN` | PAT with read / write / delete permissions for GitHub Packages (publishing & cleanup). | Company |
+| `secrets.GITHUB_TOKEN` | Ephemeral GitHub-provided token (scoped to repository). Used for checkout, pushing commits/tags, creating releases. | Company |
+| `secrets.MAVEN_GPG_PASSPHRASE` | Passphrase unlocking the GPG private key. | Company |
+| `secrets.MAVEN_GPG_PRIVATE_KEY` | ASCII‑armored GPG private key used to sign Maven artifacts (JAR, POM, etc.). | Company |
+| `secrets.MAVEN_PASSWORD` | Password / token paired with `MAVEN_USER` for Maven Central publishing. | Company |
+| `secrets.MAVEN_RELEASE_DEV_TOKEN` | GitHub token with packages write permissions. USed in `semantic-release` process by cloud core | Company |
+| `secrets.MAVEN_USER` | Username for authenticating to Maven Central when publishing release artifacts. | Company |
+| `secrets.PYPI_API_TOKEN` | API token for publishing Python packages to PyPI. | Company |
+| `secrets.PYPI_API_USER` | API user name for publishing Python packages to PyPI. | Company |
+| `secrets.SONAR_TOKEN` | Token to authenticate with SonarQube / SonarCloud for code quality analysis. | Company |
+| `secrets.WORKFLOWS_TOKEN` | Classic PAT including `workflow` scope (needed to trigger/modify workflows or dispatch across repository). Deprecated. Replaced by `secrets.GH_ACCESS_TOKEN`. | Company |
 
 ## Organization Variables
 
