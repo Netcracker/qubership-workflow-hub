@@ -247,10 +247,15 @@ async function run() {
     log.debugJSON("Template Values", values);
 
     const rendered = fillTemplate(selectedTemplateAndTag.template, values, true);
-    let result = truncateTag(rendered, tagMaxLength);
-    if (result !== rendered) {
-      log.warn(`Tag was truncated from ${rendered.length} to ${result.length} characters: "${rendered}" -> "${result}"`);
-    }
+    const renderedTags = rendered.split(",").map((tag) => tag.trim()).filter(Boolean);
+    const truncatedTags = renderedTags.map((tag) => {
+      const truncated = truncateTag(tag, tagMaxLength);
+      if (truncated !== tag) {
+        log.warn(`Tag was truncated from ${tag.length} to ${truncated.length} characters: "${tag}" -> "${truncated}"`);
+      }
+      return truncated;
+    });
+    let result = truncatedTags.join(", ");
 
     if (inputs.mergeTags && inputs.extraTags) {
       const normalizedExtraTags = normalizeExtraTags(inputs.extraTags).map((tag) => {
