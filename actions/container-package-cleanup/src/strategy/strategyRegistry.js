@@ -1,5 +1,5 @@
-const MavenStrategy = require('./maven');
-const ContainerStrategy = require('./container');
+import MavenStrategy from './maven.js';
+import ContainerStrategy from './container.js';
 
 const strategyRegistry = {
     maven: MavenStrategy,
@@ -22,4 +22,4 @@ function getStrategy(packageType) {
     return instance;
 }
 
-module.exports = { getStrategy };
+export { getStrategy };

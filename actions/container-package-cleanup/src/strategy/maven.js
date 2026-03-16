@@ -1,7 +1,7 @@
-const core = require('@actions/core');
-const WildcardMatcher = require("../utils/wildcardMatcher");
-const AbstractPackageStrategy = require("./abstractPackageStrategy");
-const log = require("@qubership/action-logger");
+import * as core from '@actions/core';
+import WildcardMatcher from "../utils/wildcardMatcher.js";
+import AbstractPackageStrategy from "./abstractPackageStrategy.js";
+import log from "@qubership/action-logger";
 
 const MODULE = 'maven.js';
 
@@ -77,4 +77,4 @@ class MavenStrategy extends AbstractPackageStrategy {
     }
 }
 
-module.exports = MavenStrategy;
+export default MavenStrategy;

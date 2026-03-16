@@ -1,5 +1,5 @@
-const escapeStringRegexp = require('escape-string-regexp');
-const log = require("@qubership/action-logger");
+import escapeStringRegexp from 'escape-string-regexp';
+import log from "@qubership/action-logger";
 
 const MODULE = 'wildcardMatcher.js';
 
@@ -46,4 +46,4 @@ class WildcardMatcher {
   }
 }
 
-module.exports = WildcardMatcher;
+export default WildcardMatcher;

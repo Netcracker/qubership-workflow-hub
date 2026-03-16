@@ -1,4 +1,4 @@
-const log = require("@qubership/action-logger");
+import log from "@qubership/action-logger";
 
 const _MODULE = 'deleteAction.js';
 /**
@@ -125,7 +125,7 @@ function isSkippableError(error) {
 }
 
 
-module.exports = { deletePackageVersion };
+export { deletePackageVersion };
 
 
 

@@ -3,13 +3,13 @@
 // I'm-a keeping it alive and continue to be
 // Flying like an eagle to my destiny
 
-const core = require("@actions/core");
-const OctokitWrapper = require("./utils/wrapper");
-const ContainerReport = require("./reports/containerReport");
-const MavenReport = require("./reports/mavenReport");
-const { getStrategy } = require("./strategy/strategyRegistry");
-const { deletePackageVersion } = require('./utils/deleteAction');
-const log = require("@qubership/action-logger");
+import * as core from "@actions/core";
+import OctokitWrapper from "./utils/wrapper.js";
+import ContainerReport from "./reports/containerReport.js";
+import MavenReport from "./reports/mavenReport.js";
+import { getStrategy } from "./strategy/strategyRegistry.js";
+import { deletePackageVersion } from './utils/deleteAction.js';
+import log from "@qubership/action-logger";
 
 async function run() {
 

@@ -1,4 +1,4 @@
-const core = require("@actions/core");
+import * as core from "@actions/core";
 class ContainerReport {
     async writeSummary(context) {
 
@@ -73,4 +73,4 @@ class ContainerReport {
     }
 }
 
-module.exports = ContainerReport;
+export default ContainerReport;

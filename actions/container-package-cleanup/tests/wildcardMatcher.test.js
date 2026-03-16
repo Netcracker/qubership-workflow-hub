@@ -1,4 +1,10 @@
-const WildcardMatcher = require('../src/utils/wildcardMatcher');
+import { jest } from '@jest/globals';
+
+jest.unstable_mockModule('@qubership/action-logger', () => ({
+  default: { setDebug: jest.fn(), setDryRun: jest.fn(), debug: jest.fn() }
+}));
+
+const { default: WildcardMatcher } = await import('../src/utils/wildcardMatcher.js');
 
 describe('WildcardMatcher — tag exclusion logic', () => {
   let matcher;

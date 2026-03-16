@@ -1,8 +1,9 @@
-const github = require("@actions/github");
-const { exec } = require("node:child_process");
-const util = require("node:util");
-const execPromise = util.promisify(exec);
-const log = require("@qubership/action-logger");
+import * as github from "@actions/github";
+import { exec, spawn } from "node:child_process";
+import { promisify } from "node:util";
+import log from "@qubership/action-logger";
+
+const execPromise = promisify(exec);
 
 const MODULE = 'wrapper.js';
 
@@ -14,7 +15,31 @@ class OctokitWrapper {
    */
   constructor(authToken, debug = false) {
     this.octokit = github.getOctokit(authToken);
+    this.authToken = authToken;
+    this.dockerLoggedIn = false;
     log.setDebug(debug);
+  }
+
+  /**
+   * Logs in to ghcr.io using the auth token so that docker manifest inspect
+   * can access private images.
+   */
+  async ensureDockerLogin() {
+    if (this.dockerLoggedIn) return;
+    try {
+      log.info('Logging in to ghcr.io for docker manifest access...');
+      await new Promise((resolve, reject) => {
+        const proc = spawn('docker', ['login', 'ghcr.io', '-u', 'x-access-token', '--password-stdin'], { stdio: ['pipe', 'pipe', 'pipe'] });
+        proc.stdin.write(this.authToken);
+        proc.stdin.end();
+        proc.on('close', code => code === 0 ? resolve() : reject(new Error(`docker login exited with code ${code}`)));
+        proc.on('error', reject);
+      });
+      this.dockerLoggedIn = true;
+      log.info('Docker login to ghcr.io succeeded.');
+    } catch (error) {
+      log.warn(`Docker login to ghcr.io failed: ${error.message}. Manifest inspect may fail for private images.`);
+    }
   }
 
   /**
@@ -64,13 +89,34 @@ class OctokitWrapper {
    */
   async listPackagesForOrganization(org, package_type) {
     try {
-      return await this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
-        {
-          org: org,
-          package_type,
-          per_page: 100,      // max 100 packages per request
-        }
-      );
+      const [publicPkgs, internalPkgs, privatePkgs] = await Promise.allSettled([
+        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: 'public', per_page: 100 }),
+        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: 'internal', per_page: 100 }),
+        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: 'private', per_page: 100 }),
+      ]);
+      const results = [];
+      if (publicPkgs.status === 'fulfilled') {
+        log.info(`Found ${publicPkgs.value.length} public packages`);
+        results.push(...publicPkgs.value);
+      } else {
+        log.warn(`Failed to fetch public packages: ${publicPkgs.reason?.message}`);
+      }
+      if (internalPkgs.status === 'fulfilled') {
+        log.info(`Found ${internalPkgs.value.length} internal packages`);
+        results.push(...internalPkgs.value);
+      } else {
+        log.warn(`Failed to fetch internal packages: ${internalPkgs.reason?.message}`);
+      }
+      if (privatePkgs.status === 'fulfilled') {
+        log.info(`Found ${privatePkgs.value.length} private packages`);
+        results.push(...privatePkgs.value);
+      } else {
+        log.warn(`Failed to fetch private packages: ${privatePkgs.reason?.message}`);
+      }
+      return results;
     } catch (error) {
       log.error(`Error fetching packages for organization ${org}:`, error);
       throw error;
@@ -187,14 +233,16 @@ class OctokitWrapper {
  * @returns {Promise<string[]>} — digest list for all platforms
  */
   async getManifestDigests(owner, packageName, tag) {
+    await this.ensureDockerLogin();
     const ref = `ghcr.io/${owner}/${packageName}:${tag}`;
     // Run docker manifest inspect and parse JSON
     const { stdout } = await execPromise(`docker manifest inspect ${ref}`);
     const manifest = JSON.parse(stdout);
-    // return digest from each entry in manifests
-    return manifest.manifests.map(m => m.digest);
+    const digests = (manifest.manifests ?? []).map(m => m.digest);
+    log.debug(`[getManifestDigests] ${ref} → ${digests.length} digests: ${digests.join(', ') || 'none (single-arch)'}`, MODULE);
+    return digests;
   }
 
 }
 
-module.exports = OctokitWrapper;
+export default OctokitWrapper;

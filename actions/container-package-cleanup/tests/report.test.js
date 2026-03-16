@@ -1,7 +1,17 @@
-const core = require("@actions/core");
-const ContainerReport = require("../src/reports/containerReport");
+import { jest } from '@jest/globals';
 
-jest.mock("@actions/core");
+const mockCore = {
+  info: jest.fn(),
+  summary: {
+    addRaw: jest.fn().mockReturnThis(),
+    addTable: jest.fn().mockReturnThis(),
+    write: jest.fn().mockResolvedValue(undefined)
+  }
+};
+
+jest.unstable_mockModule('@actions/core', () => mockCore);
+
+const { default: ContainerReport } = await import('../src/reports/containerReport.js');
 
 describe("ContainerReport", () => {
   let report;
@@ -10,12 +20,9 @@ describe("ContainerReport", () => {
     report = new ContainerReport();
     jest.clearAllMocks();
 
-    // Mock core.summary methods
-    core.summary = {
-      addRaw: jest.fn().mockReturnThis(),
-      addTable: jest.fn().mockReturnThis(),
-      write: jest.fn().mockResolvedValue(undefined)
-    };
+    mockCore.summary.addRaw = jest.fn().mockReturnThis();
+    mockCore.summary.addTable = jest.fn().mockReturnThis();
+    mockCore.summary.write = jest.fn().mockResolvedValue(undefined);
   });
 
   test("should log a message if no packages or versions to delete", async () => {
@@ -31,10 +38,10 @@ describe("ContainerReport", () => {
 
     await report.writeSummary(context);
 
-    expect(core.info).toHaveBeenCalledWith("❗️No packages or versions to delete.");
-    expect(core.summary.addRaw).not.toHaveBeenCalled();
-    expect(core.summary.addTable).not.toHaveBeenCalled();
-    expect(core.summary.write).not.toHaveBeenCalled();
+    expect(mockCore.info).toHaveBeenCalledWith("❗️No packages or versions to delete.");
+    expect(mockCore.summary.addRaw).not.toHaveBeenCalled();
+    expect(mockCore.summary.addTable).not.toHaveBeenCalled();
+    expect(mockCore.summary.write).not.toHaveBeenCalled();
   });
 
   test("should write a summary with package and version details (dry run)", async () => {
@@ -66,10 +73,10 @@ describe("ContainerReport", () => {
 
     await report.writeSummary(context);
 
-    expect(core.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("## 🎯 Container Package Cleanup Summary (Dry Run)"));
-    expect(core.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Packages Processed:** 2"));
-    expect(core.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Deleted Versions:** 3"));
-    expect(core.summary.addTable).toHaveBeenCalledWith([
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("## 🎯 Container Package Cleanup Summary (Dry Run)"));
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Packages Processed:** 2"));
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Deleted Versions:** 3"));
+    expect(mockCore.summary.addTable).toHaveBeenCalledWith([
       [
         { data: "Package", header: true },
         { data: "Deleted Versions", header: true },
@@ -83,7 +90,7 @@ describe("ContainerReport", () => {
         "• <code>v3</code> — beta",
       ],
     ]);
-    expect(core.summary.write).toHaveBeenCalled();
+    expect(mockCore.summary.write).toHaveBeenCalled();
   });
 
   test("should write a summary with package and version details (non-dry run)", async () => {
@@ -108,10 +115,10 @@ describe("ContainerReport", () => {
 
     await report.writeSummary(context);
 
-    expect(core.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("## 🎯 Container Package Cleanup Summary "));
-    expect(core.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Packages Processed:** 1"));
-    expect(core.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Deleted Versions:** 1"));
-    expect(core.summary.addTable).toHaveBeenCalledWith([
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("## 🎯 Container Package Cleanup Summary "));
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Packages Processed:** 1"));
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Deleted Versions:** 1"));
+    expect(mockCore.summary.addTable).toHaveBeenCalledWith([
       [
         { data: "Package", header: true },
         { data: "Deleted Versions", header: true },
@@ -121,7 +128,7 @@ describe("ContainerReport", () => {
         "• <code>v1</code> — latest",
       ],
     ]);
-    expect(core.summary.write).toHaveBeenCalled();
+    expect(mockCore.summary.write).toHaveBeenCalled();
   });
 
   test("should handle versions without tags (untagged/dangling)", async () => {
@@ -147,7 +154,7 @@ describe("ContainerReport", () => {
 
     await report.writeSummary(context);
 
-    expect(core.summary.addTable).toHaveBeenCalledWith([
+    expect(mockCore.summary.addTable).toHaveBeenCalledWith([
       [
         { data: "Package", header: true },
         { data: "Deleted Versions", header: true },
@@ -157,7 +164,7 @@ describe("ContainerReport", () => {
         "• <code>v1</code> — <em>sha256:abc123</em><br>• <code>v2</code> — <em>sha256:def456</em>",
       ],
     ]);
-    expect(core.summary.write).toHaveBeenCalled();
+    expect(mockCore.summary.write).toHaveBeenCalled();
   });
 
   test("should show error message when deleteStatus contains errors", async () => {
@@ -184,7 +191,7 @@ describe("ContainerReport", () => {
 
     await report.writeSummary(context);
 
-    expect(core.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("❗️Cleanup operation completed with errors"));
-    expect(core.summary.write).toHaveBeenCalled();
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("❗️Cleanup operation completed with errors"));
+    expect(mockCore.summary.write).toHaveBeenCalled();
   });
 });

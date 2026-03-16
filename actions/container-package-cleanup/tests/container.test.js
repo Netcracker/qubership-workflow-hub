@@ -1,9 +1,23 @@
-// tests/container.test.js
-jest.mock('@actions/core');
-jest.mock('@qubership/action-logger');
+import { jest } from '@jest/globals';
 
-const ContainerStrategy = require('../src/strategy/container');
-const log = require('@qubership/action-logger');
+jest.unstable_mockModule('@actions/core', () => ({
+  setFailed: jest.fn(),
+  info: jest.fn(),
+}));
+
+jest.unstable_mockModule('@qubership/action-logger', () => ({
+  default: {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    setDebug: jest.fn(),
+    setDryRun: jest.fn(),
+  }
+}));
+
+const { default: ContainerStrategy } = await import('../src/strategy/container.js');
+const { default: log } = await import('@qubership/action-logger');
 
 describe('ContainerStrategy', () => {
   let strategy;
@@ -11,12 +25,7 @@ describe('ContainerStrategy', () => {
 
   beforeEach(() => {
     strategy = new ContainerStrategy();
-    log.info = jest.fn();
-    log.debug = jest.fn();
-    log.warn = jest.fn();
-    log.setDebug = jest.fn();
 
-    // Mock wrapper with getManifestDigests method
     mockWrapper = {
       getManifestDigests: jest.fn()
     };
@@ -139,11 +148,7 @@ describe('ContainerStrategy', () => {
             {
               id: 101,
               name: 'sha256:abc123',
-              metadata: {
-                container: {
-                  tags: ['latest']
-                }
-              },
+              metadata: { container: { tags: ['latest'] } },
               created_at: '2025-01-01T00:00:00Z',
               updated_at: '2025-01-01T00:00:00Z'
             }
@@ -154,13 +159,8 @@ describe('ContainerStrategy', () => {
       mockWrapper.getManifestDigests.mockResolvedValue(['sha256:layer1']);
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
       expect(result).toEqual([]);
@@ -171,24 +171,15 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:abc123',
-              metadata: {
-                container: {
-                  tags: ['release-1.0']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 101, name: 'sha256:abc123',
+              metadata: { container: { tags: ['release-1.0'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
@@ -197,13 +188,8 @@ describe('ContainerStrategy', () => {
       mockWrapper.getManifestDigests.mockResolvedValue(['sha256:layer1']);
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: ['release-*'],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: ['release-*'], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
       expect(result).toEqual([]);
@@ -214,37 +200,23 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:abc123',
-              metadata: {
-                container: {
-                  tags: ['v2.0.0']
-                }
-              },
-              created_at: '2025-01-08T00:00:00Z',
-              updated_at: '2025-01-08T00:00:00Z'
+              id: 101, name: 'sha256:abc123',
+              metadata: { container: { tags: ['v2.0.0'] } },
+              created_at: '2025-01-08T00:00:00Z', updated_at: '2025-01-08T00:00:00Z'
             }
           ]
         }
       ];
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
       expect(result).toEqual([]);
@@ -257,74 +229,41 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:abc123',
-              metadata: {
-                container: {
-                  tags: ['latest']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 101, name: 'sha256:abc123',
+              metadata: { container: { tags: ['latest'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             },
             {
-              id: 102,
-              name: 'sha256:layer1',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 102, name: 'sha256:layer1',
+              metadata: { container: { tags: [] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             },
             {
-              id: 103,
-              name: 'sha256:obsolete',
-              metadata: {
-                container: {
-                  tags: ['old-tag']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 103, name: 'sha256:obsolete',
+              metadata: { container: { tags: ['old-tag'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
       ];
 
-      // latest uses sha256:layer1
       mockWrapper.getManifestDigests.mockImplementation((_owner, _image, tag) => {
-        if (tag === 'latest') {
-          return Promise.resolve(['sha256:layer1']);
-        }
-        if (tag === 'old-tag') {
-          return Promise.resolve(['sha256:layer2']);
-        }
+        if (tag === 'latest') return Promise.resolve(['sha256:layer1']);
+        if (tag === 'old-tag') return Promise.resolve(['sha256:layer2']);
         return Promise.resolve([]);
       });
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
-      // sha256:layer1 should not be deleted (used by latest)
-      // sha256:obsolete (old-tag) should be deleted
       expect(result).toHaveLength(1);
       expect(result[0].versions).toHaveLength(1);
       expect(result[0].versions[0].id).toBe(103);
@@ -337,35 +276,20 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:abc123',
-              metadata: {
-                container: {
-                  tags: ['dependabot-pip-2025.6.15']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 101, name: 'sha256:abc123',
+              metadata: { container: { tags: ['dependabot-pip-2025.6.15'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             },
             {
-              id: 102,
-              name: 'sha256:def456',
-              metadata: {
-                container: {
-                  tags: ['v1.0.0']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 102, name: 'sha256:def456',
+              metadata: { container: { tags: ['v1.0.0'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
@@ -374,16 +298,10 @@ describe('ContainerStrategy', () => {
       mockWrapper.getManifestDigests.mockResolvedValue([]);
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: ['dependabot-*'],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: ['dependabot-*'],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
-      // Only dependabot-* should be deleted
       expect(result).toHaveLength(1);
       expect(result[0].versions).toHaveLength(1);
       expect(result[0].versions[0].id).toBe(101);
@@ -394,35 +312,20 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:abc123',
-              metadata: {
-                container: {
-                  tags: ['v1.0.0']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 101, name: 'sha256:abc123',
+              metadata: { container: { tags: ['v1.0.0'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             },
             {
-              id: 102,
-              name: 'sha256:def456',
-              metadata: {
-                container: {
-                  tags: ['v2.0.0']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 102, name: 'sha256:def456',
+              metadata: { container: { tags: ['v2.0.0'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
@@ -431,16 +334,10 @@ describe('ContainerStrategy', () => {
       mockWrapper.getManifestDigests.mockResolvedValue([]);
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
-      // Both should be deleted
       expect(result).toHaveLength(1);
       expect(result[0].versions).toHaveLength(2);
     });
@@ -452,76 +349,45 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:multiarch',
-              metadata: {
-                container: {
-                  tags: ['v1.0.0']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 101, name: 'sha256:multiarch',
+              metadata: { container: { tags: ['v1.0.0'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             },
             {
-              id: 102,
-              name: 'sha256:amd64-layer',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 102, name: 'sha256:amd64-layer',
+              metadata: { container: { tags: [] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             },
             {
-              id: 103,
-              name: 'sha256:arm64-layer',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 103, name: 'sha256:arm64-layer',
+              metadata: { container: { tags: [] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
       ];
 
-      // v1.0.0 uses both arch layers
       mockWrapper.getManifestDigests.mockImplementation((_owner, _image, tag) => {
-        if (tag === 'v1.0.0') {
-          return Promise.resolve(['sha256:amd64-layer', 'sha256:arm64-layer']);
-        }
+        if (tag === 'v1.0.0') return Promise.resolve(['sha256:amd64-layer', 'sha256:arm64-layer']);
         return Promise.resolve([]);
       });
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
       expect(result).toHaveLength(1);
       expect(result[0].versions).toHaveLength(3);
-
-      // Check ordering: tagged version first, then its arch layers
-      expect(result[0].versions[0].id).toBe(101); // v1.0.0
-      expect(result[0].versions[1].id).toBe(102); // amd64-layer
-      expect(result[0].versions[2].id).toBe(103); // arm64-layer
+      expect(result[0].versions[0].id).toBe(101);
+      expect(result[0].versions[1].id).toBe(102);
+      expect(result[0].versions[2].id).toBe(103);
     });
   });
 
@@ -531,35 +397,20 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:dangling1',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 101, name: 'sha256:dangling1',
+              metadata: { container: { tags: [] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             },
             {
-              id: 102,
-              name: 'sha256:dangling2',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 102, name: 'sha256:dangling2',
+              metadata: { container: { tags: [] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
@@ -568,13 +419,8 @@ describe('ContainerStrategy', () => {
       mockWrapper.getManifestDigests.mockResolvedValue([]);
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
       expect(result).toHaveLength(1);
@@ -586,59 +432,35 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:abc123',
-              metadata: {
-                container: {
-                  tags: ['latest']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 101, name: 'sha256:abc123',
+              metadata: { container: { tags: ['latest'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             },
             {
-              id: 102,
-              name: 'sha256:protected-layer',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 102, name: 'sha256:protected-layer',
+              metadata: { container: { tags: [] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
       ];
 
-      // latest uses sha256:protected-layer
       mockWrapper.getManifestDigests.mockImplementation((_owner, _image, tag) => {
-        if (tag === 'latest') {
-          return Promise.resolve(['sha256:protected-layer']);
-        }
+        if (tag === 'latest') return Promise.resolve(['sha256:protected-layer']);
         return Promise.resolve([]);
       });
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
-      // No versions should be deleted
       expect(result).toEqual([]);
     });
   });
@@ -649,105 +471,26 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
-            {
-              id: 101,
-              name: 'sha256:latest-img',
-              metadata: {
-                container: {
-                  tags: ['latest']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
-            },
-            {
-              id: 102,
-              name: 'sha256:protected-layer',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
-            },
-            {
-              id: 103,
-              name: 'sha256:dependabot-img',
-              metadata: {
-                container: {
-                  tags: ['dependabot-pip-2025.6.15']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
-            },
-            {
-              id: 104,
-              name: 'sha256:dependabot-layer',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
-            },
-            {
-              id: 105,
-              name: 'sha256:release-img',
-              metadata: {
-                container: {
-                  tags: ['release-1.0']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
-            },
-            {
-              id: 106,
-              name: 'sha256:dangling',
-              metadata: {
-                container: {
-                  tags: []
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
-            },
-            {
-              id: 107,
-              name: 'sha256:recent',
-              metadata: {
-                container: {
-                  tags: ['v2.0.0']
-                }
-              },
-              created_at: '2025-01-15T00:00:00Z',
-              updated_at: '2025-01-15T00:00:00Z'
-            }
+            { id: 101, name: 'sha256:latest-img', metadata: { container: { tags: ['latest'] } }, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+            { id: 102, name: 'sha256:protected-layer', metadata: { container: { tags: [] } }, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+            { id: 103, name: 'sha256:dependabot-img', metadata: { container: { tags: ['dependabot-pip-2025.6.15'] } }, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+            { id: 104, name: 'sha256:dependabot-layer', metadata: { container: { tags: [] } }, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+            { id: 105, name: 'sha256:release-img', metadata: { container: { tags: ['release-1.0'] } }, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+            { id: 106, name: 'sha256:dangling', metadata: { container: { tags: [] } }, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+            { id: 107, name: 'sha256:recent', metadata: { container: { tags: ['v2.0.0'] } }, created_at: '2025-01-15T00:00:00Z', updated_at: '2025-01-15T00:00:00Z' }
           ]
         }
       ];
 
       mockWrapper.getManifestDigests.mockImplementation((_owner, _image, tag) => {
-        if (tag === 'latest') {
-          return Promise.resolve(['sha256:protected-layer']);
-        }
-        if (tag === 'dependabot-pip-2025.6.15') {
-          return Promise.resolve(['sha256:dependabot-layer']);
-        }
-        if (tag === 'release-1.0') {
-          return Promise.resolve(['sha256:release-layer']);
-        }
+        if (tag === 'latest') return Promise.resolve(['sha256:protected-layer']);
+        if (tag === 'dependabot-pip-2025.6.15') return Promise.resolve(['sha256:dependabot-layer']);
+        if (tag === 'release-1.0') return Promise.resolve(['sha256:release-layer']);
         return Promise.resolve([]);
       });
 
@@ -755,21 +498,16 @@ describe('ContainerStrategy', () => {
         packagesWithVersions,
         excludedPatterns: ['release-*'],
         includedPatterns: ['dependabot-*'],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: true
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: true
       });
 
-      // Should delete: dependabot-img + its layer, dangling
-      // Should NOT delete: latest, protected-layer (used by latest), release-* (excluded), recent (too new)
       expect(result).toHaveLength(1);
       expect(result[0].versions).toHaveLength(3);
-      
+
       const deletedIds = result[0].versions.map(v => v.id);
-      expect(deletedIds).toContain(103); // dependabot-img
-      expect(deletedIds).toContain(104); // dependabot-layer
-      expect(deletedIds).toContain(106); // dangling
+      expect(deletedIds).toContain(103);
+      expect(deletedIds).toContain(104);
+      expect(deletedIds).toContain(106);
     });
   });
 
@@ -779,24 +517,15 @@ describe('ContainerStrategy', () => {
       const packagesWithVersions = [
         {
           package: {
-            id: 1,
-            name: 'test-image',
-            package_type: 'container',
+            id: 1, name: 'test-image', package_type: 'container',
             repository: { full_name: 'owner/repo' },
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z'
+            created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
           },
           versions: [
             {
-              id: 101,
-              name: 'sha256:abc123',
-              metadata: {
-                container: {
-                  tags: ['v1.0.0']
-                }
-              },
-              created_at: '2025-01-01T00:00:00Z',
-              updated_at: '2025-01-01T00:00:00Z'
+              id: 101, name: 'sha256:abc123',
+              metadata: { container: { tags: ['v1.0.0'] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
@@ -805,16 +534,10 @@ describe('ContainerStrategy', () => {
       mockWrapper.getManifestDigests.mockRejectedValue(new Error('Manifest not found'));
 
       const result = await strategy.execute({
-        packagesWithVersions,
-        excludedPatterns: [],
-        includedPatterns: [],
-        thresholdDate,
-        wrapper: mockWrapper,
-        owner: 'test-owner',
-        debug: false
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
       });
 
-      // Should still try to delete the version
       expect(result).toHaveLength(1);
       expect(log.warn).toHaveBeenCalled();
     });
@@ -822,15 +545,7 @@ describe('ContainerStrategy', () => {
 
   describe('isValidMetadata', () => {
     it('should return true for valid metadata', () => {
-      const version = {
-        metadata: {
-          container: {
-            tags: ['v1.0.0']
-          }
-        }
-      };
-
-      expect(strategy.isValidMetadata(version)).toBe(true);
+      expect(strategy.isValidMetadata({ metadata: { container: { tags: ['v1.0.0'] } } })).toBe(true);
     });
 
     it('should return false for invalid metadata', () => {

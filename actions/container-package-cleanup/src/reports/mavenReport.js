@@ -1,4 +1,4 @@
-const core = require("@actions/core");
+import * as core from "@actions/core";
 
 class MavenReport {
 
@@ -77,4 +77,4 @@ class MavenReport {
     }
 }
 
-module.exports = MavenReport;
+export default MavenReport;

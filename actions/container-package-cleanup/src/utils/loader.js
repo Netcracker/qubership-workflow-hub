@@ -1,9 +1,13 @@
-const fs = require("node:fs");
-const yaml = require("js-yaml");
-const core = require("@actions/core");
-const Ajv = require("ajv");
-const path = require("node:path");
-const log = require("@qubership/action-logger");
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import yaml from "js-yaml";
+import * as core from "@actions/core";
+import Ajv from "ajv";
+import log from "@qubership/action-logger";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 class ConfigLoader {
@@ -66,4 +70,4 @@ class ConfigLoader {
   }
 }
 
-module.exports = ConfigLoader;
+export default ConfigLoader;
