@@ -23776,8 +23776,12 @@ var OctokitWrapper = class {
         this.octokit.paginate(
           this.octokit.rest.packages.listPackagesForOrganization,
           { org, package_type, visibility: "private", per_page: 100 }
-        ).catch(() => [])
+        ).catch((e) => {
+          action_logger_default.warn(`Failed to fetch private packages: ${e.message}`);
+          return [];
+        })
       ]);
+      action_logger_default.debug(`Found ${publicPkgs.length} public and ${privatePkgs.length} private packages`, MODULE);
       return [...publicPkgs, ...privatePkgs];
     } catch (error2) {
       action_logger_default.error(`Error fetching packages for organization ${org}:`, error2);
