@@ -89,13 +89,15 @@ class OctokitWrapper {
    */
   async listPackagesForOrganization(org, package_type) {
     try {
-      return await this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
-        {
-          org: org,
-          package_type,
-          per_page: 100,      // max 100 packages per request
-        }
-      );
+      const [publicPkgs, privatePkgs] = await Promise.all([
+        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: 'public', per_page: 100 }
+        ),
+        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: 'private', per_page: 100 }
+        ).catch(() => [])
+      ]);
+      return [...publicPkgs, ...privatePkgs];
     } catch (error) {
       log.error(`Error fetching packages for organization ${org}:`, error);
       throw error;

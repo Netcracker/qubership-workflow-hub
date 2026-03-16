@@ -66,10 +66,6 @@ async function run() {
 
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
 
-  log.startDebugGroup('All Packages (before filter)');
-  log.debugJSON('💡 All packages:', packages.map(p => ({ name: p.name, visibility: p.visibility, repository: p.repository?.name ?? null })));
-  log.endGroup();
-
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   log.startDebugGroup('Filtered Packages')
   log.debugJSON('💡 Filtered packages:', filteredPackages);
