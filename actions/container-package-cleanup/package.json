@@ -2,23 +2,28 @@
   "name": "package-cleanup",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "jest",
-    "build": "ncc build src/index.js -o dist"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose",
+    "build": "esbuild src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.js --preserve-symlinks"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@actions/core": "^2.0.2",
+    "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
     "@qubership/action-logger": "file:../../packages/action-logger",
     "ajv": "^8.17.1",
-    "jets": "^0.15.0",
+    "escape-string-regexp": "^5.0.0",
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {
-    "jest": "^30.1.3"
+    "esbuild": "^0.27.3",
+    "jest": "^30.2.0"
   }
 }

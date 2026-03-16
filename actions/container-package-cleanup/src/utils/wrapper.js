@@ -1,8 +1,9 @@
-const github = require("@actions/github");
-const { exec, spawn } = require("node:child_process");
-const util = require("node:util");
-const execPromise = util.promisify(exec);
-const log = require("@qubership/action-logger");
+import * as github from "@actions/github";
+import { exec, spawn } from "node:child_process";
+import { promisify } from "node:util";
+import log from "@qubership/action-logger";
+
+const execPromise = promisify(exec);
 
 const MODULE = 'wrapper.js';
 
@@ -222,4 +223,4 @@ class OctokitWrapper {
 
 }
 
-module.exports = OctokitWrapper;
+export default OctokitWrapper;

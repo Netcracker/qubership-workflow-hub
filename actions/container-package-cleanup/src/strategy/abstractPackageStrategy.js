@@ -31,4 +31,4 @@ class AbstractPackageStrategy {
     }
 }
 
-module.exports = AbstractPackageStrategy;
+export default AbstractPackageStrategy;

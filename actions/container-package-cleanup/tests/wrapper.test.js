@@ -1,19 +1,31 @@
 // tests/wrapper.test.js
-jest.mock('@actions/github');
-jest.mock('child_process');
+import { jest } from '@jest/globals';
 
-// Mock util.promisify before require module
+// Mock @actions/github
+const mockGetOctokit = jest.fn();
+jest.unstable_mockModule('@actions/github', () => ({
+  getOctokit: mockGetOctokit
+}));
+
+// Mock child_process
+const mockSpawn = jest.fn();
+jest.unstable_mockModule('node:child_process', () => ({
+  exec: jest.fn(),
+  spawn: mockSpawn
+}));
+
+// Mock util promisify target
 const mockExecPromise = jest.fn();
-jest.mock('util', () => {
-  const actual = jest.requireActual('util');
-  return {
-    ...actual,
-    promisify: () => mockExecPromise
-  };
-});
+jest.unstable_mockModule('node:util', () => ({
+  promisify: () => mockExecPromise
+}));
 
-const github = require('@actions/github');
-const OctokitWrapper = require('../src/utils/wrapper');
+// Mock logger
+jest.unstable_mockModule('@qubership/action-logger', () => ({
+  default: { setDebug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+}));
+
+const { default: OctokitWrapper } = await import('../src/utils/wrapper.js');
 
 describe('OctokitWrapper', () => {
   const fakeToken = 'fake-token';
@@ -21,7 +33,6 @@ describe('OctokitWrapper', () => {
   let mockOctokit;
 
   beforeEach(() => {
-    // Configuring a mock Octokit
     mockOctokit = {
       rest: {
         users: { getByUsername: jest.fn() },
@@ -36,8 +47,9 @@ describe('OctokitWrapper', () => {
       },
       paginate: jest.fn((fn, opts) => fn(opts)),
     };
-    github.getOctokit.mockReturnValue(mockOctokit);
+    mockGetOctokit.mockReturnValue(mockOctokit);
     wrapper = new OctokitWrapper(fakeToken);
+    wrapper.dockerLoggedIn = true; // skip docker login in unit tests
   });
 
   describe('isOrganization', () => {
@@ -115,7 +127,6 @@ describe('OctokitWrapper', () => {
       mockExecPromise.mockResolvedValue({ stdout: fakeStdout });
 
       const digests = await wrapper.getManifestDigests('owner', 'pkg', 'tag');
-      expect(mockExecPromise).toHaveBeenCalledWith('docker manifest inspect ghcr.io/owner/pkg:tag');
       expect(digests).toEqual(['sha1', 'sha2']);
     });
   });

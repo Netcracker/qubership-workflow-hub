@@ -1,7 +1,7 @@
-const core = require('@actions/core');
-const AbstractPackageStrategy = require("./abstractPackageStrategy");
-const WildcardMatcher = require("../utils/wildcardMatcher");
-const log = require("@qubership/action-logger");
+import * as core from '@actions/core';
+import AbstractPackageStrategy from "./abstractPackageStrategy.js";
+import WildcardMatcher from "../utils/wildcardMatcher.js";
+import log from "@qubership/action-logger";
 
 const MODULE = 'container.js';
 
@@ -239,4 +239,4 @@ class ContainerStrategy extends AbstractPackageStrategy {
     }
 }
 
-module.exports = ContainerStrategy;
+export default ContainerStrategy;
