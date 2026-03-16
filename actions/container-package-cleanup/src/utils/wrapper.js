@@ -89,13 +89,34 @@ class OctokitWrapper {
    */
   async listPackagesForOrganization(org, package_type) {
     try {
-      return await this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
-        {
-          org: org,
-          package_type,
-          per_page: 100,
-        }
-      );
+      const [publicPkgs, internalPkgs, privatePkgs] = await Promise.allSettled([
+        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: 'public', per_page: 100 }),
+        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: 'internal', per_page: 100 }),
+        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: 'private', per_page: 100 }),
+      ]);
+      const results = [];
+      if (publicPkgs.status === 'fulfilled') {
+        log.info(`Found ${publicPkgs.value.length} public packages`);
+        results.push(...publicPkgs.value);
+      } else {
+        log.warn(`Failed to fetch public packages: ${publicPkgs.reason?.message}`);
+      }
+      if (internalPkgs.status === 'fulfilled') {
+        log.info(`Found ${internalPkgs.value.length} internal packages`);
+        results.push(...internalPkgs.value);
+      } else {
+        log.warn(`Failed to fetch internal packages: ${internalPkgs.reason?.message}`);
+      }
+      if (privatePkgs.status === 'fulfilled') {
+        log.info(`Found ${privatePkgs.value.length} private packages`);
+        results.push(...privatePkgs.value);
+      } else {
+        log.warn(`Failed to fetch private packages: ${privatePkgs.reason?.message}`);
+      }
+      return results;
     } catch (error) {
       log.error(`Error fetching packages for organization ${org}:`, error);
       throw error;

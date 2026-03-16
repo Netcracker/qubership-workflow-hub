@@ -23768,14 +23768,40 @@ var OctokitWrapper = class {
    */
   async listPackagesForOrganization(org, package_type) {
     try {
-      return await this.octokit.paginate(
-        this.octokit.rest.packages.listPackagesForOrganization,
-        {
-          org,
-          package_type,
-          per_page: 100
-        }
-      );
+      const [publicPkgs, internalPkgs, privatePkgs] = await Promise.allSettled([
+        this.octokit.paginate(
+          this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: "public", per_page: 100 }
+        ),
+        this.octokit.paginate(
+          this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: "internal", per_page: 100 }
+        ),
+        this.octokit.paginate(
+          this.octokit.rest.packages.listPackagesForOrganization,
+          { org, package_type, visibility: "private", per_page: 100 }
+        )
+      ]);
+      const results = [];
+      if (publicPkgs.status === "fulfilled") {
+        action_logger_default.info(`Found ${publicPkgs.value.length} public packages`);
+        results.push(...publicPkgs.value);
+      } else {
+        action_logger_default.warn(`Failed to fetch public packages: ${publicPkgs.reason?.message}`);
+      }
+      if (internalPkgs.status === "fulfilled") {
+        action_logger_default.info(`Found ${internalPkgs.value.length} internal packages`);
+        results.push(...internalPkgs.value);
+      } else {
+        action_logger_default.warn(`Failed to fetch internal packages: ${internalPkgs.reason?.message}`);
+      }
+      if (privatePkgs.status === "fulfilled") {
+        action_logger_default.info(`Found ${privatePkgs.value.length} private packages`);
+        results.push(...privatePkgs.value);
+      } else {
+        action_logger_default.warn(`Failed to fetch private packages: ${privatePkgs.reason?.message}`);
+      }
+      return results;
     } catch (error2) {
       action_logger_default.error(`Error fetching packages for organization ${org}:`, error2);
       throw error2;
