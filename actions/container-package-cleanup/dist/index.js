@@ -24526,6 +24526,9 @@ async function run() {
   action_logger_default.info(`Run for type: ${package_type}, owner: ${owner}, repo: ${repo}`);
   action_logger_default.info;
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
+  action_logger_default.startDebugGroup("All Packages (before filter)");
+  action_logger_default.debugJSON("\u{1F4A1} All packages:", packages.map((p) => ({ name: p.name, visibility: p.visibility, repository: p.repository?.name ?? null })));
+  action_logger_default.endGroup();
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   action_logger_default.startDebugGroup("Filtered Packages");
   action_logger_default.debugJSON("\u{1F4A1} Filtered packages:", filteredPackages);
