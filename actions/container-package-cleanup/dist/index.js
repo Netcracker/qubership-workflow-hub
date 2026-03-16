@@ -23768,21 +23768,14 @@ var OctokitWrapper = class {
    */
   async listPackagesForOrganization(org, package_type) {
     try {
-      const [publicPkgs, privatePkgs] = await Promise.all([
-        this.octokit.paginate(
-          this.octokit.rest.packages.listPackagesForOrganization,
-          { org, package_type, visibility: "public", per_page: 100 }
-        ),
-        this.octokit.paginate(
-          this.octokit.rest.packages.listPackagesForOrganization,
-          { org, package_type, visibility: "private", per_page: 100 }
-        ).catch((e) => {
-          action_logger_default.warn(`Failed to fetch private packages: ${e.message}`);
-          return [];
-        })
-      ]);
-      action_logger_default.debug(`Found ${publicPkgs.length} public and ${privatePkgs.length} private packages`, MODULE);
-      return [...publicPkgs, ...privatePkgs];
+      return await this.octokit.paginate(
+        this.octokit.rest.packages.listPackagesForOrganization,
+        {
+          org,
+          package_type,
+          per_page: 100
+        }
+      );
     } catch (error2) {
       action_logger_default.error(`Error fetching packages for organization ${org}:`, error2);
       throw error2;
@@ -24530,9 +24523,6 @@ async function run() {
   action_logger_default.info(`Run for type: ${package_type}, owner: ${owner}, repo: ${repo}`);
   action_logger_default.info;
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
-  action_logger_default.startDebugGroup("All Packages (before filter)");
-  action_logger_default.debugJSON("\u{1F4A1} All packages:", packages.map((p) => ({ name: p.name, visibility: p.visibility, repository: p.repository?.name ?? null })));
-  action_logger_default.endGroup();
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   action_logger_default.startDebugGroup("Filtered Packages");
   action_logger_default.debugJSON("\u{1F4A1} Filtered packages:", filteredPackages);
