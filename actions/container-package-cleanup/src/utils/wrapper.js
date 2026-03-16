@@ -1,5 +1,5 @@
 const github = require("@actions/github");
-const { exec } = require("node:child_process");
+const { exec, spawn } = require("node:child_process");
 const util = require("node:util");
 const execPromise = util.promisify(exec);
 const log = require("@qubership/action-logger");
@@ -14,7 +14,31 @@ class OctokitWrapper {
    */
   constructor(authToken, debug = false) {
     this.octokit = github.getOctokit(authToken);
+    this.authToken = authToken;
+    this.dockerLoggedIn = false;
     log.setDebug(debug);
+  }
+
+  /**
+   * Logs in to ghcr.io using the auth token so that docker manifest inspect
+   * can access private images.
+   */
+  async ensureDockerLogin() {
+    if (this.dockerLoggedIn) return;
+    try {
+      log.info('Logging in to ghcr.io for docker manifest access...');
+      await new Promise((resolve, reject) => {
+        const proc = spawn('docker', ['login', 'ghcr.io', '-u', 'x-access-token', '--password-stdin'], { stdio: ['pipe', 'pipe', 'pipe'] });
+        proc.stdin.write(this.authToken);
+        proc.stdin.end();
+        proc.on('close', code => code === 0 ? resolve() : reject(new Error(`docker login exited with code ${code}`)));
+        proc.on('error', reject);
+      });
+      this.dockerLoggedIn = true;
+      log.info('Docker login to ghcr.io succeeded.');
+    } catch (error) {
+      log.warn(`Docker login to ghcr.io failed: ${error.message}. Manifest inspect may fail for private images.`);
+    }
   }
 
   /**
@@ -187,6 +211,7 @@ class OctokitWrapper {
  * @returns {Promise<string[]>} — digest list for all platforms
  */
   async getManifestDigests(owner, packageName, tag) {
+    await this.ensureDockerLogin();
     const ref = `ghcr.io/${owner}/${packageName}:${tag}`;
     // Run docker manifest inspect and parse JSON
     const { stdout } = await execPromise(`docker manifest inspect ${ref}`);
