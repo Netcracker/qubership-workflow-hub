@@ -198,6 +198,45 @@ describe("index.js template rendering", () => {
     );
   });
 
+  test("should truncate each tag individually when template contains multiple comma-separated tags", async () => {
+    // Simulate a long branch name that causes per-tag truncation
+    mockRefNormalizer.extract.mockReturnValue({
+      rawName: "refs/heads/fix-increase-integration-tests-memory",
+      normalizedName: "fix-increase-integration-tests-memory",
+      isTag: false,
+      isBranch: true,
+      type: "branch"
+    });
+    core.getInput.mockImplementation((name) => {
+      const map = {
+        ref: "refs/heads/fix-increase-integration-tests-memory",
+        "short-sha": "11",
+        "dry-run": "false",
+        "show-report": "false",
+        "debug": "false",
+        "extra-tags": "",
+        "merge-tags": "false",
+        "default-template": "{{ref-name}}-{{timestamp}}, {{ref-name}}-{{short-sha}}, {{ref-name}}, {{short-sha}}"
+      };
+      return map[name] ?? "";
+    });
+    mockConfigLoader.load.mockReturnValue(null);
+
+    await run();
+
+    const resultCall = core.setOutput.mock.calls.find(([key]) => key === "result");
+    const rendered = resultCall ? resultCall[1] : null;
+    const tags = rendered.split(",").map((t) => t.trim());
+
+    // Every individual tag must be within the 128-char limit
+    for (const tag of tags) {
+      expect(tag.length).toBeLessThanOrEqual(128);
+    }
+    // The short-sha tag must be present and correct (11 chars)
+    const shortShaTag = tags.find((t) => /^[0-9a-f]{11}$/.test(t));
+    expect(shortShaTag).toBeDefined();
+  });
+
   test("should skip invalid template entries", async () => {
     mockConfigLoader.load.mockReturnValue({
       "default-template": "fallback-template",

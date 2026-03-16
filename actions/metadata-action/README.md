@@ -171,16 +171,18 @@ Docker image tags have a maximum length of **128 characters** and must end with 
 
 This action automatically:
 
-- Truncates the generated tag to `tag-max-length` characters (default: `128`)
+- Truncates **each individual tag** to `tag-max-length` characters (default: `128`)
 - Strips trailing non-alphanumeric characters after truncation
 
-When truncation occurs, a warning is logged:
+When a template produces multiple comma-separated tags (e.g. `"{{ref-name}}-{{timestamp}}, {{ref-name}}-{{short-sha}}, {{ref-name}}, {{short-sha}}"`), each tag is evaluated and truncated **independently**. This ensures that shorter tags (such as `{{short-sha}}`) are always present in the output even when earlier tags in the list are long.
+
+When truncation occurs, a warning is logged per affected tag:
 
 ```text
 ⚠ Tag was truncated from 145 to 128 characters: "very-long-branch-..." -> "very-long-branch"
 ```
 
-**Important:** truncation always cuts from the end of the rendered string. For a template like `{{ref-name}}-{{timestamp}}-{{runNumber}}`, if `ref-name` is very long, the `timestamp` and `runNumber` parts may be cut off entirely.
+**Important:** truncation cuts from the end of each individual tag. For a single-tag template like `{{ref-name}}-{{timestamp}}-{{runNumber}}`, if `ref-name` is very long, the `timestamp` and `runNumber` parts may be cut off entirely.
 
 To avoid this, use the length modifier `{{key:N}}` to limit specific placeholders:
 
@@ -194,6 +196,16 @@ branches-template:
 | ------------- | ------------------------------- | ------------------------------------------------ |
 | No limit      | `{{ref-name}}-{{timestamp}}`    | `<first 113 chars of ref-name>` (timestamp lost) |
 | With modifier | `{{ref-name:80}}-{{timestamp}}` | `<80 chars of ref-name>-20250313235959`          |
+
+For multi-tag templates, truncation is applied per tag, so all tags are guaranteed to appear in the output (each within the length limit):
+
+```text
+Template:  "{{ref-name}}-{{timestamp}}, {{ref-name}}-{{short-sha}}, {{ref-name}}, {{short-sha}}"
+ref-name:  fix-increase-integration-tests-memory  (38 chars)
+
+Result:    "fix-increase-integration-tests-memory-20260316115900, fix-increase-integration-tests-memory-313feeac7a1, fix-increase-integration-tests-memory, 313feeac7a1"
+           ↑ each tag is within 128 chars, including the short-sha tag at the end
+```
 
 ### Semantic Version Parsing Contract
 
@@ -260,4 +272,4 @@ The configuration file for this action must adhere to [the schema defined](https
 - **Missing outputs:** Check if the action ran successfully; use `debug: true` for logs.
 - **Configuration errors:** Validate your YAML against the schema at [config.schema.json](https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/metadata-action/config.schema.json).
 - **Branch/tag name issues:** Use `replace-symbol` to customize how '/' is replaced in names (default is `-`).
-- **Tag too long:** Use `tag-max-length` to limit the generated tag length. If important parts like `timestamp` get cut off, use length modifiers in the template (e.g. `{{ref-name:80}}-{{timestamp}}`). See [Tag Length Limiting](#tag-length-limiting) for details.
+- **Tag too long:** Use `tag-max-length` to limit the generated tag length. When using multi-tag templates (comma-separated), each tag is truncated independently, so all tags appear in the output. For single-tag templates where important parts like `timestamp` get cut off, use length modifiers (e.g. `{{ref-name:80}}-{{timestamp}}`). See [Tag Length Limiting](#tag-length-limiting) for details.
