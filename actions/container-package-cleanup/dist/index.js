@@ -23896,7 +23896,7 @@ var OctokitWrapper = class {
     const ref = `ghcr.io/${owner}/${packageName}:${tag}`;
     const { stdout } = await execPromise(`docker manifest inspect ${ref}`);
     const manifest = JSON.parse(stdout);
-    return manifest.manifests.map((m) => m.digest);
+    return (manifest.manifests ?? []).map((m) => m.digest);
   }
 };
 var wrapper_default = OctokitWrapper;

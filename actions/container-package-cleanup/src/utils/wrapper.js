@@ -217,8 +217,8 @@ class OctokitWrapper {
     // Run docker manifest inspect and parse JSON
     const { stdout } = await execPromise(`docker manifest inspect ${ref}`);
     const manifest = JSON.parse(stdout);
-    // return digest from each entry in manifests
-    return manifest.manifests.map(m => m.digest);
+    // multi-arch manifest list has 'manifests' array; single-arch images do not
+    return (manifest.manifests ?? []).map(m => m.digest);
   }
 
 }
