@@ -2,12 +2,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: ""
-        type: string
+        description: "Version type to release (major, minor, patch)"
+        type: choice
+        options:
+          - 'patch'
+          - 'minor'
+          - 'major'
         required: true
 
 name: Create Workflow-Hub GitHub release
-run-name: "Workflow-Hub GitHub release v${{ inputs.version }}"
+run-name: "Workflow-Hub GitHub release type ${{ inputs.version }}"
 permissions:
   contents: read
 
@@ -16,24 +20,76 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.generate_version.outputs.version }}
     steps:
-      - name: Input parameters
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          echo "Version: $VERSION" >> $GITHUB_STEP_SUMMARY
-
       - name: Checkout code
         uses: actions/checkout@v6
         with:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Get latest release via GitHub API
+        id: generate_version
+        env:
+          VERSION_TYPE: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          RESPONSE=$(curl -s \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest)
+
+          LATEST_TAG=$(echo "$RESPONSE" | jq -r '.tag_name')
+          echo "LATEST_TAG → $LATEST_TAG"
+
+          LATEST_VERSION="${LATEST_TAG#v}"
+          echo "Clean version string → '$LATEST_VERSION'"
+          IFS='.' read -r raw_major raw_minor raw_patch _ <<< "${LATEST_VERSION}"
+
+          MAJOR=${raw_major}
+          MINOR=${raw_minor}
+          PATCH=${raw_patch}
+
+          [[ ! $MAJOR =~ ^[0-9]+$ ]] && { echo "Error: MAJOR not a number: '$MAJOR'"; exit 2; }
+          [[ ! $MINOR =~ ^[0-9]+$ ]] && { echo "Error: MINOR not a number: '$MINOR'"; exit 2; }
+          [[ ! $PATCH =~ ^[0-9]+$ ]] && { echo "Error: PATCH not a number: '$PATCH'"; exit 2; }
+
+          echo "Parsed → MAJOR=$MAJOR  MINOR=$MINOR  PATCH=$PATCH"
+
+          echo "Increment type → '$VERSION_TYPE'"
+
+          case "$VERSION_TYPE" in
+            patch)
+              ((PATCH += 1))
+              ;;
+            minor)
+              ((MINOR += 1))
+              PATCH=0
+              ;;
+            major)
+              ((MAJOR += 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            *)
+              echo "Unknown type: '$VERSION_TYPE'"
+              exit 1
+              ;;
+          esac
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "→ New version: $NEW_VERSION"
+
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "**New version**: $NEW_VERSION" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Check if tag exists
         id: check_tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-action@b575bad3a0959c4e883bc34f9d055ff07fde2dbd #v2.0.1
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@v2.1.2
         with:
-          tag-name: "v${{ github.event.inputs.version }}"
+          tag-name: "v${{ steps.generate_version.outputs.version }}"
           ref: ${{ github.ref }}
           create-tag: false
           check-tag: true
@@ -45,11 +101,13 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.check-tag.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          persist-credentials: false
+          persist-credentials: true
           token: ${{ secrets.GH_ACCESS_TOKEN }}
 
       - name: Set up authentication
@@ -63,15 +121,11 @@ jobs:
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/$REPOSITORY
 
       - name: Create Release Branch
-        env:
-          VERSION: ${{ inputs.version }}
         run: |
           git checkout -b "release/v$VERSION"
           git push origin "release/v$VERSION"
 
       - name: Update references
-        env:
-          VERSION: ${{ inputs.version }}
         run: |
           # shellcheck disable=2038
           find . -type f \( -name '*.yaml' -o -name '*.yml' -o -name '*.md' \) ! -name 'github-release.yml' \
@@ -80,7 +134,6 @@ jobs:
       - name: Commit and push changes
         env:
           ACTOR: ${{ github.actor }}
-          VERSION: ${{ inputs.version }}
         run: |
           git config --global user.name "$ACTOR"
           git config --global user.email "$ACTOR@users.noreply.github.com"
@@ -91,11 +144,11 @@ jobs:
           git push origin "v$VERSION"
 
   create-github-release:
-    needs: [release-preparation]
+    needs: [check-tag, release-preparation]
     permissions:
       contents: write
     uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@main
     with:
-      version: ${{ inputs.version }}
+      version: ${{ needs.check-tag.outputs.version }}
       publish: false
-      config-name: release-drafter-config.yml
+      config-name: release-drafter.yml
