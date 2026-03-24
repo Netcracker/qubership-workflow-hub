@@ -1,0 +1,5 @@
+__tests__/runner/*
+.vscode
+node_modules
+lib
+.idea
