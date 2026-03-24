@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "outDir": "./lib",
-    "useUnknownInCatchVariables":false,
+    "useUnknownInCatchVariables": false,
     "rootDir": "./src",
     "strict": true,
     "noImplicitAny": false,
-    "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "exclude": ["node_modules", "**/*.test.ts"]
 }

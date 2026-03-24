@@ -1,8 +1,8 @@
 import {
     CommitterMap
-} from '../interfaces'
-import * as input from '../shared/getInputs'
-import { getPrSignComment } from '../shared/pr-sign-comment'
+} from '../interfaces.js'
+import * as input from '../shared/getInputs.js'
+import { getPrSignComment } from '../shared/pr-sign-comment.js'
 
 export function commentContent(signed: boolean, committerMap: CommitterMap): string {
     // using a `string` true or false purposely as github action input cannot have a boolean value

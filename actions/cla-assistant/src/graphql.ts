@@ -1,6 +1,6 @@
-import { octokit } from './octokit'
+import { octokit } from './octokit.js'
 import { context } from '@actions/github'
-import { CommittersDetails } from './interfaces'
+import { CommittersDetails } from './interfaces.js'
 
 
 

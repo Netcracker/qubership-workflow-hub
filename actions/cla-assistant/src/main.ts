@@ -1,9 +1,9 @@
 import {context} from '@actions/github'
-import {setupClaCheck} from './setupClaCheck'
-import {lockPullRequest} from './pullrequest/pullRequestLock'
+import {setupClaCheck} from './setupClaCheck.js'
+import {lockPullRequest} from './pullrequest/pullRequestLock.js'
 
 import * as core from '@actions/core'
-import * as input from './shared/getInputs'
+import * as input from './shared/getInputs.js'
 
 export async function run() {
   try {

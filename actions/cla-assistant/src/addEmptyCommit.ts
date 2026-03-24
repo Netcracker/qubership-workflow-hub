@@ -1,9 +1,9 @@
-import { octokit } from './octokit'
+import { octokit } from './octokit.js'
 import { context } from '@actions/github'
 
 import * as core from '@actions/core'
-import * as input from './shared/getInputs'
-import { getPrSignComment } from './shared/pr-sign-comment'
+import * as input from './shared/getInputs.js'
+import { getPrSignComment } from './shared/pr-sign-comment.js'
 
 
 export async function addEmptyCommit() {
@@ -18,24 +18,24 @@ export async function addEmptyCommit() {
                 const message = input.getSignedCommitMessage() ?
                     input.getSignedCommitMessage().replace('$contributorName', contributorName) :
                     ` @${contributorName} has signed the CLA `
-                const pullRequestResponse = await octokit.pulls.get({
+                const pullRequestResponse = await octokit.rest.pulls.get({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pull_number: context.payload.issue!.number
                 })
 
-                const baseCommit = await octokit.git.getCommit({
+                const baseCommit = await octokit.rest.git.getCommit({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     commit_sha: pullRequestResponse.data.head.sha
                 })
 
-                const tree = await octokit.git.getTree({
+                const tree = await octokit.rest.git.getTree({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     tree_sha: baseCommit.data.tree.sha
                 })
-                const newCommit = await octokit.git.createCommit(
+                const newCommit = await octokit.rest.git.createCommit(
                     {
                         owner: context.repo.owner,
                         repo: context.repo.repo,
@@ -44,7 +44,7 @@ export async function addEmptyCommit() {
                         parents: [pullRequestResponse.data.head.sha]
                     }
                 )
-                return octokit.git.updateRef({
+                return octokit.rest.git.updateRef({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     ref: `heads/${pullRequestResponse.data.head.ref}`,

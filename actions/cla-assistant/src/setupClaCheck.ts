@@ -1,20 +1,20 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { checkAllowList } from './checkAllowList'
-import getCommitters from './graphql'
+import { checkAllowList } from './checkAllowList.js'
+import getCommitters from './graphql.js'
 import {
   ClafileContentAndSha,
   CommitterMap,
   CommittersDetails,
   ReactedCommitterMap
-} from './interfaces'
+} from './interfaces.js'
 import {
   createFile,
   getFileContent,
   updateFile
-} from './persistence/persistence'
-import prCommentSetup from './pullrequest/pullRequestComment'
-import { reRunLastWorkFlowIfRequired } from './pullRerunRunner'
+} from './persistence/persistence.js'
+import prCommentSetup from './pullrequest/pullRequestComment.js'
+import { reRunLastWorkFlowIfRequired } from './pullRerunRunner.js'
 
 export async function setupClaCheck() {
   let committerMap = getInitialCommittersMap()
