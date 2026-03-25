@@ -1,11 +1,11 @@
 import { octokit } from '../octokit.js'
 import { context } from '@actions/github'
-import { CommitterMap, CommittersDetails, ReactedCommitterMap } from '../interfaces.js'
+import { ICommitterMap, ICommittersDetails, IReactedCommitterMap } from '../interfaces.js'
 import { getUseDcoFlag, getCustomPrSignComment } from '../shared/getInputs.js'
 
 import * as core from '@actions/core'
 
-export default async function signatureWithPRComment(committerMap: CommitterMap, committers): Promise<ReactedCommitterMap> {
+export default async function signatureWithPRComment(committerMap: ICommitterMap, committers): Promise<IReactedCommitterMap> {
 
     let repoId = context.payload.repository!.id
     let prResponse = await octokit.rest.issues.listComments({
@@ -13,8 +13,8 @@ export default async function signatureWithPRComment(committerMap: CommitterMap,
         repo: context.repo.repo,
         issue_number: context.issue.number
     })
-    let listOfPRComments = [] as CommittersDetails[]
-    let filteredListOfPRComments = [] as CommittersDetails[]
+    let listOfPRComments = [] as ICommittersDetails[]
+    let filteredListOfPRComments = [] as ICommittersDetails[]
 
     prResponse?.data.map((prComment) => {
         listOfPRComments.push({
@@ -44,7 +44,7 @@ export default async function signatureWithPRComment(committerMap: CommitterMap,
     * checking if the commented users are only the contributors who has committed in the same PR (This is needed for the PR Comment and changing the status to success when all the contributors has reacted to the PR)
     */
     const onlyCommitters = committers.filter(committer => filteredListOfPRComments.some(commentedCommitter => committer.id == commentedCommitter.id))
-    const commentedCommitterMap: ReactedCommitterMap = {
+    const commentedCommitterMap: IReactedCommitterMap = {
         newSigned,
         onlyCommitters,
         allSignedFlag: false

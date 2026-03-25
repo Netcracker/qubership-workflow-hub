@@ -1,10 +1,10 @@
 import {
-    CommitterMap
+    ICommitterMap
 } from '../interfaces.js'
 import * as input from '../shared/getInputs.js'
 import { getPrSignComment } from '../shared/pr-sign-comment.js'
 
-export function commentContent(signed: boolean, committerMap: CommitterMap): string {
+export function commentContent(signed: boolean, committerMap: ICommitterMap): string {
     // using a `string` true or false purposely as github action input cannot have a boolean value
     if (input.getUseDcoFlag() == 'true') {
         return dco(signed, committerMap)
@@ -13,7 +13,7 @@ export function commentContent(signed: boolean, committerMap: CommitterMap): str
     }
 }
 
-function dco(signed: boolean, committerMap: CommitterMap): string {
+function dco(signed: boolean, committerMap: ICommitterMap): string {
 
     if (signed) {
         const line1 = input.getCustomAllSignedPrComment() || `All contributors have signed the DCO  ✍️ ✅`
@@ -58,7 +58,7 @@ function dco(signed: boolean, committerMap: CommitterMap): string {
     return text
 }
 
-function cla(signed: boolean, committerMap: CommitterMap): string {
+function cla(signed: boolean, committerMap: ICommitterMap): string {
 
     if (signed) {
         const line1 = input.getCustomAllSignedPrComment() || `All contributors have signed the CLA  ✍️ ✅`

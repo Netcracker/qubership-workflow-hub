@@ -1,13 +1,13 @@
 import { octokit } from './octokit.js'
 import { context } from '@actions/github'
-import { CommittersDetails } from './interfaces.js'
+import { ICommittersDetails } from './interfaces.js'
 
 
 
-export default async function getCommitters(): Promise<CommittersDetails[]> {
+export default async function getCommitters(): Promise<ICommittersDetails[]> {
     try {
-        let committers: CommittersDetails[] = []
-        let filteredCommitters: CommittersDetails[] = []
+        let committers: ICommittersDetails[] = []
+        let filteredCommitters: ICommittersDetails[] = []
         let response: any = await octokit.graphql(`
         query($owner:String! $name:String! $number:Int! $cursor:String!){
             repository(owner: $owner, name: $name) {

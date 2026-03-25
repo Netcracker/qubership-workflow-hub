@@ -1,19 +1,19 @@
-export interface CommitterMap {
-    signed: CommittersDetails[],
-    notSigned: CommittersDetails[],
-    unknown: CommittersDetails[]
+export interface ICommitterMap {
+    signed: ICommittersDetails[],
+    notSigned: ICommittersDetails[],
+    unknown: ICommittersDetails[]
 }
-export interface ReactedCommitterMap {
-    newSigned: CommittersDetails[],
-    onlyCommitters?: CommittersDetails[],
+export interface IReactedCommitterMap {
+    newSigned: ICommittersDetails[],
+    onlyCommitters?: ICommittersDetails[],
     allSignedFlag: boolean
 }
-export interface CommentedCommitterMap {
-    newSigned: CommittersDetails[],
-    onlyCommitters?: CommittersDetails[],
+export interface ICommentedCommitterMap {
+    newSigned: ICommittersDetails[],
+    onlyCommitters?: ICommittersDetails[],
     allSignedFlag: boolean
 }
-export interface CommittersDetails {
+export interface ICommittersDetails {
     name: string,
     id: number,
     pullRequestNo?: number,
@@ -27,7 +27,7 @@ export interface LabelName {
     current_name: string,
     name: string
 }
-export interface CommittersCommentDetails {
+export interface ICommittersCommentDetails {
     name: string,
     id: number,
     comment_id: number,
@@ -35,7 +35,7 @@ export interface CommittersCommentDetails {
     created_at: string,
     updated_at: string
 }
-export interface ClafileContentAndSha {
+export interface IClafileContentAndSha {
     claFileContent: any,
     sha: string
 }

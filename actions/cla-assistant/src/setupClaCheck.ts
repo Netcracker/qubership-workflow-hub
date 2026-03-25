@@ -3,10 +3,10 @@ import { context } from '@actions/github'
 import { checkAllowList } from './checkAllowList.js'
 import getCommitters from './graphql.js'
 import {
-  ClafileContentAndSha,
-  CommitterMap,
-  CommittersDetails,
-  ReactedCommitterMap
+  IClafileContentAndSha,
+  ICommitterMap,
+  ICommittersDetails,
+  IReactedCommitterMap
 } from './interfaces.js'
 import {
   createFile,
@@ -25,15 +25,15 @@ export async function setupClaCheck() {
   const { claFileContent, sha } = (await getCLAFileContentandSHA(
     committers,
     committerMap
-  )) as ClafileContentAndSha
+  )) as IClafileContentAndSha
 
-  committerMap = prepareCommiterMap(committers, claFileContent) as CommitterMap
+  committerMap = prepareCommiterMap(committers, claFileContent) as ICommitterMap
 
   try {
     const reactedCommitters = (await prCommentSetup(
       committerMap,
       committers
-    )) as ReactedCommitterMap
+    )) as IReactedCommitterMap
 
     if (reactedCommitters?.newSigned.length) {
       /* pushing the recently signed  contributors to the CLA Json File */
@@ -57,9 +57,9 @@ export async function setupClaCheck() {
 }
 
 async function getCLAFileContentandSHA(
-  committers: CommittersDetails[],
-  committerMap: CommitterMap
-): Promise<void | ClafileContentAndSha> {
+  committers: ICommittersDetails[],
+  committerMap: ICommitterMap
+): Promise<void | IClafileContentAndSha> {
   let result, claFileContentString, claFileContent, sha
   try {
     result = await getFileContent()
@@ -79,8 +79,8 @@ async function getCLAFileContentandSHA(
 }
 
 async function createClaFileAndPRComment(
-  committers: CommittersDetails[],
-  committerMap: CommitterMap
+  committers: ICommittersDetails[],
+  committerMap: ICommitterMap
 ): Promise<void> {
   committerMap.notSigned = committers
   committerMap.signed = []
@@ -109,9 +109,9 @@ async function createClaFileAndPRComment(
 }
 
 function prepareCommiterMap(
-  committers: CommittersDetails[],
+  committers: ICommittersDetails[],
   claFileContent
-): CommitterMap {
+): ICommitterMap {
   let committerMap = getInitialCommittersMap()
 
   committerMap.notSigned = committers.filter(
@@ -129,7 +129,7 @@ function prepareCommiterMap(
   return committerMap
 }
 
-const getInitialCommittersMap = (): CommitterMap => ({
+const getInitialCommittersMap = (): ICommitterMap => ({
   signed: [],
   notSigned: [],
   unknown: []

@@ -1,4 +1,4 @@
-import { CommittersDetails } from './interfaces.js'
+import { ICommittersDetails } from './interfaces.js'
 import * as input from './shared/getInputs.js'
 
 function escapeRegExp(str: string): string {
@@ -18,6 +18,6 @@ function isUserNotInAllowList(committer: string): boolean {
   }).length > 0
 }
 
-export function checkAllowList(committers: CommittersDetails[]): CommittersDetails[] {
+export function checkAllowList(committers: ICommittersDetails[]): ICommittersDetails[] {
   return committers.filter(committer => committer && !isUserNotInAllowList(committer.name))
 }

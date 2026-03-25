@@ -1,6 +1,6 @@
 import { context } from '@actions/github'
 
-import { ReactedCommitterMap } from '../interfaces.js'
+import { IReactedCommitterMap } from '../interfaces.js'
 import { GitHub } from '@actions/github/lib/utils'
 import { getDefaultOctokitClient, getPATOctokit } from '../octokit.js'
 
@@ -38,7 +38,7 @@ export async function createFile(contentBinary): Promise<any> {
 export async function updateFile(
   sha: string,
   claFileContent,
-  reactedCommitters: ReactedCommitterMap
+  reactedCommitters: IReactedCommitterMap
 ): Promise<any> {
   const octokitInstance: InstanceType<typeof GitHub> =
     isRemoteRepoOrOrgConfigured() ? getPATOctokit() : getDefaultOctokitClient()

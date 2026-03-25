@@ -3,14 +3,14 @@ import { context } from '@actions/github'
 import signatureWithPRComment from './signatureComment.js'
 import { commentContent } from './pullRequestCommentContent.js'
 import {
-  CommitterMap,
-  CommittersDetails
+  ICommitterMap,
+  ICommittersDetails
 } from '../interfaces.js'
 import { getUseDcoFlag } from '../shared/getInputs.js'
 
 
 
-export default async function prCommentSetup(committerMap: CommitterMap, committers: CommittersDetails[]) {
+export default async function prCommentSetup(committerMap: ICommitterMap, committers: ICommittersDetails[]) {
   const signed = committerMap?.notSigned && committerMap?.notSigned.length === 0
 
   try {
@@ -37,7 +37,7 @@ export default async function prCommentSetup(committerMap: CommitterMap, committ
   }
 }
 
-async function createComment(signed: boolean, committerMap: CommitterMap): Promise<void> {
+async function createComment(signed: boolean, committerMap: ICommitterMap): Promise<void> {
   await octokit.rest.issues.createComment({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -46,7 +46,7 @@ async function createComment(signed: boolean, committerMap: CommitterMap): Promi
   }).catch(error => { throw new Error(`Error occured when creating a pull request comment: ${error.message}`) })
 }
 
-async function updateComment(signed: boolean, committerMap: CommitterMap, claBotComment: any): Promise<void> {
+async function updateComment(signed: boolean, committerMap: ICommitterMap, claBotComment: any): Promise<void> {
   await octokit.rest.issues.updateComment({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -71,7 +71,7 @@ async function getComment() {
   }
 }
 
-function prepareCommiterMap(committerMap: CommitterMap, reactedCommitters) {
+function prepareCommiterMap(committerMap: ICommitterMap, reactedCommitters) {
   committerMap.signed?.push(...reactedCommitters.newSigned)
   committerMap.notSigned = committerMap.notSigned!.filter(
     committer =>
@@ -83,8 +83,8 @@ function prepareCommiterMap(committerMap: CommitterMap, reactedCommitters) {
 
 }
 
-function prepareAllSignedCommitters(committerMap: CommitterMap, signedInPrCommitters: CommittersDetails[], committers: CommittersDetails[]): boolean {
-  let allSignedCommitters = [] as CommittersDetails[]
+function prepareAllSignedCommitters(committerMap: ICommitterMap, signedInPrCommitters: ICommittersDetails[], committers: ICommittersDetails[]): boolean {
+  let allSignedCommitters = [] as ICommittersDetails[]
   /*
    * 1) already signed committers in the file 2) signed committers in the PR comment
   */
