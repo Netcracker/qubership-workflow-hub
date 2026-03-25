@@ -23,7 +23,7 @@ export interface ICommittersDetails {
     body?: string,
     repoId?: string
 }
-export interface LabelName {
+export interface ILabelName {
     current_name: string,
     name: string
 }
