@@ -33,7 +33,7 @@ export default async function prCommentSetup(committerMap: ICommitterMap, commit
     }
   } catch (error) {
     throw new Error(
-      `Error occured when creating or editing the comments of the pull request: ${error.message}`)
+      `Error occurred when creating or editing the comments of the pull request: ${error.message}`)
   }
 }
 
@@ -43,7 +43,7 @@ async function createComment(signed: boolean, committerMap: ICommitterMap): Prom
     repo: context.repo.repo,
     issue_number: context.issue.number,
     body: commentContent(signed, committerMap)
-  }).catch(error => { throw new Error(`Error occured when creating a pull request comment: ${error.message}`) })
+  }).catch(error => { throw new Error(`Error occurred when creating a pull request comment: ${error.message}`) })
 }
 
 async function updateComment(signed: boolean, committerMap: ICommitterMap, claBotComment: { id: number }): Promise<void> {
@@ -52,7 +52,7 @@ async function updateComment(signed: boolean, committerMap: ICommitterMap, claBo
     repo: context.repo.repo,
     comment_id: claBotComment.id,
     body: commentContent(signed, committerMap)
-  }).catch(error => { throw new Error(`Error occured when updating the pull request comment: ${error.message}`) })
+  }).catch(error => { throw new Error(`Error occurred when updating the pull request comment: ${error.message}`) })
 }
 
 async function getComment() {
@@ -67,7 +67,7 @@ async function getComment() {
       return response.data.find(comment => comment.body?.match(/.*CLA Assistant Lite bot.*/m))
     }
   } catch (error) {
-    throw new Error(`Error occured when getting  all the comments of the pull request: ${error.message}`)
+    throw new Error(`Error occurred when getting  all the comments of the pull request: ${error.message}`)
   }
 }
 
