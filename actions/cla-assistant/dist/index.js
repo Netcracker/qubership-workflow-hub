@@ -36349,13 +36349,16 @@ async function getCommitters() {
                 id: committer.databaseId || '',
                 pullRequestNo: github_context.issue.number
             };
-            if (committers.length === 0 || committers.map((c) => {
-                return c.name;
-            }).indexOf(user.name) < 0) {
+            if (committers.length === 0 ||
+                committers
+                    .map(c => {
+                    return c.name;
+                })
+                    .indexOf(user.name) < 0) {
                 committers.push(user);
             }
         });
-        filteredCommitters = committers.filter((committer) => {
+        filteredCommitters = committers.filter(committer => {
             return committer.id !== 41898282;
         });
         return filteredCommitters;
@@ -36364,7 +36367,10 @@ async function getCommitters() {
         throw new Error(`graphql call to get the committers details failed: ${e}`);
     }
 }
-const extractUserFromCommit = (commit) => commit.author.user || commit.committer.user || commit.author || commit.committer;
+const extractUserFromCommit = commit => commit.author.user ||
+    commit.committer.user ||
+    commit.author ||
+    commit.committer;
 
 ;// CONCATENATED MODULE: ./lib/persistence/persistence.js
 
