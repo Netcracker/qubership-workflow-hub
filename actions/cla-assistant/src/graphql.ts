@@ -2,13 +2,41 @@ import { octokit } from './octokit.js'
 import { context } from '@actions/github'
 import type { ICommittersDetails } from './interfaces.js'
 
+interface IGraphQlUser {
+    id: string
+    databaseId: number
+    login: string
+}
+
+interface IGraphQlCommit {
+    author: { email: string; name: string; user: IGraphQlUser | null }
+    committer: { name: string; user: IGraphQlUser | null }
+}
+
+interface IGraphQlEdge {
+    node: { commit: IGraphQlCommit }
+    cursor: string
+}
+
+interface IGraphQlResponse {
+    repository: {
+        pullRequest: {
+            commits: {
+                totalCount: number
+                edges: IGraphQlEdge[]
+                pageInfo: { endCursor: string; hasNextPage: boolean }
+            }
+        }
+    }
+}
+
 
 
 export default async function getCommitters(): Promise<ICommittersDetails[]> {
     try {
         const committers: ICommittersDetails[] = []
         let filteredCommitters: ICommittersDetails[] = []
-        const response: any = await octokit.graphql(`
+        const response = await octokit.graphql<IGraphQlResponse>(`
         query($owner:String! $name:String! $number:Int! $cursor:String!){
             repository(owner: $owner, name: $name) {
             pullRequest(number: $number) {
@@ -51,7 +79,7 @@ export default async function getCommitters(): Promise<ICommittersDetails[]> {
             number: context.issue.number,
             cursor: ''
         })
-        response.repository.pullRequest.commits.edges.forEach((edge: any) => {
+        response.repository.pullRequest.commits.edges.forEach((edge: IGraphQlEdge) => {
             const committer = extractUserFromCommit(edge.node.commit)
             const user = {
                 name: committer.login || committer.name,
