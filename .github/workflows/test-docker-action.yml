@@ -385,4 +385,4 @@ jobs:
             exit 1
           fi
 
-          echo "✅ All сomponent alias tests passed!"
+          echo "✅ All component alias tests passed!"
