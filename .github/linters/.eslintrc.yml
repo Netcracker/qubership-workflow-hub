@@ -12,6 +12,7 @@ plugins:
 
 rules:
   no-undef: 'warn'
+  n/no-missing-import: 'off'
 
 globals:
   module: "writable"
