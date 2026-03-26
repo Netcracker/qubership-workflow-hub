@@ -1,4 +1,4 @@
-import { ICommittersDetails } from './interfaces.js'
+import type { ICommittersDetails } from './interfaces.js'
 import * as input from './shared/getInputs.js'
 
 function escapeRegExp(str: string): string {
@@ -8,7 +8,7 @@ function escapeRegExp(str: string): string {
 function isUserNotInAllowList(committer: string): boolean {
   const allowListPatterns: string[] = input.getAllowListItem().split(',')
 
-  return allowListPatterns.filter(function (pattern) {
+  return allowListPatterns.filter((pattern) => {
     pattern = pattern.trim()
     if (pattern.includes('*')) {
       const regex = escapeRegExp(pattern).split('\\*').join('.*')

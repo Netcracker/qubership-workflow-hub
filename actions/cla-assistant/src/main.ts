@@ -14,7 +14,7 @@ export async function run() {
      */
     if (
       context.payload.action === 'closed' &&
-      input.lockPullRequestAfterMerge() == 'true'
+      input.lockPullRequestAfterMerge() === 'true'
     ) {
       return lockPullRequest()
     } else {

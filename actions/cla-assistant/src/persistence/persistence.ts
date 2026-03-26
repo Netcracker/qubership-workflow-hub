@@ -1,12 +1,12 @@
 import { context } from '@actions/github'
 
-import { IReactedCommitterMap } from '../interfaces.js'
-import { GitHub } from '@actions/github/lib/utils'
+import type { IReactedCommitterMap, IClaFileContent } from '../interfaces.js'
+import type { GitHub } from '@actions/github/lib/utils'
 import { getDefaultOctokitClient, getPATOctokit } from '../octokit.js'
 
 import * as input from '../shared/getInputs.js'
 
-export async function getFileContent(): Promise<any> {
+export async function getFileContent() {
   const octokitInstance: InstanceType<typeof GitHub> =
     isRemoteRepoOrOrgConfigured() ? getPATOctokit() : getDefaultOctokitClient()
 
@@ -19,7 +19,7 @@ export async function getFileContent(): Promise<any> {
   return result
 }
 
-export async function createFile(contentBinary): Promise<any> {
+export async function createFile(contentBinary: string) {
   const octokitInstance: InstanceType<typeof GitHub> =
     isRemoteRepoOrOrgConfigured() ? getPATOctokit() : getDefaultOctokitClient()
 
@@ -37,9 +37,9 @@ export async function createFile(contentBinary): Promise<any> {
 
 export async function updateFile(
   sha: string,
-  claFileContent,
+  claFileContent: IClaFileContent | null,
   reactedCommitters: IReactedCommitterMap
-): Promise<any> {
+) {
   const octokitInstance: InstanceType<typeof GitHub> =
     isRemoteRepoOrOrgConfigured() ? getPATOctokit() : getDefaultOctokitClient()
 
@@ -48,8 +48,8 @@ export async function updateFile(
   const repo = context.issue.repo
 
   claFileContent?.signedContributors.push(...reactedCommitters.newSigned)
-  let contentString = JSON.stringify(claFileContent, null, 2)
-  let contentBinary = Buffer.from(contentString).toString('base64')
+  const contentString = JSON.stringify(claFileContent, null, 2)
+  const contentBinary = Buffer.from(contentString).toString('base64')
   await octokitInstance.rest.repos.createOrUpdateFileContents({
     owner: input.getRemoteOrgName() || context.repo.owner,
     repo: input.getRemoteRepoName() || context.repo.repo,

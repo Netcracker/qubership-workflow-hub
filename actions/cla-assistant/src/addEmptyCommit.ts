@@ -21,7 +21,7 @@ export async function addEmptyCommit() {
                 const pullRequestResponse = await octokit.rest.pulls.get({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    pull_number: context.payload.issue!.number
+                    pull_number: context.payload.issue?.number
                 })
 
                 const baseCommit = await octokit.rest.git.getCommit({

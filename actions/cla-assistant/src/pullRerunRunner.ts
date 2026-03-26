@@ -54,7 +54,7 @@ async function getSelfWorkflowId(): Promise<number> {
     }
 
     const workflow = workflowList.data.workflows.find(
-      w => w.name == context.workflow
+      w => w.name === context.workflow
     )
 
     if (workflow) {
@@ -70,7 +70,7 @@ async function getSelfWorkflowId(): Promise<number> {
 async function listWorkflowRunsInBranch(
   branch: string,
   workflowId: number
-): Promise<any> {
+) {
   console.debug(branch)
   const runs = await octokit.rest.actions.listWorkflowRuns({
     owner: context.repo.owner,
@@ -82,7 +82,7 @@ async function listWorkflowRunsInBranch(
   return runs
 }
 
-async function reRunWorkflow(run: number): Promise<any> {
+async function reRunWorkflow(run: number) {
   // Personal Access token with repo scope is required to access this api - https://github.community/t/bug-rerun-workflow-api-not-working/126742
   await octokit.rest.actions.reRunWorkflow({
     owner: context.repo.owner,
@@ -92,11 +92,11 @@ async function reRunWorkflow(run: number): Promise<any> {
 }
 
 async function checkIfLastWorkFlowFailed(run: number): Promise<boolean> {
-  const response: any = await octokit.rest.actions.getWorkflowRun({
+  const response = await octokit.rest.actions.getWorkflowRun({
     owner: context.repo.owner,
     repo: context.repo.repo,
     run_id: run
   })
 
-  return response.data.conclusion == 'failure'
+  return response.data.conclusion === 'failure'
 }

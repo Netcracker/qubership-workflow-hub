@@ -14,7 +14,7 @@ export async function lockPullRequest() {
             }
         )
         core.info(`successfully locked the pull request ${pullRequestNo}`)
-    } catch (e) {
+    } catch {
         core.error(`failed when locking the pull request `)
 
     }

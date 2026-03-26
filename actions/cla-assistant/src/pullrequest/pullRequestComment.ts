@@ -46,7 +46,7 @@ async function createComment(signed: boolean, committerMap: ICommitterMap): Prom
   }).catch(error => { throw new Error(`Error occured when creating a pull request comment: ${error.message}`) })
 }
 
-async function updateComment(signed: boolean, committerMap: ICommitterMap, claBotComment: any): Promise<void> {
+async function updateComment(signed: boolean, committerMap: ICommitterMap, claBotComment: { id: number }): Promise<void> {
   await octokit.rest.issues.updateComment({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -93,7 +93,7 @@ function prepareAllSignedCommitters(committerMap: ICommitterMap, signedInPrCommi
   /*
   * checking if all the unsigned committers have reacted to the PR comment (this is needed for changing the content of the PR comment to "All committers have signed the CLA")
   */
-  let allSignedFlag: boolean = committers.every(committer => allSignedCommitters.some(reactedCommitter => committer.id === reactedCommitter.id))
+  const allSignedFlag: boolean = committers.every(committer => allSignedCommitters.some(reactedCommitter => committer.id === reactedCommitter.id))
   return allSignedFlag
 }
 

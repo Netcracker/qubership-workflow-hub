@@ -3,6 +3,7 @@ import { context } from '@actions/github'
 import { checkAllowList } from './checkAllowList.js'
 import getCommitters from './graphql.js'
 import {
+  IClaFileContent,
   IClafileContentAndSha,
   ICommitterMap,
   ICommittersDetails,
@@ -60,7 +61,7 @@ async function getCLAFileContentandSHA(
   committers: ICommittersDetails[],
   committerMap: ICommitterMap
 ): Promise<void | IClafileContentAndSha> {
-  let result, claFileContentString, claFileContent, sha
+  let result
   try {
     result = await getFileContent()
   } catch (error) {
@@ -72,9 +73,9 @@ async function getCLAFileContentandSHA(
       )
     }
   }
-  sha = result?.data?.sha
-  claFileContentString = Buffer.from(result.data.content, 'base64').toString()
-  claFileContent = JSON.parse(claFileContentString)
+  const sha = result?.data?.sha
+  const claFileContentString = Buffer.from(result.data.content, 'base64').toString()
+  const claFileContent = JSON.parse(claFileContentString)
   return { claFileContent, sha }
 }
 
@@ -110,9 +111,9 @@ async function createClaFileAndPRComment(
 
 function prepareCommiterMap(
   committers: ICommittersDetails[],
-  claFileContent
+  claFileContent: IClaFileContent | null
 ): ICommitterMap {
-  let committerMap = getInitialCommittersMap()
+  const committerMap = getInitialCommittersMap()
 
   committerMap.notSigned = committers.filter(
     committer =>

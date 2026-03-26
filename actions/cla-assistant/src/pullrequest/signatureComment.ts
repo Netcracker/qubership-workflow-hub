@@ -3,18 +3,16 @@ import { context } from '@actions/github'
 import { ICommitterMap, ICommittersDetails, IReactedCommitterMap } from '../interfaces.js'
 import { getUseDcoFlag, getCustomPrSignComment } from '../shared/getInputs.js'
 
-import * as core from '@actions/core'
-
 export default async function signatureWithPRComment(committerMap: ICommitterMap, committers): Promise<IReactedCommitterMap> {
 
-    let repoId = context.payload.repository!.id
-    let prResponse = await octokit.rest.issues.listComments({
+    const repoId = context.payload.repository!.id
+    const prResponse = await octokit.rest.issues.listComments({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: context.issue.number
     })
-    let listOfPRComments = [] as ICommittersDetails[]
-    let filteredListOfPRComments = [] as ICommittersDetails[]
+    const listOfPRComments = [] as ICommittersDetails[]
+    const filteredListOfPRComments = [] as ICommittersDetails[]
 
     prResponse?.data.map((prComment) => {
         listOfPRComments.push({
@@ -32,7 +30,7 @@ export default async function signatureWithPRComment(committerMap: ICommitterMap
             filteredListOfPRComments.push(comment)
         }
     })
-    for (var i = 0; i < filteredListOfPRComments.length; i++) {
+    for (let i = 0; i < filteredListOfPRComments.length; i++) {
         delete filteredListOfPRComments[i].body
     }
     /*

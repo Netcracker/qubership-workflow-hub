@@ -27,8 +27,8 @@ function dco(signed: boolean, committerMap: ICommitterMap): string {
 
     }
 
-    let you = committersCount > 1 ? `you all` : `you`
-    let lineOne = (input.getCustomNotSignedPrComment() || `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you)
+    const you = committersCount > 1 ? `you all` : `you`
+    const lineOne = (input.getCustomNotSignedPrComment() || `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you)
     let text = `${lineOne}
    - - -
    ${input.getCustomPrSignComment() || "I have read the DCO Document and I hereby sign the DCO"}
@@ -45,8 +45,8 @@ function dco(signed: boolean, committerMap: ICommitterMap): string {
     }
 
     if (committerMap && committerMap.unknown && committerMap.unknown.length > 0) {
-        let seem = committerMap.unknown.length > 1 ? "seem" : "seems"
-        let committerNames = committerMap.unknown.map(committer => committer.name)
+        const seem = committerMap.unknown.length > 1 ? "seem" : "seems"
+        const committerNames = committerMap.unknown.map(committer => committer.name)
         text += `**${committerNames.join(", ")}** ${seem} not to be a GitHub user.`
         text += ' You need a GitHub account to be able to sign the DCO. If you have already a GitHub account, please [add the email address used for this commit to your account](https://help.github.com/articles/why-are-my-commits-linked-to-the-wrong-user/#commits-are-not-linked-to-any-user).<br/>'
     }
@@ -72,8 +72,8 @@ function cla(signed: boolean, committerMap: ICommitterMap): string {
 
     }
 
-    let you = committersCount > 1 ? `you all` : `you`
-    let lineOne = (input.getCustomNotSignedPrComment() || `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CLA by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you)
+    const you = committersCount > 1 ? `you all` : `you`
+    const lineOne = (input.getCustomNotSignedPrComment() || `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CLA by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you)
     let text = `${lineOne}
    - - -
    ${getPrSignComment()}
@@ -90,8 +90,8 @@ function cla(signed: boolean, committerMap: ICommitterMap): string {
     }
 
     if (committerMap && committerMap.unknown && committerMap.unknown.length > 0) {
-        let seem = committerMap.unknown.length > 1 ? "seem" : "seems"
-        let committerNames = committerMap.unknown.map(committer => committer.name)
+        const seem = committerMap.unknown.length > 1 ? "seem" : "seems"
+        const committerNames = committerMap.unknown.map(committer => committer.name)
         text += `**${committerNames.join(", ")}** ${seem} not to be a GitHub user.`
         text += ' You need a GitHub account to be able to sign the CLA. If you have already a GitHub account, please [add the email address used for this commit to your account](https://help.github.com/articles/why-are-my-commits-linked-to-the-wrong-user/#commits-are-not-linked-to-any-user).<br/>'
     }
