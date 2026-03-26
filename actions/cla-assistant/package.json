@@ -1,0 +1,37 @@
+{
+  "name": "github-action",
+  "version": "0.0.1",
+  "description": "GitHub Action for storing CLA signatures",
+  "main": "lib/main.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc && ncc build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cla-assistant/github-action.git"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "dependencies": {
+    "@actions/core": "^3.0.0",
+    "@actions/github": "^9.0.0"
+  },
+  "devDependencies": {
+    "@octokit/types": "^16.0.0",
+    "@types/node": "^24.0.0",
+    "@vercel/ncc": "^0.38.4",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.8.0"
+  },
+  "author": "ibakshay",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/cla-assistant/github-action/issues"
+  },
+  "homepage": "https://github.com/cla-assistant/github-action#readme"
+}
