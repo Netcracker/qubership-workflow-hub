@@ -2,15 +2,13 @@ import { octokit } from '../octokit.js'
 import { context } from '@actions/github'
 import signatureWithPRComment from './signatureComment.js'
 import { commentContent } from './pullRequestCommentContent.js'
-import type {
-  ICommitterMap,
-  ICommittersDetails
-} from '../interfaces.js'
+import type { ICommitterMap, ICommittersDetails } from '../interfaces.js'
 import { getUseDcoFlag } from '../shared/getInputs.js'
 
-
-
-export default async function prCommentSetup(committerMap: ICommitterMap, committers: ICommittersDetails[]) {
+export default async function prCommentSetup(
+  committerMap: ICommitterMap,
+  committers: ICommittersDetails[]
+) {
   const signed = committerMap?.notSigned && committerMap?.notSigned.length === 0
 
   try {
@@ -23,51 +21,92 @@ export default async function prCommentSetup(committerMap: ICommitterMap, commit
       }
 
       // reacted committers are contributors who have newly signed by posting the Pull Request comment
-      const reactedCommitters = await signatureWithPRComment(committerMap, committers)
+      const reactedCommitters = await signatureWithPRComment(
+        committerMap,
+        committers
+      )
       if (reactedCommitters?.onlyCommitters) {
-          reactedCommitters.allSignedFlag = prepareAllSignedCommitters(committerMap, reactedCommitters.onlyCommitters, committers)
+        reactedCommitters.allSignedFlag = prepareAllSignedCommitters(
+          committerMap,
+          reactedCommitters.onlyCommitters,
+          committers
+        )
       }
       committerMap = prepareCommiterMap(committerMap, reactedCommitters)
-      await updateComment(reactedCommitters.allSignedFlag, committerMap, claBotComment)
+      await updateComment(
+        reactedCommitters.allSignedFlag,
+        committerMap,
+        claBotComment
+      )
       return reactedCommitters
     }
   } catch (error) {
     throw new Error(
-      `Error occurred when creating or editing the comments of the pull request: ${error.message}`)
+      `Error occurred when creating or editing the comments of the pull request: ${error.message}`
+    )
   }
 }
 
-async function createComment(signed: boolean, committerMap: ICommitterMap): Promise<void> {
-  await octokit.rest.issues.createComment({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    issue_number: context.issue.number,
-    body: commentContent(signed, committerMap)
-  }).catch(error => { throw new Error(`Error occurred when creating a pull request comment: ${error.message}`) })
+async function createComment(
+  signed: boolean,
+  committerMap: ICommitterMap
+): Promise<void> {
+  await octokit.rest.issues
+    .createComment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: context.issue.number,
+      body: commentContent(signed, committerMap)
+    })
+    .catch(error => {
+      throw new Error(
+        `Error occurred when creating a pull request comment: ${error.message}`
+      )
+    })
 }
 
-async function updateComment(signed: boolean, committerMap: ICommitterMap, claBotComment: { id: number }): Promise<void> {
-  await octokit.rest.issues.updateComment({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    comment_id: claBotComment.id,
-    body: commentContent(signed, committerMap)
-  }).catch(error => { throw new Error(`Error occurred when updating the pull request comment: ${error.message}`) })
+async function updateComment(
+  signed: boolean,
+  committerMap: ICommitterMap,
+  claBotComment: { id: number }
+): Promise<void> {
+  await octokit.rest.issues
+    .updateComment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      comment_id: claBotComment.id,
+      body: commentContent(signed, committerMap)
+    })
+    .catch(error => {
+      throw new Error(
+        `Error occurred when updating the pull request comment: ${error.message}`
+      )
+    })
 }
 
 async function getComment() {
   try {
-    const response = await octokit.rest.issues.listComments({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number })
+    const response = await octokit.rest.issues.listComments({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: context.issue.number
+    })
 
     //TODO: check the below regex
     // using a `string` true or false purposely as github action input cannot have a boolean value
     if (getUseDcoFlag() === 'true') {
-      return response.data.find(comment => comment.body?.match(/.*DCO Assistant Lite bot.*/m))
+      return response.data.find(comment =>
+        comment.body?.match(/.*DCO Assistant Lite bot.*/m)
+      )
     } else if (getUseDcoFlag() === 'false') {
-      return response.data.find(comment => comment.body?.match(/.*CLA Assistant Lite bot.*/m))
+      return response.data.find(comment =>
+        comment.body?.match(/.*CLA Assistant Lite bot.*/m)
+      )
     }
   } catch (error) {
-    throw new Error(`Error occurred when getting  all the comments of the pull request: ${error.message}`)
+    throw new Error(
+      `Error occurred when getting  all the comments of the pull request: ${error.message}`
+    )
   }
 }
 
@@ -80,20 +119,31 @@ function prepareCommiterMap(committerMap: ICommitterMap, reactedCommitters) {
       )
   )
   return committerMap
-
 }
 
-function prepareAllSignedCommitters(committerMap: ICommitterMap, signedInPrCommitters: ICommittersDetails[], committers: ICommittersDetails[]): boolean {
+function prepareAllSignedCommitters(
+  committerMap: ICommitterMap,
+  signedInPrCommitters: ICommittersDetails[],
+  committers: ICommittersDetails[]
+): boolean {
   let allSignedCommitters = [] as ICommittersDetails[]
   /*
    * 1) already signed committers in the file 2) signed committers in the PR comment
-  */
+   */
   const ids = new Set(signedInPrCommitters.map(committer => committer.id))
-  allSignedCommitters = [...signedInPrCommitters, ...(committerMap.signed?.filter(signedCommitter => !ids.has(signedCommitter.id)) ?? [])]
+  allSignedCommitters = [
+    ...signedInPrCommitters,
+    ...(committerMap.signed?.filter(
+      signedCommitter => !ids.has(signedCommitter.id)
+    ) ?? [])
+  ]
   /*
-  * checking if all the unsigned committers have reacted to the PR comment (this is needed for changing the content of the PR comment to "All committers have signed the CLA")
-  */
-  const allSignedFlag: boolean = committers.every(committer => allSignedCommitters.some(reactedCommitter => committer.id === reactedCommitter.id))
+   * checking if all the unsigned committers have reacted to the PR comment (this is needed for changing the content of the PR comment to "All committers have signed the CLA")
+   */
+  const allSignedFlag: boolean = committers.every(committer =>
+    allSignedCommitters.some(
+      reactedCommitter => committer.id === reactedCommitter.id
+    )
+  )
   return allSignedFlag
 }
-

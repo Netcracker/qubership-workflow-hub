@@ -74,7 +74,10 @@ async function getCLAFileContentandSHA(
     }
   }
   const sha = result?.data?.sha
-  const claFileContentString = Buffer.from(result.data.content, 'base64').toString()
+  const claFileContentString = Buffer.from(
+    result.data.content,
+    'base64'
+  ).toString()
   const claFileContent = JSON.parse(claFileContentString)
   return { claFileContent, sha }
 }
