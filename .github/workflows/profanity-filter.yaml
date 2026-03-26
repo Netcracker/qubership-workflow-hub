@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   apply-filter:
+    name: "Apply Profanity Filter"
     runs-on: ubuntu-latest
     steps:
     - name: Scan issue or pull request for profanity
