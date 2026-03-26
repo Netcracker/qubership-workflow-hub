@@ -1,11 +1,11 @@
 import { octokit } from '../octokit.js'
 import { context } from '@actions/github'
-import { ICommitterMap, ICommittersDetails, IReactedCommitterMap } from '../interfaces.js'
+import type { ICommitterMap, ICommittersDetails, IReactedCommitterMap } from '../interfaces.js'
 import { getUseDcoFlag, getCustomPrSignComment } from '../shared/getInputs.js'
 
 export default async function signatureWithPRComment(committerMap: ICommitterMap, committers): Promise<IReactedCommitterMap> {
 
-    const repoId = context.payload.repository!.id
+    const repoId = context.payload.repository?.id
     const prResponse = await octokit.rest.issues.listComments({
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -14,7 +14,7 @@ export default async function signatureWithPRComment(committerMap: ICommitterMap
     const listOfPRComments = [] as ICommittersDetails[]
     const filteredListOfPRComments = [] as ICommittersDetails[]
 
-    prResponse?.data.map((prComment) => {
+    prResponse?.data.forEach((prComment) => {
         listOfPRComments.push({
             name: prComment.user?.login ?? '',
             id: prComment.user?.id ?? 0,
@@ -25,7 +25,7 @@ export default async function signatureWithPRComment(committerMap: ICommitterMap
             pullRequestNo: context.issue.number
         })
     })
-    listOfPRComments.map(comment => {
+    listOfPRComments.forEach(comment => {
         if (isCommentSignedByUser(comment.body || "", comment.name)) {
             filteredListOfPRComments.push(comment)
         }
@@ -36,12 +36,12 @@ export default async function signatureWithPRComment(committerMap: ICommitterMap
     /*
     *checking if the reacted committers are not the signed committers(not in the storage file) and filtering only the unsigned committers
     */
-    const newSigned = filteredListOfPRComments.filter(commentedCommitter => committerMap.notSigned!.some(notSignedCommitter => commentedCommitter.id === notSignedCommitter.id))
+    const newSigned = filteredListOfPRComments.filter(commentedCommitter => committerMap.notSigned?.some(notSignedCommitter => commentedCommitter.id === notSignedCommitter.id))
 
     /*
     * checking if the commented users are only the contributors who has committed in the same PR (This is needed for the PR Comment and changing the status to success when all the contributors has reacted to the PR)
     */
-    const onlyCommitters = committers.filter(committer => filteredListOfPRComments.some(commentedCommitter => committer.id == commentedCommitter.id))
+    const onlyCommitters = committers.filter(committer => filteredListOfPRComments.some(commentedCommitter => committer.id === commentedCommitter.id))
     const commentedCommitterMap: IReactedCommitterMap = {
         newSigned,
         onlyCommitters,

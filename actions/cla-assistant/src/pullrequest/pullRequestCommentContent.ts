@@ -1,4 +1,4 @@
-import {
+import type {
     ICommitterMap
 } from '../interfaces.js'
 import * as input from '../shared/getInputs.js'
@@ -6,7 +6,7 @@ import { getPrSignComment } from '../shared/pr-sign-comment.js'
 
 export function commentContent(signed: boolean, committerMap: ICommitterMap): string {
     // using a `string` true or false purposely as github action input cannot have a boolean value
-    if (input.getUseDcoFlag() == 'true') {
+    if (input.getUseDcoFlag() === 'true') {
         return dco(signed, committerMap)
     } else {
         return cla(signed, committerMap)
@@ -22,7 +22,7 @@ function dco(signed: boolean, committerMap: ICommitterMap): string {
     }
     let committersCount = 1
 
-    if (committerMap && committerMap.signed && committerMap.notSigned) {
+    if (committerMap?.signed && committerMap.notSigned) {
         committersCount = committerMap.signed.length + committerMap.notSigned.length
 
     }
@@ -44,14 +44,14 @@ function dco(signed: boolean, committerMap: ICommitterMap): string {
         text += '<br/>'
     }
 
-    if (committerMap && committerMap.unknown && committerMap.unknown.length > 0) {
+    if (committerMap?.unknown && committerMap.unknown.length > 0) {
         const seem = committerMap.unknown.length > 1 ? "seem" : "seems"
         const committerNames = committerMap.unknown.map(committer => committer.name)
         text += `**${committerNames.join(", ")}** ${seem} not to be a GitHub user.`
         text += ' You need a GitHub account to be able to sign the DCO. If you have already a GitHub account, please [add the email address used for this commit to your account](https://help.github.com/articles/why-are-my-commits-linked-to-the-wrong-user/#commits-are-not-linked-to-any-user).<br/>'
     }
 
-    if (input.suggestRecheck() == 'true') {
+    if (input.suggestRecheck() === 'true') {
         text += '<sub>You can retrigger this bot by commenting **recheck** in this Pull Request. </sub>'
     }
     text += '<sub>Posted by the ****DCO Assistant Lite bot****.</sub>'
@@ -67,7 +67,7 @@ function cla(signed: boolean, committerMap: ICommitterMap): string {
     }
     let committersCount = 1
 
-    if (committerMap && committerMap.signed && committerMap.notSigned) {
+    if (committerMap?.signed && committerMap.notSigned) {
         committersCount = committerMap.signed.length + committerMap.notSigned.length
 
     }
@@ -89,14 +89,14 @@ function cla(signed: boolean, committerMap: ICommitterMap): string {
         text += '<br/>'
     }
 
-    if (committerMap && committerMap.unknown && committerMap.unknown.length > 0) {
+    if (committerMap?.unknown && committerMap.unknown.length > 0) {
         const seem = committerMap.unknown.length > 1 ? "seem" : "seems"
         const committerNames = committerMap.unknown.map(committer => committer.name)
         text += `**${committerNames.join(", ")}** ${seem} not to be a GitHub user.`
         text += ' You need a GitHub account to be able to sign the CLA. If you have already a GitHub account, please [add the email address used for this commit to your account](https://help.github.com/articles/why-are-my-commits-linked-to-the-wrong-user/#commits-are-not-linked-to-any-user).<br/>'
     }
 
-    if (input.suggestRecheck() == 'true') {
+    if (input.suggestRecheck() === 'true') {
         text += '<sub>You can retrigger this bot by commenting **recheck** in this Pull Request. </sub>'
     }
     text += '<sub>Posted by the **CLA Assistant Lite bot**.</sub>'

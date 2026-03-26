@@ -2,7 +2,7 @@ import { octokit } from '../octokit.js'
 import { context } from '@actions/github'
 import signatureWithPRComment from './signatureComment.js'
 import { commentContent } from './pullRequestCommentContent.js'
-import {
+import type {
   ICommitterMap,
   ICommittersDetails
 } from '../interfaces.js'
@@ -73,7 +73,7 @@ async function getComment() {
 
 function prepareCommiterMap(committerMap: ICommitterMap, reactedCommitters) {
   committerMap.signed?.push(...reactedCommitters.newSigned)
-  committerMap.notSigned = committerMap.notSigned!.filter(
+  committerMap.notSigned = committerMap.notSigned?.filter(
     committer =>
       !reactedCommitters.newSigned.some(
         reactedCommitter => committer.id === reactedCommitter.id
@@ -89,7 +89,7 @@ function prepareAllSignedCommitters(committerMap: ICommitterMap, signedInPrCommi
    * 1) already signed committers in the file 2) signed committers in the PR comment
   */
   const ids = new Set(signedInPrCommitters.map(committer => committer.id))
-  allSignedCommitters = [...signedInPrCommitters, ...committerMap.signed!.filter(signedCommitter => !ids.has(signedCommitter.id))]
+  allSignedCommitters = [...signedInPrCommitters, ...(committerMap.signed?.filter(signedCommitter => !ids.has(signedCommitter.id)) ?? [])]
   /*
   * checking if all the unsigned committers have reacted to the PR comment (this is needed for changing the content of the PR comment to "All committers have signed the CLA")
   */
