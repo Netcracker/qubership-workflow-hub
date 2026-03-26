@@ -73,9 +73,11 @@ async function getCLAFileContentandSHA(
       )
     }
   }
-  const sha = result?.data?.sha
+  const data = Array.isArray(result?.data) ? result.data[0] : result?.data
+  const fileData = data as { sha: string; content: string }
+  const sha = fileData?.sha
   const claFileContentString = Buffer.from(
-    result.data.content,
+    fileData.content,
     'base64'
   ).toString()
   const claFileContent = JSON.parse(claFileContentString)
@@ -85,7 +87,7 @@ async function getCLAFileContentandSHA(
 async function createClaFileAndPRComment(
   committers: ICommittersDetails[],
   committerMap: ICommitterMap
-): Promise<void> {
+): Promise<never> {
   committerMap.notSigned = committers
   committerMap.signed = []
   committers.forEach(committer => {

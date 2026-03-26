@@ -8,7 +8,7 @@ export default async function getCommitters(): Promise<ICommittersDetails[]> {
     try {
         const committers: ICommittersDetails[] = []
         let filteredCommitters: ICommittersDetails[] = []
-        const response = await octokit.graphql(`
+        const response: any = await octokit.graphql(`
         query($owner:String! $name:String! $number:Int! $cursor:String!){
             repository(owner: $owner, name: $name) {
             pullRequest(number: $number) {
@@ -51,7 +51,7 @@ export default async function getCommitters(): Promise<ICommittersDetails[]> {
             number: context.issue.number,
             cursor: ''
         })
-        response.repository.pullRequest.commits.edges.forEach(edge => {
+        response.repository.pullRequest.commits.edges.forEach((edge: any) => {
             const committer = extractUserFromCommit(edge.node.commit)
             const user = {
                 name: committer.login || committer.name,
