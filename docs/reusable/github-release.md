@@ -34,7 +34,7 @@ permissions:
 
 jobs:
   call-create-github-release:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/create-github-release.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/create-github-release.yml@v2.2.0
     with:
       revision: "1.0.0"
       draft: false
