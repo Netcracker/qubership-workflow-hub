@@ -1,9 +1,11 @@
 
 # Handling CLAs and DCOs via GitHub Action
 
-Streamline your workflow and let this GitHub Action (a lite version of [CLA Assistant](https://github.com/cla-assistant/cla-assistant)) handle the legal side of contributions to a repository for you. CLA assistant GitHub action enables contributors to sign CLAs from within a pull request. With this GitHub Action we could get rid of the need for a centrally managed database by **storing the contributor's signature data** in a decentralized way - **in the same repository's file system** or **in a remote repository** which can be even a private repository.
+Streamline your workflow and let this GitHub Action (a lite version of [CLA Assistant](https://github.com/cla-assistant/cla-assistant)) handle the legal side of contributions to a repository for you.
+CLA assistant GitHub action enables contributors to sign CLAs from within a pull request.
+With this GitHub Action we could get rid of the need for a centrally managed database by **storing the contributor's signature data** in a decentralized way - **in the same repository's file system** or **in a remote repository** which can be even a private repository.
 
-### Features
+## Features
 1. decentralized data storage
 1. fully integrated within github environment
 1. no User Interface is required
@@ -14,7 +16,7 @@ Streamline your workflow and let this GitHub Action (a lite version of [CLA Assi
 
 ## Configure Contributor License Agreement within two minutes
 
-#### 1. Add the following Workflow File to your repository in this path`.github/workflows/cla.yml`
+### 1. Add the following Workflow File to your repository in this path`.github/workflows/cla.yml`
 
 ```yml
 name: "CLA Assistant"
@@ -63,57 +65,59 @@ jobs:
 
 ```
 
-##### Demo for step 1
+#### Demo for step 1
 
 ![add-cla-file](https://github.com/cla-assistant/github-action/blob/master/images/adding-clafile.gif?raw=true)
 
-#### 2. Pull Request event triggers CLA Workflow
+### 2. Pull Request event triggers CLA Workflow
 
-CLA action workflow will be triggered on all Pull Request `opened, synchronize, closed`. This workflow will always run in the base repository and that's why we are making use of the [pull_request_target](https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request_target) event.
-<br/> When the CLA workflow is triggered on pull request `closed` event, it will lock the Pull Request conversation after the Pull Request merge so that the contributors cannot modify or delete the signatures (Pull Request comment) later. This feature is optional.
+CLA action workflow will be triggered on all Pull Request `opened, synchronize, closed`. This workflow will always run in the base repository and that's why we are making use of the [pull_request_target](https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request_target) event.  
+When the CLA workflow is triggered on pull request `closed` event, it will lock the Pull Request conversation after the Pull Request merge so that the contributors cannot modify or delete the signatures (Pull Request comment) later. This feature is optional.
 
-#### 3. Signing the CLA
+### 3. Signing the CLA
 
-CLA workflow creates a comment on Pull Request asking contributors who have not signed  CLA to sign and also fails the pull request status check with a `failure`. The contributors are requested to sign the CLA within the pull request by copy and pasting **"I have read the CLA Document and I hereby sign the CLA"** as a Pull Request comment like below.
-If the contributor has already signed the CLA, then the PR status will pass with `success`. <br/>
+CLA workflow creates a comment on Pull Request asking contributors who have not signed  CLA to sign and also fails the pull request status check with a `failure`. The contributors are requested to sign the CLA within the pull request by copy and pasting **"I have read the CLA Document and I hereby sign the CLA"** as a Pull Request comment like below.  
+If the contributor has already signed the CLA, then the PR status will pass with `success`.
 
-##### Demo for step 2 and 3
+#### Demo for step 2 and 3
 
 ![signature-process](https://github.com/cla-assistant/github-action/blob/master/images/signature-process.gif?raw=true)
 
-<br/>
+### 4. Signatures stored in a JSON file
 
-#### 4. Signatures stored in a JSON file
-
-After the contributor signed a CLA, the contributor's signature with metadata will be stored in a JSON file inside the repository and you can specify the custom path to this file with `path-to-signatures` input in the workflow. <br/> The default path is `path-to-signatures: 'signatures/version1/cla.json'`.
+After the contributor signed a CLA, the contributor's signature with metadata will be stored in a JSON file inside the repository and you can specify the custom path to this file with `path-to-signatures` input in the workflow.  
+The default path is `path-to-signatures: 'signatures/version1/cla.json'`.
 
 The signature can be also stored in a remote repository which can be done by enabling the optional inputs `remote-organization-name`: `<your org name>`
 and `remote-repository-name`: `<your repo name>` in your CLA workflow file.
 
 **NOTE:** You do not need to create this file manually. Our workflow will create the signature file if it does not already exist. Manually creating this file will cause the workflow to fail.
 
-##### Demo for step 4
+#### Demo for step 4
 
 ![signature-storage-file](https://github.com/cla-assistant/github-action/blob/master/images/signature-storage-file.gif?raw=true)
 
-#### 5. Users and bots in allowlist
+### 5. Users and bots in allowlist
 
-If a GitHub username is included in the allowlist, they will not be required to sign a CLA. You can make use of this feature If you don't want your colleagues working in the same team/organisation to sign a CLA. And also, since there's no way for bot users (such as Dependabot or Greenkeeper) to sign a CLA, you may want to add them in `allowlist`. You can do so by adding their names in a comma separated string to the `allowlist` input in the CLA  workflow file(in this case `dependabot[bot],greenkeeper[bot]`). You can also use wildcard symbol in case you want to allow all bot users something like `bot*`.
+If a GitHub username is included in the allowlist, they will not be required to sign a CLA. You can make use of this feature If you don't want your colleagues working in
+ the same team/organisation to sign a CLA. And also, since there's no way for bot users (such as Dependabot or Greenkeeper) to sign a CLA, you may want to add them in
+  `allowlist`. You can do so by adding their names in a comma separated string to the `allowlist` input in the CLA  workflow file(in this case `dependabot[bot],greenkeeper
+ [bot]`). You can also use wildcard symbol in case you want to allow all bot users something like `bot*`.
 
-##### Demo for step 5
+#### Demo for step 5
 
 ![allowlist](https://github.com/cla-assistant/github-action/blob/master/images/allowlist.gif?raw=true)
 
-#### 6. Adding Personal Access Token as a Secret
+### 6. Adding Personal Access Token as a Secret
 
 You have to create a [Repository Secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) with the name `PERSONAL_ACCESS_TOKEN`.
 This PAT should have repo scope and is only required if you have configured to store the signatures in a remote repository/organization.
 
-##### Demo for step 6
+#### Demo for step 6
 
 ![personal-access-token](https://github.com/cla-assistant/github-action/blob/master/images/personal-access-token.gif?raw=true)
 
-### Environmental Variables:
+## Environmental Variables
 
 
 | Name                  | Requirement | Description |
@@ -121,7 +125,7 @@ This PAT should have repo scope and is only required if you have configured to s
 | `GITHUB_TOKEN`        | _required_ | Usage: `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`,  CLA Action uses this in-built GitHub token to make the API calls for interacting with GitHub. It is built into Github Actions and does not need to be manually specified in your secrets store. [More Info](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)|
 | `PERSONAL_ACCESS_TOKEN`        | _required_ | Usage: `PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN}}`, you have to create a [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) with `repo scope` and store in the repository's [secrets](https://docs.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets). |
 
-### Inputs Description:
+## Inputs Description
 
 | Name                  | Requirement | Description | Example |
 | --------------------- | ----------- | ----------- | ------- |
