@@ -6,6 +6,7 @@ CLA assistant GitHub action enables contributors to sign CLAs from within a pull
 With this GitHub Action we could get rid of the need for a centrally managed database by **storing the contributor's signature data** in a decentralized way - **in the same repository's file system** or **in a remote repository** which can be even a private repository.
 
 ## Features
+
 1. decentralized data storage
 1. fully integrated within github environment
 1. no User Interface is required
@@ -119,7 +120,6 @@ This PAT should have repo scope and is only required if you have configured to s
 
 ## Environmental Variables
 
-
 | Name                  | Requirement | Description |
 | --------------------- | ----------- | ----------- |
 | `GITHUB_TOKEN`        | _required_ | Usage: `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`,  CLA Action uses this in-built GitHub token to make the API calls for interacting with GitHub. It is built into Github Actions and does not need to be manually specified in your secrets store. [More Info](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)|
@@ -129,7 +129,7 @@ This PAT should have repo scope and is only required if you have configured to s
 
 | Name                  | Requirement | Description | Example |
 | --------------------- | ----------- | ----------- | ------- |
-| `path-to-document`     | _required_ |  provide full URL `https://<clafile>` to the document which shall be signed by the contributor(s)  It can be any file e.g. inside the repository or it can be a gist. | https://github.com/Netcracker/qubership-workflow-hub/blob/main/CLA/cla.md |
+| `path-to-document`     | _required_ |  provide full URL `https://<clafile>` to the document which shall be signed by the contributor(s)  It can be any file e.g. inside the repository or it can be a gist. | `https://github.com/Netcracker/qubership-workflow-hub/blob/main/CLA/cla.md` |
 | `path-to-signatures`       | _optional_ |  Path to the JSON file where  all the signatures of the contributors will be stored inside the repository. | signatures/version1/cla.json |
 | `branch`   | _optional_ |  Branch in which all the signatures of the contributors will be stored and Default branch is `master`.  | master |
 | `allowlist`   | _optional_ | You can specify users and bots to be [added in allowlist](https://github.com/cla-assistant/github-action#5-users-and-bots-in-allowlist).  | user1,user2,bot* |
