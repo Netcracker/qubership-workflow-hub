@@ -18,6 +18,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | [assets-action](../actions/assets-action/README.md)                             | Alternative asset archiving / upload path (legacy alias)     |
 | [branch-action](../actions/branch-action/README.md)                             | Create a new branch from a tag or another branch             |
+| [cla-assistant](../actions/cla-assistant/README.md)                             | Handle Contributor License Agreement (CLA) and DCO signing   |
 | [cdxgen](../actions/cdxgen/README.md)                                           | Generate SBOM and CycloneDX vulnerability report             |
 | [charts-values-update-action](../actions/charts-values-update-action/README.md) | Updates images versions in values files                      |
 | [chart-version](../actions/chart-version/README.md)                             | Bump/patch Helm Chart.yaml version fields                    |
