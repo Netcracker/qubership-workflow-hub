@@ -3,4 +3,5 @@ rules:
     disable: true
   template-injection:
     disable: true
-    
+  use-trusted-publishing:
+    disable: true

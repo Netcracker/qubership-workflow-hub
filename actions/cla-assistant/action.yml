@@ -19,7 +19,7 @@ inputs:
   remote-organization-name:
     description: "provide the remote organization name where all the signatures should be stored"
   path-to-document:
-    description: "Fully qualified web link to the document - example: https://github.com/cla-assistant/github-action/blob/master/SAPCLA.md"
+    description: "Fully qualified web link to the document - example: https://github.com/Netcracker/qubership-workflow-hub/blob/main/CLA/cla.md"
   signed-commit-message:
     description: "Commit message when a new contributor signs the CLA in a PR"
   signed-empty-commit-message:
