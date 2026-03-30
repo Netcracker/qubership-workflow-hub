@@ -10,7 +10,6 @@ export default [
     ]
   },
 
-  // Основная конфигурация
   js.configs.recommended,
 
   {
