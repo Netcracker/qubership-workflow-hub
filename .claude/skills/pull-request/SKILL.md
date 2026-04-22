@@ -171,10 +171,45 @@ gh pr edit \
 
 After success, print the PR URL and what changed.
 
-### 10. Report to user
+### 10. Wait for checks and fix failures
+
+After creating or updating the PR, wait for all checks to complete:
+
+```bash
+gh pr checks <number> --watch --interval 10
+```
+
+When checks finish, get the full list of results:
+
+```bash
+gh pr checks <number>
+```
+
+For each **failed** check:
+
+1. Get the run ID from the check URL and read the error log:
+
+```bash
+gh run view <run-id> --log-failed
+```
+
+2. Analyse the errors. For each error: read the message, understand what is wrong, fix the affected file directly. Do not ask the user. Apply your own judgment — the error message always contains enough information to understand what needs to change.
+
+3. After fixing all errors from all failed checks, stage and commit:
+
+```bash
+git add <files> && git commit -m "fix(lint): fix linter errors" && git push
+```
+
+4. Wait for checks again — repeat this step if any check still fails (max 3 iterations).
+
+5. If after 3 iterations a check still fails → report to the user exactly which check failed, the error details, and why it could not be fixed automatically.
+
+### 11. Report to user
 
 Print a short summary:
 - PR title used
 - PR URL
 - Whether it was created or updated
+- Check results (all green / what was fixed)
 - Any sections left blank and why
