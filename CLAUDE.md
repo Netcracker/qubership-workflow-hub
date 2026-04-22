@@ -9,7 +9,7 @@ duplicate pipeline scripts.
 
 ## Repository structure
 
-```
+```text
 actions/          — 22 individual GitHub Actions (each self-contained)
 packages/         — Shared internal packages used by Node.js actions
   action-logger/  — Lightweight colored logger (@qubership/action-logger)
@@ -30,6 +30,7 @@ docs/
 There are two kinds of actions in this repo:
 
 ### Node.js actions (`runs.using: node24`)
+
 Have `src/`, `dist/`, `package.json`, `package-lock.json`.
 
 Actions: `metadata-action`, `cla-assistant`, `container-package-cleanup`,
@@ -41,6 +42,7 @@ Actions: `metadata-action`, `cla-assistant`, `container-package-cleanup`,
 Always rebuild and commit `dist/` after changing `src/`.
 
 ### Composite actions (`runs.using: composite`)
+
 No build step. Logic lives entirely in `action.yml` steps (shell, Python scripts, or calls
 to other actions).
 
@@ -67,7 +69,7 @@ No repo-root build script — each action is built independently.
 
 | Area | Rule |
 |------|------|
-| Version pins | Latest release tag (run `git tag --list 'v*' --sort=-version:refname | head -1`) or SHA — never `@main` in production |
+| Version pins | Latest release tag or SHA — never `@main` in production |
 | Permissions | Start with `contents: read`; elevate only where needed |
 | Input names | `kebab-case` — e.g. `dry-run`, `force-create` |
 | Output names | Short singular nouns — e.g. `version`, `tag`, `digest` |
@@ -118,13 +120,13 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 | Command | What it does |
 |---------|-------------|
-| `/doc-update <action-name\|workflow-name> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync of current code vs docs without git diff. |
+| `/doc-update <target> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync. |
 | `/sync-docs [N]` | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog. |
 | `/pull-request [update] [base-branch]` | Generate PR title and body following project conventions, then create or update the PR via `gh`. |
 
 ### Skill files
 
-```
+```text
 .claude/
   commands/
     doc-update.md     — /doc-update slash command

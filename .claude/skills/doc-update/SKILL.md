@@ -129,7 +129,7 @@ This analysis is the basis for updating all documentation sections.
 
 The `## Usage` section must include a complete workflow example (not just a step snippet) that shows `permissions`, `runs-on`, checkout, and the action step. Derive the `permissions` block from what the action actually needs (e.g. `contents: write` for release uploads, `pull-requests: write` for PR actions). Always include at least `contents: read` as a baseline. Place the `permissions` block at the job level, not the workflow level.
 
-~~~markdown
+```markdown
 # 🚀 <name>
 
 <description>
@@ -172,28 +172,25 @@ The `## Usage` section must include a complete workflow example (not just a step
 
 ## Usage
 
-```yaml
-name: <workflow name>
+    ```yaml
+    name: <workflow name>
 
-on:
-  workflow_dispatch:
+    on:
+      workflow_dispatch:
 
-jobs:
-  <job-name>:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: <read|write>          # adjust to what the action needs
-      # add other permissions only if the action requires them
-    steps:
-      - uses: actions/checkout@v4
+    jobs:
+      <job-name>:
+        runs-on: ubuntu-latest
+        permissions:
+          contents: <read|write>
+        steps:
+          - uses: actions/checkout@v4
 
-      - name: <action name>
-        uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
-        with:
-          <required inputs with placeholder values>
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # include only if the action uses GITHUB_TOKEN
-```
+          - name: <action name>
+            uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
+            with:
+              <required inputs with placeholder values>
+    ```
 
 ---
 
@@ -201,11 +198,11 @@ jobs:
 
 - Always pin to `@RELEASE_TAG` or a specific SHA — never `@main` in production.
 - <other key warnings derived from the code>
-~~~
+```
 
 ### 10. Doc template for new REUSABLE WORKFLOW
 
-~~~markdown
+```markdown
 # 🚀 <name>
 
 <description>
@@ -236,20 +233,20 @@ jobs:
 
 ## Usage Example
 
-```yaml
-jobs:
-  call-workflow:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-<name>.yml@RELEASE_TAG
-    with:
-      <required inputs>
-    secrets:
-      <required secrets>
-```
+    ```yaml
+    jobs:
+      call-workflow:
+        uses: netcracker/qubership-workflow-hub/.github/workflows/re-<name>.yml@RELEASE_TAG
+        with:
+          <required inputs>
+        secrets:
+          <required secrets>
+    ```
 
 ## Notes
 
 - Always pin to `@RELEASE_TAG` or a specific SHA — never `@main` in production.
-~~~
+```
 
 ### 11. Inputs table rules
 
