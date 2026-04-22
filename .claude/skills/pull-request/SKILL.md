@@ -279,6 +279,7 @@ Key rules to keep in mind:
 - Table rows must have the same column count as the header (MD056)
 - Lines ≤ 120 characters — code blocks and tables are exempt (MD013)
 - No HTML tags except `<img>`, `<br>`, `<a>`, `<p>` (MD033)
+
 ### 12. Report to user
 
 Print a short summary:
