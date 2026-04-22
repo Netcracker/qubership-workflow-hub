@@ -125,6 +125,7 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 | `/pull-request [update] [base-branch]` | Generate PR title and body following project conventions, then create or update the PR via `gh`. Auto-fixes MARKDOWN and ZIZMOR check failures. |
 | `/zizmor [files...]` | Audit workflow and action yml files for security issues (zizmor ruleset) and fix violations. |
 | `/markdown [files...]` | Audit `.md` files for markdownlint violations (full 50-rule coverage) and fix them. |
+| `/preflight [base-branch]` | Run markdown and zizmor audits on all changed files, fix violations, commit fixes. |
 
 ### Skill files
 
@@ -135,6 +136,8 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
     sync-docs.md      — /sync-docs slash command
     pull-request.md   — /pull-request slash command
     zizmor.md         — /zizmor slash command
+    markdown.md       — /markdown slash command
+    preflight.md      — /preflight slash command
   skills/
     doc-update/
       SKILL.md        — full doc-update logic (parse, analyse, generate, sync catalog)
@@ -146,6 +149,8 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
       SKILL.md        — audit workflow/action yml files for security issues, fix violations
     markdown/
       SKILL.md        — full markdownlint rule coverage (50 rules), audit and fix .md files
+    preflight/
+      SKILL.md        — run markdown + zizmor audits, fix violations, commit fixes
 ```
 
 ---
