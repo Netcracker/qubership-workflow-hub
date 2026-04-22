@@ -21,13 +21,15 @@ Scan the last N commits, find all changed actions and reusable workflows, and up
 ### 2. Get changed files
 
 Run:
-```
+
+```bash
 git diff --name-only HEAD~N..HEAD
 ```
 
 ### 3. Filter relevant files
 
 From the changed files list, keep only:
+
 - `actions/*/action.yml` — action definition changed
 - `actions/*/src/**` — Node.js action logic changed
 - `actions/*/*.py` — Python script changed
@@ -37,12 +39,14 @@ From the changed files list, keep only:
 ### 4. Extract targets
 
 From the filtered list, extract unique targets:
+
 - For `actions/<name>/...` → target = `<name>`
 - For `.github/workflows/re-<name>.yml` → target = `reusable/<name>`
 
 ### 5. Process each target
 
 For each unique target, apply the full `doc-update` logic:
+
 - Resolve paths
 - Read `action.yml` / workflow yml
 - Read current doc (if exists)
@@ -55,6 +59,7 @@ Use `N` as the commits depth for the diff in each target's processing.
 ### 6. Report to user
 
 After processing all targets, print a summary:
+
 - List of targets processed
 - For each: what was created or updated
 - Whether the catalog was updated

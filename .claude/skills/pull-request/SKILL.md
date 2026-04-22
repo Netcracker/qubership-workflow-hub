@@ -201,23 +201,23 @@ gh pr checks <number>
 
 For each **failed** check:
 
-1. Get the run ID from the check URL and read the error log:
+- Get the run ID from the check URL and read the error log:
 
-```bash
-gh run view <run-id> --log-failed
-```
+  ```bash
+  gh run view <run-id> --log-failed
+  ```
 
-2. Analyse the errors. For each error: read the message, understand what is wrong, fix the affected file directly. Do not ask the user. Apply your own judgment — the error message always contains enough information to understand what needs to change.
+- Analyse the errors. For each error: read the message, understand what is wrong, fix the affected file directly. Do not ask the user. Apply your own judgment — the error message always contains enough information to understand what needs to change.
 
-3. After fixing all errors from all failed checks, stage and commit:
+- After fixing all errors from all failed checks, stage and commit:
 
-```bash
-git add <files> && git commit -m "fix(lint): fix linter errors" && git push
-```
+  ```bash
+  git add <files> && git commit -m "fix(lint): fix linter errors" && git push
+  ```
 
-4. Wait for checks again — repeat this step if any check still fails (max 3 iterations).
+- Wait for checks again — repeat this step if any check still fails (max 3 iterations).
 
-5. If after 3 iterations a check still fails → report to the user exactly which check failed, the error details, and why it could not be fixed automatically.
+- If after 3 iterations a check still fails → report to the user exactly which check failed, the error details, and why it could not be fixed automatically.
 
 ### 11. Report to user
 
