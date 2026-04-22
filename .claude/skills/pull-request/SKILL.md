@@ -1,5 +1,5 @@
 ---
-name: pr-description
+name: pull-request
 description: Generate a PR title and description following project conventions, then create or update the PR via gh CLI
 arguments: [mode, base-branch]
 ---
@@ -139,9 +139,10 @@ Do not leave any placeholder or instructional text from the template in the outp
 
 Check whether an open PR already exists for the current branch:
 ```bash
-gh pr view --json number,url 2>/dev/null
+gh pr view --json number,url,state,isDraft 2>/dev/null
 ```
-- If a PR already exists → inform the user and suggest running `/pr-description update` instead. Stop.
+- If a PR exists AND `state` is `OPEN` (regardless of `isDraft`) → inform the user that an open PR already exists (show number and URL), and ask whether to update it or create a new one. Wait for the user's answer before proceeding.
+- If a PR exists but `state` is `CLOSED` or `MERGED` → treat as no open PR, proceed to create.
 - If no PR exists → create it:
 
 ```bash
@@ -157,10 +158,10 @@ After success, print the PR URL.
 
 Get the current PR:
 ```bash
-gh pr view --json number,url,title
+gh pr view --json number,url,title,state,isDraft
 ```
-- If no open PR found → inform the user and suggest running `/pr-description` (without `update`) instead. Stop.
-- If found → update title and body:
+- If no PR found, or `state` is `CLOSED` or `MERGED` → inform the user and suggest running `/pr` (without `update`) instead. Stop.
+- If found and `state` is `OPEN` (draft or not) → update title and body:
 
 ```bash
 gh pr edit \

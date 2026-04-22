@@ -1,11 +1,11 @@
-# pr
+# pull-request
 
 Create or update a pull request with a title and description following the project conventions.
 
 ## Usage
 
 ```
-/pr [update] [base-branch]
+/pull-request [update] [base-branch]
 ```
 
 ## Arguments
@@ -16,12 +16,12 @@ Create or update a pull request with a title and description following the proje
 ## Examples
 
 ```
-/pr
-/pr update
-/pr develop
-/pr update develop
+/pull-request
+/pull-request update
+/pull-request develop
+/pull-request update develop
 ```
 
 ## What this command does
 
-Execute the pr-description skill logic defined in `.claude/skills/pr-description/SKILL.md` with the arguments: $ARGUMENTS
+Execute the pull-request skill logic defined in `.claude/skills/pull-request/SKILL.md` with the arguments: $ARGUMENTS
