@@ -117,9 +117,8 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 | Command | What it does |
 |---------|-------------|
-| `/doc-updater [action-name\|workflow-name]` | Sync documentation with action.yml / workflow yml — updates README, reusable workflow doc, and catalog |
-
-If no name is given, the skill detects the target from git diff or the currently open file.
+| `/doc-updater <action-name\|workflow-name> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default 1), or `--full` for full resync of code vs docs. |
+| `/update-docs [N]` | Scan last N commits (default 1), find all changed actions/workflows, update their docs and catalog. |
 
 ---
 
