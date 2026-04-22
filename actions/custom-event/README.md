@@ -98,6 +98,6 @@ jobs:
 
 ## Notes
 
-- Always pin to `@v1` or a specific SHA — never `@main` in production.
+- Always pin to `@v2.2.0` or a specific SHA — never `@main` in production.
 - `client-payload` must be a valid JSON string — invalid JSON causes the action to fail immediately.
 - For cross-repository dispatch, ensure the token has `repo` scope on the target repository.
