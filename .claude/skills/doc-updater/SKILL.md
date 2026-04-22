@@ -114,7 +114,7 @@ This analysis is the basis for updating all documentation sections.
 | `## Additional Information` | Generate detailed explanations for non-obvious inputs | Regenerate |
 | `## Notes` | Generate key usage warnings and tips | Regenerate |
 | `## Troubleshooting` | Omit if no common issues known | Regenerate if exists |
-| `## Usage` / `## Usage Example` | Generate once with required inputs | **Never overwrite** |
+| `## Usage` / `## Usage Example` | Generate once with required inputs | Never overwrite structure, but always update the version pin (`@vX.Y.Z`) to `RELEASE_TAG` |
 
 ### 9. README template for new ACTION
 
