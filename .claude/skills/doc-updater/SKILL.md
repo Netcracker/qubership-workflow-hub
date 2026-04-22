@@ -118,6 +118,8 @@ This analysis is the basis for updating all documentation sections.
 
 ### 9. README template for new ACTION
 
+The `## Usage` section must include a complete workflow example (not just a step snippet) that shows `permissions`, `runs-on`, checkout, and the action step. Derive the `permissions` block from what the action actually needs (e.g. `contents: write` for release uploads, `pull-requests: write` for PR actions). Always include at least `contents: read` as a baseline. Place the `permissions` block at the job level, not the workflow level.
+
 ```markdown
 # 🚀 <name>
 
@@ -162,10 +164,26 @@ This analysis is the basis for updating all documentation sections.
 ## Usage
 
 ```yaml
-- name: <action name>
-  uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
-  with:
-    <required inputs with placeholder values>
+name: <workflow name>
+
+on:
+  workflow_dispatch:
+
+jobs:
+  <job-name>:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: <read|write>          # adjust to what the action needs
+      # add other permissions only if the action requires them
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: <action name>
+        uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
+        with:
+          <required inputs with placeholder values>
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # include only if the action uses GITHUB_TOKEN
 ```
 
 ---
