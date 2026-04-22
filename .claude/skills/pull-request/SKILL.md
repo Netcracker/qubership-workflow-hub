@@ -234,21 +234,19 @@ For each **failed** check:
 
 ### 11. Markdown authoring rules
 
-When writing `.md` files in this repo (including PR body content rendered in GitHub),
-follow these markdownlint rules (config: `netcracker/.github` → `config/linters/.markdownlint.json`):
+All `.md` files written or fixed by this skill must comply with the project markdownlint
+ruleset. Full rule definitions are in `.claude/skills/markdown/SKILL.md`.
 
-- **MD031** — always add a blank line before and after every fenced code block
-- **MD032** — always add a blank line before and after every list (bullet or numbered)
-- **MD040** — every fenced code block must have a language identifier (`bash`, `yaml`, `text`, `json`, etc.)
-- **MD046** — use fenced code blocks only (` ``` `); never use 4-space indented code blocks
-- **MD048** — use backtick fences only (` ``` `); never use tilde fences (`~~~`)
-- **MD022** — always add a blank line before and after every heading
-- **MD007** — indent nested lists with 2 spaces
-- **MD013** — keep lines under 120 characters (code blocks and tables are exempt)
-- **MD029** — use `1.` for every item in an ordered list; never use 2, 3, 4...
-- **MD038** — no spaces inside backtick code spans
-- **MD056** — table rows must have the same number of cells as the header
+Key rules to keep in mind:
 
+- Blank line before and after every heading, fenced block, and list (MD022, MD031, MD032)
+- Every fenced block must have a language identifier — use `text` for plain content (MD040)
+- Fenced blocks only — no 4-space indented blocks, no tilde fences (MD046, MD048)
+- All ordered list items use `1.` — never `2.`, `3.`, etc. (MD029)
+- No spaces inside backtick code spans (MD038)
+- Table rows must have the same column count as the header (MD056)
+- Lines ≤ 120 characters — code blocks and tables are exempt (MD013)
+- No HTML tags except `<img>`, `<br>`, `<a>`, `<p>` (MD033)
 ### 12. Report to user
 
 Print a short summary:

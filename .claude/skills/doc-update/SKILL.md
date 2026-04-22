@@ -225,28 +225,20 @@ If a new action was added, check `CLAUDE.md` for any hardcoded action count (e.g
 
 ### 14. Markdown authoring rules
 
-When writing any `.md` file in this repo, follow these markdownlint rules exactly
-(config: `netcracker/.github` → `config/linters/.markdownlint.json`, `MD046: fenced`):
+All generated `.md` files must comply with the project markdownlint ruleset.
+Full rule definitions are in `.claude/skills/markdown/SKILL.md`.
 
-- **MD031** — always add a blank line before and after every fenced code block
-- **MD032** — always add a blank line before and after every list (bullet or numbered)
-- **MD040** — every fenced code block must have a language identifier (`bash`, `yaml`, `text`, `json`, `markdown`, etc.)
-- **MD046** — use fenced code blocks only (` ``` `); never use 4-space indented code blocks
-- **MD048** — use backtick fences only (` ``` `); never use tilde fences (`~~~`)
-- **MD022** — always add a blank line before and after every heading
-- **MD004** — use consistent list marker style within a file (prefer `-`)
-- **MD007** — indent nested lists with 2 spaces
-- **MD013** — keep lines under 120 characters (code blocks and tables are exempt)
-- **MD024** — duplicate heading names are allowed only for non-sibling headings
-- **MD029** — use `1.` for every item in an ordered list (the linter renumbers automatically); never use 2, 3, 4...
-- **MD033** — only `<img>`, `<br>`, `<a>`, `<p>` HTML tags are allowed inline
-- **MD038** — no spaces inside backtick code spans
-- **MD041** — first line of file does not need to be a heading
-- **MD056** — table rows must have the same number of cells as the header
+Key rules to keep in mind while generating content:
 
-**Nested code blocks:** when a template or example contains a fenced code block inside prose, write it as a
-regular fenced block in its own paragraph — do not try to nest ` ```lang ` inside another ` ```lang ` block,
-as markdownlint does not allow this. Show the inner block as a separate section or describe it in text.
+- Blank line before and after every heading, fenced block, and list (MD022, MD031, MD032)
+- Every fenced block must have a language identifier — use `text` for plain content (MD040)
+- Fenced blocks only — no 4-space indented blocks, no tilde fences (MD046, MD048)
+- All ordered list items use `1.` — never `2.`, `3.`, etc. (MD029)
+- No spaces inside backtick code spans (MD038)
+- Table rows must have the same column count as the header (MD056)
+- Lines ≤ 120 characters — code blocks and tables are exempt (MD013)
+- No HTML tags except `<img>`, `<br>`, `<a>`, `<p>` (MD033)
+- No nested fenced blocks — show inner examples as separate standalone blocks (MD048)
 
 ### 15. Self-check before writing the file
 
