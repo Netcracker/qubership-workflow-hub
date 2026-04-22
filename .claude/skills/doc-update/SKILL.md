@@ -1,5 +1,5 @@
 ---
-name: doc-updater
+name: doc-update
 description: Update or create documentation for a specific action or reusable workflow based on git diff and action.yml
 arguments: [target, commits]
 ---
@@ -24,7 +24,8 @@ Update or create documentation for a specific GitHub Action or reusable workflow
 ### 2. Resolve latest release tag
 
 Run:
-```
+
+```bash
 git tag --list 'v*' --sort=-version:refname | head -1
 ```
 
@@ -36,12 +37,14 @@ Use `RELEASE_TAG` everywhere a version pin appears in the generated documentatio
 ### 3. Resolve paths
 
 If `$target` starts with `reusable/`:
+
 - Extract workflow name: strip `reusable/` prefix
 - `YML_PATH` = `.github/workflows/re-<name>.yml`
 - `DOC_PATH` = `docs/reusable/<name>.md`
 - `TYPE` = `workflow`
 
 Otherwise:
+
 - `YML_PATH` = `actions/<target>/action.yml`
 - `DOC_PATH` = `actions/<target>/README.md`
 - `TYPE` = `action`
@@ -51,16 +54,19 @@ Otherwise:
 Skip this step if `MODE` = `full-resync`.
 
 Run the following to get full code diff:
-```
+
+```bash
 git diff HEAD~N..HEAD -- <scope>
 ```
 
 Where `<scope>` is:
+
 - For action: `actions/<target>/`
 - For workflow: `.github/workflows/re-<name>.yml`
 
 Also run to get list of changed files:
-```
+
+```bash
 git diff --name-only HEAD~N..HEAD -- <scope>
 ```
 
@@ -69,6 +75,7 @@ If no changed files found — inform the user and stop.
 ### 5. Read source files
 
 Read `YML_PATH` in full:
+
 - For actions: extract `name`, `description`, `inputs`, `outputs`, `runs.using`, and all `steps`
 - For workflows: extract `name`, `on.workflow_call.inputs`, `on.workflow_call.secrets`, and all `jobs`
 
@@ -81,12 +88,14 @@ In `full-resync` mode: read ALL source files in the action/workflow directory �
 ### 6. Analyse the changes
 
 **In `diff` mode:** using the full diff content and source files, understand:
+
 - What new behaviour was added or changed
 - What inputs/outputs were added, removed, or modified
 - What steps or jobs changed and what they do
 - What bug was fixed or feature was introduced
 
 **In `full-resync` mode:** compare current code and `action.yml` against current `README.md` and identify all discrepancies:
+
 - Inputs/outputs in yml but missing or wrong in README
 - Behaviour in code not described in README
 - Descriptions in README that no longer match the code
@@ -118,133 +127,76 @@ This analysis is the basis for updating all documentation sections.
 
 ### 9. README template for new ACTION
 
-The `## Usage` section must include a complete workflow example (not just a step snippet) that shows `permissions`, `runs-on`, checkout, and the action step. Derive the `permissions` block from what the action actually needs (e.g. `contents: write` for release uploads, `pull-requests: write` for PR actions). Always include at least `contents: read` as a baseline. Place the `permissions` block at the job level, not the workflow level.
+The `## Usage` section must include a complete workflow example that shows `permissions`, `runs-on`, checkout, and the action step. Derive the `permissions` block from what the action actually needs. Always include at least `contents: read` as a baseline. Place the `permissions` block at the job level, not the workflow level.
 
-```markdown
-# 🚀 <name>
+Generate the README with this structure (all sections separated by `---`):
 
-<description>
+- `# 🚀 <name>` — title from `action.yml: name`
+- short description paragraph
+- `## Features` — bullet list of key capabilities
+- `## 📌 Inputs` — table with columns: Name, Description, Required, Default
+- `## 📌 Outputs` — table with columns: Name, Description
+- `## How it works` — numbered steps derived from action.yml steps and source code
+- `## Additional Information` — subsections explaining non-obvious inputs or behaviours
+- `## Usage` — complete workflow YAML example (see format below)
+- `## Notes` — bullet list of key warnings and tips
 
----
-
-## Features
-
-- <bullet per key capability, derived from steps and inputs>
-
----
-
-## 📌 Inputs
-
-| Name | Description | Required | Default |
-| ---- | ----------- | -------- | ------- |
-| `input-name` | Description | Yes/No | `value` |
-
----
-
-## 📌 Outputs
-
-| Name | Description |
-| ---- | ----------- |
-| `output-name` | Description |
-
----
-
-## How it works
-
-<numbered steps describing what the action does internally, derived from action.yml steps and source code>
-
----
-
-## Additional Information
-
-<subsections explaining non-obvious inputs, modes, or behaviours in detail>
-
----
-
-## Usage
+The `## Usage` section must contain a fenced yaml block:
 
 ```yaml
-name: <workflow name>
+name: Example workflow
 
 on:
   workflow_dispatch:
 
 jobs:
-  <job-name>:
+  example:
     runs-on: ubuntu-latest
     permissions:
-      contents: <read|write>          # adjust to what the action needs
-      # add other permissions only if the action requires them
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
-      - name: <action name>
+      - name: Run action
         uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
         with:
-          <required inputs with placeholder values>
+          required-input: value
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # include only if the action uses GITHUB_TOKEN
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
----
+Always end the Notes section with: `Always pin to @RELEASE_TAG or a specific SHA — never @main in production.`
 
-## Notes
+### 10. README template for new REUSABLE WORKFLOW
 
-- Always pin to `@RELEASE_TAG` or a specific SHA — never `@main` in production.
-- <other key warnings derived from the code>
-```
+Generate with this structure (no `---` separators for workflows):
 
-### 10. Doc template for new REUSABLE WORKFLOW
+- `# 🚀 <name>` — title
+- short description paragraph
+- `## Features` — bullet list of key capabilities
+- `## 📌 Inputs` — table with columns: Name, Description, Required, Default
+- `## 📌 Secrets` — table with columns: Name, Description, Required
+- `## How it works` — numbered steps
+- `## Additional Information` — subsections explaining non-obvious inputs
+- `## Usage Example` — fenced yaml block calling the workflow
+- `## Notes` — bullet list of key warnings
 
-```markdown
-# 🚀 <name>
-
-<description>
-
-## Features
-
-- <bullet per key capability>
-
-## 📌 Inputs
-
-| Name | Description | Required | Default |
-| ---- | ----------- | -------- | ------- |
-| `input-name` | Description | Yes/No | `value` |
-
-## 📌 Secrets
-
-| Name | Description | Required |
-| ---- | ----------- | -------- |
-| `SECRET_NAME` | Description | Yes/No |
-
-## How it works
-
-<numbered steps describing what the workflow does>
-
-## Additional Information
-
-<subsections explaining non-obvious inputs or behaviours>
-
-## Usage Example
+The `## Usage Example` section must contain a fenced yaml block:
 
 ```yaml
 jobs:
   call-workflow:
     uses: netcracker/qubership-workflow-hub/.github/workflows/re-<name>.yml@RELEASE_TAG
     with:
-      <required inputs>
+      required-input: value
     secrets:
-      <required secrets>
-```
-
-## Notes
-
-- Always pin to `@RELEASE_TAG` or a specific SHA — never `@main` in production.
+      REQUIRED_SECRET: ${{ secrets.REQUIRED_SECRET }}
 ```
 
 ### 11. Inputs table rules
 
 For each input in `action.yml` / workflow yml:
+
 - `Name` — wrap in backticks
 - `Description` — from yml `description` field; enrich with context from code if yml description is too short
 - `Required` — `Yes` if `required: true`, otherwise `No`
@@ -255,12 +207,14 @@ For each input in `action.yml` / workflow yml:
 After updating/creating the doc, open `docs/actions-workflows-catalog.md` and:
 
 **If new action/workflow (not present in catalog):**
+
 - Add a new row to the correct table (Actions or Reusable Workflows → Active section)
 - Format for action: `| [<target>](../actions/<target>/README.md) | <one-line description> |`
 - Format for workflow: `| [<name>](reusable/<name>.md) | <one-line description> |`
 - Keep rows sorted alphabetically
 
 **If existing action/workflow:**
+
 - Find the existing row and update the description if `name` or `description` changed in yml
 
 **Never modify the Deprecated sections.**
@@ -269,9 +223,44 @@ After updating/creating the doc, open `docs/actions-workflows-catalog.md` and:
 
 If a new action was added, check `CLAUDE.md` for any hardcoded action count (e.g. "22 individual GitHub Actions") and update the number.
 
-### 14. Report to user
+### 14. Markdown authoring rules
+
+All generated `.md` files must comply with the project markdownlint ruleset.
+Full rule definitions are in `.claude/skills/markdown/SKILL.md`.
+
+Key rules to keep in mind while generating content:
+
+- Blank line before and after every heading, fenced block, and list (MD022, MD031, MD032)
+- Every fenced block must have a language identifier — use `text` for plain content (MD040)
+- Fenced blocks only — no 4-space indented blocks, no tilde fences (MD046, MD048)
+- All ordered list items use `1.` — never `2.`, `3.`, etc. (MD029)
+- No spaces inside backtick code spans (MD038)
+- Table rows must have the same column count as the header (MD056)
+- Lines ≤ 120 characters — code blocks and tables are exempt (MD013)
+- No HTML tags except `<img>`, `<br>`, `<a>`, `<p>` (MD033)
+- No nested fenced blocks — show inner examples as separate standalone blocks (MD048)
+
+### 15. Self-check before writing the file
+
+Before calling the Write tool on any generated `.md` content, scan the content and verify every item below.
+Fix any violation found before writing — do not write a file that fails this checklist.
+
+- Every fenced code block opens with a language identifier (` ```bash `, ` ```yaml `, ` ```text `, etc.)
+- Every fenced code block has a blank line immediately before the opening ` ``` ` and after the closing ` ``` `
+- Every bullet or numbered list has a blank line immediately before the first item and after the last item
+- No 4-space indented code blocks exist anywhere in the content
+- No tilde fences (`~~~`) exist anywhere in the content
+- No nested fenced blocks (` ``` ` inside ` ``` `) — rewrite as separate sections if needed
+- Every heading has a blank line before and after it
+- All ordered list items use `1.` as the prefix
+- No spaces inside backtick code spans (e.g. `` `value ` `` is wrong, `` `value` `` is correct)
+- All table rows have the same number of cells as the header row
+- No line exceeds 120 characters (code blocks and table rows are exempt)
+
+### 16. Report to user
 
 After all changes, print a short summary:
+
 - What was created or updated
 - Which sections were changed
 - Whether the catalog was updated

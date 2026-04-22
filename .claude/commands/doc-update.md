@@ -1,11 +1,11 @@
-# doc-updater
+# doc-update
 
 Update or create documentation for a specific GitHub Action or reusable workflow.
 
 ## Usage
 
-```
-/doc-updater <target> [commits|--full]
+```text
+/doc-update <target> [commits|--full]
 ```
 
 ## Arguments
@@ -16,13 +16,13 @@ Update or create documentation for a specific GitHub Action or reusable workflow
 
 ## Examples
 
-```
-/doc-updater metadata-action
-/doc-updater metadata-action 5
-/doc-updater metadata-action --full
-/doc-updater reusable/docker-publish 3
+```text
+/doc-update metadata-action
+/doc-update metadata-action 5
+/doc-update metadata-action --full
+/doc-update reusable/docker-publish 3
 ```
 
 ## What this command does
 
-Execute the doc-updater skill logic defined in `.claude/skills/doc-updater/SKILL.md` with the arguments: $ARGUMENTS
+Execute the doc-update skill logic defined in `.claude/skills/doc-update/SKILL.md` with the arguments: $ARGUMENTS
