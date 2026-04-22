@@ -127,125 +127,70 @@ This analysis is the basis for updating all documentation sections.
 
 ### 9. README template for new ACTION
 
-The `## Usage` section must include a complete workflow example (not just a step snippet) that shows `permissions`, `runs-on`, checkout, and the action step. Derive the `permissions` block from what the action actually needs (e.g. `contents: write` for release uploads, `pull-requests: write` for PR actions). Always include at least `contents: read` as a baseline. Place the `permissions` block at the job level, not the workflow level.
+The `## Usage` section must include a complete workflow example that shows `permissions`, `runs-on`, checkout, and the action step. Derive the `permissions` block from what the action actually needs. Always include at least `contents: read` as a baseline. Place the `permissions` block at the job level, not the workflow level.
 
-```markdown
-# 🚀 <name>
+Generate the README with this structure (all sections separated by `---`):
 
-<description>
+- `# 🚀 <name>` — title from `action.yml: name`
+- short description paragraph
+- `## Features` — bullet list of key capabilities
+- `## 📌 Inputs` — table with columns: Name, Description, Required, Default
+- `## 📌 Outputs` — table with columns: Name, Description
+- `## How it works` — numbered steps derived from action.yml steps and source code
+- `## Additional Information` — subsections explaining non-obvious inputs or behaviours
+- `## Usage` — complete workflow YAML example (see format below)
+- `## Notes` — bullet list of key warnings and tips
 
----
+The `## Usage` section must contain a fenced yaml block:
 
-## Features
+```yaml
+name: Example workflow
 
-- <bullet per key capability, derived from steps and inputs>
+on:
+  workflow_dispatch:
 
----
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
 
-## 📌 Inputs
-
-| Name | Description | Required | Default |
-| ---- | ----------- | -------- | ------- |
-| `input-name` | Description | Yes/No | `value` |
-
----
-
-## 📌 Outputs
-
-| Name | Description |
-| ---- | ----------- |
-| `output-name` | Description |
-
----
-
-## How it works
-
-<numbered steps describing what the action does internally, derived from action.yml steps and source code>
-
----
-
-## Additional Information
-
-<subsections explaining non-obvious inputs, modes, or behaviours in detail>
-
----
-
-## Usage
-
-    ```yaml
-    name: <workflow name>
-
-    on:
-      workflow_dispatch:
-
-    jobs:
-      <job-name>:
-        runs-on: ubuntu-latest
-        permissions:
-          contents: <read|write>
-        steps:
-          - uses: actions/checkout@v4
-
-          - name: <action name>
-            uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
-            with:
-              <required inputs with placeholder values>
-    ```
-
----
-
-## Notes
-
-- Always pin to `@RELEASE_TAG` or a specific SHA — never `@main` in production.
-- <other key warnings derived from the code>
+      - name: Run action
+        uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
+        with:
+          required-input: value
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### 10. Doc template for new REUSABLE WORKFLOW
+Always end the Notes section with: `Always pin to @RELEASE_TAG or a specific SHA — never @main in production.`
 
-```markdown
-# 🚀 <name>
+### 10. README template for new REUSABLE WORKFLOW
 
-<description>
+Generate with this structure (no `---` separators for workflows):
 
-## Features
+- `# 🚀 <name>` — title
+- short description paragraph
+- `## Features` — bullet list of key capabilities
+- `## 📌 Inputs` — table with columns: Name, Description, Required, Default
+- `## 📌 Secrets` — table with columns: Name, Description, Required
+- `## How it works` — numbered steps
+- `## Additional Information` — subsections explaining non-obvious inputs
+- `## Usage Example` — fenced yaml block calling the workflow
+- `## Notes` — bullet list of key warnings
 
-- <bullet per key capability>
+The `## Usage Example` section must contain a fenced yaml block:
 
-## 📌 Inputs
-
-| Name | Description | Required | Default |
-| ---- | ----------- | -------- | ------- |
-| `input-name` | Description | Yes/No | `value` |
-
-## 📌 Secrets
-
-| Name | Description | Required |
-| ---- | ----------- | -------- |
-| `SECRET_NAME` | Description | Yes/No |
-
-## How it works
-
-<numbered steps describing what the workflow does>
-
-## Additional Information
-
-<subsections explaining non-obvious inputs or behaviours>
-
-## Usage Example
-
-    ```yaml
-    jobs:
-      call-workflow:
-        uses: netcracker/qubership-workflow-hub/.github/workflows/re-<name>.yml@RELEASE_TAG
-        with:
-          <required inputs>
-        secrets:
-          <required secrets>
-    ```
-
-## Notes
-
-- Always pin to `@RELEASE_TAG` or a specific SHA — never `@main` in production.
+```yaml
+jobs:
+  call-workflow:
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-<name>.yml@RELEASE_TAG
+    with:
+      required-input: value
+    secrets:
+      REQUIRED_SECRET: ${{ secrets.REQUIRED_SECRET }}
 ```
 
 ### 11. Inputs table rules
@@ -278,7 +223,32 @@ After updating/creating the doc, open `docs/actions-workflows-catalog.md` and:
 
 If a new action was added, check `CLAUDE.md` for any hardcoded action count (e.g. "22 individual GitHub Actions") and update the number.
 
-### 14. Report to user
+### 14. Markdown authoring rules
+
+When writing any `.md` file in this repo, follow these markdownlint rules exactly
+(config: `netcracker/.github` → `config/linters/.markdownlint.json`, `MD046: fenced`):
+
+- **MD031** — always add a blank line before and after every fenced code block
+- **MD032** — always add a blank line before and after every list (bullet or numbered)
+- **MD040** — every fenced code block must have a language identifier (`bash`, `yaml`, `text`, `json`, `markdown`, etc.)
+- **MD046** — use fenced code blocks only (` ``` `); never use 4-space indented code blocks
+- **MD048** — use backtick fences only (` ``` `); never use tilde fences (`~~~`)
+- **MD022** — always add a blank line before and after every heading
+- **MD004** — use consistent list marker style within a file (prefer `-`)
+- **MD007** — indent nested lists with 2 spaces
+- **MD013** — keep lines under 120 characters (code blocks and tables are exempt)
+- **MD024** — duplicate heading names are allowed only for non-sibling headings
+- **MD029** — use `1.` for every item in an ordered list (the linter renumbers automatically); never use 2, 3, 4...
+- **MD033** — only `<img>`, `<br>`, `<a>`, `<p>` HTML tags are allowed inline
+- **MD038** — no spaces inside backtick code spans
+- **MD041** — first line of file does not need to be a heading
+- **MD056** — table rows must have the same number of cells as the header
+
+**Nested code blocks:** when a template or example contains a fenced code block inside prose, write it as a
+regular fenced block in its own paragraph — do not try to nest ` ```lang ` inside another ` ```lang ` block,
+as markdownlint does not allow this. Show the inner block as a separate section or describe it in text.
+
+### 15. Report to user
 
 After all changes, print a short summary:
 
