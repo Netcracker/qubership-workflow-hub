@@ -117,9 +117,9 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 | Command | What it does |
 |---------|-------------|
-| `/tech-writer [action-name]` | Create or update a README for a specific action and sync the catalog |
+| `/doc-updater [action-name\|workflow-name]` | Sync documentation with action.yml / workflow yml — updates README, reusable workflow doc, and catalog |
 
-If no action name is given, the skill detects the action from the currently open file.
+If no name is given, the skill detects the target from git diff or the currently open file.
 
 ---
 
