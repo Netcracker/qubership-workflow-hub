@@ -19,7 +19,8 @@ docs/
   reusable/       — Documentation for each reusable workflow
   *.md            — Repo-wide guides (standards, secrets, contributing)
 .claude/
-  commands/       — Claude Code skills (slash commands)
+  commands/       — Slash commands (invoke via /command-name)
+  skills/         — Skill logic loaded by commands
 ```
 
 ---
@@ -66,7 +67,7 @@ No repo-root build script — each action is built independently.
 
 | Area | Rule |
 |------|------|
-| Version pins | `@v1` (major) or SHA — never `@main` in production |
+| Version pins | Latest release tag (run `git tag --list 'v*' --sort=-version:refname | head -1`) or SHA — never `@main` in production |
 | Permissions | Start with `contents: read`; elevate only where needed |
 | Input names | `kebab-case` — e.g. `dry-run`, `force-create` |
 | Output names | Short singular nouns — e.g. `version`, `tag`, `digest` |
@@ -117,14 +118,28 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 | Command | What it does |
 |---------|-------------|
-| `/doc-updater <action-name\|workflow-name> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default 1), or `--full` for full resync of code vs docs. |
-| `/update-docs [N]` | Scan last N commits (default 1), find all changed actions/workflows, update their docs and catalog. |
+| `/doc-updater <action-name\|workflow-name> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync of current code vs docs without git diff. |
+| `/update-docs [N]` | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog. |
+
+### Skill files
+
+```
+.claude/
+  commands/
+    doc-updater.md    — /doc-updater slash command
+    update-docs.md    — /update-docs slash command
+  skills/
+    doc-updater/
+      SKILL.md        — full doc-updater logic (parse, analyse, generate, sync catalog)
+    update-docs/
+      SKILL.md        — scan N commits, extract targets, invoke doc-updater logic
+```
 
 ---
 
 ## What NOT to do
 
-- Do not use `@main` in workflow examples or documentation — always `@v1`
+- Do not use `@main` in workflow examples or documentation — always use the latest release tag (check with `git tag --list 'v*' --sort=-version:refname | head -1`)
 - Do not add required inputs without treating it as a breaking change
 - Do not rename or remove existing inputs/outputs without a deprecation cycle
 - Do not commit `node_modules/`
