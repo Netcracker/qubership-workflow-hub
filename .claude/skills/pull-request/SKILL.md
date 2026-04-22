@@ -4,7 +4,7 @@ description: Generate a PR title and description following project conventions, 
 arguments: [mode, base-branch]
 ---
 
-# pr-description
+# pull-request
 
 Generate a pull request title and body following the project conventions, then create a new PR or update the existing one.
 
