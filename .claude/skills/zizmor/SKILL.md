@@ -120,7 +120,7 @@ also uploads artifacts (`actions/upload-artifact`).
 **Fix:**
 
 ```yaml
-- uses: actions/checkout@v4
+- uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
   with:
     persist-credentials: false
 ```
@@ -159,23 +159,59 @@ from `github.event.*` in a privileged trigger context.
 **Fix:** Sanitise input before writing; prefer `GITHUB_OUTPUT` for passing values
 between steps; never write raw event data to `GITHUB_ENV`.
 
-#### Rule: unpinned-uses (tag-only, not full SHA)
+#### Rule: unpinned-uses (must be SHA-pinned)
 
-**What it detects:** `uses:` references pinned to a branch (`@main`, `@master`) instead
-of a tag or SHA.
+**What it detects:** `uses:` references not pinned to an immutable SHA. Both branch refs
+(`@main`, `@master`) and mutable tag refs (`@v4`, `@v1.2.3`) are flagged — tags can be
+force-pushed and are not immutable.
 
-**Flag if:** `uses: owner/repo@main` or `uses: owner/repo@master` or any mutable branch ref.
+**Flag if** `uses:` is anything other than a 40-character hex SHA:
 
-**Do NOT flag:** `uses: owner/repo@v1.2.3` (tag pins are acceptable per project policy).
-Full SHA pins are also acceptable.
+- `uses: owner/repo@main` — branch ref
+- `uses: owner/repo@master` — branch ref
+- `uses: owner/repo@v4` — mutable tag
+- `uses: owner/repo@v1.2.3` — mutable tag
 
-**Fix:** Pin to a tag or SHA:
+**Do NOT flag:** `uses: owner/repo@<40-char-sha> # vX.Y.Z` — correct form.
+
+**Fix:** Replace the tag with the SHA of the latest release. To find the correct SHA,
+run the GitHub API for the latest release tag of that action:
+
+```bash
+gh api repos/<owner>/<repo>/git/ref/tags/<tag> --jq '.object.sha'
+```
+
+If the tag points to an annotated tag object (not a commit directly), dereference it:
+
+```bash
+gh api repos/<owner>/<repo>/git/tags/<object-sha> --jq '.object.sha'
+```
+
+**Then replace in the file:**
 
 ```yaml
+# Before (mutable tag):
 uses: actions/checkout@v4
-# or
-uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
+
+# After (SHA-pinned with version comment):
+uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 ```
+
+**Known SHA pins used in this repo** (use these as reference, but always verify with
+the API that they match the latest release tag before applying):
+
+| Action | Latest SHA seen in repo | Tag |
+|--------|------------------------|-----|
+| `actions/checkout` | `8e8c483db84b4bee98b60c0593521ed34d9990e8` | v6.0.1 |
+| `actions/cache` | `668228422ae6a00e4ad889ee87cd7109ec5666a7` | v5.0.4 |
+| `actions/upload-artifact` | `bbbca2ddaa5d8feaa63e36b76fdaad77386f024f` | v7.0.0 |
+| `actions/download-artifact` | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` | v8.0.1 |
+| `actions/setup-node` | `53b83947a5a98c8d113130e565377fae1a50d02f` | v6.3.0 |
+| `actions/setup-python` | `a309ff8b426b58ec0e2a45f0f869d46889d02405` | v6.2.0 |
+| `actions/setup-go` | `4a3601121dd01d1626a1e23e37211e3254c1c06c` | v6.4.0 |
+
+For any action **not** in the table above, always fetch the current SHA via the API
+before applying the fix — never guess or reuse stale SHAs.
 
 #### Rule: insecure-commands
 
