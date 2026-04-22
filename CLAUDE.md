@@ -122,7 +122,8 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 |---------|-------------|
 | `/doc-update <target> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync. |
 | `/sync-docs [N]` | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog. |
-| `/pull-request [update] [base-branch]` | Generate PR title and body following project conventions, then create or update the PR via `gh`. |
+| `/pull-request [update] [base-branch]` | Generate PR title and body following project conventions, then create or update the PR via `gh`. Auto-fixes MARKDOWN and ZIZMOR check failures. |
+| `/zizmor [files...]` | Audit workflow and action yml files for security issues (zizmor ruleset) and fix violations. |
 
 ### Skill files
 
@@ -132,6 +133,7 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
     doc-update.md     — /doc-update slash command
     sync-docs.md      — /sync-docs slash command
     pull-request.md   — /pull-request slash command
+    zizmor.md         — /zizmor slash command
   skills/
     doc-update/
       SKILL.md        — full doc-update logic (parse, analyse, generate, sync catalog)
@@ -139,6 +141,8 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
       SKILL.md        — scan N commits, extract targets, invoke doc-update logic
     pull-request/
       SKILL.md        — generate PR title/body, create or update PR via gh CLI
+    zizmor/
+      SKILL.md        — audit workflow/action yml files for security issues, fix violations
 ```
 
 ---

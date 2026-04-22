@@ -207,7 +207,19 @@ For each **failed** check:
   gh run view <run-id> --log-failed
   ```
 
-- Analyse the errors. For each error: read the message, understand what is wrong, fix the affected file directly. Do not ask the user. Apply your own judgment — the error message always contains enough information to understand what needs to change.
+- Identify the check type from its name and apply the matching fix strategy:
+
+  - **Check name contains `MARKDOWN`** — read the markdownlint errors from the log.
+    Fix each violation using the rules in step 11. Common fixes: add blank lines around
+    fences and lists, add language identifiers to fenced blocks, fix ordered list prefixes.
+
+  - **Check name contains `ZIZMOR` or `GITHUB_ACTIONS_ZIZMOR`** — read the zizmor errors
+    from the log. Apply the fix logic from `.claude/skills/zizmor/SKILL.md` directly to
+    the affected workflow/action files. Each zizmor finding includes the file path, line
+    number, rule name, and a description — use this to locate and fix the exact violation.
+
+  - **Any other check** — read the error message carefully and fix the affected file
+    using judgment. The error always contains enough information to understand what to change.
 
 - After fixing all errors from all failed checks, stage and commit:
 
@@ -217,7 +229,8 @@ For each **failed** check:
 
 - Wait for checks again — repeat this step if any check still fails (max 3 iterations).
 
-- If after 3 iterations a check still fails → report to the user exactly which check failed, the error details, and why it could not be fixed automatically.
+- If after 3 iterations a check still fails → report to the user exactly which check failed,
+  the error details, and why it could not be fixed automatically.
 
 ### 11. Markdown authoring rules
 
