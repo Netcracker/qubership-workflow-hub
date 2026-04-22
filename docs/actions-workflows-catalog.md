@@ -21,7 +21,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [cla-assistant](../actions/cla-assistant/README.md)                             | Handle Contributor License Agreement (CLA) and DCO signing   |
 | [cdxgen](../actions/cdxgen/README.md)                                           | Generate SBOM and CycloneDX vulnerability report             |
 | [charts-values-update-action](../actions/charts-values-update-action/README.md) | Updates images versions in values files                      |
-| [chart-version](../actions/chart-version/README.md)                             | Bump/patch Helm Chart.yaml version fields                    |
+| [chart-version](../actions/chart-version/README.md)                             | Update version and appVersion fields in Helm Chart.yaml      |
 | [container-package-cleanup](../actions/container-package-cleanup/README.md)     | Remove stale container or Maven package versions             |
 | [custom-event](../actions/custom-event/README.md)                               | Emit repository_dispatch custom event with payload           |
 | [docker-action](../actions/docker-action/README.md)                             | Build & push (multi-platform) Docker images                  |
