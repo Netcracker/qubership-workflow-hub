@@ -118,21 +118,25 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 | Command | What it does |
 |---------|-------------|
-| `/doc-updater <action-name\|workflow-name> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync of current code vs docs without git diff. |
-| `/update-docs [N]` | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog. |
+| `/doc-update <action-name\|workflow-name> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync of current code vs docs without git diff. |
+| `/sync-docs [N]` | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog. |
+| `/pull-request [update] [base-branch]` | Generate PR title and body following project conventions, then create or update the PR via `gh`. |
 
 ### Skill files
 
 ```
 .claude/
   commands/
-    doc-updater.md    — /doc-updater slash command
-    update-docs.md    — /update-docs slash command
+    doc-update.md     — /doc-update slash command
+    sync-docs.md      — /sync-docs slash command
+    pull-request.md   — /pull-request slash command
   skills/
-    doc-updater/
-      SKILL.md        — full doc-updater logic (parse, analyse, generate, sync catalog)
-    update-docs/
-      SKILL.md        — scan N commits, extract targets, invoke doc-updater logic
+    doc-update/
+      SKILL.md        — full doc-update logic (parse, analyse, generate, sync catalog)
+    sync-docs/
+      SKILL.md        — scan N commits, extract targets, invoke doc-update logic
+    pull-request/
+      SKILL.md        — generate PR title/body, create or update PR via gh CLI
 ```
 
 ---

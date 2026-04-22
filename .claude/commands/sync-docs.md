@@ -1,11 +1,11 @@
-# update-docs
+# sync-docs
 
 Scan the last N commits, find all changed actions and reusable workflows, and update their documentation.
 
 ## Usage
 
 ```
-/update-docs [commits]
+/sync-docs [commits]
 ```
 
 ## Arguments
@@ -15,14 +15,14 @@ Scan the last N commits, find all changed actions and reusable workflows, and up
 ## Examples
 
 ```
-/update-docs
-/update-docs 5
-/update-docs 10
+/sync-docs
+/sync-docs 5
+/sync-docs 10
 ```
 
 ## What this command does
 
-Execute the update-docs skill logic defined in `.claude/skills/update-docs/SKILL.md` with the arguments: $ARGUMENTS
+Execute the sync-docs skill logic defined in `.claude/skills/sync-docs/SKILL.md` with the arguments: $ARGUMENTS
 
 ### Step 1 — Get changed files
 
@@ -46,7 +46,7 @@ Keep only:
 
 ### Step 4 — Process each target
 
-For each target apply the full doc-updater skill logic from `.claude/skills/doc-updater/SKILL.md` using `N` as the commits depth.
+For each target apply the full doc-update skill logic from `.claude/skills/doc-update/SKILL.md` using `N` as the commits depth.
 
 ### Step 5 — Report
 

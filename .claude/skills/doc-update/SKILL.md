@@ -1,5 +1,5 @@
 ---
-name: doc-updater
+name: doc-update
 description: Update or create documentation for a specific action or reusable workflow based on git diff and action.yml
 arguments: [target, commits]
 ---

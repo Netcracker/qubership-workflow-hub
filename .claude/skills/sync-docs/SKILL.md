@@ -1,5 +1,5 @@
 ---
-name: update-docs
+name: sync-docs
 description: Scan the last N commits and update documentation for all changed actions and reusable workflows
 arguments: [commits]
 ---
@@ -42,7 +42,7 @@ From the filtered list, extract unique targets:
 
 ### 5. Process each target
 
-For each unique target, apply the full `doc-updater` logic:
+For each unique target, apply the full `doc-update` logic:
 - Resolve paths
 - Read `action.yml` / workflow yml
 - Read current doc (if exists)
