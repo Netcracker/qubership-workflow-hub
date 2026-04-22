@@ -4,7 +4,7 @@ Update or create documentation for a specific GitHub Action or reusable workflow
 
 ## Usage
 
-```
+```text
 /doc-update <target> [commits|--full]
 ```
 
@@ -16,7 +16,7 @@ Update or create documentation for a specific GitHub Action or reusable workflow
 
 ## Examples
 
-```
+```text
 /doc-update metadata-action
 /doc-update metadata-action 5
 /doc-update metadata-action --full

@@ -16,9 +16,11 @@ Generate a pull request title and body following the project conventions, then c
 ## Conventions reference
 
 PR title format (from `docs/code-of-conduct-prs.md`):
-```
+
+```text
 <type>(scope): imperative statement
 ```
+
 - Max 72 characters, no trailing period, no issue number in the title.
 - Types: `feat`, `fix`, `docs`, `refactor`, `chore`, `perf`, `ci`, `build`, `test`, `deprecate`, `revert`.
 - Scope: path or component name, e.g. `actions/metadata-action`, `docs`, `.github/workflows`.
@@ -38,21 +40,25 @@ Run these commands in parallel:
 ```bash
 git rev-parse --abbrev-ref HEAD
 ```
+
 → `CURRENT_BRANCH`
 
 ```bash
 git log $BASE..HEAD --oneline
 ```
+
 → `COMMITS` (list of commits on this branch)
 
 ```bash
 git diff $BASE..HEAD --name-only
 ```
+
 → `CHANGED_FILES` (list of changed files)
 
 ```bash
 git diff $BASE..HEAD
 ```
+
 → `FULL_DIFF` (full diff for content analysis)
 
 If `COMMITS` is empty — inform the user that there are no commits ahead of `$BASE` and stop.
@@ -60,6 +66,7 @@ If `COMMITS` is empty — inform the user that there are no commits ahead of `$B
 ### 3. Determine scope
 
 From `CHANGED_FILES`, identify the primary scope:
+
 - If all changes are under `actions/<name>/` → scope = `actions/<name>`
 - If all changes are under `.github/workflows/` → scope = `.github/workflows`
 - If all changes are under `docs/` → scope = `docs`
@@ -88,6 +95,7 @@ Analyse commit messages and `FULL_DIFF` to pick the single best type:
 ### 5. Detect issue references
 
 Search commit messages for patterns:
+
 - `Fixes #NNN`, `Closes #NNN`, `Related to #NNN`, `Resolves #NNN`
 - If found → `ISSUE_REF` = the full reference (e.g. `Fixes #342`)
 - If not found → `ISSUE_REF` = `<!-- No issue linked — add Fixes #NNN or explain why -->`
@@ -95,6 +103,7 @@ Search commit messages for patterns:
 ### 6. Detect breaking changes
 
 A change is breaking if any of these are true:
+
 - Commit message contains `BREAKING CHANGE` or `!` after type (e.g. `feat!:`)
 - An existing required input is removed or renamed in `action.yml` / workflow yml
 - An existing output is removed or renamed
@@ -107,6 +116,7 @@ Set `BREAKING` = `Yes` or `No` accordingly. If `Yes`, describe the impact.
 Compose: `<type>(<scope>): <imperative statement>`
 
 Rules:
+
 - Imperative mood: "add", "fix", "update", "remove" — not "added", "fixes", "updating"
 - Summarise WHAT changed, not HOW
 - Max 72 characters total
@@ -138,9 +148,11 @@ Do not leave any placeholder or instructional text from the template in the outp
 **If `MODE` = `create`:**
 
 Check whether an open PR already exists for the current branch:
+
 ```bash
 gh pr view --json number,url,state,isDraft 2>/dev/null
 ```
+
 - If a PR exists AND `state` is `OPEN` (regardless of `isDraft`) → inform the user that an open PR already exists (show number and URL), and ask whether to update it or create a new one. Wait for the user's answer before proceeding.
 - If a PR exists but `state` is `CLOSED` or `MERGED` → treat as no open PR, proceed to create.
 - If no PR exists → create it:
@@ -157,10 +169,12 @@ After success, print the PR URL.
 **If `MODE` = `update`:**
 
 Get the current PR:
+
 ```bash
 gh pr view --json number,url,title,state,isDraft
 ```
-- If no PR found, or `state` is `CLOSED` or `MERGED` → inform the user and suggest running `/pr` (without `update`) instead. Stop.
+
+- If no PR found, or `state` is `CLOSED` or `MERGED` → inform the user and suggest running `/pull-request` (without `update`) instead. Stop.
 - If found and `state` is `OPEN` (draft or not) → update title and body:
 
 ```bash
@@ -208,6 +222,7 @@ git add <files> && git commit -m "fix(lint): fix linter errors" && git push
 ### 11. Report to user
 
 Print a short summary:
+
 - PR title used
 - PR URL
 - Whether it was created or updated

@@ -24,7 +24,8 @@ Update or create documentation for a specific GitHub Action or reusable workflow
 ### 2. Resolve latest release tag
 
 Run:
-```
+
+```bash
 git tag --list 'v*' --sort=-version:refname | head -1
 ```
 
@@ -36,12 +37,14 @@ Use `RELEASE_TAG` everywhere a version pin appears in the generated documentatio
 ### 3. Resolve paths
 
 If `$target` starts with `reusable/`:
+
 - Extract workflow name: strip `reusable/` prefix
 - `YML_PATH` = `.github/workflows/re-<name>.yml`
 - `DOC_PATH` = `docs/reusable/<name>.md`
 - `TYPE` = `workflow`
 
 Otherwise:
+
 - `YML_PATH` = `actions/<target>/action.yml`
 - `DOC_PATH` = `actions/<target>/README.md`
 - `TYPE` = `action`
@@ -51,16 +54,19 @@ Otherwise:
 Skip this step if `MODE` = `full-resync`.
 
 Run the following to get full code diff:
-```
+
+```bash
 git diff HEAD~N..HEAD -- <scope>
 ```
 
 Where `<scope>` is:
+
 - For action: `actions/<target>/`
 - For workflow: `.github/workflows/re-<name>.yml`
 
 Also run to get list of changed files:
-```
+
+```bash
 git diff --name-only HEAD~N..HEAD -- <scope>
 ```
 
@@ -69,6 +75,7 @@ If no changed files found — inform the user and stop.
 ### 5. Read source files
 
 Read `YML_PATH` in full:
+
 - For actions: extract `name`, `description`, `inputs`, `outputs`, `runs.using`, and all `steps`
 - For workflows: extract `name`, `on.workflow_call.inputs`, `on.workflow_call.secrets`, and all `jobs`
 
@@ -81,12 +88,14 @@ In `full-resync` mode: read ALL source files in the action/workflow directory �
 ### 6. Analyse the changes
 
 **In `diff` mode:** using the full diff content and source files, understand:
+
 - What new behaviour was added or changed
 - What inputs/outputs were added, removed, or modified
 - What steps or jobs changed and what they do
 - What bug was fixed or feature was introduced
 
 **In `full-resync` mode:** compare current code and `action.yml` against current `README.md` and identify all discrepancies:
+
 - Inputs/outputs in yml but missing or wrong in README
 - Behaviour in code not described in README
 - Descriptions in README that no longer match the code
@@ -120,7 +129,7 @@ This analysis is the basis for updating all documentation sections.
 
 The `## Usage` section must include a complete workflow example (not just a step snippet) that shows `permissions`, `runs-on`, checkout, and the action step. Derive the `permissions` block from what the action actually needs (e.g. `contents: write` for release uploads, `pull-requests: write` for PR actions). Always include at least `contents: read` as a baseline. Place the `permissions` block at the job level, not the workflow level.
 
-```markdown
+~~~markdown
 # 🚀 <name>
 
 <description>
@@ -192,11 +201,11 @@ jobs:
 
 - Always pin to `@RELEASE_TAG` or a specific SHA — never `@main` in production.
 - <other key warnings derived from the code>
-```
+~~~
 
 ### 10. Doc template for new REUSABLE WORKFLOW
 
-```markdown
+~~~markdown
 # 🚀 <name>
 
 <description>
@@ -240,11 +249,12 @@ jobs:
 ## Notes
 
 - Always pin to `@RELEASE_TAG` or a specific SHA — never `@main` in production.
-```
+~~~
 
 ### 11. Inputs table rules
 
 For each input in `action.yml` / workflow yml:
+
 - `Name` — wrap in backticks
 - `Description` — from yml `description` field; enrich with context from code if yml description is too short
 - `Required` — `Yes` if `required: true`, otherwise `No`
@@ -255,12 +265,14 @@ For each input in `action.yml` / workflow yml:
 After updating/creating the doc, open `docs/actions-workflows-catalog.md` and:
 
 **If new action/workflow (not present in catalog):**
+
 - Add a new row to the correct table (Actions or Reusable Workflows → Active section)
 - Format for action: `| [<target>](../actions/<target>/README.md) | <one-line description> |`
 - Format for workflow: `| [<name>](reusable/<name>.md) | <one-line description> |`
 - Keep rows sorted alphabetically
 
 **If existing action/workflow:**
+
 - Find the existing row and update the description if `name` or `description` changed in yml
 
 **Never modify the Deprecated sections.**
@@ -272,6 +284,7 @@ If a new action was added, check `CLAUDE.md` for any hardcoded action count (e.g
 ### 14. Report to user
 
 After all changes, print a short summary:
+
 - What was created or updated
 - Which sections were changed
 - Whether the catalog was updated

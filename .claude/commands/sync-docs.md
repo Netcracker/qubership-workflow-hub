@@ -4,7 +4,7 @@ Scan the last N commits, find all changed actions and reusable workflows, and up
 
 ## Usage
 
-```
+```text
 /sync-docs [commits]
 ```
 
@@ -14,7 +14,7 @@ Scan the last N commits, find all changed actions and reusable workflows, and up
 
 ## Examples
 
-```
+```text
 /sync-docs
 /sync-docs 5
 /sync-docs 10
@@ -27,13 +27,15 @@ Execute the sync-docs skill logic defined in `.claude/skills/sync-docs/SKILL.md`
 ### Step 1 — Get changed files
 
 Run:
-```
+
+```bash
 git diff --name-only HEAD~N..HEAD
 ```
 
 ### Step 2 — Filter relevant files
 
 Keep only:
+
 - `actions/*/action.yml`
 - `actions/*/src/**`
 - `actions/*/*.py`

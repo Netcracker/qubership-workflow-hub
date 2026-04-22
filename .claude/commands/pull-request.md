@@ -4,7 +4,7 @@ Create or update a pull request with a title and description following the proje
 
 ## Usage
 
-```
+```text
 /pull-request [update] [base-branch]
 ```
 
@@ -15,7 +15,7 @@ Create or update a pull request with a title and description following the proje
 
 ## Examples
 
-```
+```text
 /pull-request
 /pull-request update
 /pull-request develop
