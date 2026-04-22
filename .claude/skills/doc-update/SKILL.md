@@ -248,7 +248,24 @@ When writing any `.md` file in this repo, follow these markdownlint rules exactl
 regular fenced block in its own paragraph — do not try to nest ` ```lang ` inside another ` ```lang ` block,
 as markdownlint does not allow this. Show the inner block as a separate section or describe it in text.
 
-### 15. Report to user
+### 15. Self-check before writing the file
+
+Before calling the Write tool on any generated `.md` content, scan the content and verify every item below.
+Fix any violation found before writing — do not write a file that fails this checklist.
+
+- Every fenced code block opens with a language identifier (` ```bash `, ` ```yaml `, ` ```text `, etc.)
+- Every fenced code block has a blank line immediately before the opening ` ``` ` and after the closing ` ``` `
+- Every bullet or numbered list has a blank line immediately before the first item and after the last item
+- No 4-space indented code blocks exist anywhere in the content
+- No tilde fences (`~~~`) exist anywhere in the content
+- No nested fenced blocks (` ``` ` inside ` ``` `) — rewrite as separate sections if needed
+- Every heading has a blank line before and after it
+- All ordered list items use `1.` as the prefix
+- No spaces inside backtick code spans (e.g. `` `value ` `` is wrong, `` `value` `` is correct)
+- All table rows have the same number of cells as the header row
+- No line exceeds 120 characters (code blocks and table rows are exempt)
+
+### 16. Report to user
 
 After all changes, print a short summary:
 
