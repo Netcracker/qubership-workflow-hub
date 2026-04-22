@@ -1,11 +1,11 @@
-# pr-description
+# pr
 
-Generate and apply a pull request title and description following the project conventions.
+Create or update a pull request with a title and description following the project conventions.
 
 ## Usage
 
 ```
-/pr-description [update] [base-branch]
+/pr [update] [base-branch]
 ```
 
 ## Arguments
@@ -16,10 +16,10 @@ Generate and apply a pull request title and description following the project co
 ## Examples
 
 ```
-/pr-description
-/pr-description update
-/pr-description develop
-/pr-description update develop
+/pr
+/pr update
+/pr develop
+/pr update develop
 ```
 
 ## What this command does
