@@ -1,0 +1,53 @@
+hardening_rules:
+  C-0013:
+    name: "Non-root containers"
+    description: "Ensure that containers are not running as root."
+    mandatory: true
+  C-0016:
+    name: "Allow privilege escalation"
+    description: "Ensure that containers are not allowed to escalate privileges."
+    mandatory: true
+  C-0017:
+    name: "Immutable container filesystem"
+    description: "Ensure that containers have an immutable filesystem."
+    mandatory: true
+  C-0055:
+    name: "Linux hardening"
+    description: "Ensure that containers follow Linux hardening best practices."
+    mandatory: true
+  C-0041:
+    name: "HostNetwork access"
+    description: "Ensure that containers are not using the host network."
+    mandatory: true
+  C-0045:
+    name: "Writable hostPath mount"
+    description: "Ensure that containers are not mounting writable hostPath volumes."
+    mandatory: true
+  C-0048:
+    name: "HostPath mount"
+    description: "Ensure that containers are not mounting hostPath volumes."
+    mandatory: true
+  Critical-Ports:
+    name: "Critical Ports"
+    description: "Ensure that no containers are exposing critical ports."
+    mandatory: true
+    critical_ports:
+      - 22
+      - 23
+      - 25
+      - 53
+      - 67
+      - 68
+      - 69
+      - 110
+      - 143
+      - 161
+      - 162
+      - 389
+      - 636
+      - 993
+      - 995
+  No-Latest-Tag:
+    name: "No 'latest' tag"
+    description: "Ensure that no containers are using the 'latest' image tag."
+    mandatory: true
