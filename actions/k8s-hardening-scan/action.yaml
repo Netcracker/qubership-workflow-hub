@@ -1,0 +1,101 @@
+name: Kubernetes Hardening Scan
+description: Container Hardening Validation
+inputs:
+  namespaces:
+    type: string
+  output-file:
+    type: string
+    default: "results.json"
+  install-kubescape:
+    type: string
+    default: true
+  execute-kubescape-scan:
+    type: string
+    default: true
+  execute-trivy-scan:
+    type: string
+    default: false
+  fail-on-mandatory-checks:
+    type: string
+    default: false
+  config-file:
+    type: string
+    default: ".github/hardening-config.yaml"
+runs:
+  using: "composite"
+  steps:
+    - name: Install Kubescape
+      if: inputs.install-kubescape == 'true'
+      shell: bash
+      run: |
+        curl -s https://raw.githubusercontent.com/kubescape/kubescape/1d5520f7293f418dff829bfd7ed75b1f1867ea07/install.sh | /bin/bash
+
+    - name: Scan with Kubescape (NSA + MITRE + DevOpsBest)
+      if: inputs.execute-kubescape-scan == 'true'
+      shell: bash
+      run: |
+        export PATH=$PATH:/home/runner/.kubescape/bin
+        kubescape scan framework nsa,mitre,devopsbest \
+          --include-namespaces ${{ inputs.namespaces }} \
+          --scan-images \
+          --verbose \
+          --format json \
+          --output kubescape-${{ inputs.output-file }} \
+          --severity-threshold medium \
+          --compliance-threshold 50   # (0-100)
+      continue-on-error: true
+
+    - name: Generate markdown report
+      if: inputs.execute-kubescape-scan == 'true'
+      shell: bash
+      run: |
+        python3 ${GITHUB_ACTION_PATH}/report-generator.py -i kubescape-${{ inputs.output-file }} -o kubescape-report.md -c ${{ inputs.config-file }}
+        cat kubescape-report.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload json as artifact
+      if: inputs.execute-kubescape-scan == 'true'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        path: kubescape-${{ inputs.output-file }}
+        archive: false
+
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        path: temp/repocode
+        persist-credentials: false
+
+    - name: Install Trivy
+      if: inputs.execute-trivy-scan == 'true'
+      uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+
+    - name: Scan Helm chart with Trivy (misconfigurations + images)
+      if: inputs.execute-trivy-scan == 'true'
+      shell: bash
+      working-directory: temp/repocode
+      run: |
+        trivy config \
+          --exit-code 1 \
+          --format json \
+          --output trivy-${{ inputs.output-file }} \
+          .
+      continue-on-error: true
+
+    - name: Upload json as artifact
+      if: inputs.execute-trivy-scan == 'true'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        path: temp/repocode/trivy-${{ inputs.output-file }}
+        archive: false
+
+    - name: Fail on mandatory checks failure
+      if: inputs.fail-on-mandatory-checks == 'true'
+      shell: bash
+      run: |
+        if [ -f failed_mandatory_checks.json ]; then
+          echo "Mandatory checks failed. Failing the workflow."
+          cat failed_mandatory_checks.json
+          exit 1
+        else
+          echo "All mandatory checks passed."
+        fi
