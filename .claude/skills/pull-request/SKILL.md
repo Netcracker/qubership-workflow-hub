@@ -217,54 +217,7 @@ gh pr edit \
 
 After success, print the PR URL and what changed.
 
-### 10. Wait for checks and fix failures
-
-After creating or updating the PR, wait for all checks to complete:
-
-```bash
-gh pr checks <number> --watch --interval 10
-```
-
-When checks finish, get the full list of results:
-
-```bash
-gh pr checks <number>
-```
-
-For each **failed** check:
-
-- Get the run ID from the check URL and read the error log:
-
-  ```bash
-  gh run view <run-id> --log-failed
-  ```
-
-- Identify the check type from its name and apply the matching fix strategy:
-
-  - **Check name contains `MARKDOWN`** — read the markdownlint errors from the log.
-    Fix each violation using the rules in step 11. Common fixes: add blank lines around
-    fences and lists, add language identifiers to fenced blocks, fix ordered list prefixes.
-
-  - **Check name contains `ZIZMOR` or `GITHUB_ACTIONS_ZIZMOR`** — read the zizmor errors
-    from the log. Apply the fix logic from `.claude/skills/zizmor/SKILL.md` directly to
-    the affected workflow/action files. Each zizmor finding includes the file path, line
-    number, rule name, and a description — use this to locate and fix the exact violation.
-
-  - **Any other check** — read the error message carefully and fix the affected file
-    using judgment. The error always contains enough information to understand what to change.
-
-- After fixing all errors from all failed checks, stage and commit:
-
-  ```bash
-  git add <files> && git commit -m "fix(lint): fix linter errors" && git push
-  ```
-
-- Wait for checks again — repeat this step if any check still fails (max 3 iterations).
-
-- If after 3 iterations a check still fails → report to the user exactly which check failed,
-  the error details, and why it could not be fixed automatically.
-
-### 11. Markdown authoring rules
+### 10. Markdown authoring rules
 
 All `.md` files written or fixed by this skill must comply with the project markdownlint
 ruleset. Full rule definitions are in `.claude/skills/markdown/SKILL.md`.
@@ -280,12 +233,11 @@ Key rules to keep in mind:
 - Lines ≤ 120 characters — code blocks and tables are exempt (MD013)
 - No HTML tags except `<img>`, `<br>`, `<a>`, `<p>` (MD033)
 
-### 12. Report to user
+### 11. Report to user
 
 Print a short summary:
 
 - PR title used
 - PR URL
 - Whether it was created or updated
-- Check results (all green / what was fixed)
 - Any sections left blank and why
