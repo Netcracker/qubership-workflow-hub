@@ -27,6 +27,7 @@ Deprecation & evolution rules are defined in [Standards & Change Policy](standar
 | [docker-action](../actions/docker-action/README.md)                             | Build & push (multi-platform) Docker images                  |
 | [docker-config-resolver](../actions/docker-config-resolver/README.md)           | Load, validate, and normalize Docker component configuration |
 | [ghcr-discover-repo-packages](../actions/ghcr-discover-repo-packages/README.md) | Discover and list all GHCR packages for a repository         |
+| [k8s-hardening-scan](../actions/k8s-hardening-scan/README.md)                   | Validate container hardening compliance for Kubernetes deployments |
 | [maven-release](../actions/maven-release/README.md)                             | Run Maven release scripting (docs WIP)                       |
 | [maven-snapshot-deploy](../actions/maven-snapshot-deploy/README.md)             | Deploy Maven SNAPSHOT artifacts                              |
 | [metadata-action](../actions/metadata-action/README.md)                         | Produce version / tag metadata outputs                       |
