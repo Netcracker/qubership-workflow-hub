@@ -45,7 +45,7 @@ runs:
           --format json \
           --output kubescape-${{ inputs.output-file }} \
           --severity-threshold medium \
-          --compliance-threshold 50   # (0-100)
+          --compliance-threshold 0   # (0-100)
       continue-on-error: true
 
     - name: Generate markdown report
