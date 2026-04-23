@@ -52,7 +52,7 @@ runs:
       if: inputs.execute-kubescape-scan == 'true'
       shell: bash
       run: |
-        python3 ${GITHUB_ACTION_PATH}/report-generator.py -i kubescape-${{ inputs.output-file }} -o kubescape-report.md -c ${{ inputs.config-file }} -t ${{ inputs.report-title }}
+        python3 ${GITHUB_ACTION_PATH}/report-generator.py -i kubescape-${{ inputs.output-file }} -o kubescape-report.md -c "${{ inputs.config-file }}" -t "${{ inputs.report-title }}"
         cat kubescape-report.md >> $GITHUB_STEP_SUMMARY
 
     - name: Upload json as artifact
