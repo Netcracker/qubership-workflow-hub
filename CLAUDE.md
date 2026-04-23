@@ -157,7 +157,8 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 ## What NOT to do
 
-- Do not use `@main` in workflow examples or documentation — always use the latest release tag (check with `git tag --list 'v*' --sort=-version:refname | head -1`)
+- Do not use `@main` in workflow examples or documentation — always use the latest release tag
+  (check with `git tag --list 'v*' --sort=-version:refname | head -1`)
 - Do not add required inputs without treating it as a breaking change
 - Do not rename or remove existing inputs/outputs without a deprecation cycle
 - Do not commit `node_modules/`
