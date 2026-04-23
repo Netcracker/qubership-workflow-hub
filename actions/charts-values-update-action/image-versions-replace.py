@@ -84,7 +84,7 @@ def replace_tag_regexp(image_str, tag_re):
 
 def create_summary(images_versions):
     # Create a summary of the images versions
-    summary = "<details><summary>## Image Versions Updated</summary>\n\n"
+    summary = "<details><summary>Image Versions Updated</summary>\n\n"
     for image, image_version in images_versions.items():
         summary += f"- **{image}**: `{image_version}`\n"
     summary += "\n</details>"

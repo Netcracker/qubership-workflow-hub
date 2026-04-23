@@ -179,8 +179,9 @@ def generate_full_report(data, config, title="Kubescape Hardening Scan Report"):
     print(f"[DEBUG] Generating full report with title: {title}")
     timestamp = __import__('datetime').datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    report = f"""<details>
-    <summary>{title}</summary>
+    report = f"""### {title}
+    <details>
+    <summary>Summary</summary>
 
 **Generation date:** {timestamp}
 
