@@ -15,6 +15,7 @@ packages/         — Shared internal packages used by Node.js actions
   action-logger/  — Lightweight colored logger (@qubership/action-logger)
 .github/
   workflows/      — Reusable workflows (re-*.yml) + test workflows (test-*.yml)
+.qubership/       — Qubership-specific configuration files (docker.cfg, hardening rules, etc.)
 docs/
   reusable/       — Documentation for each reusable workflow
   *.md            — Repo-wide guides (standards, secrets, contributing)
@@ -43,11 +44,16 @@ Always rebuild and commit `dist/` after changing `src/`.
 
 ### Composite actions (`runs.using: composite`)
 
-No build step. Logic lives entirely in `action.yml` steps (shell, Python scripts, or calls
-to other actions).
+No build step. Logic lives entirely in `action.yml` (or `action.yaml`) steps — shell scripts,
+Python scripts, or calls to other actions. Some actions include additional files in their
+directory (e.g. `*.py`, `*.sh`, `*.yaml` config) that are referenced from steps.
 
 Actions: all others (tag-action, docker-action, branch-action, wait-for-workflow,
 smart-download, chart-version, charts-values-update-action, cdxgen, etc.)
+
+**Note:** 8 composite actions use the `.yaml` extension (`action.yaml`) instead of `.yml`.
+When writing glob patterns or searching for action definitions, match both:
+`actions/*/action.yml` and `actions/*/action.yaml`.
 
 ---
 
@@ -94,6 +100,9 @@ No repo-root build script — each action is built independently.
 
 When changing an action's inputs or outputs, **always update its README and the catalog**.
 
+When reading a composite action for doc generation, also read any co-located scripts
+(`*.py`, `*.sh`) — they contain logic not visible in `action.yml`/`action.yaml` alone.
+
 ---
 
 ## Shared package
@@ -122,7 +131,7 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 |---------|-------------|
 | `/doc-update <target> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync. |
 | `/sync-docs [N]` | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog. |
-| `/pull-request [update] [base-branch]` | Generate PR title and body following project conventions, then create or update the PR via `gh`. Auto-fixes MARKDOWN and ZIZMOR check failures. |
+| `/pull-request [update] [base-branch]` | Generate PR title and body following project conventions, then create or update the PR via `gh`. Runs pre-flight markdown and zizmor fixes before creating. |
 | `/zizmor [files...]` | Audit workflow and action yml files for security issues (zizmor ruleset) and fix violations. |
 | `/markdown [files...]` | Audit `.md` files for markdownlint violations (full 50-rule coverage) and fix them. |
 | `/preflight [base-branch]` | Run markdown and zizmor audits on all changed files, fix violations, commit fixes. |
