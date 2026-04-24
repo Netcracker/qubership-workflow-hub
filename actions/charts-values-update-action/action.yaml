@@ -145,7 +145,7 @@ runs:
         release_version: ${{ inputs.release-version }}
         chart_version: ${{ inputs.chart-version || inputs.release-version }}
       run: |
-        echo "## Release version ${release_version}" >> $GITHUB_STEP_SUMMARY
+        echo "### Chart and images versions updated" >> $GITHUB_STEP_SUMMARY
         echo "Chart version ${chart_version}" >> $GITHUB_STEP_SUMMARY
         if [[ -f summary.md ]]; then
           cat summary.md >> $GITHUB_STEP_SUMMARY

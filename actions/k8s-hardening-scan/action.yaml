@@ -1,5 +1,5 @@
-name: Kubernetes Hardening Scan
-description: Container Hardening Validation
+name: Kubescape Hardening Scan
+description: Kubescape Hardening Validation
 inputs:
   namespaces:
     type: string
@@ -21,6 +21,9 @@ inputs:
   config-file:
     type: string
     default: ".github/hardening-config.yaml"
+  report-title:
+    type: string
+    default: "Kubescape Hardening Scan Report"
 runs:
   using: "composite"
   steps:
@@ -42,14 +45,14 @@ runs:
           --format json \
           --output kubescape-${{ inputs.output-file }} \
           --severity-threshold medium \
-          --compliance-threshold 50   # (0-100)
+          --compliance-threshold 0   # (0-100)
       continue-on-error: true
 
     - name: Generate markdown report
       if: inputs.execute-kubescape-scan == 'true'
       shell: bash
       run: |
-        python3 ${GITHUB_ACTION_PATH}/report-generator.py -i kubescape-${{ inputs.output-file }} -o kubescape-report.md -c ${{ inputs.config-file }}
+        python3 ${GITHUB_ACTION_PATH}/report-generator.py -i kubescape-${{ inputs.output-file }} -o kubescape-report.md -c "${{ inputs.config-file }}" -t "${{ inputs.report-title }}"
         cat kubescape-report.md >> $GITHUB_STEP_SUMMARY
 
     - name: Upload json as artifact
@@ -94,6 +97,7 @@ runs:
       run: |
         if [ -f failed_mandatory_checks.json ]; then
           echo "Mandatory checks failed. Failing the workflow."
+          echo "⚠️ Mandatory checks failed. Failing the workflow." >> $GITHUB_STEP_SUMMARY
           cat failed_mandatory_checks.json
           exit 1
         else

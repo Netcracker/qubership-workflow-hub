@@ -119,6 +119,8 @@ def generate_markdown_tables(data, config):
         for control in controls:
             control_id = control.get('controlID', '')
             control_name = control.get('name', '')
+            if control_id in mandatory_checks:
+                control_name += " (⚠️  Mandatory)"
             rules = control.get('rules', [])
 
             # Each rule in a separate line.
@@ -177,7 +179,9 @@ def generate_full_report(data, config, title="Kubescape Hardening Scan Report"):
     print(f"[DEBUG] Generating full report with title: {title}")
     timestamp = __import__('datetime').datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    report = f"""# {title}
+    report = f"""### {title}
+<details>
+<summary>Summary</summary>
 
 **Generation date:** {timestamp}
 
@@ -200,6 +204,7 @@ def generate_full_report(data, config, title="Kubescape Hardening Scan Report"):
     report += "\n---\n"
     report_tables, failed_mandatory_checks_all = generate_markdown_tables(data, config)
     report += report_tables
+    report += "\n</details>"
 
     return report, failed_mandatory_checks_all
 
