@@ -120,7 +120,7 @@ This analysis is the basis for updating all documentation sections.
 | `## 📌 Outputs` | Generate from yml outputs | Regenerate from yml |
 | `## 📌 Secrets` | Generate from yml secrets (workflows) | Regenerate from yml |
 | `## How it works` | Describe what the action/workflow does from the caller's perspective — what it produces, what side-effects it has, what the outputs/payload look like. Do NOT narrate action.yml steps line by line. | Regenerate from current code |
-| `## Additional Information` | Generate detailed explanations for non-obvious inputs | Regenerate |
+| `## Additional Information` | Generate detailed explanations for non-obvious inputs. For inputs that accept structured data (JSON payloads, config objects) — always include a concrete example of the data structure and how it is consumed on the receiving end. | Regenerate |
 | `## Notes` | Generate key usage warnings and tips | Regenerate |
 | `## Troubleshooting` | Omit if no common issues known | Regenerate if exists |
 | `## Usage` / `## Usage Example` | Generate once with required inputs | Never overwrite structure, but always update the version pin (`@vX.Y.Z`) to `RELEASE_TAG` |
