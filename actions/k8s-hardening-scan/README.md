@@ -9,13 +9,12 @@ and uploads raw JSON results as workflow artifacts.
 
 ## Features
 
-- Installs Kubescape at a pinned SHA — no floating version risk
 - Scans all specified namespaces against NSA, MITRE, and DevOpsBest security frameworks
-- Applies a configurable severity threshold (medium) and a compliance threshold of 50%
 - Generates a per-Deployment markdown table with pass/fail status for each control
 - Checks for critical exposed ports and containers using the `latest` image tag
 - Marks configurable rules as mandatory; writes `failed_mandatory_checks.json` when any fail
 - Appends the full markdown report to the GitHub Actions step summary
+- Uploads Kubescape JSON results and (optionally) Trivy results as workflow artifacts
 - Optionally scans Helm chart misconfiguration with Trivy
 - Can gate the workflow — fails the job when mandatory checks are violated
 
@@ -23,15 +22,15 @@ and uploads raw JSON results as workflow artifacts.
 
 ## 📌 Inputs
 
-| Name | Description | Required | Default |
-|------|-------------|----------|---------|
-| `namespaces` | Comma-separated list of Kubernetes namespaces to include in the scan | No | - |
-| `output-file` | Base filename for JSON scan results (prefixed by tool name) | No | `results.json` |
-| `install-kubescape` | Install Kubescape before scanning. Set to `false` if already installed | No | `true` |
-| `execute-kubescape-scan` | Run the Kubescape scan step | No | `true` |
-| `execute-trivy-scan` | Run the Trivy Helm chart misconfiguration scan (requires repository checkout) | No | `false` |
-| `fail-on-mandatory-checks` | Fail the job if any mandatory hardening checks did not pass | No | `false` |
-| `config-file` | Path to the caller's hardening config YAML (overrides mandatory flags per rule) | No | `.github/hardening-config.yaml` |
+| Name                       | Description                                                                     | Required | Default                         |
+| -------------------------- | ------------------------------------------------------------------------------- | -------- | ------------------------------- |
+| `namespaces`               | Comma-separated list of Kubernetes namespaces to include in the scan            | No       | -                               |
+| `output-file`              | Base filename for JSON scan results (prefixed by tool name)                     | No       | `results.json`                  |
+| `install-kubescape`        | Install Kubescape before scanning. Set to `false` if already installed          | No       | `true`                          |
+| `execute-kubescape-scan`   | Run the Kubescape scan step                                                     | No       | `true`                          |
+| `execute-trivy-scan`       | Run the Trivy Helm chart misconfiguration scan (requires repository checkout)   | No       | `false`                         |
+| `fail-on-mandatory-checks` | Fail the job if any mandatory hardening checks did not pass                     | No       | `false`                         |
+| `config-file`              | Path to the caller's hardening config YAML (overrides mandatory flags per rule) | No       | `.github/hardening-config.yaml` |
 
 ---
 
@@ -39,35 +38,49 @@ and uploads raw JSON results as workflow artifacts.
 
 This action produces no step outputs. Results are communicated through:
 
-- GitHub Actions step summary (markdown report)
-- Uploaded artifacts (`kubescape-<output-file>`, `trivy-<output-file>`)
-- `failed_mandatory_checks.json` written to the workspace (when mandatory checks fail)
+| Output                          | Description                                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| GitHub Actions step summary     | Markdown report with a per-Deployment control table, appended to `$GITHUB_STEP_SUMMARY`       |
+| `kubescape-<output-file>`       | Workflow artifact containing the raw Kubescape JSON results                                    |
+| `trivy-<output-file>`           | Workflow artifact containing Trivy misconfiguration results (only when Trivy scan is enabled)  |
+| `failed_mandatory_checks.json`  | Written to the workspace when at least one mandatory check fails (used by gate step)           |
 
 ---
 
 ## How it works
 
-1. **Install Kubescape** — downloads and installs Kubescape from a pinned commit SHA via the
-   official install script (skipped when `install-kubescape` is `false`).
-1. **Kubescape scan** — runs `kubescape scan framework nsa,mitre,devopsbest` against the
-   specified namespaces with `--scan-images`, severity threshold `medium`, and compliance
-   threshold `50`. Output is saved as `kubescape-<output-file>`. Continues on error so
-   subsequent steps always run.
-1. **Generate markdown report** — `report-generator.py` reads the Kubescape JSON, loads the
-   hardening config, and generates a per-Deployment table showing pass/fail for each control.
-   The report is appended to `$GITHUB_STEP_SUMMARY`.
-1. **Upload Kubescape artifact** — uploads `kubescape-<output-file>` as a workflow artifact.
-1. **Checkout repository** — checks out the calling repository into `temp/repocode` (always
-   runs; required for the Trivy step).
-1. **Install Trivy** — installs Trivy via `aquasecurity/setup-trivy` (only when
-   `execute-trivy-scan` is `true`).
-1. **Trivy scan** — runs `trivy config` on the repository root to detect Helm chart
-   misconfigurations. Output is saved as `trivy-<output-file>`. Continues on error.
-1. **Upload Trivy artifact** — uploads `trivy-<output-file>` as a workflow artifact (only
-   when `execute-trivy-scan` is `true`).
-1. **Fail on mandatory checks** — if `fail-on-mandatory-checks` is `true` and
-   `failed_mandatory_checks.json` exists in the workspace, prints the failures and exits with
-   code `1`.
+The action scans live Kubernetes Deployments and produces a per-resource markdown report.
+For each Deployment found in the scanned namespaces the report contains a control table:
+
+```text
+## Resource: `default/Deployment/my-app`
+
+| ControlID        | Control name              | Status |
+|------------------|---------------------------|--------|
+| C-0013           | Non-root containers       | ✅     |
+| C-0016           | Allow privilege escalation| ❌     |
+| Critical-Ports   | Critical Ports            | ✅     |
+| Latest-Tag       | No images using 'latest'  | ✅     |
+
+**Total:** ✅ passed: 3, ❌ failed: 1
+**Failed mandatory checks:** C-0016
+```
+
+When mandatory checks fail, the action writes `failed_mandatory_checks.json` to the workspace:
+
+```json
+{
+  "default/Deployment/my-app": ["C-0016"],
+  "staging/Deployment/api-server": ["C-0048", "No-Latest-Tag"]
+}
+```
+
+If `fail-on-mandatory-checks` is `true` and this file exists, the action exits with code `1`,
+gating the workflow. The full report is always appended to the GitHub Actions step summary
+regardless of pass/fail outcome.
+
+When `execute-trivy-scan` is `true`, the action also checks out the repository and scans it
+with `trivy config` for Helm chart misconfigurations, uploading results as a separate artifact.
 
 ---
 
@@ -92,17 +105,17 @@ run, suppressing failures for that check even when `fail-on-mandatory-checks` is
 
 The following rules are mandatory by default (defined in the bundled `hardening-config.yaml`):
 
-| Rule ID | Name |
-|---------|------|
-| `C-0013` | Non-root containers |
-| `C-0016` | Allow privilege escalation |
-| `C-0017` | Immutable container filesystem |
-| `C-0055` | Linux hardening |
-| `C-0041` | HostNetwork access |
-| `C-0045` | Writable hostPath mount |
-| `C-0048` | HostPath mount |
+| Rule ID          | Name                                                                             |
+| ---------------- | -------------------------------------------------------------------------------- |
+| `C-0013`         | Non-root containers                                                              |
+| `C-0016`         | Allow privilege escalation                                                       |
+| `C-0017`         | Immutable container filesystem                                                   |
+| `C-0055`         | Linux hardening                                                                  |
+| `C-0041`         | HostNetwork access                                                               |
+| `C-0045`         | Writable hostPath mount                                                          |
+| `C-0048`         | HostPath mount                                                                   |
 | `Critical-Ports` | Critical ports (22, 23, 25, 53, 67–69, 110, 143, 161, 162, 389, 636, 993, 995) |
-| `No-Latest-Tag` | No `latest` image tag |
+| `No-Latest-Tag`  | No `latest` image tag                                                            |
 
 ### Trivy scan scope
 
@@ -153,11 +166,10 @@ jobs:
 
 - The action requires a Kubernetes cluster to be reachable from the runner (kubeconfig must be
   configured before calling this action).
-- Kubescape is installed at a pinned commit SHA (`1d5520f7`) — update the install step if a
-  newer version is required.
+- Kubescape is installed at a pinned commit SHA — update the install step if a newer version
+  is required.
 - `fail-on-mandatory-checks: 'true'` causes the job to fail only when `failed_mandatory_checks.json`
-  is present in the workspace, which is written by `report-generator.py` when at least one
-  mandatory check fails.
+  is present in the workspace, which is written when at least one mandatory check fails.
 - The Trivy scan checks out the repository into `temp/repocode`; ensure this path does not
   conflict with other steps.
 - All boolean inputs (`install-kubescape`, `execute-kubescape-scan`, `execute-trivy-scan`,
