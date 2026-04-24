@@ -119,7 +119,7 @@ This analysis is the basis for updating all documentation sections.
 | `## 📌 Inputs` | Generate from yml inputs | Regenerate from yml |
 | `## 📌 Outputs` | Generate from yml outputs | Regenerate from yml |
 | `## 📌 Secrets` | Generate from yml secrets (workflows) | Regenerate from yml |
-| `## How it works` | Generate from steps/jobs logic | Regenerate from current code |
+| `## How it works` | Describe what the action/workflow does from the caller's perspective — what it produces, what side-effects it has, what the outputs/payload look like. Do NOT narrate action.yml steps line by line. | Regenerate from current code |
 | `## Additional Information` | Generate detailed explanations for non-obvious inputs | Regenerate |
 | `## Notes` | Generate key usage warnings and tips | Regenerate |
 | `## Troubleshooting` | Omit if no common issues known | Regenerate if exists |
@@ -136,7 +136,10 @@ Generate the README with this structure (all sections separated by `---`):
 - `## Features` — bullet list of key capabilities
 - `## 📌 Inputs` — table with columns: Name, Description, Required, Default
 - `## 📌 Outputs` — table with columns: Name, Description
-- `## How it works` — numbered steps derived from action.yml steps and source code
+- `## How it works` — high-level description of what the action does from the caller's perspective:
+  what it produces (outputs, artifacts, events), what side-effects it has, what the output shape
+  looks like. Include a concrete example where helpful (e.g. payload structure, output value format).
+  Do NOT narrate action.yml steps line by line.
 - `## Additional Information` — subsections explaining non-obvious inputs or behaviours
 - `## Usage` — complete workflow YAML example (see format below)
 - `## Notes` — bullet list of key warnings and tips
@@ -176,7 +179,9 @@ Generate with this structure (no `---` separators for workflows):
 - `## Features` — bullet list of key capabilities
 - `## 📌 Inputs` — table with columns: Name, Description, Required, Default
 - `## 📌 Secrets` — table with columns: Name, Description, Required
-- `## How it works` — numbered steps
+- `## How it works` — high-level description of what the workflow does from the caller's perspective:
+  what it produces, what jobs run, what outputs or side-effects result. Include a concrete example
+  where helpful. Do NOT narrate yml jobs/steps line by line.
 - `## Additional Information` — subsections explaining non-obvious inputs
 - `## Usage Example` — fenced yaml block calling the workflow
 - `## Notes` — bullet list of key warnings

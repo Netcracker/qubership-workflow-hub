@@ -165,11 +165,11 @@ Fill each section as follows:
 
 | Section | How to fill |
 |---|---|
-| `## Summary` | 1–3 sentences: what changed and why. Be specific — name the action/workflow/file. |
+| `## Summary` | 1–3 sentences: what the action/workflow **does** at a high level — its purpose, not its implementation steps. For a new action: describe what it produces or triggers, what the key output/payload looks like, and how a caller would use it. Example: "Adds `custom-event` action that dispatches a `repository_dispatch` event to a target repo with a JSON payload. The payload shape is `{"ref": "main", "sha": "abc123"}` and can be read in the receiving workflow via `github.event.client_payload`." |
 | `## Issue` | `ISSUE_REF` value. If no issue found: explain that no linked issue was detected and the change is self-contained (or ask the user to add one). Remove the placeholder hint text. |
 | `## Breaking Change?` | Check the `- [ ] Yes` / `- [ ] No` checkbox that applies (replace `[ ]` with `[x]`). If Yes, add description below the checkboxes. Remove the placeholder hint text. |
 | `## Scope / Project` | The `scope` value determined in step 3. Remove the placeholder hint text. |
-| `## Implementation Notes` | Technical details, trade-offs, design decisions derived from the diff. If straightforward, write "No special implementation notes." — never leave the placeholder text. |
+| `## Implementation Notes` | Describe **what the action/workflow does** from the caller's perspective — not a list of internal steps. Include: (1) what it produces (outputs, artifacts, events, side-effects); (2) a minimal usage example showing required inputs and how to consume the output; (3) any non-obvious behaviour or constraints. Do NOT narrate the code line by line. Example for `custom-event`: "Sends a `repository_dispatch` event to the target repo. The receiving workflow reads the payload via `github.event.client_payload`. Requires `GITHUB_TOKEN` with `repo` scope on the target. Example: `event-type: deploy-staging`, `client-payload: '{"version":"1.2.3"}'`." If the change is docs-only, write "Documentation update only — no behaviour change." |
 | `## Tests / Evidence` | How the change was verified: existing tests cover it, manual run, no tests needed (docs-only), etc. Remove the placeholder hint text and bullet points that don't apply. |
 | `## Additional Notes` | Dependencies introduced, follow-up tasks, reviewer instructions. If none, write "None." — never leave the placeholder text. |
 
