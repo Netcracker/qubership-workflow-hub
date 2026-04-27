@@ -29,7 +29,7 @@ Always check that document before modifying or depending on a deprecated compone
 | [docker-config-resolver](../actions/docker-config-resolver/README.md)           | Load, validate, and normalize Docker component configuration |
 | [ghcr-discover-repo-packages](../actions/ghcr-discover-repo-packages/README.md) | Discover and list all GHCR packages for a repository         |
 | [k8s-hardening-scan](../actions/k8s-hardening-scan/README.md)                   | Validate container hardening compliance for Kubernetes deployments |
-| [maven-release](../actions/maven-release/README.md)                             | Run Maven release scripting (docs WIP)                       |
+| [maven-release](../actions/maven-release/README.md)                             | Build and release a Maven artifact with version bumping and GPG signing |
 | [maven-snapshot-deploy](../actions/maven-snapshot-deploy/README.md)             | Deploy Maven SNAPSHOT artifacts                              |
 | [metadata-action](../actions/metadata-action/README.md)                         | Produce version / tag metadata outputs                       |
 | [poetry-publisher](../actions/poetry-publisher/README.md)                       | Build, test & publish Poetry-based Python package            |
