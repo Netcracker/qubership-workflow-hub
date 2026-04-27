@@ -11,8 +11,7 @@ preparation and perform, and optional post-release dependency snapshot bumping.
 - Validates `version-type` (`major`, `minor`, `patch`) and required inputs before proceeding
 - Validates Maven `groupId` across all `pom.xml` files against a forbidden-groupId policy
   (`org.qubership`, `com.netcracker` exact matches are blocked)
-- Bumps the project version automatically based on `version-type` and runs `mvn release:prepare`
-  + `mvn release:perform`
+- Bumps the project version automatically based on `version-type` and runs `mvn release:prepare` + `mvn release:perform`
 - Supports **dry-run** mode: builds and deploys the current SNAPSHOT version without tagging or
   pushing any changes
 - Signs artifacts via GPG using `actions/setup-java` key import
