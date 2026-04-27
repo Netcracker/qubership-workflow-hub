@@ -219,19 +219,9 @@ After success, print the PR URL and what changed.
 
 ### 10. Markdown authoring rules
 
-All `.md` files written or fixed by this skill must comply with the project markdownlint
-ruleset. Full rule definitions are in `.claude/skills/markdown/SKILL.md`.
-
-Key rules to keep in mind:
-
-- Blank line before and after every heading, fenced block, and list (MD022, MD031, MD032)
-- Every fenced block must have a language identifier — use `text` for plain content (MD040)
-- Fenced blocks only — no 4-space indented blocks, no tilde fences (MD046, MD048)
-- All ordered list items use `1.` — never `2.`, `3.`, etc. (MD029)
-- No spaces inside backtick code spans (MD038)
-- Table rows must have the same column count as the header (MD056)
-- Lines ≤ 120 characters — code blocks and tables are exempt (MD013)
-- No HTML tags except `<img>`, `<br>`, `<a>`, `<p>` (MD033)
+All `.md` files written or fixed by this skill must comply with the project markdownlint ruleset.
+Apply the full audit logic from `.claude/skills/markdown/SKILL.md` (step 3 — all rules) to any
+`.md` file before writing it. Fix all violations in-memory before calling the Write tool.
 
 ### 11. Report to user
 

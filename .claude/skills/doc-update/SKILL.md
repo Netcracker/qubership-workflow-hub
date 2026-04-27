@@ -228,41 +228,16 @@ After updating/creating the doc, open `docs/actions-workflows-catalog.md` and:
 
 If a new action was added, check `CLAUDE.md` for any hardcoded action count (e.g. "22 individual GitHub Actions") and update the number.
 
-### 14. Markdown authoring rules
+### 14. Markdown compliance
 
-All generated `.md` files must comply with the project markdownlint ruleset.
-Full rule definitions are in `.claude/skills/markdown/SKILL.md`.
+Before writing any generated or updated `.md` file, apply the full audit logic from
+`.claude/skills/markdown/SKILL.md` (step 3 — all 50 rules) to the generated content in-memory.
+Fix every violation found before calling the Write tool.
 
-Key rules to keep in mind while generating content:
+The markdown skill's step 5 ("Self-check before writing") describes exactly this flow —
+follow it for every file this skill produces.
 
-- Blank line before and after every heading, fenced block, and list (MD022, MD031, MD032)
-- Every fenced block must have a language identifier — use `text` for plain content (MD040)
-- Fenced blocks only — no 4-space indented blocks, no tilde fences (MD046, MD048)
-- All ordered list items use `1.` — never `2.`, `3.`, etc. (MD029)
-- No spaces inside backtick code spans (MD038)
-- Table rows must have the same column count as the header (MD056)
-- Lines ≤ 120 characters — code blocks and tables are exempt (MD013)
-- No HTML tags except `<img>`, `<br>`, `<a>`, `<p>` (MD033)
-- No nested fenced blocks — show inner examples as separate standalone blocks (MD048)
-
-### 15. Self-check before writing the file
-
-Before calling the Write tool on any generated `.md` content, scan the content and verify every item below.
-Fix any violation found before writing — do not write a file that fails this checklist.
-
-- Every fenced code block opens with a language identifier (` ```bash `, ` ```yaml `, ` ```text `, etc.)
-- Every fenced code block has a blank line immediately before the opening ` ``` ` and after the closing ` ``` `
-- Every bullet or numbered list has a blank line immediately before the first item and after the last item
-- No 4-space indented code blocks exist anywhere in the content
-- No tilde fences (`~~~`) exist anywhere in the content
-- No nested fenced blocks (` ``` ` inside ` ``` `) — rewrite as separate sections if needed
-- Every heading has a blank line before and after it
-- All ordered list items use `1.` as the prefix
-- No spaces inside backtick code spans (e.g. `` `value ` `` is wrong, `` `value` `` is correct)
-- All table rows have the same number of cells as the header row
-- No line exceeds 120 characters (code blocks and table rows are exempt)
-
-### 16. Report to user
+### 15. Report to user
 
 After all changes, print a short summary:
 
