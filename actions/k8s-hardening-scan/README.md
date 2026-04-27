@@ -170,7 +170,7 @@ jobs:
   is required.
 - `fail-on-mandatory-checks: 'true'` causes the job to fail only when `failed_mandatory_checks.json`
   is present in the workspace, which is written when at least one mandatory check fails.
- - The Trivy scan checks out the repository into `temp/repocode`; ensure this path does not
+- The Trivy scan checks out the repository into `temp/repocode`; ensure this path does not
   conflict with other steps.
 - All boolean inputs (`install-kubescape`, `execute-kubescape-scan`, `execute-trivy-scan`,
   `fail-on-mandatory-checks`) must be passed as strings (`'true'` / `'false'`), not YAML booleans.
