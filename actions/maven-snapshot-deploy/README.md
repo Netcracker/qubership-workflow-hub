@@ -1,83 +1,121 @@
-# Maven Snapshot Deploy Action
+# 🚀 Maven Snapshot Deploy
 
-This GitHub Action builds and deploys a Maven project to either Maven Central or GitHub Packages. It checks if the version is a `SNAPSHOT` version and deploys accordingly. If the version is not a `SNAPSHOT`, it runs the `mvn install` command instead.
+Builds and deploys a Maven project to either Maven Central or GitHub Packages. Automatically
+detects whether the project version is a SNAPSHOT and deploys accordingly — if the version has
+no `-SNAPSHOT` suffix, the action falls back to `mvn install` instead of deploying.
 
-## Inputs
+---
 
-### `java-version`
+## Features
 
-**Optional**
-The JDK version to use. Defaults to `21`.
+- Detects SNAPSHOT versions in `pom.xml` using `xmlstarlet` — supports both direct
+  `<version>` and property-based `${revision}` patterns
+- Configures Maven authentication and GPG signing automatically for Central or GitHub Packages
+- Optionally pins a specific Maven version via `stCarolas/setup-maven`
+- Caches the local Maven repository (`~/.m2/repository`) to speed up subsequent runs
+- Auto-injects a `github` server entry into `~/.m2/settings.xml` when deploying to GitHub Packages
+- Activates a named Maven profile (`-P<target-store>`) when it exists in `pom.xml`
+- Supports non-root `pom.xml` paths and sub-directory working directories
+- Optionally uploads compiled output (`**/target`) as a GitHub Actions artifact
+- Surfaces key build decisions and version check results in the workflow step summary
 
-### `maven-version`
+---
 
-**Optional**
-The maven version to use. GitHub runner default maven will be used.
+## 📌 Inputs
 
-### `target-store`
+| Name | Description | Required | Default |
+| --- | --- | --- | --- |
+| `java-version` | JDK version to use (e.g. `21`). | No | `21` |
+| `maven-version` | Maven version to install. When empty, the runner's pre-installed Maven is used. | No | - |
+| `target-store` | Target registry for deployment. Use `central` for Maven Central or `github` for GitHub Packages. | No | `central` |
+| `maven-command` | Maven lifecycle command to execute. Defaults to `deploy` (SNAPSHOT versions) or `install` (non-SNAPSHOT). | No | `deploy` |
+| `additional-mvn-args` | Extra Maven command-line arguments appended to the final `mvn` invocation (e.g. `-Dskip.tests=true`). | No | - |
+| `working-directory` | Directory to run Maven commands from. Useful when the repository contains multiple independent `pom.xml` files. | No | - |
+| `pom-file` | Path to the `pom.xml` file, relative to `working-directory`. | No | `pom.xml` |
+| `upload-artifact` | Set to `true` to upload the `**/target` directory tree as a GitHub Actions artifact after the build. | No | `false` |
+| `artifact-id` | Name for the uploaded artifact. Applies only when `upload-artifact` is `true`. | No | `maven-snapshot-deploy-artifact` |
+| `maven-username` | Username for Maven registry authentication. | No | - |
+| `maven-token` | Token or password for Maven registry authentication. | Yes | - |
+| `gpg-private-key` | Armored GPG private key used to sign artifacts before deployment. | No | - |
+| `gpg-passphrase` | Passphrase for the GPG private key. | No | - |
+| `sonar-token` | SonarQube/SonarCloud token, passed as `SONAR_TOKEN` to the Maven process. | No | - |
 
-**Optional**
-The target store for the artifact. Can be `central` or `github`. Defaults to `central`.
+---
 
-### `maven-command`
+## How it works
 
-**Optional**
-Maven command to execute (default is 'deploy' for SNAPSHOT versions, 'install' otherwise).
+The action resolves the effective Maven command before running the build:
 
+1. **SNAPSHOT check** — when `maven-command` is `deploy`, the action reads `pom.xml` with
+   `xmlstarlet` to determine whether the project version (or `${revision}` property) ends in
+   `-SNAPSHOT`. If it does not, the command is automatically downgraded to `install` so no
+   artifact is published from a release-tagged build.
 
-### `additional-mvn-args`
+1. **Profile activation** — the action checks whether a Maven profile named after `target-store`
+   exists in `pom.xml`. When found, it adds `-P<target-store>` to the Maven invocation, enabling
+   repository-specific configuration (distribution management, plugins, etc.).
 
-**Optional**
-Additional Maven command-line parameters (e.g., `-Dskip.tests=true`). Defaults to an empty string.
+1. **JDK and credentials setup** — for `deploy` commands, `actions/setup-java` configures the
+   Maven `server-id` matching `target-store` and wires in `MAVEN_USERNAME` / `MAVEN_PASSWORD`
+   environment variables, plus GPG signing if keys are provided. For non-deploy commands, a plain
+   JDK is set up without credential injection.
 
-### `working-directory`
+1. **GitHub Packages server** — the action automatically adds a `github` server block to
+   `~/.m2/settings.xml` (using `GITHUB_ACTOR` and `GITHUB_TOKEN`) when it is not already present,
+   ensuring GitHub Packages dependencies and deployments always resolve correctly.
 
-**Optional**
-Working directory for the action. It is usefull when there are several independant pom.xml files in the repository.
-Default is `.`.
+1. **Maven execution** — the final command takes the form:
 
-### `pom-file`
+   ```text
+   mvn --batch-mode <command> [<-Pprofile>] [<additional-args>] [-f <pom-file>]
+   ```
 
-**Optional**
-Path and name of pom.xml file. Path to file must be relative to `working-directory`.
-Default is `pom.xml`
+1. **Artifact upload** — when `upload-artifact` is `true`, all `**/target` directories are
+   uploaded under the name given by `artifact-id`.
 
-### `upload-artifact`
+---
 
-**Optional**
-Upload `**/target` as an artifact to the workflow artifacts. Defaults to `'false'`.
+## Additional Information
 
-### `artifact-id`
+### `target-store` values
 
-**Optional**
-Artifact ID. Defaults to `maven-snapshot-deploy-artifact`.
+| Value | Registry |
+| --- | --- |
+| `central` | Maven Central (via Central Publishing Maven Plugin) |
+| `github` | GitHub Packages (uses `GITHUB_ACTOR` / `GITHUB_TOKEN`) |
 
-### `maven-username`
+The value must match a `<profile><id>` in your `pom.xml` for profile activation to take effect.
+See the [pom.xml configuration guide](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-pom-preparation_doc.md)
+for the required structure.
 
-**Optional**
-The username for Maven authentication.
+### `maven-command` and SNAPSHOT detection
 
-### `maven-token`
+When `maven-command` is `deploy`:
 
-**Required**
-The token for Maven authentication.
+- The action parses `pom.xml` to find the effective version (direct `<version>` or
+  `<properties><revision>` when the version contains `${revision}`).
+- If the version does **not** contain `-SNAPSHOT`, the command is replaced with `install` and
+  nothing is deployed. This prevents accidentally publishing a release build as a snapshot.
 
-### `gpg-private-key`
+When `maven-command` is anything other than `deploy` (e.g. `clean verify`), the SNAPSHOT check
+is skipped and the command is passed through as-is.
 
-**Optional**
-The GPG private key for signing artifacts.
+### GPG signing
 
-### `gpg-passphrase`
+Provide `gpg-private-key` and `gpg-passphrase` to enable artifact signing. These are forwarded
+to `actions/setup-java`, which imports the key and configures Maven to use it automatically.
+For Netcracker repositories both secrets are available at org level as `MAVEN_GPG_PRIVATE_KEY`
+and `MAVEN_GPG_PASSPHRASE`.
 
-**Optional**
-The passphrase for the GPG private key.
+### `working-directory` and `pom-file`
 
-### `sonar-token`
+Use `working-directory` when your repository root is not the Maven project root. The `pom-file`
+path is relative to `working-directory`. The action validates that the file exists before
+proceeding and exits with an error if it is not found.
 
-**Optional**
-Sonar token. Default to `''`
+---
 
-## Example Usage
+## Usage
 
 ```yaml
 name: Deploy Snapshot
@@ -86,51 +124,56 @@ on:
   push:
     branches:
       - develop
-permissions:
-  packages: write # Required for GitHub packages deployment. For maven central deployment it can be omitted
-  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Code quality/security scan on SonarQube
-        uses: netcracker/qubership-workflow-hub/actions/maven-snapshot-deploy@main
+      - name: Code quality scan on SonarQube
+        uses: netcracker/qubership-workflow-hub/actions/maven-snapshot-deploy@v2.2.1
         with:
           java-version: '17'
           target-store: 'github'
           maven-command: 'clean verify'
-          additional-mvn-args: 'org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar -Dsonar.projectKey=Netcracker_qubership -Dsonar.organization=netcracker -Dsonar.host.url=https://sonarcloud.io'
-          maven-username: ${{ github.actor }} # For maven central repository it would be ${{ secrets.MAVEN_USER }}. Already set for Netcracker.
-          maven-token: ${{ github.token }} # For maven central repository it would be ${{ secrets.MAVEN_PASSWORD}}. Already set for Netcracker.
-          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Organization level secret. Already set for Netcracker.
-          gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }} # Organization level secret. Already set for Netcracker.
-          sonar-token: ${{ secrets.SONAR_TOKEN }} # Organization level secret. Already set for Netcracker.
+          additional-mvn-args: >-
+            org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
+            -Dsonar.projectKey=Netcracker_qubership
+            -Dsonar.organization=netcracker
+            -Dsonar.host.url=https://sonarcloud.io
+          maven-username: ${{ github.actor }}
+          maven-token: ${{ github.token }}
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          sonar-token: ${{ secrets.SONAR_TOKEN }}
 
       - name: Deploy Maven Snapshot
-        uses: netcracker/qubership-workflow-hub/actions/maven-snapshot-deploy@main
+        uses: netcracker/qubership-workflow-hub/actions/maven-snapshot-deploy@v2.2.1
         with:
           java-version: '17'
           target-store: 'github'
           maven-command: 'deploy'
           additional-mvn-args: '-Dskip.tests=true'
-          maven-username: ${{ github.actor }} # For maven central repository it would be ${{ secrets.MAVEN_USER }}. Already set for Netcracker.
-          maven-token: ${{ github.token }} # For maven central repository it would be ${{ secrets.MAVEN_PASSWORD}}. Already set for Netcracker.
-          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Organization level secret. Already set for Netcracker.
-          gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }} # Organization level secret. Already set for Netcracker.
+          maven-username: ${{ github.actor }}
+          maven-token: ${{ github.token }}
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 ```
 
-## How It Works
-
-1. **Check Version**: The action checks if the version in `pom.xml` contains `-SNAPSHOT`. If it does, the artifact is deployed. Otherwise, the `mvn install` command is executed.
-2. **Setup JDK**: The specified JDK version is set up using `actions/setup-java`.
-3. **Deploy Artifacts**: The action deploys the artifact to the specified target store (`central` or `github`).
-4. **GPG Signing**: If a GPG private key and passphrase are provided, the artifacts are signed before deployment.
+---
 
 ## Notes
 
-- Ensure that the `pom.xml` file is correctly configured for deployment. [How to configure pom.xml](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-pom-preparation_doc.md)
-- Secrets to use to publish to Maven Central can be found there [Organization level secrets](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-secrets_doc.md)
-- For deploying to GitHub Packages, additional setup is performed to disable the `central-publishing-maven-plugin` and set an alternative deployment repository.
+- `packages: write` permission is required for GitHub Packages deployment; it can be omitted
+  for Maven Central deployments.
+- Ensure `pom.xml` contains a `<profile>` whose `<id>` matches `target-store` for profile
+  activation to work. See the
+  [pom.xml configuration guide](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-pom-preparation_doc.md).
+- Organization-level secrets for Maven Central are documented in the
+  [secrets guide](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-secrets_doc.md).
+- The `upload-artifact` input is a `string`, not a boolean — pass `'true'` (quoted) to enable it.
+- Always pin to `@v2.2.1` or a specific SHA — never `@main` in production.
