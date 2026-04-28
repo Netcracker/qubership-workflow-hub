@@ -63,7 +63,7 @@ git diff $BASE..HEAD
 
 If `COMMITS` is empty — inform the user that there are no commits ahead of `$BASE` and stop.
 
-### 2.5. Pre-flight audit
+### 2.5. Lint audit
 
 Before generating the PR, apply the full lint skill logic from
 `.claude/skills/lint/SKILL.md` using `BASE` as the base branch.
