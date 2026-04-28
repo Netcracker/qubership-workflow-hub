@@ -63,7 +63,7 @@ git diff $BASE..HEAD
 
 If `COMMITS` is empty — inform the user that there are no commits ahead of `$BASE` and stop.
 
-### 2.5. Lint audit
+### 3. Lint audit
 
 Before generating the PR, apply the full lint skill logic from
 `.claude/skills/lint/SKILL.md` using `BASE` as the base branch.
@@ -71,7 +71,7 @@ Before generating the PR, apply the full lint skill logic from
 This audits all changed `.md` and workflow/action `.yml` files, fixes violations
 in-place, and commits the fixes. If nothing needs fixing the step completes silently.
 
-### 3. Determine scope
+### 4. Determine scope
 
 From `CHANGED_FILES`, identify the primary scope:
 
@@ -82,7 +82,7 @@ From `CHANGED_FILES`, identify the primary scope:
 - If changes span multiple top-level areas → pick the most significant one (where most files changed), or use the most specific common ancestor path
 - If only root-level config files changed → scope = repo root (omit scope from title)
 
-### 4. Determine type
+### 5. Determine type
 
 Analyse commit messages and `FULL_DIFF` to pick the single best type:
 
@@ -100,7 +100,7 @@ Analyse commit messages and `FULL_DIFF` to pick the single best type:
 | `deprecate` | Marking something as deprecated |
 | `revert` | Reverting a previous commit |
 
-### 5. Detect issue references
+### 6. Detect issue references
 
 Search commit messages for patterns:
 
@@ -108,7 +108,7 @@ Search commit messages for patterns:
 - If found → `ISSUE_REF` = the full reference (e.g. `Fixes #342`)
 - If not found → `ISSUE_REF` = `<!-- No issue linked — add Fixes #NNN or explain why -->`
 
-### 6. Detect breaking changes
+### 7. Detect breaking changes
 
 A change is breaking if any of these are true:
 
@@ -119,7 +119,7 @@ A change is breaking if any of these are true:
 
 Set `BREAKING` = `Yes` or `No` accordingly. If `Yes`, describe the impact.
 
-### 7. Generate PR title
+### 8. Generate PR title
 
 Compose: `<type>(<scope>): <imperative statement>`
 
@@ -133,7 +133,7 @@ Rules:
 
 Example: `docs(actions/chart-version): sync README with current action.yml inputs`
 
-### 8. Generate PR body
+### 9. Generate PR body
 
 Read `.github/pull_request_template.md` — this is the authoritative template. Use its exact section headings and structure as the skeleton for the body. Do not add, remove, or rename sections.
 
@@ -151,7 +151,7 @@ Fill each section as follows:
 
 Do not leave any placeholder or instructional text from the template in the output — replace every hint with real content.
 
-### 9. Execute
+### 10. Execute
 
 **If `MODE` = `create`:**
 
@@ -193,13 +193,13 @@ gh pr edit \
 
 After success, print the PR URL and what changed.
 
-### 10. Markdown authoring rules
+### 11. Markdown authoring rules
 
 All `.md` files written or fixed by this skill must comply with the project markdownlint ruleset.
 Apply the full audit logic from `.claude/skills/markdown/SKILL.md` (step 3 — all rules) to any
 `.md` file before writing it. Fix all violations in-memory before calling the Write tool.
 
-### 11. Report to user
+### 12. Report to user
 
 Print a short summary:
 
