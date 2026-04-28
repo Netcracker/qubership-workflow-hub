@@ -1,5 +1,5 @@
 ---
-name: markdown
+name: md-lint
 description: Audit markdown files for markdownlint violations and fix them, or validate generated content before writing
 arguments: [files]
 ---

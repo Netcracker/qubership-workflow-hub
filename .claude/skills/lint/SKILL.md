@@ -44,7 +44,7 @@ to `$BASE` and stop.
 
 If any `.md` files are in `CHANGED_FILES`:
 
-Apply the full audit logic from `.claude/skills/markdown/SKILL.md` to those files.
+Apply the full audit logic from `.claude/skills/md-lint/SKILL.md` to those files.
 Fix all violations in-place, then stage the fixes:
 
 ```bash

@@ -38,7 +38,7 @@ If `$files` is provided → use that list.
 Otherwise run:
 
 ```bash
-git diff main..HEAD --name-only | grep -E '\.(yml|yaml)$' | grep -E '(\.github/workflows/|actions/[^/]+/action\.yml)'
+git diff main..HEAD --name-only | grep -E '\.(yml|yaml)$' | grep -E '(\.github/workflows/|actions/[^/]+/action\.(yml|yaml))'
 ```
 
 If no yml files changed — report "No workflow or action files changed" and stop.
@@ -84,6 +84,8 @@ into `run:` scripts or `actions/github-script` code.
 - `github.event.discussion.title`
 - `github.event.discussion.body`
 - `github.head_ref`
+- `github.event.workflow_run.head_branch`
+- `github.event.workflow_run.head_commit.message`
 
 **Flag if** any of these appear inside `${{ ... }}` within a `run:` block or
 `actions/github-script` `script:` input.
@@ -234,6 +236,241 @@ string that looks like a credential (not a `${{ secrets.* }}` reference).
 ```yaml
 password: ${{ secrets.REGISTRY_PASSWORD }}
 ```
+
+#### Rule: archived-uses
+
+**What it detects:** `uses:` references pointing to archived GitHub repositories that are
+no longer maintained.
+
+**Flag if:** any `uses:` clause references a repository that is archived on GitHub.
+
+**Fix:** Replace with an actively maintained alternative, or vendor the action locally.
+Cannot be auto-fixed — report to user with repository URL to verify manually.
+
+#### Rule: bot-conditions
+
+**What it detects:** Conditions that check `github.actor` to detect bots — these can be
+spoofed by creating an account with a bot-like username.
+
+**Flag if:** any `if:` condition checks `github.actor == 'dependabot[bot]'` or similar
+pattern using string comparison against `github.actor`.
+
+**Fix:** Use `github.actor_id` instead of `github.actor` for bot detection, or use
+`github.event.sender.type == 'Bot'`.
+
+#### Rule: cache-poisoning
+
+**What it detects:** Cache restore steps in release workflows where cache keys can be
+influenced by untrusted input, allowing an attacker to poison the build cache.
+
+**Flag if:** a release workflow (triggered by `push` to default branch, `release`, or
+`workflow_dispatch`) uses `actions/cache` or similar with a cache key derived from
+untrusted input (e.g. PR title, branch name from event).
+
+**Fix:** Use only trusted, deterministic cache keys in release contexts (e.g. hash of
+lock files). Never derive cache keys from user-controlled event inputs.
+
+#### Rule: concurrency-limits
+
+**What it detects:** Workflows without concurrency limits that could lead to race
+conditions or resource exhaustion.
+
+**Flag if:** a workflow triggered by `push` or `pull_request` does not define a
+`concurrency:` block.
+
+**Fix:** Add a concurrency group to cancel in-progress runs:
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+#### Rule: github-app
+
+**What it detects:** Dangerous usage of GitHub App installation tokens — e.g. tokens
+generated and then passed to untrusted code or logged.
+
+**Flag if:** a step generates a GitHub App token (via `actions/create-github-app-token`
+or similar) and the token is then passed to a `run:` step using `${{ steps.*.outputs.token }}`
+directly in shell interpolation rather than via an env var.
+
+**Fix:** Always pass tokens through environment variables, never interpolate directly:
+
+```yaml
+env:
+  APP_TOKEN: ${{ steps.generate-token.outputs.token }}
+run: |
+  gh api ... --header "Authorization: Bearer $APP_TOKEN"
+```
+
+#### Rule: impostor-commit
+
+**What it detects:** `uses:` SHA pins that do not correspond to any commit in the
+referenced repository — possible sign of a supply chain attack or typosquatting.
+
+**Flag if:** a SHA-pinned `uses:` clause references a commit SHA that cannot be verified
+in the upstream repository.
+
+**Fix:** Cannot be auto-fixed — report to user. Verify the SHA matches a real commit in
+the action's repository via `gh api repos/<owner>/<repo>/commits/<sha>`.
+
+#### Rule: known-vulnerable-actions
+
+**What it detects:** `uses:` references to action versions with known, publicly disclosed
+vulnerabilities (CVEs or GitHub Security Advisories).
+
+**Flag if:** any `uses:` clause references an action at a version known to be vulnerable.
+
+**Fix:** Upgrade to a patched version. Cannot be auto-fixed without knowing the safe
+version — report the action name and current version to the user.
+
+#### Rule: misfeature
+
+**What it detects:** Usage of GitHub Actions features considered problematic or unsafe:
+
+- `actions/github-script` with untrusted input in `script:`
+- `workflow_dispatch` inputs used unsafely
+- `continue-on-error: true` in security-sensitive steps
+
+**Flag if:** any of the above patterns appear.
+
+**Fix:** Remove or restrict the problematic feature usage. Apply judgment based on context.
+
+#### Rule: obfuscation
+
+**What it detects:** Obfuscated content in workflow files — base64-encoded payloads in
+`run:` blocks, eval of encoded strings, or unusual Unicode in identifiers.
+
+**Flag if:** a `run:` step contains `base64 -d`, `eval`, or piped decode patterns that
+obscure what code is being executed.
+
+**Fix:** Cannot be auto-fixed — report to user. Obfuscated steps must be reviewed manually.
+
+#### Rule: ref-confusion
+
+**What it detects:** Actions pinned to symbolic refs (branches or tags) that could be
+confused with each other — e.g. a branch named the same as a tag.
+
+**Flag if:** `uses:` references a ref that exists as both a branch and a tag in the
+upstream repository, creating ambiguity about which is resolved.
+
+**Fix:** Pin to a full SHA to eliminate ref ambiguity.
+
+#### Rule: ref-version-mismatch
+
+**What it detects:** SHA-pinned `uses:` where the version comment does not match the
+actual tag that SHA points to.
+
+**Flag if:** `uses: owner/repo@<sha> # v1.0.0` but the SHA actually corresponds to a
+different tag (e.g. `v1.0.1`).
+
+**Fix:** Update the version comment to match the actual tag for the SHA:
+
+```bash
+gh api repos/<owner>/<repo>/git/tags/<sha> --jq '.tag'
+```
+
+#### Rule: secrets-outside-env
+
+**What it detects:** Use of the `secrets` context in jobs that do not run in a dedicated
+GitHub environment — secrets should be scoped to environments with protection rules.
+
+**Flag if:** a job uses `${{ secrets.* }}` but does not define `environment:`.
+
+**Fix:** Add an `environment:` block to the job to scope secret access, or document why
+environment protection is not needed.
+
+#### Rule: superfluous-actions
+
+**What it detects:** Actions that duplicate functionality already provided natively by
+the GitHub Actions runner (e.g. using `actions/setup-node` when the runner already has
+the required Node version).
+
+**Flag if:** a `uses:` step calls an action whose functionality is already available in
+the runner image being used.
+
+**Fix:** Remove the superfluous action step. Cannot always be auto-fixed — report to user
+with explanation of what the runner already provides.
+
+#### Rule: unpinned-images
+
+**What it detects:** Container image references in `container:` or `services:` blocks
+that are not pinned to an immutable digest.
+
+**Flag if:** `container.image` or `services.*.image` uses a mutable tag (e.g. `ubuntu:latest`,
+`postgres:15`) instead of a SHA256 digest.
+
+**Fix:** Pin the image to a specific digest:
+
+```yaml
+container:
+  image: ubuntu@sha256:<digest>
+```
+
+#### Rule: unpinned-tools
+
+**What it detects:** Steps where referenced actions may download and execute unpinned
+external tools at runtime (e.g. `curl | bash`, `pip install` without version pin).
+
+**Flag if:** a `run:` step downloads and executes tools without version pinning:
+
+- `curl ... | bash` or `curl ... | sh`
+- `pip install <package>` without `==version`
+- `npm install -g <package>` without `@version`
+
+**Fix:** Pin tool versions explicitly or use a SHA-verified download.
+
+#### Rule: unredacted-secrets
+
+**What it detects:** Potential secret leakage through redaction failures — e.g. secrets
+split across multiple lines, transformed before use, or concatenated in ways that bypass
+GitHub's automatic redaction.
+
+**Flag if:** a `run:` step manipulates a secret value (substring, concatenation, encoding)
+before using it, which could bypass redaction.
+
+**Fix:** Avoid transforming secret values in shell. If transformation is needed, ensure
+the result is also masked using `::add-mask::`.
+
+#### Rule: unsound-condition
+
+**What it detects:** `if:` conditions that are inadvertently always `true` due to
+YAML/expression parsing quirks — e.g. comparing a string to a non-empty object.
+
+**Flag if:** an `if:` expression compares `github.event_name` or similar to a value using
+`==` where the comparison will always evaluate to `true` due to type coercion.
+
+**Fix:** Rewrite the condition to use explicit string comparison and test both branches.
+
+#### Rule: unsound-contains
+
+**What it detects:** Usage of the `contains()` function in conditions that can be bypassed
+by an attacker controlling the input — e.g. `contains(github.event.label.name, 'safe')`.
+
+**Flag if:** `contains()` is used with attacker-controlled input as the haystack in a
+security-sensitive condition (e.g. gating privileged steps).
+
+**Fix:** Use exact equality (`==`) instead of `contains()` for security-sensitive checks,
+or validate the full value.
+
+#### Rule: use-trusted-publishing
+
+**What it detects:** Workflows that publish packages (PyPI, npm, RubyGems) using long-lived
+credentials (secrets) instead of OIDC trusted publishing.
+
+**Flag if:** a publishing step uses `${{ secrets.PYPI_TOKEN }}`, `${{ secrets.NPM_TOKEN }}`,
+or similar long-lived credentials for package publishing to a registry that supports
+trusted publishing.
+
+**Fix:** Migrate to OIDC trusted publishing — removes the need for long-lived tokens:
+
+```yaml
+permissions:
+  id-token: write
+```
+
+Then use the official trusted publishing action for the registry.
 
 ### 4. Report violations
 

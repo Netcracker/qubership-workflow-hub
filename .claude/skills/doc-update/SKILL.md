@@ -231,7 +231,7 @@ If a new action was added, check `CLAUDE.md` for any hardcoded action count (e.g
 ### 14. Markdown compliance
 
 Before writing any generated or updated `.md` file, apply the full audit logic from
-`.claude/skills/markdown/SKILL.md` (step 3 — all 50 rules) to the generated content in-memory.
+`.claude/skills/md-lint/SKILL.md` (step 3 — all 50 rules) to the generated content in-memory.
 Fix every violation found before calling the Write tool.
 
 The markdown skill's step 5 ("Self-check before writing") describes exactly this flow —

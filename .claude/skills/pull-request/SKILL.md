@@ -196,7 +196,7 @@ After success, print the PR URL and what changed.
 ### 11. Markdown authoring rules
 
 All `.md` files written or fixed by this skill must comply with the project markdownlint ruleset.
-Apply the full audit logic from `.claude/skills/markdown/SKILL.md` (step 3 — all rules) to any
+Apply the full audit logic from `.claude/skills/md-lint/SKILL.md` (step 3 — all rules) to any
 `.md` file before writing it. Fix all violations in-memory before calling the Write tool.
 
 ### 12. Report to user

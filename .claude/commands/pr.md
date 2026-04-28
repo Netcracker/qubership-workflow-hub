@@ -1,11 +1,11 @@
-# pull-request
+# pr
 
 Create or update a pull request with a title and description following the project conventions.
 
 ## Usage
 
 ```text
-/pull-request [update] [base-branch]
+/pr [update] [base-branch]
 ```
 
 ## Arguments
@@ -16,10 +16,10 @@ Create or update a pull request with a title and description following the proje
 ## Examples
 
 ```text
-/pull-request
-/pull-request update
-/pull-request develop
-/pull-request update develop
+/pr
+/pr update
+/pr develop
+/pr update develop
 ```
 
 ## What this command does

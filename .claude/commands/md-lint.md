@@ -1,11 +1,11 @@
-# markdown
+# md-lint
 
 Audit markdown files for markdownlint violations and fix them.
 
 ## Usage
 
 ```text
-/markdown [files...]
+/md-lint [files...]
 ```
 
 ## Arguments
@@ -16,11 +16,11 @@ Audit markdown files for markdownlint violations and fix them.
 ## Examples
 
 ```text
-/markdown
-/markdown actions/my-action/README.md
-/markdown actions/my-action/README.md docs/reusable/docker-publish.md
+/md-lint
+/md-lint actions/my-action/README.md
+/md-lint actions/my-action/README.md docs/reusable/docker-publish.md
 ```
 
 ## What this command does
 
-Execute the markdown skill logic defined in `.claude/skills/markdown/SKILL.md` with the arguments: $ARGUMENTS
+Execute the markdown skill logic defined in `.claude/skills/md-lint/SKILL.md` with the arguments: $ARGUMENTS

@@ -1,11 +1,11 @@
-# zizmor
+# workflow-audit
 
 Audit GitHub Actions workflow and action files for security issues and fix violations.
 
 ## Usage
 
 ```text
-/zizmor [files...]
+/workflow-audit [files...]
 ```
 
 ## Arguments
@@ -16,9 +16,9 @@ Audit GitHub Actions workflow and action files for security issues and fix viola
 ## Examples
 
 ```text
-/zizmor
-/zizmor .github/workflows/release.yaml
-/zizmor .github/workflows/release.yaml actions/my-action/action.yml
+/workflow-audit
+/workflow-audit .github/workflows/release.yaml
+/workflow-audit .github/workflows/release.yaml actions/my-action/action.yml
 ```
 
 ## What this command does
