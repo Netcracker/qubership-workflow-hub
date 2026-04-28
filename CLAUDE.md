@@ -73,30 +73,30 @@ No repo-root build script — each action is built independently.
 
 ## Key conventions (from docs/standards-and-change-policy.md)
 
-| Area | Rule |
-|------|------|
-| Version pins | Latest release tag or SHA — never `@main` in production |
-| Permissions | Start with `contents: read`; elevate only where needed |
-| Input names | `kebab-case` — e.g. `dry-run`, `force-create` |
-| Output names | Short singular nouns — e.g. `version`, `tag`, `digest` |
-| Org name in refs | Always `netcracker` lowercase — never `Netcracker` |
-| Boolean inputs | Default `false`; name describes the feature when enabled |
-| Dry-run | Offer `dry-run: true` for any action that writes/pushes |
-| Secrets | Never echo; never use `set -x` near secrets |
+| Area             | Rule                                                           |
+| ---------------- | -------------------------------------------------------------- |
+| Version pins     | Latest release tag or SHA — never `@main` in production        |
+| Permissions      | Start with `contents: read`; elevate only where needed         |
+| Input names      | `kebab-case` — e.g. `dry-run`, `force-create`                  |
+| Output names     | Short singular nouns — e.g. `version`, `tag`, `digest`         |
+| Org name in refs | Always `netcracker` lowercase — never `Netcracker`             |
+| Boolean inputs   | Default `false`; name describes the feature when enabled       |
+| Dry-run          | Offer `dry-run: true` for any action that writes/pushes        |
+| Secrets          | Never echo; never use `set -x` near secrets                    |
 | Breaking changes | Open issue first → deprecate → new major tag → keep old stable |
 
 ---
 
 ## Documentation layout
 
-| Location | Contains |
-|----------|----------|
-| `actions/{name}/README.md` | Full usage docs for each action |
-| `docs/reusable/{name}.md` | Full usage docs for each reusable workflow |
-| `docs/actions-workflows-catalog.md` | Index of all active + deprecated actions/workflows |
+| Location                              | Contains                                             |
+| ------------------------------------- | ---------------------------------------------------- |
+| `actions/{name}/README.md`            | Full usage docs for each action                      |
+| `docs/reusable/{name}.md`             | Full usage docs for each reusable workflow           |
+| `docs/actions-workflows-catalog.md`   | Index of all active + deprecated actions/workflows   |
 | `docs/standards-and-change-policy.md` | Naming rules, version pinning, deprecation lifecycle |
-| `docs/secrets-and-vars.md` | Org-level secrets reference |
-| `docs/getting-started.md` | How to consume actions and workflows |
+| `docs/secrets-and-vars.md`            | Org-level secrets reference                          |
+| `docs/getting-started.md`             | How to consume actions and workflows                 |
 
 When changing an action's inputs or outputs, **always update its README and the catalog**.
 
@@ -127,14 +127,14 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 ## Claude Code skills
 
-| Command | What it does |
-|---------|-------------|
+| Command                            | What it does                                                                                                                          |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `/doc-update <target> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync. |
-| `/sync-docs [N]` | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog. |
-| `/pr [update] [base-branch]` | Generate PR title and body following project conventions, then create or update the PR via `gh`. Runs lint audit before creating. |
-| `/workflow-audit [files...]` | Audit workflow and action yml files for security issues (zizmor ruleset) and fix violations. |
-| `/md-lint [files...]` | Audit `.md` files for markdownlint violations (full 50-rule coverage) and fix them. |
-| `/lint [base-branch]` | Run markdown and zizmor audits on all changed files, fix violations, commit fixes. |
+| `/sync-docs [N]`                   | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog.                                  |
+| `/pr [update] [base-branch]`       | Generate PR title and body following project conventions, then create or update the PR via `gh`. Runs lint audit before creating.     |
+| `/workflow-audit [files...]`       | Audit workflow and action yml files for security issues (zizmor ruleset) and fix violations.                                          |
+| `/md-lint [files...]`              | Audit `.md` files for markdownlint violations (full 50-rule coverage) and fix them.                                                   |
+| `/lint [base-branch]`              | Run markdown and zizmor audits on all changed files, fix violations, commit fixes.                                                    |
 
 ### Skill files
 
