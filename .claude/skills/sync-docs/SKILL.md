@@ -30,18 +30,18 @@ git diff --name-only HEAD~N..HEAD
 
 From the changed files list, keep only:
 
-- `actions/*/action.yml` — action definition changed
+- `actions/*/action.yml`, `actions/*/action.yaml` — action definition changed
 - `actions/*/src/**` — Node.js action logic changed
 - `actions/*/*.py` — Python script changed
-- `actions/*/action.yml` steps — composite action logic changed
-- `.github/workflows/re-*.yml` — reusable workflow changed
+- `actions/*/action.yml`, `actions/*/action.yaml` steps — composite action logic changed
+- `.github/workflows/re-*.yml`, `.github/workflows/re-*.yaml` — reusable workflow changed
 
 ### 4. Extract targets
 
 From the filtered list, extract unique targets:
 
 - For `actions/<name>/...` → target = `<name>`
-- For `.github/workflows/re-<name>.yml` → target = `reusable/<name>`
+- For `.github/workflows/re-<name>.yml` or `.github/workflows/re-<name>.yaml` → target = `reusable/<name>`
 
 ### 5. Process each target
 

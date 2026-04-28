@@ -65,35 +65,11 @@ If `COMMITS` is empty — inform the user that there are no commits ahead of `$B
 
 ### 2.5. Pre-flight audit
 
-Before generating the PR, run proactive checks on the changed files to catch issues
-before CI does. This avoids the create → fail → fix → retry cycle.
+Before generating the PR, apply the full lint skill logic from
+`.claude/skills/lint/SKILL.md` using `BASE` as the base branch.
 
-**Markdown audit** — if any `.md` files are in `CHANGED_FILES`:
-
-Apply the full audit logic from `.claude/skills/markdown/SKILL.md` to those files.
-Fix all violations in-place, then stage the fixes:
-
-```bash
-git add <fixed-md-files>
-```
-
-**Zizmor audit** — if any `.github/workflows/*.yml`, `.github/workflows/*.yaml`, or
-`actions/*/action.yml` files are in `CHANGED_FILES`:
-
-Apply the full audit logic from `.claude/skills/zizmor/SKILL.md` to those files.
-Fix all violations in-place, then stage the fixes:
-
-```bash
-git add <fixed-yml-files>
-```
-
-**If any files were fixed:** commit all staged fixes before proceeding:
-
-```bash
-git commit -m "fix(lint): pre-flight markdown and security fixes" && git push
-```
-
-If no files of either type are in `CHANGED_FILES` — skip this step silently.
+This audits all changed `.md` and workflow/action `.yml` files, fixes violations
+in-place, and commits the fixes. If nothing needs fixing the step completes silently.
 
 ### 3. Determine scope
 

@@ -1,14 +1,14 @@
 ---
-name: preflight
+name: lint
 description: Run markdown and zizmor audits on changed files, fix all violations, and commit the fixes
 arguments: [base-branch]
 ---
 
-# preflight
+# lint
 
 Audit all changed files on the current branch for markdownlint and zizmor violations,
-fix them in-place, and commit the fixes. Mirrors the pre-flight step in `/pull-request`
-so you can run checks independently at any time.
+fix them in-place, and commit the fixes. Run this at any time to clean up the branch
+before a PR or after making changes.
 
 ## Arguments
 
@@ -56,7 +56,7 @@ If no `.md` files in `CHANGED_FILES` — skip this step silently.
 ### 4. Zizmor audit
 
 If any `.github/workflows/*.yml`, `.github/workflows/*.yaml`, or
-`actions/*/action.yml` files are in `CHANGED_FILES`:
+`actions/*/action.yml`, `actions/*/action.yaml` files are in `CHANGED_FILES`:
 
 Apply the full audit logic from `.claude/skills/zizmor/SKILL.md` to those files.
 Fix all violations in-place, then stage the fixes:
@@ -72,7 +72,7 @@ If no workflow or action yml files in `CHANGED_FILES` — skip this step silentl
 If any files were fixed and staged in steps 3 or 4:
 
 ```bash
-git commit -m "fix(lint): pre-flight markdown and security fixes" && git push
+git commit -m "fix(lint): fix markdown and security violations" && git push
 ```
 
 If nothing was fixed — do not create an empty commit.
