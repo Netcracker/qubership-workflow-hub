@@ -32,7 +32,12 @@ git tag --list 'v*' --sort=-version:refname | head -1
 - If a tag is found → `RELEASE_TAG` = that tag (e.g. `v2.2.0`)
 - If no tags found → `RELEASE_TAG` = `v1`
 
-Use `RELEASE_TAG` everywhere a version pin appears in the generated documentation (Usage examples, Notes).
+Use `RELEASE_TAG` in the **Usage example** (readable, follows minor updates).
+
+For the **Notes** section pin warning, recommend a full 40-character commit SHA as the most
+reliable option — tags are mutable refs and can be moved or overwritten, only a full SHA
+guarantees an immutable pin. The tag remains acceptable when callers want automatic minor-version
+updates. `@main` and short SHAs are never acceptable.
 
 ### 3. Resolve paths
 
@@ -185,14 +190,34 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run action
-        uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
+        uses: netcracker/qubership-workflow-hub/actions/<target>@<SHA> # RELEASE_TAG
         with:
           required-input: value
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Always end the Notes section with: `Always pin to @RELEASE_TAG or a specific SHA — never @main in production.`
+Where `<SHA>` is the full 40-character commit SHA of `RELEASE_TAG`. Resolve it with:
+
+```bash
+git ls-remote https://github.com/netcracker/qubership-workflow-hub refs/tags/RELEASE_TAG
+```
+
+Render the actual SHA into the example, with the tag as a trailing comment for readability —
+the SHA is the immutable pin, the comment shows which release it corresponds to.
+
+Always end the Notes section with a pin warning shaped like:
+
+> Pin to a full 40-character commit SHA with the release tag as a trailing comment, e.g.
+> `@<SHA> # RELEASE_TAG`. The SHA is the immutable pin; the comment shows which release it
+> points to. Tags alone are mutable and can be moved — acceptable only when callers explicitly
+> want auto-updates within a minor version. Never use `@main` or short SHAs.
+
+Resolve the SHA for a tag with:
+
+```bash
+git ls-remote https://github.com/netcracker/qubership-workflow-hub refs/tags/RELEASE_TAG
+```
 
 ### 10. README template for new REUSABLE WORKFLOW
 
