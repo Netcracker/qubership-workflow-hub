@@ -1,5 +1,5 @@
 name: "Wait for Workflow"
-description: "Waits for a specific GitHub Actions workflow to start and complete successfully."
+description: "Poll the GitHub API until a target workflow run starts and completes, matched by workflow filename or run ID, with configurable timeout."
 
 inputs:
   workflow:

@@ -1,5 +1,5 @@
 name: "Container Package Cleanup Action"
-description: "Cleans up old Docker images based on specified criteria."
+description: "Delete old GHCR container images or Maven package versions by age, version count, and tag include/exclude patterns; defaults to SNAPSHOT-only for Maven."
 inputs:
   threshold-days:
     description: "The number of days to keep docker images."

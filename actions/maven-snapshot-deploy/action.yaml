@@ -10,7 +10,7 @@
 #   gpg-passphrase: GPG passphrase
 
 name: "Maven Snapshot Deploy"
-description: "Builds and deploys a Maven project to either Maven Central or GitHub Packages. It checks if the version is a SNAPSHOT version and deploys accordingly. If not, it runs 'mvn install' instead."
+description: "Deploy Maven SNAPSHOT artifacts to Maven Central or GitHub Packages, falling back to 'mvn install' for non-SNAPSHOT versions."
 inputs:
   java-version:
     type: string

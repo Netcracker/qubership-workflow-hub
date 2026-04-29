@@ -1,5 +1,5 @@
 name: "Create Branch Action"
-description: "Creates a new branch from a tag or another branch with customizable options."
+description: "Create a new Git branch from a tag or another branch, with auto-naming strategies (release/, feature/, timestamp, short-sha) and optional remote push."
 
 inputs:
   branch-name:

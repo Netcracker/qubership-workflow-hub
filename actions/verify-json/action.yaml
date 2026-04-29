@@ -6,7 +6,7 @@
 # ${GITHUB_WORKSPACE}/../../_actions/<repository-owner>/<repository-name>/<version>/<path-to-action>
 
 name: "Verify JSON file"
-description: "Verify JSON file against schema file"
+description: "Validate a JSON file against a JSON Schema using jsonschema; fails the workflow on schema violations."
 
 inputs:
   json-file:

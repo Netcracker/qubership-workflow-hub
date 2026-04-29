@@ -6,7 +6,7 @@
 # https://cyclonedx.github.io/cdxgen/#/PROJECT_TYPES
 
 name: "Generate SBOM file for project"
-description: "Generate Software Bill of Materials (SBOM) file for the project and CycloneDX vulnerability report"
+description: "Generate a CycloneDX SBOM and an optional dependency-vulnerability report for the project using cdxgen in Docker."
 
 inputs:
   project_type:

@@ -1,5 +1,5 @@
 name: "Change Helm Chart.yaml"
-description: "Automatically updates the Helm Chart.yaml file."
+description: "Update the version (and optionally appVersion) field in a Helm Chart.yaml using yq."
 
 inputs:
   new-chart-version:

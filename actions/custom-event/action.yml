@@ -1,5 +1,5 @@
 name: "Custom Event Action"
-description: "Triggers a custom repository_dispatch event"
+description: "Trigger a repository_dispatch event in the same or another repository with a JSON payload, with payload validation before dispatch."
 inputs:
   event-type:
     description: "The type of the custom event"

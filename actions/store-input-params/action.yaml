@@ -1,5 +1,5 @@
 name: "Store Input Params"
-description: "Store workflow input params as run's artifact"
+description: "Persist workflow_dispatch inputs as a JSON file and upload it as a workflow artifact for downstream jobs to consume."
 
 inputs:
   input:

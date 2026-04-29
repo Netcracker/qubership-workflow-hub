@@ -1,5 +1,5 @@
 name: "Smart Download Artifact"
-description: "Download artifacts by name, IDs, or pattern"
+description: "Download GitHub Actions artifacts by name, comma-separated IDs, or glob pattern — a thin wrapper over actions/download-artifact covering all selection modes."
 
 inputs:
   name:
