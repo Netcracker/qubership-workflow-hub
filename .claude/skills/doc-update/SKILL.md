@@ -103,6 +103,30 @@ In `full-resync` mode: read ALL source files in the action/workflow directory �
 
 This analysis is the basis for updating all documentation sections.
 
+#### Composite action deep-read checklist
+
+When `runs.using: composite`, go through every step in `action.yml` and check each of the
+following — these are the most commonly missed documentation gaps:
+
+- **Conditional steps (`if:`)** — for every step with an `if:` condition, document when it is
+  skipped and what effect that has on outputs or behaviour. Example: metadata upload skipped when
+  `dry-run: true` → outputs are empty.
+- **Inputs read from `env:` not from `inputs:`** — if a step reads a value from the environment
+  (e.g. `env.GITHUB_TOKEN`) rather than from `inputs.*`, document how the caller must pass it
+  (via the `env:` block on the step, not via `with:`).
+- **Input ignored when another input is set** — e.g. `ref` is ignored when `checkout: false`.
+  Document the dependency in the input's Description column.
+- **Precedence / override logic** — e.g. `component.arguments` overrides `build-args` entirely.
+  Make the override explicit in both the input description and the Additional Information section.
+- **Value normalisation** — e.g. tags lowercased, `/` replaced with `-`, strings trimmed. Document
+  the normalisation in the input or output description so callers aren't surprised.
+- **Outputs that are conditionally empty** — if an output is only set under certain conditions
+  (e.g. only when `dry-run: false`), say so in the Outputs table row and in Notes.
+- **Files printed to log** — if a step prints file contents (e.g. `cat Dockerfile`), note it in
+  Notes as a potential secret-exposure risk.
+- **Deprecated inputs** — mark them **Deprecated** in the Description column and point to the
+  replacement input.
+
 ### 7. Decide: create or update
 
 **If `DOC_PATH` does not exist** → CREATE mode: generate full README from scratch using the templates below.
@@ -203,9 +227,25 @@ jobs:
 For each input in `action.yml` / workflow yml:
 
 - `Name` — wrap in backticks
-- `Description` — from yml `description` field; enrich with context from code if yml description is too short
-- `Required` — `Yes` if `required: true`, otherwise `No`
-- `Default` — wrap value in backticks, or `-` if none
+- `Description` — from yml `description` field; enrich with context from code if yml description
+  is too short. If the input is ignored when another input has a specific value, state it here
+  (e.g. "Ignored when `checkout` is `false`"). If the input is deprecated, lead with
+  `**Deprecated.**` and name the replacement.
+- `Required` — `Yes` if `required: true`, otherwise `No`. Never use footnote markers (`*`) —
+  put conditional-required logic in the Description instead.
+- `Default` — the **literal value from `action.yml`**, wrapped in backticks, or `-` if absent.
+  If the code applies a fallback that differs from the yml default, document the fallback in
+  Description, not in the Default column.
+
+### 11a. Outputs table rules
+
+For each output in `action.yml`:
+
+- `Name` — wrap in backticks
+- `Description` — from yml `description` field; enrich from code. If the output is only populated
+  under certain conditions (e.g. only when `dry-run` is `false`, or only on a specific event),
+  state it explicitly: "Only set when `dry-run` is `false`." If the output name uses an
+  inconsistent style (underscore vs dash), note it: "Note: uses underscore (legacy naming)."
 
 ### 12. Sync the catalog
 
