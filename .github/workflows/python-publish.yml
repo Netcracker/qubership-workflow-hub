@@ -26,6 +26,10 @@ on:
       gh_app_id:
         required: true
         type: string
+      environment:
+        required: false
+        type: string
+        default: ''
     secrets:
       PYPI_API_TOKEN:
         required: true
@@ -35,6 +39,7 @@ on:
 jobs:
   build-publish:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || '' }}
     steps:
       - name: Debug variables
         env:
@@ -91,14 +96,20 @@ jobs:
 
       - name: AutoPatch version
         if: ${{ inputs.poetry_version_options != '' && inputs.version == '' }}
-        run: poetry version ${{ inputs.poetry_version_options }}
+        env:
+          POETRY_VERSION_OPTIONS: ${{ inputs.poetry_version_options }}
+        run: poetry version "$POETRY_VERSION_OPTIONS"
 
       - name: Set specific version
         if: ${{ inputs.version != '' }}
-        run: poetry version ${{ inputs.version }}
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: poetry version "$INPUT_VERSION"
 
       - name: Build package
-        run: poetry build ${{ inputs.poetry_build_params }}
+        env:
+          POETRY_BUILD_PARAMS: ${{ inputs.poetry_build_params }}
+        run: poetry build $POETRY_BUILD_PARAMS
 
       - name: Validate build
         run: |
@@ -107,14 +118,16 @@ jobs:
 
       - name: Run tests
         if: ${{ inputs.pytest_run == true }}
+        env:
+          PYTEST_PARAMS: ${{ inputs.pytest_params }}
         run: |
           poetry install
-          poetry run pytest ${{ inputs.pytest_params }}
+          poetry run pytest $PYTEST_PARAMS
 
       - name: Publish to PyPi
+        # zizmor: ignore[use-trusted-publishing]
         run: |
           poetry config pypi-token.pypi $PYPI_TOKEN
-          # zizmor: ignore[use-trusted-publishing]
           poetry publish --no-interaction -p test
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
