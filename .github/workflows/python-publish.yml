@@ -26,6 +26,10 @@ on:
       gh_app_id:
         required: true
         type: string
+      environment:
+        required: false
+        type: string
+        default: ''
     secrets:
       PYPI_API_TOKEN:
         required: true
@@ -35,21 +39,29 @@ on:
 jobs:
   build-publish:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || '' }}
     steps:
       - name: Debug variables
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_POETRY_VERSION_OPTIONS: ${{ inputs.poetry_version_options }}
+          INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
+          INPUT_POETRY_BUILD_PARAMS: ${{ inputs.poetry_build_params }}
+          INPUT_PYTEST_RUN: ${{ inputs.pytest_run }}
+          INPUT_PYTEST_PARAMS: ${{ inputs.pytest_params }}
         run: |
-          echo version = ${{ inputs.version }}
-          echo poetry_version_options = ${{ inputs.poetry_version_options }}
-          echo python-version = ${{ inputs.python-version }}
-          echo poetry_build_params = ${{ inputs.poetry_build_params }}
-          echo pytest_run = ${{ inputs.pytest_run }}
-          echo pytest_params = ${{ inputs.pytest_params }}
+          echo "version = $INPUT_VERSION"
+          echo "poetry_version_options = $INPUT_POETRY_VERSION_OPTIONS"
+          echo "python-version = $INPUT_PYTHON_VERSION"
+          echo "poetry_build_params = $INPUT_POETRY_BUILD_PARAMS"
+          echo "pytest_run = $INPUT_PYTEST_RUN"
+          echo "pytest_params = $INPUT_PYTEST_PARAMS"
 
           echo "Environment:"
           env
 
       - name: "Prepare app token"
-        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: app-token
         with:
           app-id: ${{ inputs.gh_app_id }}
@@ -84,14 +96,20 @@ jobs:
 
       - name: AutoPatch version
         if: ${{ inputs.poetry_version_options != '' && inputs.version == '' }}
-        run: poetry version ${{ inputs.poetry_version_options }}
+        env:
+          POETRY_VERSION_OPTIONS: ${{ inputs.poetry_version_options }}
+        run: poetry version "$POETRY_VERSION_OPTIONS"
 
       - name: Set specific version
         if: ${{ inputs.version != '' }}
-        run: poetry version ${{ inputs.version }}
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: poetry version "$INPUT_VERSION"
 
       - name: Build package
-        run: poetry build ${{ inputs.poetry_build_params }}
+        env:
+          POETRY_BUILD_PARAMS: ${{ inputs.poetry_build_params }}
+        run: poetry build $POETRY_BUILD_PARAMS
 
       - name: Validate build
         run: |
@@ -100,22 +118,26 @@ jobs:
 
       - name: Run tests
         if: ${{ inputs.pytest_run == true }}
+        env:
+          PYTEST_PARAMS: ${{ inputs.pytest_params }}
         run: |
           poetry install
-          poetry run pytest ${{ inputs.pytest_params }}
+          poetry run pytest $PYTEST_PARAMS
 
       - name: Publish to PyPi
+        # zizmor: ignore[use-trusted-publishing]
         run: |
           poetry config pypi-token.pypi $PYPI_TOKEN
-          # zizmor: ignore[use-trusted-publishing]
           poetry publish --no-interaction -p test
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
       - name: Update Source on GitHub
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
           git config --global user.name "qubership-actions[bot]"
           git add .
-          git commit -m "Update version to ${{ inputs.version }} for release"
+          git commit -m "Update version to $INPUT_VERSION for release"
           git push -u origin main
