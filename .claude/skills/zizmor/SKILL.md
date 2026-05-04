@@ -68,11 +68,12 @@ a trusted ref; move untrusted input handling to a separate unprivileged workflow
 
 #### Rule: template-injection
 
-**What it detects:** User-controlled `github.event.*` expressions interpolated directly
-into `run:` scripts or `actions/github-script` code.
+**What it detects:** User-controlled expressions interpolated directly into `run:` scripts
+or `actions/github-script` code.
 
 **Dangerous sources** (attacker-controlled):
 
+`github.event.*` fields:
 - `github.event.pull_request.title`
 - `github.event.pull_request.body`
 - `github.event.pull_request.head.ref`
@@ -86,6 +87,10 @@ into `run:` scripts or `actions/github-script` code.
 - `github.head_ref`
 - `github.event.workflow_run.head_branch`
 - `github.event.workflow_run.head_commit.message`
+
+`inputs.*` in `workflow_call` and `workflow_dispatch` — callers control these values
+and they can contain arbitrary shell metacharacters:
+- `${{ inputs.<any-string-input> }}` inside a `run:` block
 
 **Flag if** any of these appear inside `${{ ... }}` within a `run:` block or
 `actions/github-script` `script:` input.
@@ -378,8 +383,42 @@ GitHub environment — secrets should be scoped to environments with protection 
 
 **Flag if:** a job uses `${{ secrets.* }}` but does not define `environment:`.
 
-**Fix:** Add an `environment:` block to the job to scope secret access, or document why
-environment protection is not needed.
+**Fix — regular workflow:** Add an `environment:` block directly to the job:
+
+```yaml
+jobs:
+  deploy:
+    environment: production
+    steps:
+      ...
+```
+
+**Fix — reusable workflow (`workflow_call`):** Do NOT hardcode the environment name —
+callers may use different environment names or none at all. Instead, add `environment`
+as an optional input and pass it through:
+
+```yaml
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  build:
+    environment: ${{ inputs.environment || '' }}
+```
+
+The caller then passes their environment name:
+```yaml
+jobs:
+  call:
+    uses: org/repo/.github/workflows/reusable.yml@SHA
+    with:
+      environment: production
+```
 
 #### Rule: superfluous-actions
 
