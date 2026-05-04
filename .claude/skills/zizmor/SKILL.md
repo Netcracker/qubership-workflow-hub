@@ -74,6 +74,7 @@ or `actions/github-script` code.
 **Dangerous sources** (attacker-controlled):
 
 `github.event.*` fields:
+
 - `github.event.pull_request.title`
 - `github.event.pull_request.body`
 - `github.event.pull_request.head.ref`
@@ -90,6 +91,7 @@ or `actions/github-script` code.
 
 `inputs.*` in `workflow_call` and `workflow_dispatch` — callers control these values
 and they can contain arbitrary shell metacharacters:
+
 - `${{ inputs.<any-string-input> }}` inside a `run:` block
 
 **Flag if** any of these appear inside `${{ ... }}` within a `run:` block or
@@ -412,6 +414,7 @@ jobs:
 ```
 
 The caller then passes their environment name:
+
 ```yaml
 jobs:
   call:
