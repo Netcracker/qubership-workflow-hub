@@ -170,11 +170,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Check Grype version
+        env:
+          INPUT_GRYPE_VERSION: ${{ inputs.grype-version }}
         run: |
-          if [ "${{ inputs.grype-version }}" == "latest" ]; then
+          if [ "$INPUT_GRYPE_VERSION" == "latest" ]; then
             echo "GRYPE_VERSION=" >> $GITHUB_ENV
           else
-            echo "GRYPE_VERSION=${{ inputs.grype-version }}" >> $GITHUB_ENV
+            echo "GRYPE_VERSION=$INPUT_GRYPE_VERSION" >> $GITHUB_ENV
           fi
       - name: "Grype scan (Docker: High+Critical)"
         if: ${{ inputs.target == 'docker' }}
