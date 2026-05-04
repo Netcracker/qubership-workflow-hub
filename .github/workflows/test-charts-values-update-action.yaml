@@ -12,6 +12,10 @@ on:
     paths:
       - "actions/charts-values-update-action"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     permissions:
