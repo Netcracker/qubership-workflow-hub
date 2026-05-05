@@ -55,7 +55,7 @@ outputs:
   chart-metadata:
     description: "Chart metadata"
     value: ${{ steps.metadata.outputs.metadata }}
-  released-chart-artifact:
+  released-chart-atrifact:
     description: "ID of uploaded charts artifact"
     value: ${{ steps.upload-charts.outputs.artifact-id }}
 runs:
