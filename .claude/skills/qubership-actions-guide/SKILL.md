@@ -75,8 +75,21 @@ negligible; the cost of a hallucinated identifier is a broken workflow.
 
 1. **Apply Pinning and Permissions rules below** to every `uses:` line.
 
-`<ref>` in fetch URLs: a commit SHA in production, the latest tag for
-exploration (e.g. `v2.2.0`).
+`<ref>` in fetch URLs: resolve the **latest stable release tag** of
+`netcracker/qubership-workflow-hub` first (or its commit SHA), then use
+that as `<ref>` for the catalog and README fetches. Do not use `main`
+for production reads — its content can drift ahead of the latest
+release and lead you to inputs that are not yet in any tagged version.
+
+Resolve the latest tag with:
+
+```bash
+git ls-remote https://github.com/netcracker/qubership-workflow-hub 'refs/tags/v*' \
+  | awk -F/ '{print $NF}' | sort -V | tail -1
+```
+
+This keeps the README you read aligned with the SHA you will pin —
+both reflect the same released version.
 
 ## No fake examples in this skill
 
@@ -87,22 +100,36 @@ those when generating workflows.
 
 ## Pinning
 
-Always pin to a full 40-character commit SHA, with the release tag as a
-trailing comment for readability:
+Always pin to the **latest stable release** as a full 40-character
+commit SHA, with the release tag as a trailing comment for readability:
 
 ```yaml
-uses: netcracker/qubership-workflow-hub/actions/<name>@a1b2c3d4e5f6789012345678901234567890abcd # v2.2.0
+uses: netcracker/qubership-workflow-hub/actions/<name>@<sha>  # vX.Y.Z
 ```
 
-The SHA is the immutable pin; the comment shows the release. Use a bare
-tag only when the caller wants automatic minor-version updates within a
-release line. Never use `@main` or short SHAs.
+The SHA is the immutable pin; the comment shows the release. Resolve
+both the latest tag and its SHA at write time — do not copy SHAs from
+this skill (the example above uses placeholders), from memory, or
+unchanged from a forked template. Templates can lag behind the
+current release.
 
-Resolve the SHA for a tag with:
+Resolution procedure:
 
 ```bash
+# 1. Latest stable tag
+git ls-remote https://github.com/netcracker/qubership-workflow-hub 'refs/tags/v*' \
+  | awk -F/ '{print $NF}' | sort -V | tail -1
+
+# 2. SHA for that tag
 git ls-remote https://github.com/netcracker/qubership-workflow-hub refs/tags/<tag>
 ```
+
+**Exception:** a bare tag (e.g. `@v2`) is acceptable **only** when the
+user has explicitly asked for automatic minor-version updates within a
+release line. Do not pick this on your own — ask first, or stick to
+SHA pinning.
+
+Never use `@main` or short SHAs.
 
 ## Permissions
 
