@@ -113,7 +113,7 @@ def generate_markdown_tables(data, config):
         # Resource header
         output_lines.append(f"\n## Resource: `{resource_id}`\n")
         output_lines.append(f"\n### Resource Images:\n")
-        output_lines.append(f"\n- {resource_images.join('\n- ')}")
+        output_lines.append(f"\n- {'\n- '.join(resource_images)}\n")
         output_lines.append("| ControlID | Control name | Status |")
         output_lines.append("|-----------|--------------|--------|")
 
