@@ -1,8 +1,10 @@
 # Workflow patterns
 
-Use this file for general workflow structure. The response contract
-itself lives in `SKILL.md` (*Core responsibility* and *Preferred answer
-style*) — do not duplicate it here.
+Use this file for general workflow structure. The mandatory conventions
+(pinning, permissions, anti-hallucination, naming, secrets, PR safety)
+live in `SKILL.md` → *Mandatory conventions* and are not duplicated
+here. The response contract lives in `SKILL.md` → *Core responsibility*
+and *Preferred answer style*.
 
 ## Always output full workflow files
 
@@ -90,31 +92,6 @@ Prefer clear jobs:
 - `cleanup`
 
 Use `needs:` when one job depends on another.
-
-## Qubership action usage
-
-Before writing a Qubership action step:
-
-1. Use `qubership-actions-guide`.
-2. Fetch the catalog.
-3. Select the action by purpose.
-4. Fetch its README.
-5. Copy exact inputs and outputs from README.
-6. Add job permissions required by README.
-7. Pin according to the guide.
-
-Do not invent `with:` inputs.
-
-## Output handling
-
-When an action produces outputs, use the exact output name from the action README:
-
-```yaml
-- name: Use previous output
-  run: echo "${{ steps.some_step.outputs.exact_output_name }}"
-```
-
-Never infer output names from examples of other actions.
 
 ## Concurrency
 
