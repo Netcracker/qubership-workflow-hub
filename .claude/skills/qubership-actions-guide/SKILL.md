@@ -9,14 +9,6 @@ Navigator for actions in `netcracker/qubership-workflow-hub`. The
 catalog and per-action READMEs are the source of truth — this skill
 helps you fetch only what you need.
 
-## This skill is navigation-only
-
-All rules — pinning, permissions, anti-hallucination, naming
-conventions, secrets handling — live in **`qubership-workflow-conventions`**
-(*Mandatory conventions*). They are **not** restated here. Apply them
-when assembling a workflow that uses any action surfaced through this
-skill.
-
 ## How to use
 
 1. **Read the user's task.** Identify the CI/CD operations needed
@@ -24,17 +16,9 @@ skill.
    security scan, etc.).
 
 1. **Resolve the latest stable tag** of `netcracker/qubership-workflow-hub`
-   first — use it as `<ref>` for catalog and README fetches so the
-   README you read aligns with the SHA you will pin:
-
-   ```bash
-   git ls-remote https://github.com/netcracker/qubership-workflow-hub 'refs/tags/v*' \
-     | awk -F/ '{print $NF}' | sort -V | tail -1
-   ```
-
-   Do not use `main` for production reads — its content can drift ahead
-   of the latest release and lead you to inputs that are not yet in
-   any tagged version.
+   first (see *Resolving the latest tag and its SHA* below). Use it as
+   `<ref>` for the catalog and README fetches below so the README you
+   read aligns with the SHA you will pin.
 
 1. **Fetch the catalog ONCE** to see what's available:
 
@@ -61,21 +45,20 @@ skill.
 1. **Hand off to `qubership-workflow-conventions`** for all rules
    when assembling the workflow.
 
-## Resolving the SHA for a tag
+## Resolving the latest tag and its SHA
 
-Once `qubership-workflow-conventions` (*Mandatory conventions →
-Pinning*) tells you to pin to a specific tag, resolve its SHA via:
+Latest stable tag:
+
+```bash
+git ls-remote https://github.com/netcracker/qubership-workflow-hub 'refs/tags/v*' \
+  | awk -F/ '{print $NF}' | sort -V | tail -1
+```
+
+SHA for a specific tag:
 
 ```bash
 git ls-remote https://github.com/netcracker/qubership-workflow-hub refs/tags/<tag>
 ```
-
-## No fake examples in this skill
-
-This skill deliberately does not include sample workflows with
-concrete `with:` blocks. Any such example would risk encoding
-hallucinated input names. Each action's README contains correct,
-maintained examples — use those when generating workflows.
 
 ## What this skill does NOT do
 
@@ -83,8 +66,5 @@ maintained examples — use those when generating workflows.
   `qubership-workflow-conventions`.
 - It does not duplicate the catalog or per-action READMEs — those are
   the source of truth and are fetched on demand.
-- It does not restate pinning, permissions, naming, or
-  anti-hallucination rules — those live in
-  `qubership-workflow-conventions`.
 - It does not cover reusable workflows (`re-*.yml`) — only individual
   actions.

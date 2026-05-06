@@ -1,10 +1,11 @@
 # Workflow patterns
 
-Use this file for general workflow structure. The mandatory conventions
-(pinning, permissions, anti-hallucination, naming, secrets, PR safety)
-live in `SKILL.md` → *Mandatory conventions* and are not duplicated
-here. The response contract lives in `SKILL.md` → *Core responsibility*
-and *Preferred answer style*.
+General workflow structure: triggers, jobs, concurrency, timeouts,
+matrix, dry-run gating, reusable workflow contracts, artifacts.
+
+All YAML samples below show structure only. Verify every action name,
+input, output, and required permission per *Mandatory conventions →
+Anti-hallucination*.
 
 ## Always output full workflow files
 
@@ -38,8 +39,8 @@ jobs:
         uses: actions/checkout@<sha>  # vX.Y.Z
 ```
 
-Resolve `<sha>` to the latest stable release SHA at write time. Do not
-copy `@v6`, `@v4`, etc. from this skill — those are placeholders.
+`<sha>` and `# vX.Y.Z` are placeholders — resolve per *Mandatory
+conventions → Pinning*.
 
 Add language/tool steps or Qubership actions after checkout.
 
@@ -182,13 +183,6 @@ emit it as a job output, and consume it as a `matrix:` in a downstream
 job. Used in `docker-release`, `helm-charts-release`, and the
 `dev-docker-build-multiple-images` template.
 
-> **Shape example only.** The Qubership action names and `with:` keys
-> below are illustrative — they show the structure, not the contract.
-> Before producing a final workflow, verify every action name, input,
-> output, and required permission through `qubership-actions-guide`
-> (read the action's README) or by forking from a current template
-> via `qubership-templates-guide`.
-
 Shape:
 
 ```yaml
@@ -241,13 +235,6 @@ Rules:
 
 For destructive release workflows (publish to Maven Central / npm /
 PyPI / push tags), gate the real publish behind a dry-run job:
-
-> **Shape example only.** The Qubership action names and `with:` keys
-> below are illustrative — they show the gating structure, not the
-> contract. Before producing a final workflow, verify every action name,
-> input, output, and required permission through `qubership-actions-guide`
-> (read the action's README) or by forking from a current template
-> via `qubership-templates-guide`.
 
 ```yaml
 jobs:

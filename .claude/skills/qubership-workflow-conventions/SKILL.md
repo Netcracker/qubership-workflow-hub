@@ -21,8 +21,7 @@ actions, `Netcracker/.github` templates).
 It does two things at once:
 
 1. **Defines the mandatory conventions** every Qubership workflow must
-   follow — pinning, permissions, anti-hallucination, naming, secrets,
-   PR safety. No other Qubership skill duplicates these rules.
+   follow.
 2. **Drives the workflow design process** — produces complete,
    copy-paste-ready workflows for users.
 
@@ -52,31 +51,17 @@ snippet.
 
 ## Companion skills (navigators)
 
-These skills supply ground-truth references. Invoke them before writing
-any identifier, pin, or template name from memory.
+Both are navigation-only and rule-free; rules live here.
 
-### qubership-templates-guide
+- `qubership-templates-guide` — workflow-templates catalog at
+  `Netcracker/.github/workflow-templates` (see step 2 of *Workflow
+  design process*).
+- `qubership-actions-guide` — per-action READMEs in
+  `netcracker/qubership-workflow-hub`, plus tag/SHA resolution
+  commands.
 
-Navigator for the curated workflow-templates catalog at
-`Netcracker/.github/workflow-templates`. Use it **first** for any task
-that may already have a canonical template. If a template fits, fork it
-and apply this skill's conventions during the adaptation.
-
-### qubership-actions-guide
-
-Navigator for individual actions in `netcracker/qubership-workflow-hub`.
-Invoke it before writing any `uses: netcracker/qubership-workflow-hub/...`
-step that is not coming from a forked template, and whenever you need
-to verify an action's inputs, outputs, or required permissions against
-its README.
-
-### Hard delegation rule
-
-Both companion skills are **navigation-only**. They do **not** restate
-pinning, permissions, naming, or anti-hallucination rules. All such
-rules live in this skill. If a companion skill is unavailable, follow
-its lookup procedure manually (fetch catalog and READMEs via `gh api` /
-`WebFetch`). Do not skip the lookup.
+If a companion skill is unavailable, follow its lookup procedure
+manually instead of guessing.
 
 ## Workflow design process
 
@@ -84,19 +69,52 @@ For each user request:
 
 1. Identify the CI/CD operation: validate, build, test, package,
    publish, scan, tag, release, deploy, cleanup.
-1. Invoke `qubership-templates-guide` to check the catalog. If a
-   curated template fits, fork and adapt it as the baseline, then
-   continue this process to verify trigger, target, permissions,
-   secrets, and user-specific configuration.
+1. **Prefer forking a curated template over writing from scratch.**
+   Invoke `qubership-templates-guide` to check the catalog. Templates
+   encode correct identifiers, pinning, and permissions, so copying
+   them eliminates whole classes of hallucination, and user-repo
+   workflows are expected to look like the rest of the org.
+
+   Match strength rule:
+
+   - **≥80% of the operations match** — fork the template, adapt the
+     remaining 20% (image names, secrets, extra steps).
+   - **50–80% match** — fork only if the matching part is the
+     structurally hard piece (multi-stage release, config-driven
+     matrix, dry-run gating) and the rest is straightforward
+     additions; otherwise design from scratch using individual actions.
+   - **<50% match** — design from scratch with `qubership-actions-guide`.
+     Forking a poorly-matched template usually produces a workflow
+     that looks like a template but does the wrong thing, which is
+     harder to audit than a clean design.
+
+   If unsure, design from scratch and **mention the nearest template**
+   in the answer so the user can decide.
+
+   When forking, continue this process to verify trigger, target,
+   permissions, secrets, and user-specific configuration. For the
+   adaptation rules (what to change, what to keep), see
+   `qubership-templates-guide` → *What to adapt vs. keep*.
 1. Identify trigger: `pull_request`, `push`, tag, `workflow_dispatch`,
    `schedule`, or `workflow_call`.
 1. Identify target: branch, tag, package registry, image registry,
    environment, release, artifact.
 1. Identify result: check status, artifact, image, package, tag,
    GitHub release, report.
-1. Prefer a matching Qubership action if available. Use
-   `qubership-actions-guide` to find and read the action's README.
-1. Apply the **Mandatory conventions** below to every step.
+1. Prefer a matching Qubership action when one fits — Docker
+   build/push, version rendering, tag creation, release preparation,
+   Maven/npm/Python publishing, package cleanup, Helm charts, security
+   scans, and other operations in the Qubership workflow hub catalog.
+   Use `qubership-actions-guide` to find and read the action's README.
+   Fall back to standard actions (`actions/checkout`,
+   `actions/setup-*`, `docker/*`, GitHub CLI) only when no Qubership
+   action fits, the user explicitly asks for them, the README does not
+   support the required capability, or a standard action is required
+   as setup around a Qubership action. If nothing matches, use stock
+   GitHub Actions patterns and explicitly state that no Qubership
+   template/action was selected.
+1. Apply the rules from the *Mandatory conventions* section to every
+   step.
 1. Add safe defaults: timeout, concurrency where useful, no secrets in
    untrusted PR contexts.
 1. Return the complete workflow and concise usage instructions.
@@ -146,23 +164,18 @@ Resolution rules:
 - **Always resolve every pin to the latest stable release SHA at write
   time.** Do not copy SHAs from this skill, from another skill, from
   memory, or unchanged from a forked template — those can be outdated.
-- For Qubership actions, use `qubership-actions-guide` to look up the
-  current latest tag, then resolve the SHA via `git ls-remote`.
-- For third-party actions, use `git ls-remote` or
-  `gh api repos/<org>/<repo>/releases/latest`.
-
-```bash
-# Latest stable Qubership tag
-git ls-remote https://github.com/netcracker/qubership-workflow-hub 'refs/tags/v*' \
-  | awk -F/ '{print $NF}' | sort -V | tail -1
-
-# SHA for that tag
-git ls-remote https://github.com/netcracker/qubership-workflow-hub refs/tags/<tag>
-```
+- For Qubership actions, follow the resolution procedure in
+  `qubership-actions-guide` → *Resolving the latest tag and its SHA*.
+- For third-party actions, use the same `git ls-remote` form against
+  the third-party repo, or `gh api repos/<org>/<repo>/releases/latest`.
 
 Forbidden:
 
-- Never use `@main`.
+- Never use `@main` — neither as an action pin nor as `<ref>` for
+  catalog/README fetches. `main` content can drift ahead of the latest
+  release and lead you to inputs that are not yet in any tagged
+  version. Use the latest stable tag as `<ref>` for reads, and a full
+  SHA as the action pin.
 - Never use short SHAs.
 
 Exception:
@@ -219,35 +232,6 @@ When using a Qubership action's outputs:
 
 Use the exact output name from the action's README. Never infer output
 names from examples of other actions.
-
-## Qubership action priority
-
-Prefer Qubership actions for operations that match the user's request:
-
-- Docker build and push;
-- version rendering;
-- tag creation;
-- GitHub release preparation;
-- Maven publishing;
-- npm publishing;
-- Python package publishing;
-- package cleanup;
-- Helm chart operations;
-- security scans;
-- other operations listed in the Qubership workflow hub catalog (via
-  `qubership-actions-guide`).
-
-Use standard actions (`actions/checkout`, `actions/setup-node`,
-`actions/setup-python`, `docker/*`, GitHub CLI) only when:
-
-- no Qubership action fits;
-- the user explicitly asks for standard actions;
-- the Qubership action README does not support the required capability;
-- a standard action is required as setup around a Qubership action.
-
-If no Qubership template or action fits the requested operation, use
-standard GitHub Actions patterns and explicitly say that no matching
-Qubership template/action was selected.
 
 ## Supporting documents
 

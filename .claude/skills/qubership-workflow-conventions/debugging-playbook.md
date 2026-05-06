@@ -55,13 +55,11 @@ Symptoms:
 - output is empty;
 - config not recognized.
 
-For Qubership actions:
-
-1. Invoke/follow `qubership-actions-guide`.
-2. Read the selected action README.
-3. Compare every `with:` key against the documented inputs.
-4. Remove hallucinated inputs.
-5. Add required inputs exactly as documented.
+This is the application of the *Anti-hallucination* rule (see
+`SKILL.md` → *Mandatory conventions*) to a broken workflow. Re-read
+the action's README via `qubership-actions-guide`, diff every `with:`
+key against the documented inputs, and remove or correct any that
+don't appear in the README.
 
 ### Path or artifact problem
 

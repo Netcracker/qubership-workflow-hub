@@ -12,50 +12,6 @@ These templates are the canonical, production-tested workflows used
 across the org. The catalog is the source of truth — this skill helps
 you locate the right template and adapt it.
 
-## This skill is navigation-only
-
-All rules — pinning, permissions, anti-hallucination, naming
-conventions, secrets handling — live in **`qubership-workflow-conventions`**
-(*Mandatory conventions*). They are **not** restated here. Apply them
-when forking and adapting any template surfaced through this skill.
-
-## Hard rule: prefer forking a template over writing from scratch
-
-If the user's task matches a catalog template, fetch that template and
-adapt it. Do not write a new workflow from scratch when an official
-template already solves the problem.
-
-Why this matters:
-
-- Templates encode correct Qubership action identifiers and inputs —
-  copying them eliminates whole classes of hallucination.
-- Templates are maintained alongside Qubership action releases.
-- Workflows in user repos should look like the rest of the org for
-  consistency and supportability.
-
-If no template matches, fall back to the standard design process in
-`qubership-workflow-conventions` and use `qubership-actions-guide` for
-action lookups.
-
-### Match strength: when to fork vs. design from scratch
-
-Forking only pays off when most of the template carries over. Use this
-rough rule:
-
-- **≥80% of the operations match** — fork the template, adapt the
-  remaining 20% (image names, secrets, extra steps).
-- **50–80% match** — fork only if the matching part is the structurally
-  hard piece (multi-stage release, config-driven matrix, dry-run gating)
-  and the rest is straightforward additions. Otherwise design from
-  scratch using individual actions.
-- **<50% match** — design from scratch with `qubership-actions-guide`.
-  Forking a poorly-matched template usually produces a workflow that
-  looks like a template but does the wrong thing, which is harder to
-  audit than a clean design.
-
-If you are unsure, prefer designing from scratch and **mention the
-nearest template** in your answer so the user can decide.
-
 ## How to use
 
 1. **Read the user's task.** Identify the CI/CD operation (release,
@@ -93,13 +49,10 @@ nearest template** in your answer so the user can decide.
 
 ## Catalog: task → template
 
-The table below is a snapshot for fast lookup. **Before claiming a
-template exists, verify it from the current
+The table below is a snapshot for fast lookup; verify the file exists
+in the current
 [`Netcracker/.github/workflow-templates`](https://github.com/Netcracker/.github/tree/main/workflow-templates)
-directory** — list the directory or attempt the fetch. Templates are
-added, renamed, and removed; the snapshot can drift. If a fetch returns
-404, do not retry with a guessed name — list the directory and pick the
-real file.
+directory before using it (templates are added, renamed, and removed):
 
 ```bash
 gh api repos/Netcracker/.github/contents/workflow-templates --jq '.[].name'
@@ -200,25 +153,11 @@ When forking a template into a user's repo:
   `.github/release-drafter-config.yml`) and where to find examples.
 - Required org/repo variables (`vars.GH_BUMP_VERSION_APP_ID` etc.).
 
-## Pin freshness during fork
-
-Templates can lag behind the latest action releases — different
-templates in the catalog may pin different versions of the same action.
-This is normal: templates are updated in batches, individual action
-releases happen continuously.
-
-Pin resolution and upgrade rules live in `qubership-workflow-conventions`
-(*Mandatory conventions → Pinning*). Apply them to every action pin
-when forking — do not blindly copy the template's SHAs as-is.
-
 ## What this skill does NOT do
 
 - It does not generate workflows from scratch — for that, follow
   `qubership-workflow-conventions`.
 - It does not duplicate template content — templates are fetched on
   demand from the catalog.
-- It does not restate pinning, permissions, naming, or
-  anti-hallucination rules — those live in
-  `qubership-workflow-conventions`.
 - It does not cover reusable workflows (`re-*.yml`) — those are not
   part of the workflow-templates catalog.
