@@ -4,11 +4,11 @@
 
 Ask these before designing any Helm workflow (Path B — scratch):
 
-| Question | Why |
-| --- | --- |
-| Does `.qubership/helm-charts-release-config.yaml` already exist? | If yes — read it. If no — generate it together with the workflow. |
-| Is a GitHub Release needed alongside the Helm release? | Determines whether `assets-action` is needed |
-| Should the workflow also update Docker image versions in values.yaml? | Determines whether `charts-values-update-action` is needed |
+| Question                                                              | Why                                                               |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Does `.qubership/helm-charts-release-config.yaml` already exist?      | If yes — read it. If no — generate it together with the workflow. |
+| Is a GitHub Release needed alongside the Helm release?                | Determines whether `assets-action` is needed                      |
+| Should the workflow also update Docker image versions in values.yaml? | Determines whether `charts-values-update-action` is needed        |
 
 ## `.qubership/helm-charts-release-config.yaml` schema
 
@@ -23,13 +23,13 @@ charts:
       - image.repository.another-image
 ```
 
-| Field | Description |
-| --- | --- |
-| `chart_file` | Path to the Helm `Chart.yaml` |
-| `values_file` | Path to the Helm `values.yaml` |
-| `name` | Chart name |
-| `version` | Image version template — `${tag}` is substituted at runtime |
-| `image` | List of image keys in `values.yaml` to update |
+| Field         | Description                                                 |
+| ------------- | ----------------------------------------------------------- |
+| `chart_file`  | Path to the Helm `Chart.yaml`                               |
+| `values_file` | Path to the Helm `values.yaml`                              |
+| `name`        | Chart name                                                  |
+| `version`     | Image version template — `${tag}` is substituted at runtime |
+| `image`       | List of image keys in `values.yaml` to update               |
 
 ## Release pipeline
 
