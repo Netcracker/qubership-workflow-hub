@@ -2,13 +2,14 @@
 
 ## Clarifying questions
 
-Ask these before designing any Helm workflow (Path B — scratch):
+General workflow questions (triggers, dry-run, runner, concurrency) are collected in Step 0
+of `SKILL.md` before this guide is loaded. Ask only the Helm-specific questions below.
 
 | Question                                                              | Why                                                               |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Do you have a Helm release config file? If yes — what is its path?    | If yes — read it. If no — generate it together with the workflow, using `.qubership/helm-charts-release-config.yaml` as the default path (passed via the action's config input). |
+| Do you have a Helm release config file? If yes — what is its path?    | If yes — read it. If no — generate it from collected answers (chart paths, image keys, chart name), using `.qubership/helm-charts-release-config.yaml` as the default path. |
 | Is a GitHub Release needed alongside the Helm release?                | Determines whether `assets-action` is needed                      |
-| Should the workflow also update Docker image versions in values.yaml? | Determines whether `charts-values-update-action` is needed        |
+| Should the workflow also update Docker image versions in values.yaml? | Determines whether `charts-values-update-action` is needed; if yes — ask which image keys in `values.yaml` to update |
 
 ## `.qubership/helm-charts-release-config.yaml` schema
 

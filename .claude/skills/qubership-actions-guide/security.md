@@ -2,7 +2,8 @@
 
 ## Clarifying questions
 
-Ask these before designing any security scan workflow (Path B — scratch):
+General workflow questions (triggers, dry-run, runner, concurrency) are collected in Step 0
+of `SKILL.md` before this guide is loaded. Ask only the security-specific questions below.
 
 | Question | Why |
 | --- | --- |

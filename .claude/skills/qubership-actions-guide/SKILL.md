@@ -5,6 +5,22 @@ description: Navigation-only skill for individual actions in netcracker/qubershi
 
 # qubership-actions-guide
 
+## Step 0 — collect general workflow requirements
+
+**Before identifying which domain guide to load, ask these questions first.**
+They apply to every workflow regardless of domain (Docker, Helm, Maven, security, etc.).
+Do not generate anything until all answers are collected.
+
+| # | Question | What it controls |
+| - | --- | --- |
+| 1 | Does the user have an existing workflow to migrate, or is this from scratch? | Migration → read the existing file first, extract what's already defined. Scratch → proceed with questions below. |
+| 2 | What triggers this workflow? (push to branch, pull_request, tag push, `workflow_dispatch`, schedule?) | `on:` block |
+| 3 | Should there be a dry-run mode? | `dry-run` input + conditional logic |
+| 4 | Which runner? (`ubuntu-latest` or self-hosted?) | `runs-on:` |
+| 5 | Should concurrent runs be cancelled or queued? | `concurrency:` block |
+
+After collecting these answers, continue to Step 1 to identify the domain and load the relevant guide.
+
 ## Step 1 — identify the operation and load the right guide
 
 Before picking any action, identify what the workflow needs to do and load
