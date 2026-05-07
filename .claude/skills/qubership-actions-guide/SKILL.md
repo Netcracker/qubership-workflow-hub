@@ -17,7 +17,7 @@ wiring up the actions:
 
 | Config file | Format | Used by | Purpose |
 | --- | --- | --- | --- |
-| `.qubership/docker.cfg` | JSON | `docker-config-resolver` | Defines all Docker components: name, dockerfile, context, platforms, registry, security settings. **Required for multi-image builds.** |
+| `.qubership/docker.cfg` (or any name) | JSON | `docker-config-resolver` | Defines all Docker components: name, dockerfile, context, platforms, registry, security settings. **Required for multi-image builds.** Different workflows may use different filenames — the path is passed via `file-path` input. |
 | `.qubership/helm-charts-release-config.yaml` | YAML | `charts-values-update-action` | Maps Helm charts to image keys in values.yaml for version updates |
 | `.qubership/hardening-config.yaml` | YAML | `k8s-hardening-scan` | List of Kubescape rule IDs to mark as non-mandatory (`ignored_checks`). Pass path via `config-file` input. |
 
@@ -28,22 +28,38 @@ wiring up the actions:
   "registry": "ghcr.io",
   "security": {},
   "defaults": {
-    "platforms": "linux/amd64,linux/arm64"
+    "platforms": "linux/amd64,linux/arm64",
+    "dockerfile": "Dockerfile",
+    "build_context": "."
   },
   "components": [
     {
       "name": "my-service",
       "dockerfile": "Dockerfile",
-      "context": ".",
+      "build_context": ".",
       "platforms": "linux/amd64",
-      "tags": ["latest"]
+      "arguments": "NODE_ENV=production"
+    },
+    {
+      "name": "my-worker",
+      "build_context": "./worker"
     }
   ]
 }
 ```
 
-Each component's `name` becomes the image path: `{registry}/{owner}/{name}`.
-Security settings merge: component-level overrides global.
+Component fields (all optional except `name`):
+
+| Field | Description |
+| --- | --- |
+| `name` | **Required.** Used as image path: `{registry}/{owner}/{name}` |
+| `dockerfile` | Path to Dockerfile. Default: `"Dockerfile"` |
+| `build_context` | Docker build context path. Default: `"."` |
+| `platforms` | Comma-separated platforms. Default: `"linux/amd64"` |
+| `arguments` | Build args, comma-separated or newline-delimited |
+| `security` | Component-level security overrides (merges with global `security`) |
+
+Note: `context` is a deprecated alias for `build_context` — always use `build_context`.
 
 ### `.qubership/helm-charts-release-config.yaml` schema
 
@@ -72,15 +88,42 @@ Rules listed here are marked non-mandatory even when `fail-on-mandatory-checks: 
 
 Actions are rarely used alone — they form pipelines. The common ones:
 
-### Multi-image Docker build
+### Single-image Docker build
 
 ```
-docker-config-resolver  →  metadata-action  →  docker-action (matrix)
-reads .qubership/docker.cfg   produces tags      builds each component
+metadata-action  →  docker-action
+produces tags        builds and pushes
 ```
 
-`docker-config-resolver` outputs a JSON array → becomes `matrix.component`.
-Each matrix cell passes `component` + `platforms` to `docker-action`.
+`metadata-action.outputs.result` → `docker-action` input `tags`.
+No config file needed. If the workflow supports extra user-supplied tags via
+`workflow_dispatch`, combine them with `metadata-action` output in a shell
+step — otherwise pass `result` directly to `tags`.
+
+### Multi-image Docker build (CI)
+
+```
+docker-config-resolver       metadata-action  →  docker-action (matrix)
+reads .qubership/docker.cfg  produces tags        builds each component
+        ↓
+  matrix.component
+```
+
+`docker-config-resolver` outputs JSON array → `matrix.component`.
+`metadata-action` runs per matrix cell → tags passed to `docker-action`.
+Both `component: ${{ toJson(matrix.component) }}` and `platforms: ${{ matrix.component.platforms }}`
+are passed to `docker-action`.
+
+### Multi-image Docker release
+
+```
+docker-config-resolver  →  tag-action  →  docker-action (matrix)
+reads docker config file    creates tag    builds each component
+```
+
+Release uses `tag-action` instead of `metadata-action` to create the release
+tag first. The docker config file path is whatever the workflow specifies via
+`file-path` input to `docker-config-resolver`.
 
 ### Docker image security scan
 

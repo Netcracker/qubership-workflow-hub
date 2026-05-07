@@ -107,11 +107,19 @@ Ask only the questions whose answers cannot be inferred from context:
 | Tag / release | Trigger: on tag push or `workflow_dispatch`? |
 | Cleanup | Package type: container images or Maven artifacts? |
 
-For any operation — ask about the trigger only if it is not obvious from
-context (e.g. "release workflow" implies tag trigger).
+**Always ask about the trigger** — even if it seems implied. Add it to the
+same question block as the operation-specific clarifications:
+
+> "When should this workflow run? (on every push, on PR, on tag, manually via
+> workflow_dispatch, or on a schedule?)"
+
+**Always ask about dry-run** for any workflow that pushes images, publishes
+packages, creates tags, or creates releases:
+
+> "Should the workflow support dry-run mode (build/validate without pushing)?"
 
 Do not ask about things that have safe defaults: Java version defaults to 21,
-platforms default to `linux/amd64`, dry-run defaults to false.
+platforms default to `linux/amd64`.
 
 ## Workflow design process
 
