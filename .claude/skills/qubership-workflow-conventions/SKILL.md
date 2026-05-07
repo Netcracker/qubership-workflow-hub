@@ -63,6 +63,56 @@ Both are navigation-only and rule-free; rules live here.
 If a companion skill is unavailable, follow its lookup procedure
 manually instead of guessing.
 
+## Clarify before acting
+
+Before designing any workflow, establish context with the minimum necessary
+questions. Never ask for information that can be read from a file.
+
+### Step 0 — one question first
+
+Ask exactly one question:
+
+> "Do you have an existing workflow and/or `.qubership/` config files, or
+> are we starting from scratch?"
+
+If the user has already provided a file or it is open in the IDE — skip
+this question and go straight to *Path A*.
+
+### Path A — existing workflow or configs
+
+1. Read the workflow file (already open in IDE, or ask the user to paste it).
+2. Find every config file referenced inside the workflow (e.g.
+   `file-path: .qubership/docker.cfg`) and read those files too. Do not ask
+   the user to list them — discover them from the workflow.
+3. Analyse what is already correct, what is missing, and what should be
+   replaced with Qubership actions.
+4. Ask only about what is genuinely missing after reading — do not ask about
+   things already visible in the files.
+5. Produce a diff-style result: keep what works, replace/add what does not.
+   Do not rewrite from scratch unless the existing workflow is beyond repair.
+
+### Path B — starting from scratch
+
+Ask only the questions whose answers cannot be inferred from context:
+
+| Operation | Required clarifications |
+| --- | --- |
+| Docker build / push | Registry (GHCR / Docker Hub / other); single image or multiple? If multiple — does `.qubership/docker.cfg` already exist? |
+| Docker release | Same as build + is a GitHub Release needed? |
+| Maven | Target store (Central / GitHub Packages); Java version |
+| npm | Registry (npmjs / GitHub Packages) |
+| Python | Target (PyPI / GitHub Packages) |
+| Helm release | Does `.qubership/helm-charts-release-config.yaml` already exist? |
+| Security scan | What to scan: source/deps (`cdxgen`), images in GHCR, or running k8s cluster? |
+| Tag / release | Trigger: on tag push or `workflow_dispatch`? |
+| Cleanup | Package type: container images or Maven artifacts? |
+
+For any operation — ask about the trigger only if it is not obvious from
+context (e.g. "release workflow" implies tag trigger).
+
+Do not ask about things that have safe defaults: Java version defaults to 21,
+platforms default to `linux/amd64`, dry-run defaults to false.
+
 ## Workflow design process
 
 For each user request:
