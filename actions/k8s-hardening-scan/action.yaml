@@ -20,7 +20,7 @@ inputs:
     default: false
   config-file:
     type: string
-    default: ".github/hardening-config.yaml"
+    default: ".qubership/hardening-config.yaml"
   report-title:
     type: string
     default: "Hardening Scan Report"

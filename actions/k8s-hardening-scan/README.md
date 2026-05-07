@@ -30,7 +30,7 @@ and uploads raw JSON results as workflow artifacts.
 | `execute-kubescape-scan`   | Run the Kubescape scan step                                                     | No       | `true`                          |
 | `execute-trivy-scan`       | Run the Trivy Helm chart misconfiguration scan (requires repository checkout)   | No       | `false`                         |
 | `fail-on-mandatory-checks` | Fail the job if any mandatory hardening checks did not pass                     | No       | `false`                         |
-| `config-file`              | Path to the caller's hardening config YAML (overrides mandatory flags per rule) | No       | `.github/hardening-config.yaml` |
+| `config-file`              | Path to the caller's hardening config YAML (overrides mandatory flags per rule) | No       | `.qubership/hardening-config.yaml` |
 
 ---
 
@@ -89,7 +89,7 @@ with `trivy config` for Helm chart misconfigurations, uploading results as a sep
 ### Hardening config file
 
 The action ships a built-in `hardening-config.yaml` that defines which rules are mandatory.
-The caller can provide a custom config at `config-file` (default: `.github/hardening-config.yaml`).
+The caller can provide a custom config at `config-file` (default: `.qubership/hardening-config.yaml`).
 The custom config supports an `ignored_checks` list that marks specific rule IDs as non-mandatory:
 
 ```yaml
@@ -157,7 +157,7 @@ jobs:
           execute-kubescape-scan: 'true'
           execute-trivy-scan: 'false'
           fail-on-mandatory-checks: 'false'
-          config-file: .github/hardening-config.yaml
+          config-file: .qubership/hardening-config.yaml
 ```
 
 ---

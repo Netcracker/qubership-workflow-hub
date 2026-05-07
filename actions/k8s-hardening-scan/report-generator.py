@@ -233,8 +233,8 @@ def main():
     )
     parser.add_argument(
         '--config', '-c',
-        default='.github/hardening-config.yaml',
-        help='Path to the YAML configuration file (default: .github/hardening-config.yaml)'
+        default='.qubership/hardening-config.yaml',
+        help='Path to the YAML configuration file (default: .qubership/hardening-config.yaml)'
     )
 
     args = parser.parse_args()
