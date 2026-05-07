@@ -6,7 +6,7 @@ Ask these before designing any Helm workflow (Path B — scratch):
 
 | Question                                                              | Why                                                               |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Does `.qubership/helm-charts-release-config.yaml` already exist?      | If yes — read it. If no — generate it together with the workflow. |
+| Do you have a Helm release config file? If yes — what is its path?    | If yes — read it. If no — generate it together with the workflow, using `.qubership/helm-charts-release-config.yaml` as the default path (passed via the action's config input). |
 | Is a GitHub Release needed alongside the Helm release?                | Determines whether `assets-action` is needed                      |
 | Should the workflow also update Docker image versions in values.yaml? | Determines whether `charts-values-update-action` is needed        |
 
