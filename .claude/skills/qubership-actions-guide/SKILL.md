@@ -10,157 +10,16 @@ below is embedded (v2.2.1) — use it to pick the right action without
 fetching the catalog. Fetch a per-action README only when you need full
 input/output details for an action you are actually using.
 
-## Config files and the actions that use them
+## Supporting documents
 
-Qubership actions are config-driven. Create these files in the repo before
-wiring up the actions:
+Read these files when relevant:
 
-| Config file | Format | Used by | Purpose |
-| --- | --- | --- | --- |
-| `.qubership/docker.cfg` (or any name) | JSON | `docker-config-resolver` | Defines all Docker components: name, dockerfile, context, platforms, registry, security settings. **Required for multi-image builds.** Different workflows may use different filenames — the path is passed via `file-path` input. |
-| `.qubership/helm-charts-release-config.yaml` | YAML | `charts-values-update-action` | Maps Helm charts to image keys in values.yaml for version updates |
-| `.qubership/hardening-config.yaml` | YAML | `k8s-hardening-scan` | List of Kubescape rule IDs to mark as non-mandatory (`ignored_checks`). Pass path via `config-file` input. |
-
-### `.qubership/docker.cfg` schema
-
-```json
-{
-  "registry": "ghcr.io",
-  "security": {},
-  "defaults": {
-    "platforms": "linux/amd64,linux/arm64",
-    "dockerfile": "Dockerfile",
-    "build_context": "."
-  },
-  "components": [
-    {
-      "name": "my-service",
-      "dockerfile": "Dockerfile",
-      "build_context": ".",
-      "platforms": "linux/amd64",
-      "arguments": "NODE_ENV=production"
-    },
-    {
-      "name": "my-worker",
-      "build_context": "./worker"
-    }
-  ]
-}
-```
-
-Component fields (all optional except `name`):
-
-| Field | Description |
-| --- | --- |
-| `name` | **Required.** Used as image path: `{registry}/{owner}/{name}` |
-| `dockerfile` | Path to Dockerfile. Default: `"Dockerfile"` |
-| `build_context` | Docker build context path. Default: `"."` |
-| `platforms` | Comma-separated platforms. Default: `"linux/amd64"` |
-| `arguments` | Build args, comma-separated or newline-delimited |
-| `security` | Component-level security overrides (merges with global `security`) |
-
-Note: `context` is a deprecated alias for `build_context` — always use `build_context`.
-
-### `.qubership/helm-charts-release-config.yaml` schema
-
-```yaml
-charts:
-  - chart_file: ./charts/my-chart/Chart.yaml
-    values_file: ./charts/my-chart/values.yaml
-    name: my-chart
-    version: my-image:${tag}
-    image:
-      - image.repository.my-image
-```
-
-### `.qubership/hardening-config.yaml` schema
-
-```yaml
-ignored_checks:
-  - C-0048
-  - Critical-Ports
-```
-
-Pass to `k8s-hardening-scan` via `config-file: .qubership/hardening-config.yaml`.
-Rules listed here are marked non-mandatory even when `fail-on-mandatory-checks: true`.
-
-## Action pipelines
-
-Actions are rarely used alone — they form pipelines. The common ones:
-
-### Single-image Docker build
-
-```
-metadata-action  →  docker-action
-produces tags        builds and pushes
-```
-
-`metadata-action.outputs.result` → `docker-action` input `tags`.
-No config file needed. If the workflow supports extra user-supplied tags via
-`workflow_dispatch`, combine them with `metadata-action` output in a shell
-step — otherwise pass `result` directly to `tags`.
-
-### Multi-image Docker build (CI)
-
-```
-docker-config-resolver       metadata-action  →  docker-action (matrix)
-reads .qubership/docker.cfg  produces tags        builds each component
-        ↓
-  matrix.component
-```
-
-`docker-config-resolver` outputs JSON array → `matrix.component`.
-`metadata-action` runs per matrix cell → tags passed to `docker-action`.
-Both `component: ${{ toJson(matrix.component) }}` and `platforms: ${{ matrix.component.platforms }}`
-are passed to `docker-action`.
-
-### Multi-image Docker release
-
-```
-docker-config-resolver  →  tag-action  →  docker-action (matrix)
-reads docker config file    creates tag    builds each component
-```
-
-Release uses `tag-action` instead of `metadata-action` to create the release
-tag first. The docker config file path is whatever the workflow specifies via
-`file-path` input to `docker-config-resolver`.
-
-### Docker image security scan
-
-```
-docker-action  →  GHCR  →  ghcr-discover-repo-packages  →  security-scan template
- (pushes images)            discovers all repo packages      scans each image
-                                      ↓
-                            container-package-cleanup  (optional: cleanup old versions)
-```
-
-`ghcr-discover-repo-packages` is a general-purpose utility — its `packages`
-output feeds into security scan, cleanup, or any other step that needs the
-list of images. Security scan does NOT read `docker.cfg` directly.
-
-### Code / dependency security scan
-
-```
-cdxgen
-scans project source + dependencies → SBOM artifact + CycloneDX vuln report
-```
-
-Auto-detects project type (`package.json`, pom.xml, etc.) or set `project_type` explicitly.
-
-### Helm chart release
-
-```
-metadata-action  →  charts-values-update-action  →  chart-version
-produces version     updates values.yaml images        updates Chart.yaml
-                     reads .qubership/helm-charts-release-config.yaml
-```
-
-### Tag + release
-
-```
-metadata-action  →  tag-action  →  assets-action
-produces version     creates tag    uploads artifacts to GitHub release
-```
+- `docker.md` — Docker config file schema, pipelines, clarifying questions.
+  Read when the task involves Docker build, push, or release.
+- `security.md` — Security scan pipelines, configs, clarifying questions.
+  Read when the task involves image scanning, dependency scanning, or k8s hardening.
+- `helm.md` — Helm config file schema, release pipeline, clarifying questions.
+  Read when the task involves Helm chart release or values updates.
 
 ## Actions catalog (v2.2.1)
 
@@ -168,8 +27,8 @@ produces version     creates tag    uploads artifacts to GitHub release
 
 | Action | Purpose | Key inputs | Key outputs |
 | --- | --- | --- | --- |
-| `docker-config-resolver` | Read `.qubership/docker.cfg`, validate, output JSON array for matrix | `file-path` (default: `.qubership/docker.cfg`) | `config` (JSON array of components) |
-| `docker-action` | Build & push multi-platform Docker images | `custom-image-name`, `platforms`, `tags`, `registry`, `docker-io-login`, `docker-io-token`, `sbom`, `build-args` | `image-name`, `final-tags`, `final-labels`, `final-build-args`, `final-platforms` |
+| `docker-config-resolver` | Read docker config file, validate, output JSON array for matrix | `file-path` (default: `.qubership/docker.cfg`) | `config` (JSON array of components) |
+| `docker-action` | Build & push multi-platform Docker images | `custom-image-name`, `platforms`, `tags`, `registry`, `docker-io-login`, `docker-io-token`, `sbom`, `build-args`, `download-artifact` | `image-name`, `final-tags`, `final-labels`, `final-build-args`, `final-platforms` |
 
 ### Versioning & tagging
 
@@ -232,9 +91,12 @@ Deprecated (do not use): `commit-and-push`, `pom-updater`, `tag-checker`, `archi
 ## How to use
 
 1. **Pick the action** from the catalog above whose purpose matches the step
-   you need. Check *Action pipelines* for the right combination.
+   you need.
 
-2. **Fetch its README** only when you need full input/output details:
+2. **Read the relevant supporting document** (`docker.md`, `helm.md`) for
+   config schemas and pipeline patterns before assembling the workflow.
+
+3. **Fetch the action README** only when you need full input/output details:
 
    ```text
    WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<ref>/actions/<name>/README.md
@@ -242,9 +104,9 @@ Deprecated (do not use): `commit-and-push`, `pom-updater`, `tag-checker`, `archi
 
    Use the latest stable tag as `<ref>` (see *Resolving the latest tag* below).
 
-3. **Skip the README fetch** for actions you are not actually using.
+4. **Skip the README fetch** for actions you are not actually using.
 
-4. **Hand off to `qubership-workflow-conventions`** for all rules when
+5. **Hand off to `qubership-workflow-conventions`** for all rules when
    assembling the workflow.
 
 ## Resolving the latest tag and its SHA

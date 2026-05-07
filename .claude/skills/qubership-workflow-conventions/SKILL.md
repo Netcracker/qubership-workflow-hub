@@ -93,22 +93,22 @@ this question and go straight to *Path A*.
 
 ### Path B — starting from scratch
 
-Ask only the questions whose answers cannot be inferred from context:
+Ask only the questions whose answers cannot be inferred from context.
+For Docker-specific clarifications read `docker.md` in `qubership-actions-guide`.
+For Helm-specific clarifications read `helm.md` in `qubership-actions-guide`.
 
 | Operation | Required clarifications |
 | --- | --- |
-| Docker build / push | Registry (GHCR / Docker Hub / other); single image or multiple?<br>• Single image → no config file needed, proceed.<br>• Multiple images → ask: "Does `.qubership/docker.cfg` already exist?" If yes — read it. If no — generate it together with the workflow.<br>How to generate image tags? Auto from branch/tag name (`metadata-action`) or manually via input? |
-| Docker release | Same as build + is a GitHub Release needed? |
+| Docker build / push / release | See `docker.md` → *Clarifying questions* |
 | Maven | Target store (Central / GitHub Packages); Java version |
 | npm | Registry (npmjs / GitHub Packages) |
 | Python | Target (PyPI / GitHub Packages) |
-| Helm release | Does `.qubership/helm-charts-release-config.yaml` already exist? If yes — read it. If no — generate it together with the workflow. |
+| Helm release | See `helm.md` → *Clarifying questions* |
 | Security scan | What to scan: source/deps (`cdxgen`), images in GHCR, or running k8s cluster? |
 | Tag / release | Trigger: on tag push or `workflow_dispatch`? |
 | Cleanup | Package type: container images or Maven artifacts? |
 
-**Always ask about the trigger** — even if it seems implied. Add it to the
-same question block as the operation-specific clarifications:
+**Always ask about the trigger** — even if it seems implied:
 
 > "When should this workflow run? (on every push, on PR, on tag, manually via
 > workflow_dispatch, or on a schedule?)"
