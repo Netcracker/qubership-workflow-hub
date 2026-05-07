@@ -105,6 +105,8 @@ tag-action (check)  →  docker-config-resolver  →  tag-action (create)  →  
 verify tag absent      reads config file            creates vX.Y.Z tag      builds each component       release-drafter
 ```
 
+For release details (tag-action inputs, assets-action patterns, permissions) — see `release.md`.
+
 ### Key action inputs reference
 
 **`docker-config-resolver`:**
@@ -122,17 +124,6 @@ verify tag absent      reads config file            creates vX.Y.Z tag      buil
 - `dry-run` — `"true"` / `"false"`
 - `checkout` — set `"false"` if repo already checked out
 - `download-artifact` / `download-artifact-name` / `download-artifact-path` — for separate build job
-
-**`tag-action`** (check):
-- `check-tag: true`, `create-tag: false`, `tag-name: v${{ inputs.release }}`
-
-**`tag-action`** (create):
-- `create-tag: true`, `check-tag: false`, `tag-name: v${{ inputs.release }}`
-
-**`assets-action`:**
-- `tag` — release tag
-- `item-path` — files or glob patterns to upload
-- Requires `permissions: contents: write`
 
 ---
 

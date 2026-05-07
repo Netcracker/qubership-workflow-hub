@@ -28,11 +28,11 @@ the relevant supporting document:
 
 | Operation | Load |
 | --- | --- |
-| Docker build, push, release, image migration | `docker.md` |
+| Docker build, push, image migration | `docker.md` |
 | Security scan (images, source/deps, k8s cluster) | `security.md` |
 | Helm chart release, values update | `helm.md` |
+| Git tag, GitHub Release, release assets | `release.md` |
 | Maven, npm, Python publish | catalog below — no guide file needed |
-| Tag creation, branch creation, GitHub release | catalog below — no guide file needed |
 | Cleanup, utilities, PR automation | catalog below — no guide file needed |
 
 Each guide contains: clarifying questions for the user, config file schemas,
