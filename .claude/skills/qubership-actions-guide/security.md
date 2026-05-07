@@ -22,9 +22,9 @@ Set `project_type` input explicitly if auto-detection is wrong.
 
 ## Docker image scan
 
-Two patterns depending on whether `docker.cfg` exists:
+Two patterns depending on whether a Docker config file exists:
 
-**With `docker.cfg`** (recommended — scan config lives alongside build config):
+**With Docker config file** (recommended — filename is arbitrary, conventional default is `.qubership/docker.cfg`; this is the same central component config used across build, scan, cleanup, and other jobs):
 
 ```
 docker-config-resolver  →  filter security.scan==true  →  re-security-scan (matrix)
@@ -34,8 +34,9 @@ reads docker config file    per-component scan settings    Trivy + Grype
 Each component with `security.scan: true` becomes a matrix entry.
 Scan settings (`trivy_scan`, `only_high_critical`, etc.) come from the
 component's `security` block — see `docker.md` for the full schema.
+The config file path is passed via `file-path` input to `docker-config-resolver`.
 
-**Without `docker.cfg`** (discover from GHCR):
+**Without Docker config file** (discover from GHCR):
 
 ```
 ghcr-discover-repo-packages  →  re-security-scan (matrix)

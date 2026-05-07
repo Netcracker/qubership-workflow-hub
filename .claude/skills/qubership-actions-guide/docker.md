@@ -45,9 +45,11 @@ When the user has an existing workflow that builds/pushes Docker images:
 
 ## `.qubership/docker.cfg` schema
 
-Single config file for both build and security scan settings.
+Central config file describing the repository's components. Read by `docker-config-resolver`,
+which outputs a JSON matrix consumed by any downstream steps — Docker build, security scan,
+cleanup, deploy, or any other job that needs the component list.
 The filename can be anything — the path is passed via `file-path` input to
-`docker-config-resolver`. Convention: `docker.cfg` for CI builds.
+`docker-config-resolver`. Convention: `docker.cfg`.
 
 ```json
 {
