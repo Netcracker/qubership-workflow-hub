@@ -120,28 +120,29 @@ line is not enough to write the `with:` block:
 WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<ref>/actions/<name>/README.md
 ```
 
-Use the latest stable tag as `<ref>` (see *Resolving the latest tag* below).
-Skip the fetch for actions you are not using.
+Use the SHA from the *Pin table* below as `<ref>`. Skip the fetch for actions you are not using.
 
 ## Step 4 — assemble the workflow
 
 Hand off to `qubership-workflow-conventions` for all rules: pinning, permissions,
 concurrency, timeouts, dry-run gating, secrets.
 
-## Resolving the latest tag and its SHA
+## Pin table
 
-Latest stable tag:
+Use these exact refs when writing `uses:` lines. Update this table when a new release is published.
 
-```bash
-git ls-remote https://github.com/netcracker/qubership-workflow-hub 'refs/tags/v*' \
-  | awk -F/ '{print $NF}' | sort -V | tail -1
+| Repo | Latest tag | SHA (use this in `uses:`) |
+| --- | --- | --- |
+| `netcracker/qubership-workflow-hub` | `v2.2.1` | `e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1` |
+| `netcracker/release-drafter` | `v1.0.0` | `86f4276a3894b5af70480e826c32fe3648ac6a70` |
+| `actions/checkout` | `v6.0.2` | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` |
+
+Example usage:
+```yaml
+uses: netcracker/qubership-workflow-hub/actions/docker-action@e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1  # v2.2.1
 ```
 
-SHA for a specific tag:
-
-```bash
-git ls-remote https://github.com/netcracker/qubership-workflow-hub refs/tags/<tag>
-```
+Update this table manually when intentionally upgrading to a new release.
 
 ## What this skill does NOT do
 
