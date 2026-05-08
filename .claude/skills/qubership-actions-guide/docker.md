@@ -34,8 +34,8 @@ If from scratch → go directly to *Collect requirements*.
 
 ## Collect requirements
 
-Ask ALL questions below at once. Do not generate anything until every question is answered.
-General questions (triggers, dry-run, runner) are already collected in `SKILL.md` Step 0.
+Extract answers from the user's message first. Ask only what is missing and required to generate the workflow.
+General context (triggers, runner) is already established in `SKILL.md` Step 0.
 
 | # | Question | What it controls |
 | - | --- | --- |

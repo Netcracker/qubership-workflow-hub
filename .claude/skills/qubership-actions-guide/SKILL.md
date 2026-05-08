@@ -5,23 +5,30 @@ description: Navigation-only skill for individual actions in netcracker/qubershi
 
 # qubership-actions-guide
 
-## Step 0 — collect general workflow requirements
+## Step 0 — understand the request
 
-**Before identifying which domain guide to load, establish the following.**
-Do not generate anything until all answers are collected.
+**Extract everything possible from what the user wrote before asking anything.**
 
-If the user has provided or mentioned an existing workflow file — read it first and extract what's already defined. Do not ask for information that can be read from the file.
+- User mentioned triggers ("on push", "manually", "on tag") → use them, do not ask
+- User mentioned existing file → read it first, extract what's defined, do not ask for what can be read
+- User says "write a workflow" with no existing file → from scratch, do not ask
+- User mentioned domain ("Docker", "Helm", "release") → load the relevant guide immediately
 
-| # | Question | What it controls |
+**Only ask if a piece of information is absent from the user's message AND without it the workflow cannot be generated correctly.**
+
+The table below lists what to look for — extract from context first, ask only if missing:
+
+| # | What to determine | Ask only if not clear from context |
 | - | --- | --- |
-| 1 | What triggers this workflow? (push to branch, pull_request, tag push, `workflow_dispatch`, schedule?) | `on:` block |
+| 1 | Triggers (`on:`) | Yes — triggers are rarely obvious without being stated |
+| 2 | Domain (Docker / Helm / security / release) | Usually clear from the request |
 
-Defaults — do not ask, apply automatically:
+Defaults — never ask, apply automatically:
 - Runner: `ubuntu-latest`
 - Concurrency: release/deploy workflows → `cancel-in-progress: false`; CI/PR workflows → `cancel-in-progress: true`
-- Dry-run: asked per domain where relevant (Docker, Helm) — not here
+- Dry-run: see domain guide
 
-After collecting these answers, continue to Step 1 to identify the domain and load the relevant guide.
+After understanding the request, continue to Step 1 to load the relevant domain guide.
 
 ## Step 1 — identify the operation and load the right guide
 

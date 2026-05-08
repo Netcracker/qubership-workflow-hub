@@ -2,8 +2,8 @@
 
 ## Clarifying questions
 
-General workflow questions (triggers, dry-run, runner, concurrency) are collected in Step 0
-of `SKILL.md` before this guide is loaded. Ask only the security-specific questions below.
+Extract answers from the user's message first. Ask only what is missing and required to generate the workflow.
+General context (triggers, runner) is already established in `SKILL.md` Step 0.
 
 | Question | Why |
 | --- | --- |

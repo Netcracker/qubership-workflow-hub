@@ -5,7 +5,7 @@ Load it whenever the workflow needs to create a Git tag, a GitHub Release, or up
 
 ## Clarifying questions
 
-General workflow questions are collected in Step 0 of `SKILL.md`. Ask only the release-specific questions below.
+Extract answers from the user's message first. Ask only what is missing and cannot be defaulted.
 
 Default: the workflow always creates a Git tag. If the tag already exists the `check-tag` step fails fast. Only skip tag creation if the user explicitly says the tag already exists.
 
