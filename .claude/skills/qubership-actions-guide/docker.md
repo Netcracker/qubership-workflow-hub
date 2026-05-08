@@ -101,6 +101,8 @@ verify tag absent      reads config file            creates vX.Y.Z tag      buil
 
 For release details (tag-action inputs, assets-action patterns, permissions) — see `release.md`.
 
+**Checkout:** `docker-action` checks out internally (`checkout: "true"` by default). Only set `ref` in release workflows — pass `refs/tags/v${{ inputs.release }}` so the build uses the tag created in the previous job. For CI builds (push/PR), omit `ref` entirely — the action uses the current commit. A separate explicit checkout is still needed in any job that reads files before the build (e.g. `resolve-config` job reading the config file).
+
 ### Tag strategy per trigger
 
 Use different `metadata-action` templates depending on the trigger — they serve different purposes:
@@ -150,7 +152,8 @@ tags: ${{ steps.metadata-release.outputs.result || steps.metadata-push.outputs.r
 - `tags` — from `metadata-action` output or direct
 - `registry` — e.g. `ghcr.io`
 - `dry-run` — `"true"` / `"false"`
-- `checkout` — set `"false"` if repo already checked out
+- `ref` — set only in release workflows: `refs/tags/v${{ inputs.release }}`; omit for CI builds
+- `checkout` — default `"true"`; set `"false"` only if repo already checked out in the same job
 - `download-artifact` / `download-artifact-name` / `download-artifact-path` — for separate build job
 
 ---
