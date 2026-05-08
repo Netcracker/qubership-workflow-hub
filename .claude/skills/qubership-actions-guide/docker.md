@@ -101,13 +101,47 @@ verify tag absent      reads config file            creates vX.Y.Z tag      buil
 
 For release details (tag-action inputs, assets-action patterns, permissions) — see `release.md`.
 
+### Tag strategy per trigger
+
+Use different `metadata-action` templates depending on the trigger — they serve different purposes:
+
+| Trigger | `default-template` | Result |
+| --- | --- | --- |
+| `push` to branch / `pull_request` | `"{{ref-name}},{{short-sha}}"` | Branch tag + short commit SHA — temporary, identifies the build |
+| `workflow_dispatch` release | `"{{ref-name}},{{major}}.{{minor}},{{major}},latest"` | Full semver set — `v1.2.3`, `1.2`, `1`, `latest` |
+
+When the workflow handles both triggers (push + workflow_dispatch), use two separate `metadata-action` steps with `if:` conditions and merge the outputs:
+
+```yaml
+- id: metadata-release
+  if: github.event_name == 'workflow_dispatch'
+  uses: netcracker/qubership-workflow-hub/actions/metadata-action@<sha>  # vX.Y.Z
+  with:
+    ref: refs/tags/v${{ inputs.release }}
+    default-template: "{{ref-name}},{{major}}.{{minor}},{{major}},latest"
+    extra-tags: ${{ inputs.extra-tags }}
+
+- id: metadata-push
+  if: github.event_name == 'push'
+  uses: netcracker/qubership-workflow-hub/actions/metadata-action@<sha>  # vX.Y.Z
+  with:
+    ref: ${{ github.ref }}
+    default-template: "{{ref-name}},{{short-sha}}"
+```
+
+Then pass to `docker-action`:
+```yaml
+tags: ${{ steps.metadata-release.outputs.result || steps.metadata-push.outputs.result }}
+```
+
 ### Key action inputs reference
 
 **`docker-config-resolver`:**
 - `file-path` — path to config file
 
 **`metadata-action`:**
-- `default-template` — tag template, e.g. `"{{ref-name}}"`
+- `ref` — the ref to render tags from; for release use `refs/tags/v${{ inputs.release }}`, for push use `${{ github.ref }}`
+- `default-template` — tag template (see *Tag strategy* above)
 - `extra-tags` — additional tags from `workflow_dispatch` input
 
 **`docker-action`:**

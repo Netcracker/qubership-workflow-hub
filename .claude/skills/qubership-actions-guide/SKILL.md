@@ -16,12 +16,21 @@ description: Navigation-only skill for individual actions in netcracker/qubershi
 
 **Only ask if a piece of information is absent from the user's message AND without it the workflow cannot be generated correctly.**
 
-The table below lists what to look for — extract from context first, ask only if missing:
+Infer triggers from the request — do not ask unless truly ambiguous.
 
-| # | What to determine | Ask only if not clear from context |
-| - | --- | --- |
-| 1 | Triggers (`on:`) | Yes — triggers are rarely obvious without being stated |
-| 2 | Domain (Docker / Helm / security / release) | Usually clear from the request |
+Three standard patterns used across all org templates:
+
+| Pattern | `on:` | Use when |
+| --- | --- | --- |
+| Release only | `workflow_dispatch` | User says "release", "publish", "manually" — all release workflows (Docker, Helm, Maven, npm, Python) are manual-only |
+| CI + manual | `push` (branches) + `workflow_dispatch` | User says "build on push" or "CI build" with optional manual trigger — dev Docker build, Maven+Docker |
+| CI only | `push` (branches) + `pull_request` | User says "run on PR" or "validate only" — no manual trigger needed |
+
+All `push`-based templates include `paths-ignore` for docs/config files (`.github/**`, `docs/**`, `README.md`, `LICENSE`, etc.) — always add this.
+
+Release workflows always use `cancel-in-progress: false` — never cancel a running release.
+
+If the trigger cannot be inferred — ask once, briefly.
 
 Defaults — never ask, apply automatically:
 - Runner: `ubuntu-latest`
