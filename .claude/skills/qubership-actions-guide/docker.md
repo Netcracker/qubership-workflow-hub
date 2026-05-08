@@ -62,6 +62,8 @@ Use collected answers to pick the pipeline and generate output in this order:
 
 ### Pipeline selection
 
+**Release workflows MUST include `tag-action` (check) and `tag-action` (create) before any build step. Never omit tag creation in a release workflow — even if the user didn't mention it explicitly. "Release" implies tag.**
+
 | Config file? | Release? | Pipeline |
 | --- | --- | --- |
 | No | No | `metadata-action` → `docker-action` (inline component) |

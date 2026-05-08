@@ -17,6 +17,24 @@ Default: `upload-assets` job always generated with a comment `# remove if not ne
 
 ---
 
+## Critical rule: tag before build
+
+**Always create the Git tag before any build or publish step.** Never create the tag after.
+
+Reason: if the build pushes artifacts (Docker images, Maven jars, npm packages) but the tag step fails afterwards, artifacts exist in the registry with release version tags but no corresponding Git tag — the release is in an inconsistent state.
+
+Correct order:
+```
+check-tag → create-tag → [build/publish] → github-release
+```
+
+Wrong order (never do this):
+```
+[build/publish] → create-tag   ← tag created after artifacts already pushed
+```
+
+---
+
 ## Patterns
 
 ### Tag only
