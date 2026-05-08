@@ -7,11 +7,12 @@ Load it whenever the workflow needs to create a Git tag, a GitHub Release, or up
 
 General workflow questions are collected in Step 0 of `SKILL.md`. Ask only the release-specific questions below.
 
+Default: the workflow always creates a Git tag. If the tag already exists the `check-tag` step fails fast. Only skip tag creation if the user explicitly says the tag already exists.
+
 | # | Question | What it controls |
 | - | --- | --- |
-| 1 | Should the workflow create a Git tag, or does the tag already exist? | Creating → `tag-action` with `create-tag: true`. Already exists → skip `tag-action`. |
-| 2 | Should a GitHub Release be created? If yes — minimal release or with auto-generated changelog from PR history? | Minimal → `tag-action` with `create-release: true`. Changelog → `release-drafter` (requires `.github/release-drafter-config.yml` in the repo). |
-| 3 | Should release assets be uploaded? If yes — are they build artifacts (jars, zips, binaries produced during the workflow) or files already in the repo? | Build artifacts → `upload-artifact` in producer job + `download-artifact` before `assets-action`, no `checkout` needed. Repo files → `checkout` at release tag is enough. |
+| 1 | Minimal GitHub Release or with auto-generated changelog from PR history? | Minimal → `tag-action` with `create-release: true`. Changelog → `release-drafter` (requires `.github/release-drafter-config.yml`). |
+| 2 | Should release assets be uploaded? If yes — are they build artifacts (jars, zips, binaries) or files already in the repo? | Build artifacts → `upload-artifact` in producer job + `download-artifact` before `assets-action`, no `checkout` needed. Repo files → `checkout` at release tag is enough. |
 
 ---
 

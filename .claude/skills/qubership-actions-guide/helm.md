@@ -7,6 +7,7 @@ of `SKILL.md` before this guide is loaded. Ask only the Helm-specific questions 
 
 | Question                                                              | Why                                                               |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Should there be a dry-run mode?                                       | Helm release modifies files and publishes charts — dry-run lets you verify before committing |
 | Do you have a Helm release config file? If yes — what is its path?    | If yes — read it. If no — generate it from collected answers (chart paths, image keys, chart name), using `.qubership/helm-charts-release-config.yaml` as the default path. |
 | Is a GitHub Release needed alongside the Helm release?                | Yes → also load `release.md` for tag/release/assets patterns.     |
 | Should the workflow also update Docker image versions in values.yaml? | Determines whether `charts-values-update-action` is needed; if yes — ask which image keys in `values.yaml` to update |

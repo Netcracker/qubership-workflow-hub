@@ -39,12 +39,13 @@ General questions (triggers, dry-run, runner) are already collected in `SKILL.md
 
 | # | Question | What it controls |
 | - | --- | --- |
-| 1 | Registry: GHCR / Docker Hub / both? | `registry` input and auth method |
-| 2 | Do you want a Docker config file (e.g. `.qubership/docker.cfg`)? If you already have one — what is its path? | Config file → `docker-config-resolver` + matrix. No config → inline JSON in `docker-action`. |
-| 3 | How many Docker images does this workflow build? What are their names and Dockerfile paths? | Populates `components` — in config file or inline. |
-| 4 | How should image tags be generated? Auto from branch/tag name (`metadata-action`), custom tags via `workflow_dispatch` input, or both? | Whether `metadata-action` is needed and how tags are assembled. |
-| 5 | Is there a build step before Docker (Maven/npm/Python/Go/other)? If yes — same job or separate job? | Separate job → `upload-artifact` in build job + `download-artifact: true` in `docker-action`. |
-| 6 | Is a GitHub Release needed? | Yes → also load `release.md` for tag/release/assets patterns. |
+| 1 | Should there be a dry-run mode? | `dry-run` input + separate job or conditional — builds without pushing |
+| 2 | Registry: GHCR / Docker Hub / both? | `registry` input and auth method |
+| 3 | Do you want a Docker config file (e.g. `.qubership/docker.cfg`)? If you already have one — what is its path? | Config file → `docker-config-resolver` + matrix. No config → inline JSON in `docker-action`. |
+| 4 | *(Skip if config file already read)* How many Docker images? What are their names and Dockerfile paths? | Populates `components` in config file or inline. |
+| 5 | Should image tags include custom values supplied via `workflow_dispatch` input (in addition to auto-generated from ref)? | Yes → add `extra-tags` input wired to `metadata-action`. Default: auto only. |
+| 6 | Is there a build step before Docker (Maven/npm/Python/Go/other)? If yes — same job or separate job? | Separate job → `upload-artifact` in build job + `download-artifact: true` in `docker-action`. |
+| 7 | Is a GitHub Release needed? | Yes → also load `release.md` for tag/release/assets patterns. |
 When the user doesn't know same job vs separate jobs — explain: same job is simpler;
 separate jobs make sense when the artifact is also needed by other parallel jobs (tests, scans).
 

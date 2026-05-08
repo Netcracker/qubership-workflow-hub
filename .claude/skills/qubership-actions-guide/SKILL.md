@@ -7,19 +7,19 @@ description: Navigation-only skill for individual actions in netcracker/qubershi
 
 ## Step 0 — collect general workflow requirements
 
-**Before identifying which domain guide to load, ask these questions first.**
-They apply to every workflow regardless of domain (Docker, Helm, Maven, security, etc.).
+**Before identifying which domain guide to load, establish the following.**
 Do not generate anything until all answers are collected.
+
+If the user has provided or mentioned an existing workflow file — read it first and extract what's already defined. Do not ask for information that can be read from the file.
 
 | # | Question | What it controls |
 | - | --- | --- |
-| 1 | Does the user have an existing workflow to migrate, or is this from scratch? | Migration → read the existing file first, extract what's already defined. Scratch → proceed with questions below. |
-| 2 | What triggers this workflow? (push to branch, pull_request, tag push, `workflow_dispatch`, schedule?) | `on:` block |
-| 3 | Should there be a dry-run mode? | `dry-run` input + conditional logic |
+| 1 | What triggers this workflow? (push to branch, pull_request, tag push, `workflow_dispatch`, schedule?) | `on:` block |
 
 Defaults — do not ask, apply automatically:
 - Runner: `ubuntu-latest`
 - Concurrency: release/deploy workflows → `cancel-in-progress: false`; CI/PR workflows → `cancel-in-progress: true`
+- Dry-run: asked per domain where relevant (Docker, Helm) — not here
 
 After collecting these answers, continue to Step 1 to identify the domain and load the relevant guide.
 
