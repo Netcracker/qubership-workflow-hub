@@ -12,7 +12,8 @@ Default: the workflow always creates a Git tag. If the tag already exists the `c
 | # | Question | What it controls |
 | - | --- | --- |
 | 1 | Minimal GitHub Release or with auto-generated changelog from PR history? | Minimal → `tag-action` with `create-release: true`. Changelog → `release-drafter` (requires `.github/release-drafter-config.yml`). |
-| 2 | Should release assets be uploaded? If yes — are they build artifacts (jars, zips, binaries) or files already in the repo? | Build artifacts → `upload-artifact` in producer job + `download-artifact` before `assets-action`, no `checkout` needed. Repo files → `checkout` at release tag is enough. |
+
+Default: `upload-assets` job always generated with a comment `# remove if not needed`. Build artifacts need `upload-artifact` → `download-artifact`; repo files need only `checkout`.
 
 ---
 

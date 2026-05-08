@@ -39,17 +39,17 @@ General questions (triggers, dry-run, runner) are already collected in `SKILL.md
 
 | # | Question | What it controls |
 | - | --- | --- |
-| 1 | Should there be a dry-run mode? | `dry-run` input + separate job or conditional — builds without pushing |
+| 1 | Should there be a dry-run mode? | `dry-run` input + conditional — builds without pushing |
 | 2 | Registry: GHCR / Docker Hub / both? | `registry` input and auth method |
-| 3 | Do you want a Docker config file (e.g. `.qubership/docker.cfg`)? If you already have one — what is its path? | Config file → `docker-config-resolver` + matrix. No config → inline JSON in `docker-action`. |
-| 4 | *(Skip if config file already read)* How many Docker images? What are their names and Dockerfile paths? | Populates `components` in config file or inline. |
-| 5 | Should image tags include custom values supplied via `workflow_dispatch` input (in addition to auto-generated from ref)? | Yes → add `extra-tags` input wired to `metadata-action`. Default: auto only. |
-| 6 | Is there a build step before Docker (Maven/npm/Python/Go/other)? If yes — same job or separate job? | Separate job → `upload-artifact` in build job + `download-artifact: true` in `docker-action`. |
-| 7 | Is a GitHub Release needed? | Yes → also load `release.md` for tag/release/assets patterns. |
-When the user doesn't know same job vs separate jobs — explain: same job is simpler;
-separate jobs make sense when the artifact is also needed by other parallel jobs (tests, scans).
+| 3 | Do you have an existing Docker config file? If yes — what is its path? | Yes → read it. No → generate it (see *Config file generation*). Config file is always used — never inline components in the workflow. |
+| 4 | Is a GitHub Release needed? | Yes → also load `release.md`. |
 
-Default — do not ask: platforms `linux/amd64,linux/arm64` unless user specifies otherwise.
+Defaults — do not ask, apply automatically:
+- Platforms: `linux/amd64,linux/arm64` (set in `defaults` of config file, not in workflow inputs)
+- `extra-tags` input always included in `workflow_dispatch` — user removes if not needed
+- Image names / Dockerfiles: goes into config file as placeholder `"name": "your-image"` — user fills in
+- Build step before Docker: only ask if user explicitly mentions Maven/npm/Go/etc
+- **Config file is always generated** — never put image name, Dockerfile path, platforms, or build-context into workflow inputs
 
 ---
 

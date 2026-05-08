@@ -113,14 +113,15 @@ Deprecated (do not use): `commit-and-push`, `pom-updater`, `tag-checker`, `archi
 
 ## Step 3 — fetch action README on demand
 
-Fetch only for actions you are actually using, only when the catalog purpose
-line is not enough to write the `with:` block:
+**Never use WebFetch or git ls-remote to look up versions or SHAs — use the Pin table below.**
+
+Fetch action README only when the catalog purpose line is not enough to write the `with:` block:
 
 ```text
-WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<ref>/actions/<name>/README.md
+WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<sha>/actions/<name>/README.md
 ```
 
-Use the SHA from the *Pin table* below as `<ref>`. Skip the fetch for actions you are not using.
+Use the SHA from the *Pin table* below. Skip the fetch for actions you are not using.
 
 ## Step 4 — assemble the workflow
 
