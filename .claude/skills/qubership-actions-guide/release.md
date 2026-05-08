@@ -11,8 +11,7 @@ General workflow questions are collected in Step 0 of `SKILL.md`. Ask only the r
 | - | --- | --- |
 | 1 | Should the workflow create a Git tag, or does the tag already exist? | Creating → `tag-action` with `create-tag: true`. Already exists → skip `tag-action`. |
 | 2 | Should a GitHub Release be created? If yes — minimal release or with auto-generated changelog from PR history? | Minimal → `tag-action` with `create-release: true`. Changelog → `release-drafter` (requires `.github/release-drafter-config.yml` in the repo). |
-| 3 | Should release assets be uploaded? | Yes → `assets-action`. |
-| 4 | Where do the assets come from? | Build artifacts produced during the workflow (jars, tgz, zips, binaries) → `upload-artifact` in producer job + `download-artifact` before `assets-action`, no `checkout` needed. Files already in the repo → `checkout` at the release tag is enough. |
+| 3 | Should release assets be uploaded? If yes — are they build artifacts (jars, zips, binaries produced during the workflow) or files already in the repo? | Build artifacts → `upload-artifact` in producer job + `download-artifact` before `assets-action`, no `checkout` needed. Repo files → `checkout` at release tag is enough. |
 
 ---
 

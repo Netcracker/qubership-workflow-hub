@@ -8,7 +8,7 @@ of `SKILL.md` before this guide is loaded. Ask only the security-specific questi
 | Question | Why |
 | --- | --- |
 | What to scan: source/deps, Docker images in GHCR, or running k8s cluster? | Determines which action to use: `cdxgen`, `re-security-scan`, or `k8s-hardening-scan` |
-| Do you have a Docker config file with `security` settings? If yes — what is its path? | If yes — read it. Docker image scan config lives there. If no — `.qubership/docker.cfg` is the conventional default; the path is passed via `file-path` input to `docker-config-resolver`. |
+| *(Docker image scan only)* Do you have a Docker config file with `security` settings? If yes — what is its path? | If yes — read it. If no — `.qubership/docker.cfg` is the conventional default; path passed via `file-path` to `docker-config-resolver`. |
 
 ## Source / dependency scan (`cdxgen`)
 
@@ -58,8 +58,9 @@ Does not scan images — scans live deployments for hardening compliance.
 | --- | --- |
 | Which Kubernetes namespaces to scan? (comma-separated, or leave empty for all) | Maps to `namespaces` input — scanning all namespaces can be noisy |
 | Should the job fail if mandatory hardening checks are violated? | Maps to `fail-on-mandatory-checks` — default is `false` (report only) |
-| Enable Trivy scan for Helm chart misconfigurations? | Maps to `execute-trivy-scan` — default is `false`, Kubescape only |
 | Do you have a hardening config file? If yes — what is its path? | If yes — read it. If no — ask if any built-in rules should be suppressed, and confirm `.qubership/hardening-config.yaml` as the default path (passed via `config-file` input). |
+
+Default — do not ask: Trivy scan for Helm chart misconfigurations is `false` (Kubescape only) unless user requests it.
 
 ### `.qubership/hardening-config.yaml` schema
 

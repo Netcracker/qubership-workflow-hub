@@ -3,25 +3,21 @@
 ## How to use this guide
 
 Follow the steps in order. Do not skip ahead. Do not generate any workflow,
-config file, or code until Step 3 explicitly says to.
+config file, or code until Step 2 explicitly says to.
+
+If the user has an existing workflow → go to *Migrating an existing workflow* below first.
+If from scratch → go directly to *Collect requirements*.
 
 ---
 
-## Step 1 — determine starting point
-
-**Does the user have an existing workflow?**
-
-- **Yes** → go to *Migrating an existing workflow* (Step 1b). Read the file first.
-- **No** → continue to Step 2.
-
-### Step 1b — migrating an existing workflow
+## Migrating an existing workflow
 
 1. Read the workflow file (ask user for path or let them paste it).
 2. Find and read any config files referenced in the workflow — component list,
    registries, and build settings may already be defined there.
 3. Extract all existing information (images, Dockerfiles, registry, platforms)
    before asking the user anything — do not ask for information that can be read.
-4. Replace non-Qubership patterns using the table below, then go to Step 3.
+4. Replace non-Qubership patterns using the table below, then go to *Collect requirements* for anything still missing.
 
 | Existing pattern | Replace with |
 | --- | --- |
@@ -36,13 +32,10 @@ config file, or code until Step 3 explicitly says to.
 
 ---
 
-## Step 2 — collect requirements (from scratch only)
+## Collect requirements
 
-Ask ALL questions below. Do not generate anything until every question is answered.
-Ask them all at once, not one by one.
-
-General workflow questions (triggers, dry-run, runner, concurrency) are collected in Step 0
-of `SKILL.md` before this guide is loaded. Ask only the Docker-specific questions below.
+Ask ALL questions below at once. Do not generate anything until every question is answered.
+General questions (triggers, dry-run, runner) are already collected in `SKILL.md` Step 0.
 
 | # | Question | What it controls |
 | - | --- | --- |
@@ -51,17 +44,17 @@ of `SKILL.md` before this guide is loaded. Ask only the Docker-specific question
 | 3 | How many Docker images does this workflow build? What are their names and Dockerfile paths? | Populates `components` — in config file or inline. |
 | 4 | How should image tags be generated? Auto from branch/tag name (`metadata-action`), custom tags via `workflow_dispatch` input, or both? | Whether `metadata-action` is needed and how tags are assembled. |
 | 5 | Is there a build step before Docker (Maven/npm/Python/Go/other)? If yes — same job or separate job? | Separate job → `upload-artifact` in build job + `download-artifact: true` in `docker-action`. |
-| 6 | Is a GitHub Release needed? If yes — should release assets (binaries, archives) be uploaded? | `tag-action` (creates tag + release) and optionally `assets-action`. |
-| 7 | Target platforms: `linux/amd64` only or multi-arch (`linux/amd64,linux/arm64`)? | Multi-arch requires QEMU setup and longer build time. Default: `linux/amd64`. |
-
+| 6 | Is a GitHub Release needed? | Yes → also load `release.md` for tag/release/assets patterns. |
 When the user doesn't know same job vs separate jobs — explain: same job is simpler;
 separate jobs make sense when the artifact is also needed by other parallel jobs (tests, scans).
 
+Default — do not ask: platforms `linux/amd64,linux/arm64` unless user specifies otherwise.
+
 ---
 
-## Step 3 — decide and generate
+## Decide and generate
 
-Use answers from Step 2 to pick the pipeline and generate output in this order:
+Use collected answers to pick the pipeline and generate output in this order:
 
 1. If config file is wanted and doesn't exist → **generate the config file first** (see *Config file generation* below), write it, show it, ask user to confirm or adjust.
 2. Then generate the workflow.
@@ -132,13 +125,13 @@ For release details (tag-action inputs, assets-action patterns, permissions) —
 When config file is wanted but doesn't exist — generate it from collected answers.
 Do not ask the user to fill in a template. Write the file, show it, say "adjust if anything looks wrong."
 
-Minimal generated example (two images, GHCR, amd64):
+Minimal generated example (two images, GHCR):
 
 ```json
 {
   "registry": "ghcr.io",
   "defaults": {
-    "platforms": "linux/amd64",
+    "platforms": "linux/amd64,linux/arm64",
     "dockerfile": "Dockerfile",
     "build_context": "."
   },
@@ -216,7 +209,7 @@ The filename is arbitrary — path is passed via `file-path` input. Convention: 
 | `name` | **Required.** Image path becomes `{registry}/{owner}/{name}` |
 | `dockerfile` | Path to Dockerfile. Default: `"Dockerfile"` |
 | `build_context` | Docker build context path. Default: `"."` |
-| `platforms` | Comma-separated platforms. Default: `"linux/amd64"` |
+| `platforms` | Comma-separated platforms. Default: `"linux/amd64,linux/arm64"` |
 | `arguments` | Build args, comma-separated or newline-delimited |
 | `security` | Component-level security overrides (merged with global) |
 
