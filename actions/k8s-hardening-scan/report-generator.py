@@ -213,7 +213,8 @@ def generate_full_report(data, config, title="Kubescape Hardening Scan Report"):
         passed = sum(1 for c in controls
                     if c.get('rules', [{}])[0].get('status', '') == 'passed')
         failed = len(controls) - passed
-        report += f"- `{resource_id}`: ✅ {passed} / ❌ {failed}\n"
+        report += f"- `{resource_id}`: ✅ {passed} / ❌ {failed}"
+        report += f"{'\n  - '.join(resource_images)}\n"
 
     report += "\n---\n"
     report_tables, failed_mandatory_checks_all = generate_markdown_tables(data, config)
