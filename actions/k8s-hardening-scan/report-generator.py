@@ -127,7 +127,7 @@ def generate_markdown_tables(data, config):
         output_lines.append("|-----------|--------------|--------|")
 
         # Processing each control
-        for control in controls:
+        for control in sorted(controls, key=lambda c: c.get('controlID', '')):
             control_id = control.get('controlID', '')
             control_name = control.get('name', '')
             if control_id in mandatory_checks:
