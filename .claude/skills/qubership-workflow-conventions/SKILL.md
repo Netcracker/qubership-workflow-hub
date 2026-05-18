@@ -1,15 +1,6 @@
 ---
 name: qubership-workflow-conventions
-description: >
-  Single source of truth for Qubership GitHub Actions workflows. Use when
-  designing, writing, reviewing, or debugging .github/workflows/*.yml that
-  consume actions or templates from netcracker/qubership-workflow-hub or
-  Netcracker/.github. Covers the workflow design process, mandatory
-  conventions (pinning, permissions, anti-hallucination, naming, secrets,
-  PR safety), structural patterns (matrix, dry-run gating, concurrency,
-  timeouts, reusable workflow contracts), GitHub App tokens, and failed
-  workflow debugging. Other Qubership skills (templates-guide,
-  actions-guide) are navigators that defer to this one for all rules.
+description: Single source of truth for Qubership GitHub Actions workflows. Use when designing, writing, reviewing, or debugging .github/workflows/*.yml that consume actions or templates from netcracker/qubership-workflow-hub or Netcracker/.github.
 ---
 
 # qubership-workflow-conventions
@@ -106,9 +97,6 @@ After *Clarify before acting*:
 
 ## Mandatory conventions
 
-These rules apply to every Qubership workflow. Companion skills defer
-to this section.
-
 ### Anti-hallucination
 
 LLMs invent plausible-sounding identifiers when they don't have the
@@ -148,28 +136,15 @@ uses: netcracker/qubership-workflow-hub/actions/<name>@<sha>  # vX.Y.Z
 Never resolve SHAs via `git ls-remote`, `WebFetch`, or memory — the table is
 the single source of truth and is maintained manually by the user.
 
-Forbidden:
-
-- Never use `@main` — neither as an action pin nor as `<ref>` for catalog
-  or README fetches. Use the SHA from the Pin table.
-- Never use short SHAs.
-
-Exception:
-
-- A bare major tag (e.g. `actions/checkout@v4`) is acceptable **only** when
-  the user has explicitly asked for automatic minor-version updates. Do not
-  pick this on your own — ask first, or stick to SHA pinning.
+Forbidden: `@main`, short SHAs, bare tags (`@v6`, `@v1.2.3`). Always full SHA.
 
 ### Permissions
 
 - Set `permissions:` at the **job level**, not the workflow level.
-- Start every job from `contents: read` and elevate only where the
-  action's README says it needs more (e.g. `packages: write` for GHCR
-  pushes, `pull-requests: write` for PR comments, `id-token: write`
-  for OIDC, `contents: write` for tag/release creation).
-- The action's README is authoritative for required permissions —
-  check it via `qubership-actions-guide` when generating each
-  `permissions:` block.
+- Start every job from `contents: read` and elevate only where the action's
+  README says it needs more (e.g. `packages: write` for GHCR pushes,
+  `pull-requests: write` for PR comments, `id-token: write` for OIDC,
+  `contents: write` for tag/release creation).
 
 ### Naming and structure
 
@@ -179,8 +154,6 @@ Exception:
   `Netcracker`.
 - Boolean inputs default `false`; the input name describes the feature
   when enabled.
-- Actions that write or push must offer a `dry-run` input — check the
-  README and use it during exploration.
 
 ### Secrets and PR safety
 
@@ -210,28 +183,17 @@ Read these files when relevant:
 
 ## Preferred answer style
 
-Match the language of the user's request. If the user writes in Russian,
-answer in Russian; if in English, answer in English. Translate the
-section headers in the structure below to the same language. Keep YAML,
-file paths, action identifiers, and code samples unchanged regardless
-of language.
+Match the user's language. Translate section headers; keep YAML, paths,
+action identifiers unchanged.
 
-Use this structure (English form shown — translate headers as needed):
+Structure:
 
 ```text
 File: .github/workflows/<name>.yml
 
 <full YAML>
 
-What to configure:
-- secret/variable/environment
-
-How to trigger:
-- push, PR, tag, workflow_dispatch, etc.
-
-How to verify:
-- Actions tab, expected artifact/image/release/check
+What to configure: <secrets / vars / environments>
+How to trigger: <push / PR / tag / workflow_dispatch>
+How to verify: <Actions tab, expected artifact/image/release>
 ```
-
-If the user is non-expert, explain simply. Do not over-explain basic
-YAML unless asked.
