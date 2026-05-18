@@ -35,6 +35,16 @@ charts:
 
 ## Release pipeline
 
+When a GitHub Release is needed, prepend the tag steps from `release.md` (*Critical rule: tag before build*):
+
+```
+tag-action (check)  →  tag-action (create)  →  metadata-action  →  charts-values-update-action  →  chart-version  →  github-release
+verify tag absent      creates vX.Y.Z tag      produces version     updates values.yaml images        updates Chart.yaml   publishes release
+                                                                     reads helm-charts-release-config.yaml
+```
+
+When only chart update is needed (no release):
+
 ```
 metadata-action  →  charts-values-update-action  →  chart-version
 produces version     updates values.yaml images        updates Chart.yaml

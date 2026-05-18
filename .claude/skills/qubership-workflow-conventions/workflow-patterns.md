@@ -187,7 +187,7 @@ jobs:
       components: ${{ steps.load.outputs.components }}
       platforms: ${{ steps.load.outputs.platforms }}
     env:
-      CONFIG_FILE: .qubership/docker-build-config.cfg
+      CONFIG_FILE: .qubership/docker.cfg
     steps:
       - uses: actions/checkout@<sha>  # vX.Y.Z
         with:
@@ -222,8 +222,7 @@ Rules:
 - Use `fail-fast: true` when one bad component invalidates the release;
   `false` when each component is independent.
 - Keep config files under `.qubership/` per org convention
-  (`.qubership/docker.cfg`, `.qubership/docker-build-config.cfg`,
-  `.qubership/helm-charts-release-config.yaml`).
+  (`.qubership/docker.cfg`, `.qubership/helm-charts-release-config.yaml`).
 
 ## Dry-run release stages
 
@@ -265,8 +264,11 @@ Rules:
   unless the action README documents a boolean input.
 - Keep dry-run and deploy `with:` blocks identical except the `dry-run`
   flag — divergence defeats the purpose.
-- Place tag creation **after** the deploy job, not before. Creating a
-  tag pre-publish leaves an orphan tag if the publish fails.
+- For publish workflows (Maven Central, npm, PyPI): place tag creation
+  **after** the deploy job. Creating a tag before publish leaves an orphan
+  tag if the publish fails.
+- For Docker + GitHub Release workflows: place tag creation **before** the
+  build, per `release.md` → *Critical rule: tag before build*.
 - Use `if: ${{ needs.dry-run.result == 'success' }}` rather than relying
   on default `needs:` short-circuit when you want explicit gating.
 

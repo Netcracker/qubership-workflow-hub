@@ -34,7 +34,7 @@ reads docker config file    per-component scan settings    Trivy + Grype
 
 Each component with `security.scan: true` becomes a matrix entry.
 Scan settings (`trivy_scan`, `only_high_critical`, etc.) come from the
-component's `security` block — see `docker.md` for the full schema.
+component's `security` block — load `docker.md` as well for the full config file schema.
 The config file path is passed via `file-path` input to `docker-config-resolver`.
 
 **Without Docker config file** (discover from GHCR):
