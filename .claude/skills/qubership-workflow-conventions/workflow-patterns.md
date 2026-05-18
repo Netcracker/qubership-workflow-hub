@@ -84,40 +84,10 @@ and turns a hung job into wasted minutes.
 
 ## Matrix strategy
 
-Use a matrix when the same job needs to run across multiple versions,
-OSes, or build variants:
-
-```yaml
-jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        node-version: [20, 22]
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@<sha>  # vX.Y.Z
-      - uses: actions/setup-node@<sha>  # vX.Y.Z
-        with:
-          node-version: ${{ matrix.node-version }}
-```
-
-Rules:
-
-- Set `fail-fast: false` when each cell is independent and you want full
-  signal across the matrix. Keep the default `true` only when one
-  failure invalidates the rest.
-- Use `include:` to add specific extra combinations and `exclude:` to
-  drop unsupported ones — do not enumerate by hand.
-- Keep matrix dimensions small. Rows × columns × variants explodes
-  runner usage.
-- For a required status check on a matrix job, add a single
-  `matrix-complete` job with `needs: test` so branch protection has one
-  stable check name to gate on.
+- Set `fail-fast: false` when each cell is independent. Keep `true` only when one failure invalidates the rest.
+- Use `include:` / `exclude:` — do not enumerate combinations by hand.
+- For a required status check on a matrix job, add a single `matrix-complete` job with `needs:` so branch protection has one stable check name.
+- In Qubership workflows, matrix is always config-driven via a resolver action — see *Config-driven matrix* below.
 
 ## Config-driven matrix
 

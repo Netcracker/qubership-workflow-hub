@@ -32,6 +32,11 @@ docker-config-resolver  →  filter security.scan==true  →  re-security-scan (
 reads docker config file    per-component scan settings    Trivy + Grype
 ```
 
+`re-security-scan` is a reusable workflow from `netcracker/qubership-workflow-hub`:
+```yaml
+uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@<sha>  # vX.Y.Z
+```
+
 Each component with `security.scan: true` becomes a matrix entry.
 Scan settings (`trivy_scan`, `only_high_critical`, etc.) come from the
 component's `security` block — load `docker.md` as well for the full config file schema.

@@ -1,10 +1,5 @@
 # Docker — config, pipelines, and security
 
-If the user has an existing workflow → go to *Migrating an existing workflow* below first.
-If from scratch → go directly to *Collect requirements*.
-
----
-
 ## Migrating an existing workflow
 
 1. Read the workflow file (ask user for path or let them paste it).
@@ -36,15 +31,18 @@ Trigger and runner are inferred per `workflow-patterns.md` → *Trigger rules* �
 | - | --- | --- |
 | 1 | Should there be a dry-run mode? | `dry-run` input + conditional — builds without pushing |
 | 2 | Registry: GHCR / Docker Hub / both? | `registry` input and auth method |
-| 3 | Do you have an existing Docker config file? If yes — what is its path? | Yes → read it. No → generate it (see *Config file generation*). Config file is always used — never inline components in the workflow. |
-| 4 | Is a GitHub Release needed? | Yes → also load `release.md`. |
+| 3 | Is a GitHub Release needed? | Yes → also load `release.md`. |
+
+Config file — do not ask, determine from path:
+- **Path A** (existing workflow/configs): config file was already found when reading the workflow — use it.
+- **Path B** (from scratch): no config file exists — generate it (see *Config file generation*). Never ask the user to fill in a template.
+- Never put image name, Dockerfile path, platforms, or build-context into workflow inputs — always use config file.
 
 Defaults — do not ask, apply automatically:
 - Platforms: `linux/amd64,linux/arm64` — set in `defaults` of config file (see *Config file schema*)
 - `extra-tags` input always included in `workflow_dispatch` — user removes if not needed
-- Image names / Dockerfiles: goes into config file as placeholder `"name": "your-image"` — user fills in
+- Image names / Dockerfiles: placeholder `"name": "your-image"` in generated config — user fills in
 - Build step before Docker: only ask if user explicitly mentions Maven/npm/Go/etc
-- **Config file is always generated** — never put image name, Dockerfile path, platforms, or build-context into workflow inputs
 
 ---
 
@@ -52,7 +50,7 @@ Defaults — do not ask, apply automatically:
 
 Use collected answers to pick the pipeline and generate output in this order:
 
-1. If config file is wanted and doesn't exist → **generate the config file first** (see *Config file generation* below), write it, show it, ask user to confirm or adjust.
+1. **Path B only:** no config file exists → generate it first (see *Config file generation* below), write it, show it, ask user to confirm or adjust.
 2. Then generate the workflow.
 
 ### Pipeline selection

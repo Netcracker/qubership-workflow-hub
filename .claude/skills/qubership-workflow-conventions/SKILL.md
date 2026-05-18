@@ -43,12 +43,7 @@ is missing after reading. Produce a diff — do not rewrite from scratch.
 Hand off to `qubership-actions-guide` Step 1 — it routes to the relevant
 domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) or returns
 to the catalog for operations without a guide (Maven, npm, Python, Cleanup).
-
-For Maven/npm/Python/Cleanup ask only what is missing after inferring from context:
-- Maven: target store (Central / GitHub Packages); Java version (default: 21)
-- npm: registry (npmjs / GitHub Packages)
-- Python: target (PyPI / GitHub Packages)
-- Cleanup: package type (container images or Maven artifacts)
+Clarifying questions for catalog-only operations live in the catalog (see `qubership-actions-guide` → *Publishing* / *Cleanup*).
 
 **Infer the trigger from the request** — do not ask unless truly ambiguous.
 See `workflow-patterns.md` → *Trigger rules* for the three standard patterns.

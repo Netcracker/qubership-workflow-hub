@@ -5,10 +5,6 @@ description: Navigation-only skill for individual actions in netcracker/qubershi
 
 # qubership-actions-guide
 
-Clarification logic and trigger patterns live in `qubership-workflow-conventions`
-(*Clarify before acting* + `workflow-patterns.md` → *Trigger rules*). This skill
-only navigates actions.
-
 ## Step 1 — identify the operation and load the right guide
 
 Before picking any action, identify what the workflow needs to do and load
@@ -51,6 +47,11 @@ For full input/output details fetch the action README on demand (see *Step 3*).
 
 ### Publishing
 
+Ask only what is missing after inferring from context:
+- Maven: target store (Central / GitHub Packages); Java version (default: 21)
+- npm: registry (npmjs / GitHub Packages)
+- Python: target (PyPI / GitHub Packages)
+
 | Action | Purpose |
 | --- | --- |
 | `maven-release` | Maven artifact release with version bumping and GPG signing |
@@ -72,6 +73,8 @@ For full input/output details fetch the action README on demand (see *Step 3*).
 | `k8s-hardening-scan` | Validate Kubernetes container hardening compliance (Kubescape + Trivy) |
 
 ### Cleanup
+
+Ask only what is missing: package type (container images or Maven artifacts).
 
 | Action | Purpose |
 | --- | --- |
