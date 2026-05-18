@@ -27,6 +27,8 @@ Each guide contains: clarifying questions for the user, config file schemas,
 and pipeline patterns for that domain. Read it before picking actions or
 asking questions.
 
+Reusable workflows (`re-*.yml` in `netcracker/qubership-workflow-hub`) are out of scope — consume them as documented, do not redesign them here.
+
 ## Step 2 — pick actions from the catalog
 
 Use the catalog to match each step in the workflow to a Qubership action.
@@ -107,12 +109,7 @@ Fetch action README only when the catalog purpose line is not enough to write th
 WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<sha>/actions/<name>/README.md
 ```
 
-Use the SHA from the *Pin table* below. Skip the fetch for actions you are not using.
-
-## Step 4 — assemble the workflow
-
-Hand off to `qubership-workflow-conventions` for all rules: pinning, permissions,
-concurrency, timeouts, dry-run gating, secrets.
+Use the SHA from the *Pin table* below.
 
 ## Pin table
 
@@ -131,7 +128,3 @@ uses: netcracker/qubership-workflow-hub/actions/docker-action@e64a1ee2fc2f68ab44
 
 Update this table manually when intentionally upgrading to a new release.
 
-## What this skill does NOT do
-
-- It does not generate full workflows — for that, follow `qubership-workflow-conventions`.
-- It does not cover reusable workflows (`re-*.yml`) — only individual actions.

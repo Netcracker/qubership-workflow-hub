@@ -7,43 +7,6 @@ All YAML samples below show structure only. Verify every action name,
 input, output, and required permission per *Mandatory conventions →
 Anti-hallucination*.
 
-## Always output full workflow files
-
-When creating a workflow for a user, return a complete YAML file, not a
-partial snippet.
-
-## Baseline CI shape
-
-Use this shape for simple validation workflows:
-
-```yaml
-name: ci
-
-on:
-  pull_request:
-  push:
-    branches: [main]
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@<sha>  # vX.Y.Z
-```
-
-`<sha>` and `# vX.Y.Z` are placeholders — resolve per *Mandatory
-conventions → Pinning*.
-
-Add language/tool steps or Qubership actions after checkout.
-
 ## Trigger rules
 
 Three standard patterns used across all org templates. Infer from the user's
@@ -73,20 +36,6 @@ For reusable workflows:
 on:
   workflow_call:
 ```
-
-## Job structure
-
-Prefer clear jobs:
-
-- `validate`
-- `build`
-- `scan`
-- `publish`
-- `tag`
-- `release`
-- `cleanup`
-
-Use `needs:` when one job depends on another.
 
 ## Concurrency
 
@@ -172,55 +121,48 @@ Rules:
 
 ## Config-driven matrix
 
-A common Qubership pattern: load a JSON/YAML config file in one job,
-emit it as a job output, and consume it as a `matrix:` in a downstream
-job. Used in `docker-release`, `helm-charts-release`, and the
-`dev-docker-build-multiple-images` template.
+A common Qubership pattern: a resolver action reads a config file in one job,
+emits a JSON array as a job output, and a downstream job consumes it as `matrix:`.
+Used in `docker-release`, `helm-charts-release`, and the `dev-docker-build-multiple-images` template.
+
+For Docker multi-image builds use `docker-config-resolver` (reads `.qubership/docker.cfg`).
+For Helm releases use `charts-values-update-action`. Do not parse config files manually with `jq` — use the appropriate resolver action.
 
 Shape:
 
 ```yaml
 jobs:
-  load-config:
+  resolve-config:
     runs-on: ubuntu-latest
     outputs:
-      components: ${{ steps.load.outputs.components }}
-      platforms: ${{ steps.load.outputs.platforms }}
-    env:
-      CONFIG_FILE: .qubership/docker.cfg
+      components: ${{ steps.resolve.outputs.components }}
     steps:
       - uses: actions/checkout@<sha>  # vX.Y.Z
         with:
           persist-credentials: false
-      - id: load
-        run: |
-          components=$(jq -c ".components" "$GITHUB_WORKSPACE/${CONFIG_FILE}")
-          platforms=$(jq -c ".platforms" "$GITHUB_WORKSPACE/${CONFIG_FILE}")
-          echo "components=${components}" >> $GITHUB_OUTPUT
-          echo "platforms=${platforms}" >> $GITHUB_OUTPUT
+      - id: resolve
+        uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@<sha>  # vX.Y.Z
+        with:
+          file-path: .qubership/docker.cfg
 
   build:
-    needs: load-config
+    needs: resolve-config
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
-        component: ${{ fromJson(needs.load-config.outputs.components) }}
+        component: ${{ fromJson(needs.resolve-config.outputs.components) }}
     steps:
-      - name: Build component
-        uses: netcracker/qubership-workflow-hub/actions/docker-action@<sha>  # vX.Y.Z
+      - uses: netcracker/qubership-workflow-hub/actions/docker-action@<sha>  # vX.Y.Z
         with:
           component: ${{ toJson(matrix.component) }}
-          platforms: ${{ needs.load-config.outputs.platforms }}
+          platforms: ${{ matrix.component.platforms }}
 ```
 
 Rules:
 
-- Validate the config file before emitting it (`jq` schema check) — a
-  malformed config should fail the loader job, not the matrix.
-- Emit JSON via `toJson(matrix.component)` so nested structures survive.
-- Use `fail-fast: true` when one bad component invalidates the release;
-  `false` when each component is independent.
+- Emit nested objects via `toJson(matrix.component)` so nested structures survive the matrix boundary.
+- Use `fail-fast: true` when one bad component invalidates the release; `false` when each is independent.
 - Keep config files under `.qubership/` per org convention
   (`.qubership/docker.cfg`, `.qubership/helm-charts-release-config.yaml`).
 

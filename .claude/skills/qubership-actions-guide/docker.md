@@ -1,10 +1,5 @@
 # Docker — config, pipelines, and security
 
-## How to use this guide
-
-Follow the sections in order. Do not skip ahead. Do not generate any workflow,
-config file, or code until *Decide and generate* section explicitly says to.
-
 If the user has an existing workflow → go to *Migrating an existing workflow* below first.
 If from scratch → go directly to *Collect requirements*.
 
@@ -35,7 +30,7 @@ If from scratch → go directly to *Collect requirements*.
 ## Collect requirements
 
 Extract answers from the user's message first. Ask only what is missing and required to generate the workflow.
-General context (triggers, runner) is already established in `SKILL.md` Step 0.
+Trigger and runner are inferred per `workflow-patterns.md` → *Trigger rules* — do not ask.
 
 | # | Question | What it controls |
 | - | --- | --- |
@@ -45,7 +40,7 @@ General context (triggers, runner) is already established in `SKILL.md` Step 0.
 | 4 | Is a GitHub Release needed? | Yes → also load `release.md`. |
 
 Defaults — do not ask, apply automatically:
-- Platforms: `linux/amd64,linux/arm64` (set in `defaults` of config file, not in workflow inputs)
+- Platforms: `linux/amd64,linux/arm64` — set in `defaults` of config file (see *Config file schema*)
 - `extra-tags` input always included in `workflow_dispatch` — user removes if not needed
 - Image names / Dockerfiles: goes into config file as placeholder `"name": "your-image"` — user fills in
 - Build step before Docker: only ask if user explicitly mentions Maven/npm/Go/etc
@@ -74,32 +69,6 @@ Use collected answers to pick the pipeline and generate output in this order:
 If release assets needed → append `assets-action` after `github-release` in any release pipeline.
 
 If build step in separate job → prepend build job with `upload-artifact`, add `download-artifact: true` to `docker-action`.
-
-### Pipeline details
-
-**No config, no release (CI build):**
-```
-metadata-action  →  docker-action
-produces tags        builds and pushes (inline component)
-```
-
-**With config, no release (CI build, multi-image):**
-```
-docker-config-resolver  →  metadata-action  →  docker-action (matrix)
-reads config file           produces tags        builds each component
-```
-
-**No config, with release:**
-```
-tag-action (check)  →  tag-action (create)  →  docker-action  →  github-release
-verify tag absent      creates vX.Y.Z tag      builds image(s)    release-drafter
-```
-
-**With config, with release:**
-```
-tag-action (check)  →  docker-config-resolver  →  tag-action (create)  →  docker-action (matrix)  →  github-release
-verify tag absent      reads config file            creates vX.Y.Z tag      builds each component       release-drafter
-```
 
 For release details (tag-action inputs, assets-action patterns, permissions) — see `release.md`.
 
@@ -276,26 +245,3 @@ Note: `context` is a deprecated alias for `build_context` — always use `build_
 
 The workflow reads `matrix.component.security_scan`, `matrix.component.security_trivy_scan`, and so on.
 
----
-
-## Security scan pipelines
-
-### With config file (recommended)
-
-```
-docker-config-resolver  →  filter security.scan==true  →  re-security-scan (matrix)
-reads config file           per-component scan settings    Trivy + Grype
-```
-
-The config file here is the same central file used for Docker build — filename is arbitrary,
-can be shared with build config or a dedicated scan-only file.
-
-### Without config file (discover from GHCR)
-
-```
-ghcr-discover-repo-packages  →  re-security-scan (matrix)
-discovers all repo packages      scans each image
-```
-
-`ghcr-discover-repo-packages` output `packages` can also feed `container-package-cleanup`
-or any other step that needs the image list.

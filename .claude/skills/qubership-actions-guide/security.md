@@ -3,7 +3,7 @@
 ## Clarifying questions
 
 Extract answers from the user's message first. Ask only what is missing and required to generate the workflow.
-General context (triggers, runner) is already established in `SKILL.md` Step 0.
+Trigger and runner are inferred per `workflow-patterns.md` → *Trigger rules* — do not ask.
 
 | Question | Why |
 | --- | --- |

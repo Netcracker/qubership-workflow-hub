@@ -9,30 +9,12 @@ Single source of truth for any GitHub Actions workflow that consumes the
 Qubership ecosystem (`netcracker/qubership-workflow-hub` actions,
 `Netcracker/.github` templates).
 
-## Core responsibility
-
-When the user asks for a workflow, produce a complete, copy-paste-ready
-workflow file.
-
-Always provide:
-
-1. File path, for example `.github/workflows/ci.yml`.
-1. Full YAML.
-1. Which Qubership actions or templates were selected and why.
-1. Required permissions.
-1. Required secrets, variables, environments, or repository settings.
-1. How the workflow is triggered.
-1. How the user can test it.
-1. What the user may need to customize.
-
-Do not provide only fragments unless the user explicitly asks for a snippet.
-
 ## Companion skills (navigators)
 
-- `qubership-templates-guide` — Netcracker workflow-templates catalog (fork-able templates).
-- `qubership-actions-guide` — Qubership actions catalog, domain guides (`docker.md`, `helm.md`, `security.md`, `release.md`), and the Pin table for SHAs.
+- `qubership-templates-guide` — fork-able Netcracker workflow-templates catalog.
+- `qubership-actions-guide` — actions catalog, domain guides, and the Pin table for SHAs.
 
-Both are navigation-only; all rules live in this file.
+All rules live in this file.
 
 ## Clarify before acting
 
@@ -58,13 +40,12 @@ is missing after reading. Produce a diff — do not rewrite from scratch.
 
 ### Path B — starting from scratch
 
-Ask only the questions whose answers cannot be inferred from context.
 Hand off to `qubership-actions-guide` Step 1 — it routes to the relevant
 domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) or returns
 to the catalog for operations without a guide (Maven, npm, Python, Cleanup).
 
-For Maven/npm/Python/Cleanup ask only:
-- Maven: target store (Central / GitHub Packages); Java version
+For Maven/npm/Python/Cleanup ask only what is missing after inferring from context:
+- Maven: target store (Central / GitHub Packages); Java version (default: 21)
 - npm: registry (npmjs / GitHub Packages)
 - Python: target (PyPI / GitHub Packages)
 - Cleanup: package type (container images or Maven artifacts)
@@ -72,18 +53,14 @@ For Maven/npm/Python/Cleanup ask only:
 **Infer the trigger from the request** — do not ask unless truly ambiguous.
 See `workflow-patterns.md` → *Trigger rules* for the three standard patterns.
 
-Do not ask about things that have safe defaults: Java version defaults to 21,
-platforms default to `linux/amd64`.
-
 ## Workflow design process
 
 After *Clarify before acting*:
 
-1. **Check `qubership-templates-guide` first.** Fork if ≥80% match. Borderline
-   (50–80%) — fork only if the matching part is structurally hard
-   (multi-stage release, config-driven matrix, dry-run gating). Otherwise
-   design from scratch. *Skip this step in Path A — templates do not apply
-   when migrating an existing workflow.*
+1. **Check `qubership-templates-guide` first.** Fork a template when it covers
+   the core structure (triggers, jobs, pipeline shape). Design from scratch
+   when only superficial details match. *Skip in Path A — templates do not
+   apply when migrating an existing workflow.*
 2. **Hand off to `qubership-actions-guide` Step 1** — it loads the domain
    guide and picks actions. Use Pin table for SHAs. Fall back to standard
    actions only when no Qubership action fits.
@@ -183,6 +160,8 @@ Read these files when relevant:
 Match the user's language. Translate section headers; keep YAML, paths,
 action identifiers unchanged.
 
+Always return a complete, copy-paste-ready workflow file — not a partial snippet, unless the user explicitly asks for one.
+
 Structure:
 
 ```text
@@ -190,7 +169,8 @@ File: .github/workflows/<name>.yml
 
 <full YAML>
 
-What to configure: <secrets / vars / environments>
+Actions used: <which Qubership actions or templates and why>
+What to configure: <secrets / vars / environments / config files>
 How to trigger: <push / PR / tag / workflow_dispatch>
 How to verify: <Actions tab, expected artifact/image/release>
 ```
