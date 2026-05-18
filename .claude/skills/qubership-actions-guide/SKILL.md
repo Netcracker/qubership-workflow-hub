@@ -28,7 +28,7 @@ Reusable workflows (`re-*.yml` in `netcracker/qubership-workflow-hub`) are out o
 ## Step 2 — pick actions from the catalog
 
 Use the catalog to match each step in the workflow to a Qubership action.
-For full input/output details fetch the action README on demand (see *Step 3*).
+For full input/output details fetch the action README on demand (see *Pin table*).
 
 ### Docker
 
@@ -102,32 +102,24 @@ Ask only what is missing: package type (container images or Maven artifacts).
 
 Deprecated (do not use): `commit-and-push`, `pom-updater`, `tag-checker`, `archive-and-upload-assets`.
 
-## Step 3 — fetch action README on demand
-
-For SHA pinning rules see `qubership-workflow-conventions` → *Pinning*.
-
-Fetch action README only when the catalog purpose line is not enough to write the `with:` block:
-
-```text
-WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<sha>/actions/<name>/README.md
-```
-
-Use the SHA from the *Pin table* below.
-
 ## Pin table
 
-Use these exact refs when writing `uses:` lines. Update this table when a new release is published.
+Use these exact SHAs in `uses:` lines. For SHA pinning rules see `qubership-workflow-conventions` → *Pinning*.
+Update this table manually when intentionally upgrading to a new release.
 
-| Repo | Latest tag | SHA (use this in `uses:`) |
+| Repo | Latest tag | SHA |
 | --- | --- | --- |
 | `netcracker/qubership-workflow-hub` | `v2.2.1` | `e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1` |
 | `netcracker/release-drafter` | `v1.0.0` | `86f4276a3894b5af70480e826c32fe3648ac6a70` |
 | `actions/checkout` | `v6.0.2` | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` |
 
-Example usage:
 ```yaml
 uses: netcracker/qubership-workflow-hub/actions/docker-action@e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1  # v2.2.1
 ```
 
-Update this table manually when intentionally upgrading to a new release.
+When the catalog purpose line is not enough to write the `with:` block — fetch the action README. Never write inputs from memory.
+
+```text
+WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1/actions/<name>/README.md
+```
 
