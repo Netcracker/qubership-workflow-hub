@@ -14,16 +14,9 @@ description: >
 
 # qubership-workflow-conventions
 
-This is the **single source of truth** for any GitHub Actions workflow
-that consumes the Qubership ecosystem (`netcracker/qubership-workflow-hub`
-actions, `Netcracker/.github` templates).
-
-It does two things at once:
-
-1. **Defines the mandatory conventions** every Qubership workflow must
-   follow.
-2. **Drives the workflow design process** — produces complete,
-   copy-paste-ready workflows for users.
+Single source of truth for any GitHub Actions workflow that consumes the
+Qubership ecosystem (`netcracker/qubership-workflow-hub` actions,
+`Netcracker/.github` templates).
 
 ## Core responsibility
 
@@ -40,28 +33,15 @@ Always provide:
 1. How the workflow is triggered.
 1. How the user can test it.
 1. What the user may need to customize.
-1. **Pin upgrades.** When the workflow is forked from a template and any
-   action pin SHA was updated to the latest stable release during the
-   fork, list each upgraded pin: action name, the template's original
-   SHA + tag, and the resolved replacement SHA + tag. If no pins were
-   upgraded, say so explicitly. If written from scratch, say "N/A".
 
-Do not provide only fragments unless the user explicitly asks for a
-snippet.
+Do not provide only fragments unless the user explicitly asks for a snippet.
 
 ## Companion skills (navigators)
 
-Both are navigation-only and rule-free; rules live here.
+- `qubership-templates-guide` — Netcracker workflow-templates catalog (fork-able templates).
+- `qubership-actions-guide` — Qubership actions catalog, domain guides (`docker.md`, `helm.md`, `security.md`, `release.md`), and the Pin table for SHAs.
 
-- `qubership-templates-guide` — workflow-templates catalog at
-  `Netcracker/.github/workflow-templates` (see step 2 of *Workflow
-  design process*).
-- `qubership-actions-guide` — per-action READMEs in
-  `netcracker/qubership-workflow-hub`, plus tag/SHA resolution
-  commands.
-
-If a companion skill is unavailable, follow its lookup procedure
-manually instead of guessing.
+Both are navigation-only; all rules live in this file.
 
 ## Clarify before acting
 
@@ -80,102 +60,49 @@ this question and go straight to *Path A*.
 
 ### Path A — existing workflow or configs
 
-1. Read the workflow file (already open in IDE, or ask the user to paste it).
-2. Find every config file referenced inside the workflow (e.g.
-   `file-path: .qubership/docker.cfg`) and read those files too. Do not ask
-   the user to list them — discover them from the workflow.
-3. Analyse what is already correct, what is missing, and what should be
-   replaced with Qubership actions.
-4. Ask only about what is genuinely missing after reading — do not ask about
-   things already visible in the files.
-5. Produce a diff-style result: keep what works, replace/add what does not.
-   Do not rewrite from scratch unless the existing workflow is beyond repair.
+Read the workflow and any config files it references. Load the relevant
+domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) from
+`qubership-actions-guide` and use its migration table. Ask only about what
+is missing after reading. Produce a diff — do not rewrite from scratch.
 
 ### Path B — starting from scratch
 
 Ask only the questions whose answers cannot be inferred from context.
-For Docker-specific clarifications read `docker.md` in `qubership-actions-guide`.
-For Helm-specific clarifications read `helm.md` in `qubership-actions-guide`.
+Domain-specific clarifications live in the domain guides in `qubership-actions-guide`:
 
-| Operation | Required clarifications |
+| Operation | Where the questions live |
 | --- | --- |
-| Docker build / push / release | See `docker.md` → *Clarifying questions* |
+| Docker build / push / release | `docker.md` |
+| Helm release | `helm.md` |
+| Security scan (source/deps, images, k8s cluster) | `security.md` |
+| Tag / GitHub Release / release assets | `release.md` |
 | Maven | Target store (Central / GitHub Packages); Java version |
 | npm | Registry (npmjs / GitHub Packages) |
 | Python | Target (PyPI / GitHub Packages) |
-| Helm release | See `helm.md` → *Clarifying questions* |
-| Security scan | What to scan: source/deps (`cdxgen`), images in GHCR, or running k8s cluster? |
-| Tag / release | Trigger: on tag push or `workflow_dispatch`? |
 | Cleanup | Package type: container images or Maven artifacts? |
 
-**Always ask about the trigger** — even if it seems implied:
+For operations with a domain guide — read it and follow its *Clarifying questions* section.
+For others — ask the questions listed in the right column.
 
-> "When should this workflow run? (on every push, on PR, on tag, manually via
-> workflow_dispatch, or on a schedule?)"
-
-**Always ask about dry-run** for any workflow that pushes images, publishes
-packages, creates tags, or creates releases:
-
-> "Should the workflow support dry-run mode (build/validate without pushing)?"
+**Infer the trigger from the request** — do not ask unless truly ambiguous.
+See `workflow-patterns.md` → *Trigger rules* for the three standard patterns.
 
 Do not ask about things that have safe defaults: Java version defaults to 21,
 platforms default to `linux/amd64`.
 
 ## Workflow design process
 
-For each user request:
+After *Clarify before acting*:
 
-1. Identify the CI/CD operation: validate, build, test, package,
-   publish, scan, tag, release, deploy, cleanup.
-1. **Prefer forking a curated template over writing from scratch.**
-   Invoke `qubership-templates-guide` to check the catalog. Templates
-   encode correct identifiers, pinning, and permissions, so copying
-   them eliminates whole classes of hallucination, and user-repo
-   workflows are expected to look like the rest of the org.
-
-   Match strength rule:
-
-   - **≥80% of the operations match** — fork the template, adapt the
-     remaining 20% (image names, secrets, extra steps).
-   - **50–80% match** — fork only if the matching part is the
-     structurally hard piece (multi-stage release, config-driven
-     matrix, dry-run gating) and the rest is straightforward
-     additions; otherwise design from scratch using individual actions.
-   - **<50% match** — design from scratch with `qubership-actions-guide`.
-     Forking a poorly-matched template usually produces a workflow
-     that looks like a template but does the wrong thing, which is
-     harder to audit than a clean design.
-
-   If unsure, design from scratch and **mention the nearest template**
-   in the answer so the user can decide.
-
-   When forking, continue this process to verify trigger, target,
-   permissions, secrets, and user-specific configuration. For the
-   adaptation rules (what to change, what to keep), see
-   `qubership-templates-guide` → *What to adapt vs. keep*.
-1. Identify trigger: `pull_request`, `push`, tag, `workflow_dispatch`,
-   `schedule`, or `workflow_call`.
-1. Identify target: branch, tag, package registry, image registry,
-   environment, release, artifact.
-1. Identify result: check status, artifact, image, package, tag,
-   GitHub release, report.
-1. Prefer a matching Qubership action when one fits — Docker
-   build/push, version rendering, tag creation, release preparation,
-   Maven/npm/Python publishing, package cleanup, Helm charts, security
-   scans, and other operations in the Qubership workflow hub catalog.
-   Use `qubership-actions-guide` to find and read the action's README.
-   Fall back to standard actions (`actions/checkout`,
-   `actions/setup-*`, `docker/*`, GitHub CLI) only when no Qubership
-   action fits, the user explicitly asks for them, the README does not
-   support the required capability, or a standard action is required
-   as setup around a Qubership action. If nothing matches, use stock
-   GitHub Actions patterns and explicitly state that no Qubership
-   template/action was selected.
-1. Apply the rules from the *Mandatory conventions* section to every
-   step.
-1. Add safe defaults: timeout, concurrency where useful, no secrets in
-   untrusted PR contexts.
-1. Return the complete workflow and concise usage instructions.
+1. **Check `qubership-templates-guide` first.** Fork if ≥80% match. Borderline
+   (50–80%) — fork only if the matching part is structurally hard
+   (multi-stage release, config-driven matrix, dry-run gating). Otherwise
+   design from scratch.
+2. **Hand off to `qubership-actions-guide` Step 1** — it loads the domain
+   guide and picks actions. Use Pin table for SHAs. Fall back to standard
+   actions only when no Qubership action fits.
+3. **Apply *Mandatory conventions*** to every step.
+4. **Return the workflow** per *Preferred answer style*.
 
 ## Mandatory conventions
 
@@ -217,31 +144,21 @@ commit SHA with a trailing `# vX.Y.Z` comment showing the release:
 uses: netcracker/qubership-workflow-hub/actions/<name>@<sha>  # vX.Y.Z
 ```
 
-Resolution rules:
-
-- **Always resolve every pin to the latest stable release SHA at write
-  time.** Do not copy SHAs from this skill, from another skill, from
-  memory, or unchanged from a forked template — those can be outdated.
-- For Qubership actions, follow the resolution procedure in
-  `qubership-actions-guide` → *Resolving the latest tag and its SHA*.
-- For third-party actions, use the same `git ls-remote` form against
-  the third-party repo, or `gh api repos/<org>/<repo>/releases/latest`.
+**Always use the Pin table** in `qubership-actions-guide` → *Pin table*.
+Never resolve SHAs via `git ls-remote`, `WebFetch`, or memory — the table is
+the single source of truth and is maintained manually by the user.
 
 Forbidden:
 
-- Never use `@main` — neither as an action pin nor as `<ref>` for
-  catalog/README fetches. `main` content can drift ahead of the latest
-  release and lead you to inputs that are not yet in any tagged
-  version. Use the latest stable tag as `<ref>` for reads, and a full
-  SHA as the action pin.
+- Never use `@main` — neither as an action pin nor as `<ref>` for catalog
+  or README fetches. Use the SHA from the Pin table.
 - Never use short SHAs.
 
 Exception:
 
-- A bare major tag (e.g. `actions/checkout@v4`, `netcracker/.../@v2`) is
-  acceptable **only** when the user has explicitly asked for automatic
-  minor-version updates within a release line. Do not pick this on your
-  own — ask first, or stick to SHA pinning.
+- A bare major tag (e.g. `actions/checkout@v4`) is acceptable **only** when
+  the user has explicitly asked for automatic minor-version updates. Do not
+  pick this on your own — ask first, or stick to SHA pinning.
 
 ### Permissions
 
@@ -279,18 +196,6 @@ Exception:
   secrets** (declared on a GitHub Environment) over repository-wide
   secrets — see `security-model.md`.
 
-### Action input contract
-
-When using a Qubership action's outputs:
-
-```yaml
-- name: Use previous output
-  run: echo "${{ steps.some_step.outputs.exact_output_name }}"
-```
-
-Use the exact output name from the action's README. Never infer output
-names from examples of other actions.
-
 ## Supporting documents
 
 Read these files when relevant:
@@ -326,10 +231,6 @@ How to trigger:
 
 How to verify:
 - Actions tab, expected artifact/image/release/check
-
-Pin upgrades (when forked from a template):
-- <action> @<old-sha> # <old-tag>  →  @<new-sha> # <new-tag>
-- (or "No pins upgraded" when forked verbatim, or "N/A" when written from scratch)
 ```
 
 If the user is non-expert, explain simply. Do not over-explain basic

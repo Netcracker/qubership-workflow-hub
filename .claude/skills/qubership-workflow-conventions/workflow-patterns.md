@@ -46,25 +46,19 @@ Add language/tool steps or Qubership actions after checkout.
 
 ## Trigger rules
 
-Use explicit triggers.
+Three standard patterns used across all org templates. Infer from the user's
+request — do not ask unless truly ambiguous.
 
-For pull request validation:
+| Pattern | `on:` | Use when |
+| --- | --- | --- |
+| Release only | `workflow_dispatch` | User says "release", "publish", "manually" — all release workflows (Docker, Helm, Maven, npm, Python) are manual-only |
+| CI + manual | `push` (branches) + `workflow_dispatch` | User says "build on push" or "CI build" with optional manual trigger — dev Docker build, Maven+Docker |
+| CI only | `push` (branches) + `pull_request` | User says "run on PR" or "validate only" — no manual trigger needed |
 
-```yaml
-on:
-  pull_request:
-  push:
-    branches: [main]
-```
+All `push`-based templates include `paths-ignore` for docs/config files
+(`.github/**`, `docs/**`, `README.md`, `LICENSE`, etc.) — always add this.
 
-For manual workflows:
-
-```yaml
-on:
-  workflow_dispatch:
-```
-
-For tag workflows:
+For tag-driven workflows:
 
 ```yaml
 on:

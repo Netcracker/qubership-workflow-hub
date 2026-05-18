@@ -41,8 +41,8 @@ you locate the right template and adapt it.
 1. **Adapt the template.** See *What to adapt vs. keep* below.
 
 1. **Apply `qubership-workflow-conventions`** (*Mandatory conventions*)
-   to every adapted line. Pin upgrades and permission tightening
-   happen during this step.
+   to every adapted line. Replace template SHAs with values from the
+   *Pin table* in `qubership-actions-guide`.
 
 1. **Tell the user which template you started from**, including the
    raw URL or repo path, so they can compare and re-fetch updates.

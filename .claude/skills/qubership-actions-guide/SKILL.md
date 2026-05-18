@@ -5,39 +5,9 @@ description: Navigation-only skill for individual actions in netcracker/qubershi
 
 # qubership-actions-guide
 
-## Step 0 — understand the request
-
-**Extract everything possible from what the user wrote before asking anything.**
-
-- User mentioned triggers ("on push", "manually", "on tag") → use them, do not ask
-- User mentioned existing file → read it first, extract what's defined, do not ask for what can be read
-- User says "write a workflow" with no existing file → from scratch, do not ask
-- User mentioned domain ("Docker", "Helm", "release") → load the relevant guide immediately
-
-**Only ask if a piece of information is absent from the user's message AND without it the workflow cannot be generated correctly.**
-
-Infer triggers from the request — do not ask unless truly ambiguous.
-
-Three standard patterns used across all org templates:
-
-| Pattern | `on:` | Use when |
-| --- | --- | --- |
-| Release only | `workflow_dispatch` | User says "release", "publish", "manually" — all release workflows (Docker, Helm, Maven, npm, Python) are manual-only |
-| CI + manual | `push` (branches) + `workflow_dispatch` | User says "build on push" or "CI build" with optional manual trigger — dev Docker build, Maven+Docker |
-| CI only | `push` (branches) + `pull_request` | User says "run on PR" or "validate only" — no manual trigger needed |
-
-All `push`-based templates include `paths-ignore` for docs/config files (`.github/**`, `docs/**`, `README.md`, `LICENSE`, etc.) — always add this.
-
-Release workflows always use `cancel-in-progress: false` — never cancel a running release.
-
-If the trigger cannot be inferred — ask once, briefly.
-
-Defaults — never ask, apply automatically:
-- Runner: `ubuntu-latest`
-- Concurrency: release/deploy workflows → `cancel-in-progress: false`; CI/PR workflows → `cancel-in-progress: true`
-- Dry-run: see domain guide
-
-After understanding the request, continue to Step 1 to load the relevant domain guide.
+Clarification logic and trigger patterns live in `qubership-workflow-conventions`
+(*Clarify before acting* + `workflow-patterns.md` → *Trigger rules*). This skill
+only navigates actions.
 
 ## Step 1 — identify the operation and load the right guide
 
