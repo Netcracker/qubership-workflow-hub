@@ -52,10 +52,7 @@ See `workflow-patterns.md` → *Trigger rules* for the three standard patterns.
 
 After *Clarify before acting*:
 
-1. **Check `qubership-templates-guide` first.** Fork a template when it covers
-   the core structure (triggers, jobs, pipeline shape). Design from scratch
-   when only superficial details match. *Skip in Path A — templates do not
-   apply when migrating an existing workflow.*
+1. **Read `qubership-templates-guide/SKILL.md` and search the catalog for a matching template.** Do this before writing any YAML — for new workflows and for modifications alike. If a match is found: show the user which template, use it as the base. If no match: proceed from scratch using actions-guide.
 2. **Hand off to `qubership-actions-guide` Step 1** — it loads the domain
    guide and picks actions. Use Pin table for SHAs. Fall back to standard
    actions only when no Qubership action fits.
