@@ -2,8 +2,8 @@
 
 ## How to use this guide
 
-Follow the steps in order. Do not skip ahead. Do not generate any workflow,
-config file, or code until Step 2 explicitly says to.
+Follow the sections in order. Do not skip ahead. Do not generate any workflow,
+config file, or code until *Decide and generate* section explicitly says to.
 
 If the user has an existing workflow → go to *Migrating an existing workflow* below first.
 If from scratch → go directly to *Collect requirements*.

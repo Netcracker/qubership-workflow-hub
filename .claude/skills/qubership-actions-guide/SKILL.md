@@ -99,7 +99,7 @@ Deprecated (do not use): `commit-and-push`, `pom-updater`, `tag-checker`, `archi
 
 ## Step 3 — fetch action README on demand
 
-**Never use WebFetch or git ls-remote to look up versions or SHAs — use the Pin table below.**
+For SHA pinning rules see `qubership-workflow-conventions` → *Pinning*.
 
 Fetch action README only when the catalog purpose line is not enough to write the `with:` block:
 

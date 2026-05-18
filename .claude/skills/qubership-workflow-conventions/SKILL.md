@@ -59,21 +59,15 @@ is missing after reading. Produce a diff — do not rewrite from scratch.
 ### Path B — starting from scratch
 
 Ask only the questions whose answers cannot be inferred from context.
-Domain-specific clarifications live in the domain guides in `qubership-actions-guide`:
+Hand off to `qubership-actions-guide` Step 1 — it routes to the relevant
+domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) or returns
+to the catalog for operations without a guide (Maven, npm, Python, Cleanup).
 
-| Operation | Where the questions live |
-| --- | --- |
-| Docker build / push / release | `docker.md` |
-| Helm release | `helm.md` |
-| Security scan (source/deps, images, k8s cluster) | `security.md` |
-| Tag / GitHub Release / release assets | `release.md` |
-| Maven | Target store (Central / GitHub Packages); Java version |
-| npm | Registry (npmjs / GitHub Packages) |
-| Python | Target (PyPI / GitHub Packages) |
-| Cleanup | Package type: container images or Maven artifacts? |
-
-For operations with a domain guide — read it and follow its *Clarifying questions* section.
-For others — ask the questions listed in the right column.
+For Maven/npm/Python/Cleanup ask only:
+- Maven: target store (Central / GitHub Packages); Java version
+- npm: registry (npmjs / GitHub Packages)
+- Python: target (PyPI / GitHub Packages)
+- Cleanup: package type (container images or Maven artifacts)
 
 **Infer the trigger from the request** — do not ask unless truly ambiguous.
 See `workflow-patterns.md` → *Trigger rules* for the three standard patterns.
@@ -88,7 +82,8 @@ After *Clarify before acting*:
 1. **Check `qubership-templates-guide` first.** Fork if ≥80% match. Borderline
    (50–80%) — fork only if the matching part is structurally hard
    (multi-stage release, config-driven matrix, dry-run gating). Otherwise
-   design from scratch.
+   design from scratch. *Skip this step in Path A — templates do not apply
+   when migrating an existing workflow.*
 2. **Hand off to `qubership-actions-guide` Step 1** — it loads the domain
    guide and picks actions. Use Pin table for SHAs. Fall back to standard
    actions only when no Qubership action fits.
@@ -132,9 +127,11 @@ commit SHA with a trailing `# vX.Y.Z` comment showing the release:
 uses: netcracker/qubership-workflow-hub/actions/<name>@<sha>  # vX.Y.Z
 ```
 
-**Always use the Pin table** in `qubership-actions-guide` → *Pin table*.
-Never resolve SHAs via `git ls-remote`, `WebFetch`, or memory — the table is
-the single source of truth and is maintained manually by the user.
+For actions listed in the Pin table (`qubership-actions-guide` → *Pin table*) —
+always use it.
+
+For actions **not in the Pin table** (e.g. third-party like `docker/login-action`) —
+use the SHA and version known to the model from training.
 
 Forbidden: `@main`, short SHAs, bare tags (`@v6`, `@v1.2.3`). Always full SHA.
 
