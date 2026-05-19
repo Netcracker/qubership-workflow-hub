@@ -57,7 +57,8 @@ After *Clarify before acting*:
    guide and picks actions. Use Pin table for SHAs. Fall back to standard
    actions only when no Qubership action fits.
 3. **Apply *Mandatory conventions*** to every step.
-4. **Return the workflow** per *Preferred answer style*.
+4. **Run `/workflow-audit`** on the generated workflow file. Fix all zizmor violations before returning. This applies to both new workflows and edits to existing ones.
+5. **Return the workflow** per *Preferred answer style*.
 
 ## Mandatory conventions
 
