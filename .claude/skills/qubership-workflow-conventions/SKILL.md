@@ -56,9 +56,8 @@ After *Clarify before acting*:
 2. **Hand off to `qubership-actions-guide` Step 1** — it loads the domain
    guide and picks actions. Use Pin table for SHAs. Fall back to standard
    actions only when no Qubership action fits.
-3. **Apply *Mandatory conventions*** to every step.
-4. **Run `/workflow-audit`** on the generated workflow file. Fix all zizmor violations before returning. This applies to both new workflows and edits to existing ones.
-5. **Return the workflow** per *Preferred answer style*.
+3. **Apply *Mandatory conventions*** to every step — including *Security checklist* below.
+4. **Return the workflow** per *Preferred answer style*.
 
 ## Mandatory conventions
 
@@ -123,6 +122,11 @@ Forbidden: `@main`, short SHAs, bare tags (`@v6`, `@v1.2.3`). Always full SHA.
 - Boolean inputs default `false`; the input name describes the feature
   when enabled.
 
+### Security (zizmor rules)
+
+Read `zizmor-rules.md` and apply all rules while writing the workflow.
+Do not wait for an audit — violations must not appear in the generated output.
+
 ### Secrets and PR safety
 
 - Never put secret values in YAML. Use `${{ secrets.SECRET_NAME }}`.
@@ -144,6 +148,7 @@ Read these files when relevant:
 - `workflow-patterns.md` — workflow structure, triggers, concurrency,
   timeouts, matrix, config-driven matrix, dry-run gating, reusable
   workflow contracts, artifacts.
+- `zizmor-rules.md` — full zizmor security rules to apply at generation time.
 - `security-model.md` — checkout credentials, environment-scoped
   secrets, GitHub App tokens for protected branches, environments.
 - `debugging-playbook.md` — failure categories and the diagnosis
