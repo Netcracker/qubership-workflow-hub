@@ -112,6 +112,10 @@ Update this table manually when intentionally upgrading to a new release.
 | `netcracker/qubership-workflow-hub` | `v2.2.1` | `e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1` |
 | `netcracker/release-drafter` | `v1.0.0` | `86f4276a3894b5af70480e826c32fe3648ac6a70` |
 | `actions/checkout` | `v6.0.2` | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` |
+| `actions/upload-artifact` | `v7.0.1` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` |
+| `actions/download-artifact` | `v8.0.1` | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` |
+| `actions/setup-python` | `v6.2.0` | `a309ff8b426b58ec0e2a45f0f869d46889d02405` |
+| `actions/create-github-app-token` | `v3.2.0` | `bcd2ba49218906704ab6c1aa796996da409d3eb1` |
 
 ```yaml
 uses: netcracker/qubership-workflow-hub/actions/docker-action@e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1  # v2.2.1
