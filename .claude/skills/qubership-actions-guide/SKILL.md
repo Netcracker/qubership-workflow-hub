@@ -16,8 +16,10 @@ the relevant supporting document:
 | Security scan (images, source/deps, k8s cluster) | `security.md` |
 | Helm chart release, values update | `helm.md` |
 | Git tag, GitHub Release, release assets | `release.md` |
+| PR automation (assigners, commit messages) | `pr.md` |
+| CLA / DCO signing | `cla.md` |
 | Maven, npm, Python publish | catalog below — no guide file needed |
-| Cleanup, utilities, PR automation | catalog below — no guide file needed |
+| Cleanup, utilities | catalog below — no guide file needed |
 
 Each guide contains: clarifying questions for the user, config file schemas,
 and pipeline patterns for that domain. Read it before picking actions or

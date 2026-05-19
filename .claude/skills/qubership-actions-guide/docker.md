@@ -27,11 +27,12 @@
 Extract answers from the user's message first. Ask only what is missing and required to generate the workflow.
 Trigger and runner are inferred per `workflow-patterns.md` → *Trigger rules* — do not ask.
 
+If the user's request contains "release", "publish", or "tag" — load `release.md` immediately, do not ask.
+
 | # | Question | What it controls |
 | - | --- | --- |
 | 1 | Should there be a dry-run mode? | `dry-run` input + conditional — builds without pushing |
 | 2 | Registry: GHCR / Docker Hub / both? | `registry` input and auth method |
-| 3 | Is a GitHub Release needed? | Yes → also load `release.md`. |
 
 Config file — do not ask, determine from path:
 - **Path A** (existing workflow/configs): config file was already found when reading the workflow — use it.
