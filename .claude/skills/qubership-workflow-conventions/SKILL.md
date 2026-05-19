@@ -125,7 +125,7 @@ Forbidden: `@main`, short SHAs, bare tags (`@v6`, `@v1.2.3`). Always full SHA.
 ### Security (zizmor rules)
 
 Read `zizmor-rules.md` and apply all rules while writing the workflow.
-Do not wait for an audit — violations must not appear in the generated output.
+Violations must not appear in the generated output.
 
 ### Secrets and PR safety
 

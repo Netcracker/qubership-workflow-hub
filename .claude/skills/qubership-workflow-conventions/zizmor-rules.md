@@ -1,8 +1,6 @@
 # Zizmor rules — apply at workflow generation time
 
-Apply every rule below while writing or editing a workflow. Do not wait for an audit.
-Rules that only apply retrospectively (impostor-commit, archived-uses, obfuscation, etc.)
-live in `zizmor/SKILL.md` and are checked during `/workflow-audit`.
+Apply every rule below while writing or editing a workflow.
 
 ---
 
@@ -214,21 +212,6 @@ concurrency:
 
 ---
 
-## insecure-commands
-
-**What to avoid:** `ACTIONS_ALLOW_UNSECURE_COMMANDS=true` in any `env:` block.
-
-**Never write:**
-```yaml
-env:
-  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-```
-
-**Correct pattern:** Use `$GITHUB_OUTPUT`, `$GITHUB_ENV`, `$GITHUB_STEP_SUMMARY`
-instead of legacy `::set-output` / `::add-path` commands.
-
----
-
 ## github-app
 
 **What to avoid:** GitHub App token passed directly via shell interpolation in a `run:` step.
@@ -245,24 +228,6 @@ run: |
   gh api ... --header "Authorization: Bearer $APP_TOKEN"
 env:
   APP_TOKEN: ${{ steps.generate-token.outputs.token }}
-```
-
----
-
-## cache-poisoning
-
-**What to avoid:** Cache keys derived from untrusted input in release workflows —
-an attacker can poison the cache to influence the build output.
-
-**Flag if:** a release workflow (`push` to default branch, `release`, `workflow_dispatch`)
-uses `actions/cache` with a cache key derived from PR title, branch name, or other
-user-controlled event data.
-
-**Correct pattern — use only deterministic, trusted inputs for cache keys:**
-```yaml
-- uses: actions/cache@<sha>  # vX.Y.Z
-  with:
-    key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 ```
 
 ---
@@ -326,3 +291,51 @@ if: contains(github.event.label.name, 'safe-to-run')
 ```yaml
 if: github.event.label.name == 'safe-to-run'
 ```
+
+---
+
+## misfeature
+
+**What to avoid:** GitHub Actions features that are unsafe or misleading:
+
+- `continue-on-error: true` on security-sensitive steps (scan, lint, auth) — failures are silently swallowed
+- `workflow_dispatch` inputs used unsafely in shell without sanitisation
+- `actions/github-script` with untrusted input in `script:`
+
+**Never write:**
+```yaml
+- name: Security scan
+  continue-on-error: true   # failure is silently ignored
+```
+
+**Correct pattern — only use `continue-on-error` on genuinely optional steps,
+never on steps whose failure should block the workflow:**
+```yaml
+- name: Security scan
+  continue-on-error: false  # default — omit the line entirely
+```
+
+For `workflow_dispatch` inputs in shell — always pass through `env:`, same as template-injection rule.
+
+---
+
+## unsound-condition
+
+**What to avoid:** `if:` conditions that are inadvertently always `true` due to
+YAML/expression type coercion — e.g. comparing a string context value to a non-string.
+
+**Flag if:** an `if:` expression compares `github.event_name` or a similar string
+context value using `==` where type coercion could make it always evaluate to `true`.
+
+**Common mistake:**
+```yaml
+if: ${{ github.event.inputs.dry-run }}   # always true if input is the string "false"
+```
+
+**Correct pattern — explicit string comparison:**
+```yaml
+if: ${{ github.event.inputs.dry-run == 'true' }}
+```
+
+For boolean inputs from `workflow_dispatch`, always compare to the string `'true'` or `'false'`.
+
