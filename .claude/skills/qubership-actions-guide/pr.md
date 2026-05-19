@@ -30,7 +30,12 @@ env:
 
 ### CODEOWNERS mode (preferred)
 
-No config file needed. The action reads `.github/CODEOWNERS` automatically:
+No config file needed. The action searches three locations in order and uses the first file found:
+1. `.github/CODEOWNERS`
+2. `CODEOWNERS` (repo root)
+3. `docs/CODEOWNERS`
+
+Selection logic within the file:
 - Prefers the `*` (wildcard) rule if present.
 - Falls back to the last non-empty, non-comment line if no wildcard rule exists.
 
