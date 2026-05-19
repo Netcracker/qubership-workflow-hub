@@ -76,7 +76,7 @@ gh api repos/Netcracker/.github/contents/workflow-templates --jq '.[].name'
 
 | Task | Template | Trigger | Key details |
 | --- | --- | --- | --- |
-| Release Docker images + GitHub release | `docker-release.yaml` | workflow_dispatch | check-tag → load-config (jq, `.qubership/docker-build-config.cfg`) → create-tag → docker-action (matrix) → release-drafter; **⚠️ uses old config format, not `docker-config-resolver`** |
+| Release Docker images + GitHub release | `docker-release.yaml` | workflow_dispatch | check-tag → `docker-config-resolver` (`.qubership/docker.cfg`) → create-tag → docker-action (matrix) → release-drafter |
 | Release Maven artifact (Central or GH Packages) | `maven-release-v2.yaml` | workflow_dispatch | dry-run-build → deploy (maven-release) → docker-build (optional) → github-release; needs GPG secrets + GH App token for protected branch |
 | Deploy Maven SNAPSHOT | `maven-snapshot-deploy.yaml` | workflow_dispatch | maven-snapshot-deploy action; no tag/release created |
 | Release npm package | `npm-release.yaml` | workflow_dispatch | npm publish to npmjs or GitHub Packages |
