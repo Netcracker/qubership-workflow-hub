@@ -36,7 +36,7 @@ this question and go straight to *Path A*.
 Read the workflow and any config files it references. Load the relevant
 domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) from
 `qubership-actions-guide` and use its migration table. Ask only about what
-is missing after reading. Produce a diff — do not rewrite from scratch.
+is missing after reading. Return the full updated workflow file — preserve existing structure, change only what needs changing.
 
 ### Path B — starting from scratch
 
@@ -52,7 +52,7 @@ See `workflow-patterns.md` → *Trigger rules* for the three standard patterns.
 
 After *Clarify before acting*:
 
-1. **Read `qubership-templates-guide/SKILL.md` and search the catalog for a matching template.** Do this before writing any YAML — for new workflows and for modifications alike. If a match is found: show the user which template, use it as the base. If no match: proceed from scratch using actions-guide.
+1. **Read `qubership-templates-guide/SKILL.md` and search the catalog for a matching template.** Do this when creating a new workflow or restructuring an existing one (changing jobs, triggers, or pipeline shape). Skip for small targeted edits (adding a timeout, changing a branch filter, updating an input value). If a match is found: show the user which template, use it as the base. If no match: proceed from scratch using actions-guide.
 2. **Hand off to `qubership-actions-guide` Step 1** — it loads the domain
    guide and picks actions. Use Pin table for SHAs. Fall back to standard
    actions only when no Qubership action fits.
@@ -99,8 +99,9 @@ uses: netcracker/qubership-workflow-hub/actions/<name>@<sha>  # vX.Y.Z
 For actions listed in the Pin table (`qubership-actions-guide` → *Pin table*) —
 always use it.
 
-For actions **not in the Pin table** (e.g. third-party like `docker/login-action`) —
-use the SHA and version known to the model from training.
+For actions **not in the Pin table**:
+- `actions/*` (GitHub-owned, e.g. `actions/setup-java`, `actions/upload-artifact`) — use the SHA and version known to the model from training. These are stable and well-known.
+- All other third-party actions (e.g. `docker/login-action`, `tj-actions/*`) — add to the Pin table or ask the user to provide the SHA. Do not write third-party SHAs from memory.
 
 Forbidden: `@main`, short SHAs, bare tags (`@v6`, `@v1.2.3`). Always full SHA.
 

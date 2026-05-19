@@ -14,7 +14,7 @@ you locate the right template and adapt it.
 
 ## How to use
 
-**Always run this step before writing any workflow YAML** — for new workflows and modifications alike.
+**Run this step when creating a new workflow or restructuring an existing one** (changing jobs, triggers, or pipeline shape). Skip for small targeted edits (timeout, branch filter, input value).
 
 If a matching template is found → tell the user which template, fetch it, use it as the base.
 If no match → return to `qubership-workflow-conventions` Workflow design process Step 2 and build from scratch.
