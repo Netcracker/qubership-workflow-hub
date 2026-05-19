@@ -19,7 +19,8 @@ the relevant supporting document:
 | PR automation (assigners, commit messages) | `pr.md` |
 | CLA / DCO signing | `cla.md` |
 | Maven, npm, Python publish | catalog below — no guide file needed |
-| Cleanup, utilities | catalog below — no guide file needed |
+| Cleanup (container images, Maven packages) | `cleanup.md` |
+| Utilities | catalog below — no guide file needed |
 
 Each guide contains: clarifying questions for the user, config file schemas,
 and pipeline patterns for that domain. Read it before picking actions or
@@ -75,8 +76,6 @@ Ask only what is missing after inferring from context:
 | `k8s-hardening-scan` | Validate Kubernetes container hardening compliance (Kubescape + Trivy) |
 
 ### Cleanup
-
-Ask only what is missing: package type (container images or Maven artifacts).
 
 | Action | Purpose |
 | --- | --- |
