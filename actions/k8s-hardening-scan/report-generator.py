@@ -10,6 +10,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import Dict, List
 
 def load_json_data(source):
     """Loads JSON from a file or URL."""
@@ -45,37 +46,45 @@ def load_yaml_config(config_path):
     print(f"[DEBUG]: {default_config_data}")
     return default_config_data
 
-def get_resource_ports(resource):
+def get_resource_ports(resource: Dict) -> List[str]:
     """Extracts ports from a resource definition."""
     ports = []
-    object = resource.get('object', {})
-    spec = object.get('spec', {})
-    template = spec.get('template', {})
-    spec_template = template.get('spec', {})
-    containers = spec_template.get('containers', [])
 
-    for container in containers:
-        container_ports = container.get('ports', [])
-        for port in container_ports:
-            ports.append(port.get('containerPort'))
-    print(f"[DEBUG] Resource: {resource.get('resourceID', 'Unknown')}, Ports: {ports}")
-    return ports
+    def recursive_find(obj, results):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k in ("containerPort") and isinstance(v, str):
+                    results.append(v)
+                else:
+                    recursive_find(v, results)
+        elif isinstance(obj, list):
+            for item in obj:
+                recursive_find(item, results)
 
-def get_resource_images(resource):
-    """Extracts container images from a resource definition."""
+    recursive_find(resource, ports)
+    if ports:
+        print(f"Found ports in resource {resource.get('resourceID', 'unknown')}: {ports}")
+    return list(dict.fromkeys(ports))  # deduplicate
+
+def get_resource_images(resource: Dict) -> List[str]:
+    """Finds all container images in a resource definition, handling various possible structures."""
     images = []
-    object = resource.get('object', {})
-    spec = object.get('spec', {})
-    template = spec.get('template', {})
-    spec_template = template.get('spec', {})
-    containers = spec_template.get('containers', [])
 
-    for container in containers:
-        image = container.get('image', '')
-        if image:
-            images.append(image)
-    print(f"[DEBUG] Resource: {resource.get('resourceID', 'Unknown')}, Images: {images}")
-    return images
+    def recursive_find(obj, results):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k in ("image", "imageID", "containerImage") and isinstance(v, str):
+                    results.append(v)
+                else:
+                    recursive_find(v, results)
+        elif isinstance(obj, list):
+            for item in obj:
+                recursive_find(item, results)
+
+    recursive_find(resource, images)
+    if images:
+        print(f"Found images in resource {resource.get('resourceID', 'unknown')}: {images}")
+    return list(dict.fromkeys(images))  # deduplicate
 
 def get_status_emoji(status):
     """Returns the emoji for a given status."""
@@ -118,7 +127,7 @@ def generate_markdown_tables(data, config):
         output_lines.append("|-----------|--------------|--------|")
 
         # Processing each control
-        for control in controls:
+        for control in sorted(controls, key=lambda c: c.get('controlID', '')):
             control_id = control.get('controlID', '')
             control_name = control.get('name', '')
             if control_id in mandatory_checks:
@@ -204,7 +213,8 @@ def generate_full_report(data, config, title="Kubescape Hardening Scan Report"):
         passed = sum(1 for c in controls
                     if c.get('rules', [{}])[0].get('status', '') == 'passed')
         failed = len(controls) - passed
-        report += f"- `{resource_id}`: ✅ {passed} / ❌ {failed}\n"
+        report += f"- `{resource_id}`: ✅ {passed} / ❌ {failed}"
+        report += f"\n  - {'\n  - '.join(resource_images)}\n"
 
     report += "\n---\n"
     report_tables, failed_mandatory_checks_all = generate_markdown_tables(data, config)
