@@ -18,7 +18,8 @@ the relevant supporting document:
 | Git tag, GitHub Release, release assets | `release.md` |
 | PR automation (assigners, commit messages) | `pr.md` |
 | CLA / DCO signing | `cla.md` |
-| Maven, npm, Python publish | catalog below — no guide file needed |
+| Maven build, SNAPSHOT deploy, release | `maven.md` |
+| npm, Python publish | catalog below — no guide file needed |
 | Cleanup (container images, Maven packages) | `cleanup.md` |
 | Utilities | catalog below — no guide file needed |
 
@@ -51,7 +52,6 @@ For full input/output details fetch the action README on demand (see *Pin table*
 ### Publishing
 
 Ask only what is missing after inferring from context:
-- Maven: target store (Central / GitHub Packages); Java version (default: 21)
 - npm: registry (npmjs / GitHub Packages)
 - Python: target (PyPI / GitHub Packages)
 
