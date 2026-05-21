@@ -1,14 +1,14 @@
 ---
 name: lint
-description: Run markdown and zizmor audits on changed files, fix all violations, and commit the fixes
+description: Run markdown, EditorConfig, and zizmor audits on changed files, fix all violations, and commit the fixes
 arguments: [base-branch]
 ---
 
 # lint
 
-Audit all changed files on the current branch for markdownlint and zizmor violations,
-fix them in-place, and commit the fixes. Run this at any time to clean up the branch
-before a PR or after making changes.
+Audit all changed files on the current branch for markdownlint, EditorConfig, and zizmor
+violations, fix them in-place, and commit the fixes. Run this at any time to clean up
+the branch before a PR or after making changes.
 
 ## Arguments
 
@@ -53,7 +53,18 @@ git add <fixed-md-files>
 
 If no `.md` files in `CHANGED_FILES` — skip this step silently.
 
-### 4. Zizmor audit
+### 4. EditorConfig audit
+
+Apply the full audit logic from `.claude/skills/editorconfig/SKILL.md` to all files in `CHANGED_FILES`.
+Fix all violations in-place, then stage the fixes:
+
+```bash
+git add <fixed-files>
+```
+
+If no violations found — skip silently.
+
+### 5. Zizmor audit
 
 If any `.github/workflows/*.yml`, `.github/workflows/*.yaml`, or
 `actions/*/action.yml`, `actions/*/action.yaml` files are in `CHANGED_FILES`:
@@ -67,9 +78,9 @@ git add <fixed-yml-files>
 
 If no workflow or action yml files in `CHANGED_FILES` — skip this step silently.
 
-### 5. Commit fixes
+### 6. Commit fixes
 
-If any files were fixed and staged in steps 3 or 4:
+If any files were fixed and staged in steps 3, 4, or 5:
 
 ```bash
 git commit -m "fix(lint): fix markdown and security violations" && git push
@@ -77,7 +88,7 @@ git commit -m "fix(lint): fix markdown and security violations" && git push
 
 If nothing was fixed — do not create an empty commit.
 
-### 6. Report to user
+### 7. Report to user
 
 Print a summary:
 
