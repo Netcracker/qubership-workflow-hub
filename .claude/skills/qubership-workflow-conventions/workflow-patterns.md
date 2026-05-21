@@ -247,6 +247,40 @@ Rules:
 - Declare `outputs:` at the workflow level when the caller needs a
   result. Wire them from a job output via `value:`.
 
+## Caller workflow permissions
+
+The caller job acts as a **ceiling** for the reusable workflow — the reusable
+workflow cannot exceed the permissions granted by the caller job. If the caller
+job grants `permissions: {}`, the reusable workflow runs with no permissions
+regardless of what it declares internally.
+
+**Rules:**
+
+- Set `permissions: {}` at the **workflow level** of the caller — deny everything by default.
+- On the **caller job**, declare the permissions that the reusable workflow needs.
+  Read the reusable workflow's internal `permissions:` blocks and grant their union.
+- The reusable workflow still declares its own `permissions:` internally for
+  least-privilege within its own jobs — but those declarations are capped by
+  what the caller job granted.
+
+```yaml
+# caller workflow
+permissions: {}                    # deny all at workflow level
+
+jobs:
+  security-scan:
+    permissions:
+      security-events: write       # required by re-security-scan internally
+      contents: read
+      packages: read
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@<sha>
+    with:
+      target: docker
+```
+
+To find what to grant — read the reusable workflow's `permissions:` block at the
+top of the file (workflow-level) or per-job, and use the union of all of them.
+
 ## Artifacts
 
 Use artifacts when passing generated files between jobs.
