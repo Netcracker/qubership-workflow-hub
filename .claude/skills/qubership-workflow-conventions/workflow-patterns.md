@@ -18,8 +18,8 @@ request — do not ask unless truly ambiguous.
 | CI + manual | `push` (branches) + `workflow_dispatch` | User says "build on push" or "CI build" with optional manual trigger — dev Docker build, Maven+Docker |
 | CI only | `push` (branches) + `pull_request` | User says "run on PR" or "validate only" — no manual trigger needed |
 
-All `push`-based templates include `paths-ignore` for docs/config files
-(`.github/**`, `docs/**`, `README.md`, `LICENSE`, etc.) — always add this.
+All `push`-based and `pull_request`-based triggers must include `paths-ignore` —
+see *paths-ignore* below.
 
 For tag-driven workflows:
 
@@ -36,6 +36,60 @@ For reusable workflows:
 on:
   workflow_call:
 ```
+
+## run-name
+
+Always set `run-name:` — it replaces the default branch/SHA display in the
+GitHub Actions UI with a human-readable label.
+
+| Trigger | Pattern | Example |
+| --- | --- | --- |
+| `workflow_dispatch` release | `${{ github.repository }} Release ${{ github.event.inputs.release }}` | `my-org/my-repo Release 1.2.3` |
+| `workflow_dispatch` by type | `${{ github.event.inputs.version-type }} release for ${{ github.event.repository.name }}` | `patch release for my-repo` |
+| `push` / `pull_request` CI | `"Ref: ${{ github.ref_name }}. On ${{ github.event_name }}"` | `Ref: main. On push` |
+| PR automation | `"PR #${{ github.event.pull_request.number }} - <description>"` | `PR #42 - Automatic Labeler` |
+| Issue automation | `"Issue ${{ github.event.issue.number }} -> <description>"` | `Issue 7 -> Project board` |
+
+```yaml
+name: Docker Release
+run-name: ${{ github.repository }} Release ${{ github.event.inputs.release }}
+```
+
+## paths-ignore
+
+Every `push`- and `pull_request`-triggered workflow must include `paths-ignore`
+to avoid triggering on doc-only changes. Apply the same list to both triggers.
+
+Standard list (use as-is, add repo-specific paths if needed):
+
+```yaml
+on:
+  push:
+    branches:
+      - "**"
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "CODE-OF-CONDUCT.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "README.md"
+      - "SECURITY.md"
+  pull_request:
+    branches:
+      - "**"
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "CODE-OF-CONDUCT.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "README.md"
+      - "SECURITY.md"
+```
+
+Do not use `paths-ignore` on release workflows (`workflow_dispatch` only) —
+they have no push trigger to filter.
 
 ## Concurrency
 
