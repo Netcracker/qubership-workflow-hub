@@ -65,11 +65,12 @@ If `COMMITS` is empty — inform the user that there are no commits ahead of `$B
 
 ### 3. Lint audit
 
-Before generating the PR, apply the full lint skill logic from
-`.claude/skills/lint/SKILL.md` using `BASE` as the base branch.
+Before generating the PR, audit all changed `.md` and workflow/action `.yml` files:
 
-This audits all changed `.md` and workflow/action `.yml` files, fixes violations
-in-place, and commits the fixes. If nothing needs fixing the step completes silently.
+- `.md` files → apply `.claude/skills/markdown-rules/SKILL.md` rules in-memory, fix violations with Edit.
+- `.yml` files → apply `.claude/skills/zizmor/SKILL.md` rules, fix violations with Edit.
+
+Do not commit. If nothing needs fixing the step completes silently.
 
 ### 4. Determine scope
 
@@ -158,7 +159,7 @@ Do not leave any placeholder or instructional text from the template in the outp
 Check whether an open PR already exists for the current branch:
 
 ```bash
-gh pr view --json number,url,state,isDraft 2>/dev/null
+gh pr view --json number,url,state,isDraft
 ```
 
 - If a PR exists AND `state` is `OPEN` (regardless of `isDraft`) → inform the user that an open PR already exists (show number and URL), and ask whether to update it or create a new one. Wait for the user's answer before proceeding.
@@ -196,8 +197,8 @@ After success, print the PR URL and what changed.
 ### 11. Markdown authoring rules
 
 All `.md` files written or fixed by this skill must comply with the project markdownlint ruleset.
-Apply the full audit logic from `.claude/skills/md-lint/SKILL.md` (step 3 — all rules) to any
-`.md` file before writing it. Fix all violations in-memory before calling the Write tool.
+Apply rules from `.claude/skills/markdown-rules/SKILL.md` to any `.md` file before writing it.
+Fix all violations in-memory before calling the Write tool.
 
 ### 12. Report to user
 
