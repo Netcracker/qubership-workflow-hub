@@ -8,7 +8,7 @@ MD013:
   # Number of characters
   line_length: 500
   # Number of characters for headings
-  heading_line_length: 80
+  heading_line_length: 100
   # Number of characters for code blocks
   code_block_line_length: 500
   # Include code blocks
