@@ -27,6 +27,7 @@ Trigger and runner are inferred per `workflow-patterns.md` → *Trigger rules* �
 Auto-discovers all packages for the repo via `GITHUB_REPOSITORY` — no package list needed.
 
 **Required env on the action step:**
+
 ```yaml
 env:
   PACKAGE_TOKEN: ${{ secrets.GH_RWD_PACKAGE_TOKEN }}
@@ -44,12 +45,14 @@ env:
 ### Tag filter logic
 
 Filters are applied in this order:
+
 1. Candidates: all versions older than `threshold-days`
-2. If `included-tags` is set — keep only versions whose tags match (wildcard `*` / `?` supported)
-3. Remove any version whose tags match `excluded-tags` — these are never deleted regardless of age
+1. If `included-tags` is set — keep only versions whose tags match (wildcard `*` / `?` supported)
+1. Remove any version whose tags match `excluded-tags` — these are never deleted regardless of age
 
 **`excluded-tags` recommended value:**
-```
+
+```text
 release*,semver,main,latest,*.*,*.*.*
 ```
 

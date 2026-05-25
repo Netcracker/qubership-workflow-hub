@@ -23,6 +23,7 @@ Auto-assigns reviewers to PRs. **Prefer CODEOWNERS** — it is the zero-config p
 **Permissions:** `pull-requests: write`, `contents: read`
 
 **Required env:**
+
 ```yaml
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -31,11 +32,13 @@ env:
 ### CODEOWNERS mode (preferred)
 
 No config file needed. The action searches three locations in order and uses the first file found:
+
 1. `.github/CODEOWNERS`
-2. `CODEOWNERS` (repo root)
-3. `docs/CODEOWNERS`
+1. `CODEOWNERS` (repo root)
+1. `docs/CODEOWNERS`
 
 Selection logic within the file:
+
 - Prefers the `*` (wildcard) rule if present.
 - Falls back to the last non-empty, non-comment line if no wildcard rule exists.
 
@@ -69,12 +72,13 @@ count: 2
 
 ### Pipeline
 
-```
+```text
 pull_request → pr-assigner
                reads config or CODEOWNERS, assigns reviewers
 ```
 
 Action ref (from Pin table):
+
 ```yaml
 uses: netcracker/qubership-workflow-hub/actions/pr-assigner@<sha>  # vX.Y.Z
 ```
@@ -94,7 +98,7 @@ Appends commit messages from the PR to the PR description. No inputs required.
 
 ### Pipeline
 
-```
+```text
 pull_request → pr-add-messages
                collects commit messages, appends to PR description
 ```

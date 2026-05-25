@@ -32,6 +32,7 @@ Trigger is inferred per `workflow-patterns.md` → *Trigger rules* — do not as
 Bumps version (major/minor/patch), creates Git tag `v<version>`, runs `mvn release:prepare` + `mvn release:perform`, deploys signed artifact.
 
 **Critical behaviour:**
+
 - Checks out `<org>/<module>` — a **different repo** from the one running the workflow. `module` input must match the target repository name exactly.
 - `token` must have write access to `<org>/<module>`. `GITHUB_TOKEN` only covers the calling repo — use a PAT or GitHub App token for cross-repo releases or protected branches.
 - `dry-run` default is `'true'` (string). Only passes `dry-run: 'false'` (exact string) to trigger an actual release. Any other value including omission → dry-run.
@@ -46,6 +47,7 @@ Bumps version (major/minor/patch), creates Git tag `v<version>`, runs `mvn relea
 Deploys current SNAPSHOT version or runs any Maven command. Does not bump version or create tags.
 
 **Critical behaviour:**
+
 - `maven-token` is the only required input.
 - When `maven-command: deploy` — reads `pom.xml` to check for `-SNAPSHOT` suffix. If not a SNAPSHOT, automatically falls back to `mvn install` without deploying.
 - When `maven-command` is anything other than `deploy` (e.g. `clean verify`, `test`) — SNAPSHOT check is skipped, command runs as-is. GPG not needed.
@@ -89,7 +91,7 @@ If the default branch is **not** protected — `token: ${{ secrets.GITHUB_TOKEN 
 
 ### Release pipeline
 
-```
+```text
 dry-run-build → deploy → [check-dockerfile → docker-build] → github-release
 ```
 
@@ -112,7 +114,7 @@ Tag ordering: tag is created **inside `maven-release`** during `release:prepare`
 
 ### SNAPSHOT deploy pipeline
 
-```
+```text
 push (non-main branches) → checkout → maven-snapshot-deploy
 ```
 
@@ -129,7 +131,7 @@ Trigger: `push` with `branches-ignore: [main, **release*, dependabot/**]` + `pat
 
 Canonical one-job flow from `dev-mvn-docker-build.yml` — no artifact upload/download:
 
-```
+```text
 checkout → maven-snapshot-deploy → metadata-action → docker-action
            (build only, no deploy)   generates tags     builds image
 ```
@@ -202,6 +204,7 @@ Both actions require `pom.xml` to be prepared according to the org guide:
 [maven-publish-pom-preparation_doc.md](https://github.com/Netcracker/.github/blob/main/docs/maven-publish-pom-preparation_doc.md)
 
 Key requirements:
+
 - `<profile><id>` matching `target-store` value must exist for profile activation
 - Maven Central deploy requires Central Publishing Maven Plugin configured in the profile
 - Forbidden `groupId` values: `org.qubership` and `com.netcracker` exactly (subpackages like `org.qubership.cloud` are allowed)

@@ -79,10 +79,10 @@ Rules:
   exist. Pick a different action, restructure the workflow, or tell
   the user the action does not support that capability.
 - This applies even when:
-    - you remember the identifier from earlier in the session;
-    - a similar action has a similar-looking identifier;
-    - the identifier appears in another action's **output** JSON —
-      outputs and inputs are different namespaces.
+  - you remember the identifier from earlier in the session;
+  - a similar action has a similar-looking identifier;
+  - the identifier appears in another action's **output** JSON —
+    outputs and inputs are different namespaces.
 - When in doubt, re-read the README. The cost of an extra lookup is
   negligible; the cost of a hallucinated identifier is a broken
   workflow that silently no-ops or fails on first run.
@@ -100,6 +100,7 @@ For actions listed in the Pin table (`qubership-actions-guide` → *Pin table*) 
 always use it.
 
 For actions **not in the Pin table**:
+
 - `actions/*` (GitHub-owned, e.g. `actions/setup-java`, `actions/upload-artifact`) — use the SHA and version known to the model from training. These are stable and well-known.
 - All other third-party actions (e.g. `docker/login-action`, `tj-actions/*`) — add to the Pin table or ask the user to provide the SHA. Do not write third-party SHAs from memory.
 

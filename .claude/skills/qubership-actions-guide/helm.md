@@ -37,7 +37,7 @@ charts:
 
 When a GitHub Release is needed, prepend the tag steps from `release.md` (*Critical rule: tag before build*):
 
-```
+```text
 tag-action (check)  →  tag-action (create)  →  metadata-action  →  charts-values-update-action  →  chart-version  →  release-drafter
 verify tag absent      creates vX.Y.Z tag      produces version     updates values.yaml images        updates Chart.yaml   publishes release with changelog
                                                                      reads helm-charts-release-config.yaml
@@ -47,7 +47,7 @@ For release step details (tag-action inputs, release-drafter config, assets) —
 
 When only chart update is needed (no release):
 
-```
+```text
 metadata-action  →  charts-values-update-action  →  chart-version
 produces version     updates values.yaml images        updates Chart.yaml
                      reads helm-charts-release-config.yaml
@@ -56,4 +56,3 @@ produces version     updates values.yaml images        updates Chart.yaml
 `charts-values-update-action` reads the config, substitutes `${tag}` with
 the release version, and updates image references in `values.yaml`.
 `chart-version` then updates `version` and `appVersion` in `Chart.yaml`.
-

@@ -14,7 +14,7 @@ Trigger and runner are inferred per `workflow-patterns.md` → *Trigger rules* �
 
 Scans project source code and dependencies. No config file needed.
 
-```
+```text
 cdxgen → SBOM artifact + CycloneDX vuln report
 ```
 
@@ -27,12 +27,13 @@ Two patterns depending on whether a Docker config file exists:
 
 **With Docker config file** (recommended — filename is arbitrary, conventional default is `.qubership/docker.cfg`; this is the same central component config used across build, scan, cleanup, and other jobs):
 
-```
+```text
 docker-config-resolver  →  filter security.scan==true  →  re-security-scan (matrix)
 reads docker config file    per-component scan settings    Trivy + Grype
 ```
 
 `re-security-scan` is a reusable workflow from `netcracker/qubership-workflow-hub`:
+
 ```yaml
 uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@<sha>  # vX.Y.Z
 ```
@@ -44,7 +45,7 @@ The config file path is passed via `file-path` input to `docker-config-resolver`
 
 **Without Docker config file** (discover from GHCR):
 
-```
+```text
 ghcr-discover-repo-packages  →  re-security-scan (matrix)
 discovers all repo packages      scans each image
 ```

@@ -298,6 +298,7 @@ Rules:
       secrets:
         REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
   ```
+
 - Declare `outputs:` at the workflow level when the caller needs a
   result. Wire them from a job output via `value:`.
 

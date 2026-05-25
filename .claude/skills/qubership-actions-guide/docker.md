@@ -35,11 +35,13 @@ If the user's request contains "release", "publish", or "tag" — load `release.
 | 2 | Registry: GHCR / Docker Hub / both? | `registry` input and auth method |
 
 Config file — do not ask, determine from path:
+
 - **Path A** (existing workflow/configs): config file was already found when reading the workflow — use it.
 - **Path B** (from scratch): no config file exists — generate it (see *Config file generation*). Never ask the user to fill in a template.
 - Never put image name, Dockerfile path, platforms, or build-context into workflow inputs — always use config file.
 
 Defaults — do not ask, apply automatically:
+
 - Platforms: `linux/amd64,linux/arm64` — set in `defaults` of config file (see *Config file schema*)
 - `extra-tags` input always included in `workflow_dispatch` — user removes if not needed
 - Image names / Dockerfiles: placeholder `"name": "your-image"` in generated config — user fills in
@@ -102,6 +104,7 @@ When the workflow handles both triggers (push + workflow_dispatch), use two sepa
 ```
 
 Then pass to `docker-action`:
+
 ```yaml
 tags: ${{ steps.metadata-release.outputs.result || steps.metadata-push.outputs.result }}
 ```
@@ -109,14 +112,17 @@ tags: ${{ steps.metadata-release.outputs.result || steps.metadata-push.outputs.r
 ### Key action inputs reference
 
 **`docker-config-resolver`:**
+
 - `file-path` — path to config file
 
 **`metadata-action`:**
+
 - `ref` — the ref to render tags from; for release use `refs/tags/v${{ inputs.release }}`, for push use `${{ github.ref }}`
 - `default-template` — tag template (see *Tag strategy* above)
 - `extra-tags` — additional tags from `workflow_dispatch` input
 
 **`docker-action`:**
+
 - `component` — `${{ toJson(matrix.component) }}` (with config) or inline JSON array (without config)
 - `platforms` — `${{ matrix.component.platforms }}` (with config) or direct value
 - `tags` — from `metadata-action` output or direct
@@ -225,6 +231,7 @@ Note: `context` is a deprecated alias for `build_context` — always use `build_
 
 ### `security` object fields
 
+
 | Field | Description |
 | --- | --- |
 | `scan` | `true` — include this component in security scan |
@@ -243,4 +250,3 @@ Note: `context` is a deprecated alias for `build_context` — always use `build_
 2. **Flatten:** `security.scan` → `security_scan`, `security.tag` → `security_tag`, etc.
 
 The workflow reads `matrix.component.security_scan`, `matrix.component.security_trivy_scan`, and so on.
-

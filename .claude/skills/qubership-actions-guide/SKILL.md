@@ -52,6 +52,7 @@ For full input/output details fetch the action README on demand (see *Pin table*
 ### Publishing
 
 Ask only what is missing after inferring from context:
+
 - npm: registry (npmjs / GitHub Packages)
 - Python: target (PyPI / GitHub Packages)
 
@@ -127,4 +128,3 @@ When the catalog purpose line is not enough to write the `with:` block — fetch
 ```text
 WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1/actions/<name>/README.md
 ```
-

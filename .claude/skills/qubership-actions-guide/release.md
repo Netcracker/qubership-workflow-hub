@@ -24,12 +24,14 @@ Default: `upload-assets` job always generated with a comment `# remove if not ne
 Reason: if the build pushes artifacts (Docker images, Maven jars, npm packages) but the tag step fails afterwards, artifacts exist in the registry with release version tags but no corresponding Git tag — the release is in an inconsistent state.
 
 Correct order:
-```
+
+```text
 check-tag → create-tag → [build/publish] → github-release
 ```
 
 Wrong order (never do this):
-```
+
+```text
 [build/publish] → create-tag   ← tag created after artifacts already pushed
 ```
 
@@ -39,7 +41,7 @@ Wrong order (never do this):
 
 ### Tag only
 
-```
+```text
 tag-action (check)  →  tag-action (create)
 verify tag absent      creates vX.Y.Z tag
 ```
@@ -50,7 +52,7 @@ Use when only a Git tag is needed, no GitHub Release page.
 
 ### Tag + minimal GitHub Release
 
-```
+```text
 tag-action (check)  →  tag-action (create, create-release: true)
 verify tag absent      creates tag and empty GitHub Release
 ```
@@ -62,7 +64,7 @@ Release body will be empty — edit manually afterwards if needed.
 
 ### Tag + GitHub Release with changelog (release-drafter)
 
-```
+```text
 tag-action (check)  →  tag-action (create)  →  release-drafter
 verify tag absent      creates tag              generates changelog, publishes release
 ```
@@ -72,6 +74,7 @@ verify tag absent      creates tag              generates changelog, publishes r
 Ask the user if it exists. If not — generate the default config below and write it to `.github/release-drafter-config.yml`.
 
 `release-drafter` inputs:
+
 - `config-name: release-drafter-config.yml`
 - `publish: true`
 - `name: ${{ inputs.release }}`
@@ -142,7 +145,7 @@ Version bump is determined by PR labels: `major`, `minor`, `patch`. Default is `
 
 ### Tag + GitHub Release + assets from repo files
 
-```
+```text
 tag-action (check)  →  tag-action (create, create-release: true)  →  checkout (ref: tag)  →  assets-action
 verify tag absent      creates tag and release                        fetch repo at tag       upload files
 ```
@@ -154,13 +157,14 @@ Use when assets are files committed to the repo (scripts, configs, docs).
 
 ### Tag + GitHub Release + assets from build artifacts
 
-```
+```text
 [producer job]                   [release job]                         [upload-assets job]
 build  →  upload-artifact    →   tag-action (check)                →   download-artifact  →  assets-action
            saves to GHA           tag-action (create + release)         restores files        uploads to release
 ```
 
 Use when assets are produced during the workflow (jars, .tgz chart packages, zips, binaries).
+
 - `upload-artifact` in the producer job saves files to GitHub Actions storage
 - `download-artifact` in the upload-assets job restores them — **no `checkout` needed**
 - Pass `artifact-ids` output from the producer job to `download-artifact` for precision

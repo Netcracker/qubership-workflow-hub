@@ -10,6 +10,7 @@ Apply every rule below while writing or editing a workflow.
 `run:` scripts or `actions/github-script` `script:` input.
 
 **Attacker-controlled sources — never use these inside `${{ }}` in a `run:` block:**
+
 - `github.event.pull_request.title`
 - `github.event.pull_request.body`
 - `github.event.pull_request.head.ref`
@@ -25,6 +26,7 @@ Apply every rule below while writing or editing a workflow.
 - `github.event.workflow_run.head_commit.message`
 
 **Correct pattern — pass through `env:` var:**
+
 ```yaml
 env:
   TITLE: ${{ github.event.pull_request.title }}
@@ -39,11 +41,13 @@ run: |
 **What to avoid:** Overly broad permissions at workflow level or per job.
 
 **Never write:**
+
 - `permissions: write-all`
 - `contents: write` at the top-level workflow (not inside a job)
 - Any `write` permission a job does not actually need
 
 **Correct pattern:**
+
 ```yaml
 # Top of workflow — restrict everything
 permissions: {}
@@ -64,6 +68,7 @@ Start every job from `contents: read` and elevate only where the action's README
 **What to avoid:** Any `uses:` not pinned to a full 40-character SHA.
 
 **Never write:**
+
 ```yaml
 uses: actions/checkout@main          # branch ref
 uses: actions/checkout@v4            # mutable tag
@@ -71,6 +76,7 @@ uses: actions/checkout@v4.2.2        # mutable tag
 ```
 
 **Always write:**
+
 ```yaml
 uses: actions/checkout@<40-char-sha>  # vX.Y.Z
 ```
@@ -88,6 +94,7 @@ that also uploads artifacts — Git credentials can be leaked into the artifact 
 **Flag if:** same job has both `actions/checkout` and `actions/upload-artifact`.
 
 **Correct pattern:**
+
 ```yaml
 - uses: actions/checkout@<sha>  # vX.Y.Z
   with:
@@ -104,6 +111,7 @@ Git push access (e.g. tag creation, branch push).
 **What to avoid:** Passing all secrets to a reusable workflow via `secrets: inherit`.
 
 **Never write:**
+
 ```yaml
 jobs:
   call:
@@ -112,6 +120,7 @@ jobs:
 ```
 
 **Correct pattern — pass only what the callee needs:**
+
 ```yaml
 jobs:
   call:
@@ -128,10 +137,12 @@ jobs:
 execution of untrusted PR head code.
 
 **Flag if** the workflow uses `pull_request_target` or `workflow_run` AND any step:
+
 - Checks out with `ref: ${{ github.event.pull_request.head.sha }}` or similar PR head ref
 - Runs shell commands using `github.event.pull_request.*` input directly
 
 **Correct pattern — safe checkout in privileged trigger:**
+
 ```yaml
 - uses: actions/checkout@<sha>  # vX.Y.Z
   with:
@@ -150,11 +161,13 @@ because it does not checkout or execute PR head code.
 in privileged trigger contexts (`pull_request_target`, `workflow_run`).
 
 **Never write:**
+
 ```yaml
 run: echo "BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
 ```
 
 **Correct pattern — use `GITHUB_OUTPUT` for inter-step data:**
+
 ```yaml
 run: echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 env:
@@ -169,6 +182,7 @@ env:
 automatic redaction may miss the transformed form.
 
 **Never write:**
+
 ```yaml
 run: |
   TOKEN="${{ secrets.MY_TOKEN }}"
@@ -176,6 +190,7 @@ run: |
 ```
 
 **Correct pattern:**
+
 ```yaml
 run: |
   curl -H "Authorization: Bearer $MY_TOKEN"
@@ -197,6 +212,7 @@ workflows — parallel runs can cause race conditions or wasted compute.
 **Correct patterns — see `workflow-patterns.md` → *Concurrency* for full details:**
 
 For CI (push / pull_request):
+
 ```yaml
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -204,6 +220,7 @@ concurrency:
 ```
 
 For release / publish (never cancel):
+
 ```yaml
 concurrency:
   group: release-${{ github.ref }}
@@ -217,12 +234,14 @@ concurrency:
 **What to avoid:** GitHub App token passed directly via shell interpolation in a `run:` step.
 
 **Never write:**
+
 ```yaml
 run: |
   gh api ... --header "Authorization: Bearer ${{ steps.generate-token.outputs.token }}"
 ```
 
 **Correct pattern — always via env var:**
+
 ```yaml
 run: |
   gh api ... --header "Authorization: Bearer $APP_TOKEN"
@@ -240,6 +259,7 @@ secrets should be scoped to GitHub Environments with protection rules for produc
 **Flag if:** a deployment or publish job uses secrets but has no `environment:` declaration.
 
 **Correct pattern:**
+
 ```yaml
 jobs:
   deploy:
@@ -263,11 +283,13 @@ workflows publishing to production registries or environments should always decl
 anyone can create an account named `dependabot[bot]`.
 
 **Never write:**
+
 ```yaml
 if: github.actor == 'dependabot[bot]'
 ```
 
 **Correct pattern:**
+
 ```yaml
 if: github.actor_id == '49699333'        # dependabot's stable numeric ID
 # or
@@ -283,11 +305,13 @@ in security-sensitive conditions — an attacker can craft a label name that sat
 the check.
 
 **Never write:**
+
 ```yaml
 if: contains(github.event.label.name, 'safe-to-run')
 ```
 
 **Correct pattern — use exact equality for security gates:**
+
 ```yaml
 if: github.event.label.name == 'safe-to-run'
 ```
@@ -303,6 +327,7 @@ if: github.event.label.name == 'safe-to-run'
 - `actions/github-script` with untrusted input in `script:`
 
 **Never write:**
+
 ```yaml
 - name: Security scan
   continue-on-error: true   # failure is silently ignored
@@ -310,6 +335,7 @@ if: github.event.label.name == 'safe-to-run'
 
 **Correct pattern — only use `continue-on-error` on genuinely optional steps,
 never on steps whose failure should block the workflow:**
+
 ```yaml
 - name: Security scan
   continue-on-error: false  # default — omit the line entirely
@@ -328,14 +354,15 @@ YAML/expression type coercion — e.g. comparing a string context value to a non
 context value using `==` where type coercion could make it always evaluate to `true`.
 
 **Common mistake:**
+
 ```yaml
 if: ${{ github.event.inputs.dry-run }}   # always true if input is the string "false"
 ```
 
 **Correct pattern — explicit string comparison:**
+
 ```yaml
 if: ${{ github.event.inputs.dry-run == 'true' }}
 ```
 
 For boolean inputs from `workflow_dispatch`, always compare to the string `'true'` or `'false'`.
-

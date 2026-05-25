@@ -15,12 +15,13 @@ Extract answers from the user's message first. Ask only what is missing.
 
 ## Pipeline
 
-```
+```text
 pull_request_target (opened, synchronize, closed) + issue_comment (created) → cla-assistant
                                                                                 checks signature, requests signing, records to JSON
 ```
 
 Full trigger block:
+
 ```yaml
 on:
   issue_comment:
@@ -85,7 +86,7 @@ permissions:
 
 Contributors sign by posting this exact comment on the PR:
 
-```
+```text
 I have read the CLA Document and I hereby sign the CLA
 ```
 
