@@ -29,9 +29,12 @@ def load_yaml_config(config_path):
     config_data = {}
     # Try to load user config file
     # user config structure:
-    # ignored_checks:
+    # global_ignored_checks:
     #   - ControlID1
     #   - ControlID2
+    # image_ignored_checks:
+    #   image_name:
+    #     - ControlID1
     if not Path(config_path).is_file():
         print(f"⚠️  Warning: Config file '{config_path}' not found. Using default config path '{default_config_path}'.")
     else:
@@ -39,10 +42,17 @@ def load_yaml_config(config_path):
             config_data = yaml.safe_load(f)
     with open(default_config_path, 'r', encoding='utf-8') as f:
         default_config_data = yaml.safe_load(f)
-    # Merge default config with user config. Setting `mandatory` field to False for checks listed in `ignored_checks` in user config.
-    for check in config_data.get('ignored_checks', []):
+    # Merge default config with user config. Setting `mandatory` field to False for checks listed in `global_ignored_checks` in user config.
+    for check in config_data.get('global_ignored_checks', []):
         if check in default_config_data.get('hardening_rules', {}):
             default_config_data['hardening_rules'][check]['mandatory'] = False
+    individual_ignored_checks = config_data.get('image_ignored_checks', {})
+    for image, checks in individual_ignored_checks.items():
+        for check in checks:
+            if check in default_config_data.get('hardening_rules', {}):
+                if 'ignored_for_images' not in default_config_data['hardening_rules'][check]:
+                    default_config_data['hardening_rules'][check]['ignored_for_images'] = []
+                default_config_data['hardening_rules'][check]['ignored_for_images'].append(image)
     print(f"[DEBUG]: {default_config_data}")
     return default_config_data
 
@@ -110,12 +120,15 @@ def generate_markdown_tables(data, config):
     failed_mandatory_checks_all = {}
     output_lines = []
     for resource in results:
+        resource_mandatory_checks = mandatory_checks.copy()
         resource_id = resource.get('resourceID', 'Unknown')
         resource_data = next((r for r in resources if r.get('resourceID') == resource_id), {})
         resource_ports = get_resource_ports(resource_data)
         resource_images = get_resource_images(resource_data)
         if len(resource_images) == 0:
             continue
+        # need to strip the tag from the image name to compare with the ignored images in the config file, as the config file may contain image names without tags.
+        resource_images_stripped = [img.split(':')[0] for img in resource_images]
         controls = resource.get('controls', [])
         failed_mandatory_checks = []
 
@@ -131,7 +144,12 @@ def generate_markdown_tables(data, config):
             control_id = control.get('controlID', '')
             control_name = control.get('name', '')
             if control_id in mandatory_checks:
-                control_name += " (⚠️  Mandatory)"
+                if 'ignored_for_images' in config.get('hardening_rules', {}).get(control_id, {}) and any(img in config['hardening_rules'][control_id]['ignored_for_images'] for img in resource_images_stripped):
+                    print(f"⚠️  Skipping mandatory check '{control_id}' for resource '{resource_id}' due to image-based ignore rule.")
+                    resource_mandatory_checks.remove(control_id)
+                else:
+                    print(f"[DEBUG] Control '{control_id}' is mandatory for resource '{resource_id}'.")
+                    control_name += " (Mandatory)"
             rules = control.get('rules', [])
 
             # Each rule in a separate line.
@@ -140,14 +158,14 @@ def generate_markdown_tables(data, config):
                     status = rule.get('status', '')
                     status_emoji = get_status_emoji(status)
                     output_lines.append(f"| {control_id} | {control_name} ({rule.get('name', '')}) | {status_emoji} |")
-                    if control_id in mandatory_checks and status != 'passed' and control_id not in failed_mandatory_checks:
+                    if control_id in resource_mandatory_checks and status != 'passed' and control_id not in failed_mandatory_checks:
                         failed_mandatory_checks.append(control_id)
             else:
                 # Normal case - single rule
                 status = rules[0].get('status', '') if rules else control.get('status', {}).get('status', '')
                 status_emoji = get_status_emoji(status)
                 output_lines.append(f"| {control_id} | {control_name} | {status_emoji} |")
-                if control_id in mandatory_checks and status != 'passed':
+                if control_id in resource_mandatory_checks and status != 'passed':
                     failed_mandatory_checks.append(control_id)
 
         # compare resource ports with prohibited ports list from config file and add a line to the table if there is a match.
@@ -155,7 +173,7 @@ def generate_markdown_tables(data, config):
         ports_intersection = list(set(config.get('hardening_rules', {}).get('Critical-Ports', {}).get('critical_ports', [])) & set(resource_ports))
         if ports_intersection:
             output_lines.append(f"| Critical-Ports | Critical Ports: {', '.join(map(str, sorted(ports_intersection)))} | ❌ |")
-            if 'Critical-Ports' in mandatory_checks:
+            if 'Critical-Ports' in resource_mandatory_checks:
                 failed_mandatory_checks.append('Critical-Ports')
         else:
             output_lines.append("| Critical-Ports | Critical Ports | ✅ |")
@@ -165,7 +183,7 @@ def generate_markdown_tables(data, config):
         latest_images = [img for img in resource_images if img.endswith(':latest')]
         if latest_images:
             output_lines.append(f"| Latest-Tag | Images using 'latest' tag: {', '.join(latest_images)} | ❌ |")
-            if 'No-Latest-Tag' in mandatory_checks:
+            if 'No-Latest-Tag' in resource_mandatory_checks:
                 failed_mandatory_checks.append('No-Latest-Tag')
         else:
             output_lines.append("| Latest-Tag | No images using 'latest' tag | ✅ |")
