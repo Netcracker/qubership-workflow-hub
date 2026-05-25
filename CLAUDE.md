@@ -159,9 +159,10 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 ## Markdown authoring rule
 
-Before writing any `.md` file — whether a new skill, guide, or doc update — apply the full
-md-lint ruleset in-memory (all 50 rules from `.claude/skills/md-lint/SKILL.md` step 3).
-Fix all violations before calling Write or Edit. This prevents markdownlint CI failures.
+Before writing **or editing** any `.md` file — whether a new skill, guide, doc update, or
+any partial edit — apply the full md-lint ruleset in-memory (all 50 rules from
+`.claude/skills/markdown-rules/SKILL.md` step 3). Fix all violations before calling Write
+or Edit. This prevents markdownlint CI failures.
 
 ---
 

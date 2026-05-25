@@ -231,7 +231,6 @@ Note: `context` is a deprecated alias for `build_context` — always use `build_
 
 ### `security` object fields
 
-
 | Field | Description |
 | --- | --- |
 | `scan` | `true` — include this component in security scan |
