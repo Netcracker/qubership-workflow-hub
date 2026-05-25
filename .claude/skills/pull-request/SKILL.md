@@ -58,7 +58,7 @@ gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
 Resolve `BASE` in priority order:
 
 1. `$BASE_ARG` if provided
-1. `EXISTING_PR.baseRefName` if an open PR exists
+1. `EXISTING_PR.baseRefName` if `EXISTING_PR` is non-empty **and** `EXISTING_PR.state == "OPEN"`
 1. `DEFAULT_BRANCH` from `gh repo view`
 1. `main` as final fallback if `gh repo view` fails — warn the user
 
