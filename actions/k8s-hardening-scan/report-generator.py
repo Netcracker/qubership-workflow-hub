@@ -149,7 +149,8 @@ def generate_markdown_tables(data, config):
                     resource_mandatory_checks.remove(control_id)
                 else:
                     print(f"[DEBUG] Control '{control_id}' is mandatory for resource '{resource_id}'.")
-                    control_name += " (Mandatory)"
+                    # adding (Mandatory) bold label to the control name in the table for better visibility
+                    control_name += " **(Mandatory)**"
             rules = control.get('rules', [])
 
             # Each rule in a separate line.
