@@ -170,11 +170,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Check Grype version
+        env:
+          INPUT_GRYPE_VERSION: ${{ inputs.grype-version }}
         run: |
-          if [ "${{ inputs.grype-version }}" == "latest" ]; then
+          if [ "$INPUT_GRYPE_VERSION" == "latest" ]; then
             echo "GRYPE_VERSION=" >> $GITHUB_ENV
           else
-            echo "GRYPE_VERSION=${{ inputs.grype-version }}" >> $GITHUB_ENV
+            echo "GRYPE_VERSION=$INPUT_GRYPE_VERSION" >> $GITHUB_ENV
           fi
       - name: "Grype scan (Docker: High+Critical)"
         if: ${{ inputs.target == 'docker' }}
@@ -279,14 +281,14 @@ jobs:
 
       - name: Upload Grype SARIF
         if: inputs.upload-sarif-to-security
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13  # v4.35.1
+        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e  # v4.35.4
         with:
           sarif_file: |
             ${{ needs.init.outputs.GRYPE_FILENAME }}
           category: ${{ needs.init.outputs.IMAGE_SHORT_NAME || 'source' }}
 
       - name: Upload all scan artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: ${{ needs.init.outputs.GRYPE_FILENAME }}
           path: |
@@ -316,7 +318,7 @@ jobs:
         if: ${{ inputs.target == 'docker' }}
         continue-on-error: ${{ inputs.continue-on-error }}
         id: trivy-docker
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 #v0.36.0
         with:
           image-ref: "${{ needs.init.outputs.IMAGE }}"
           severity: ${{ env.TRIVY_SEVERITY }}
@@ -330,7 +332,7 @@ jobs:
         if: ${{ inputs.target == 'source' }}
         continue-on-error: ${{ inputs.continue-on-error }}
         id: trivy-source
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 #v0.36.0
         with:
           scan-type: "fs"
           severity: ${{ env.TRIVY_SEVERITY }}
@@ -392,13 +394,13 @@ jobs:
 
       - name: Upload Trivy SARIF
         if: inputs.upload-sarif-to-security
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13  # v4.35.1
+        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e  # v4.35.4
         with:
           sarif_file: ${{ needs.init.outputs.TRIVY_FILENAME }}
           category: ${{ needs.init.outputs.IMAGE_SHORT_NAME || 'source' }}
 
       - name: Upload all scan artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: ${{ needs.init.outputs.TRIVY_FILENAME }}
           path: |

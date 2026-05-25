@@ -16,13 +16,13 @@
   "description": "",
   "dependencies": {
     "@actions/core": "^3.0.0",
-    "@actions/github": "^9.0.0",
+    "@actions/github": "^9.1.1",
     "@qubership/action-logger": "file:../../packages/action-logger",
-    "ajv": "^8.18.0",
+    "ajv": "^8.20.0",
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {
-    "esbuild": "^0.27.7",
+    "esbuild": "^0.28.0",
     "jest": "^30.2.0"
   }
 }
