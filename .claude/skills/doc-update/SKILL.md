@@ -52,17 +52,17 @@ Use `RELEASE_TAG` in all usage examples. Never use `@main` or short SHAs.
 
 | `$target` starts with | `YML_PATH` | `DOC_PATH` | `TYPE` |
 | --- | --- | --- | --- |
-| `reusable/` | `.github/workflows/re-<name>.yml` | `docs/reusable/<name>.md` | `workflow` |
+| `reusable/` | `.github/workflows/re-<name>.yml` or `.yaml` — check which exists | `docs/reusable/<name>.md` | `workflow` |
 | anything else | `actions/<target>/action.yml` | `actions/<target>/README.md` | `action` |
 
-For actions, also check `action.yaml` if `action.yml` does not exist.
+For both actions and reusable workflows, check `.yml` first, then `.yaml`. Use whichever exists.
 
 ### 4. Collect diff
 
 Collect the diff of `<scope>` relative to the base ref resolved in step 2:
 
 - Actions: scope = `actions/<target>/`
-- Workflows: scope = `.github/workflows/re-<name>.yml`
+- Workflows: scope = `YML_PATH` resolved in step 3 (`.yml` or `.yaml`)
 
 → `CHANGED_FILES`, `FULL_DIFF`
 
@@ -187,6 +187,12 @@ jobs:
 
 Resolve the SHA for the pin by looking up the tag in the repository's remote refs.
 Render the actual SHA into the example; tag as a trailing comment.
+
+If the lookup fails (no network, no remote, tag not found in origin):
+
+- Use the placeholder `<SHA>` literally in the example.
+- Add a comment in the generated doc: `<!-- TODO: replace <SHA> with the full commit SHA for RELEASE_TAG -->`.
+- Continue — do not stop or skip the usage section.
 
 **Notes pin warning** (always last in `## Notes`):
 

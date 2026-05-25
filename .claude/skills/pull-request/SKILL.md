@@ -28,43 +28,35 @@ PR title format:
 
 ## Steps
 
-### 1. Parse arguments
+### 1. Preflight checks
+
+Verify `gh` is installed and authenticated. If not — stop immediately and inform the user:
+install gh CLI and run `gh auth login`.
+
+### 2. Parse arguments
 
 - If first argument is `update` → `MODE` = `update`; second argument (if any) = `BASE_ARG`
 - Otherwise → `MODE` = `create`; first argument (if any) = `BASE_ARG`
 
-### 2. Resolve BASE branch
+### 3. Resolve BASE branch
 
-Run in parallel:
+Collect in parallel:
 
-```bash
-git rev-parse --abbrev-ref HEAD
-```
-
-→ `CURRENT_BRANCH`
-
-```bash
-gh pr view --json baseRefName,number,url,state,isDraft 2>$null
-```
-
-→ `EXISTING_PR` (may be empty)
-
-```bash
-gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
-```
-
-→ `DEFAULT_BRANCH`
+- Current branch name → `CURRENT_BRANCH`
+- Open PR for the current branch (fields: `baseRefName`, `number`, `url`, `state`, `isDraft`);
+  if no PR exists or the command fails, treat as empty → `EXISTING_PR`
+- Default branch of the repository → `DEFAULT_BRANCH`; if unavailable, fall back to `main`
 
 Resolve `BASE` in priority order:
 
 1. `$BASE_ARG` if provided
-1. `EXISTING_PR.baseRefName` if an open PR exists
+1. `EXISTING_PR.baseRefName` if `EXISTING_PR` is non-empty **and** `EXISTING_PR.state == "OPEN"`
 1. `DEFAULT_BRANCH` from `gh repo view`
 1. `main` as final fallback if `gh repo view` fails — warn the user
 
 If `CURRENT_BRANCH` == `BASE` — inform the user and stop.
 
-### 3. Collect diff
+### 4. Collect diff
 
 ```bash
 git log BASE..HEAD --oneline
@@ -76,7 +68,7 @@ git diff BASE..HEAD
 
 If `COMMITS` is empty — inform the user there are no commits ahead of `BASE` and stop.
 
-### 4. Lint audit (non-blocking)
+### 5. Lint audit (non-blocking)
 
 Audit all changed files:
 
@@ -87,7 +79,7 @@ Audit all changed files:
 Fix everything that is safe to auto-fix. For violations that cannot be safely auto-fixed —
 collect them into `AUDIT_WARNINGS` and continue. Never block the preview or the PR flow.
 
-### 5. Determine scope
+### 6. Determine scope
 
 From `CHANGED_FILES`:
 
@@ -98,7 +90,7 @@ From `CHANGED_FILES`:
 - Mixed → most-changed area, or most specific common ancestor path
 - Root-level config only → omit scope from title
 
-### 6. Determine type
+### 7. Determine type
 
 From commit messages and `FULL_DIFF`:
 
@@ -116,7 +108,7 @@ From commit messages and `FULL_DIFF`:
 | `deprecate` | Marking something deprecated |
 | `revert` | Reverting a previous commit |
 
-### 7. Detect issue references and breaking changes
+### 8. Detect issue references and breaking changes
 
 **Issue:** search commit messages for `Fixes #NNN`, `Closes #NNN`, `Resolves #NNN`,
 `Related to #NNN`. If found → `ISSUE_REF` = full reference. If not → `ISSUE_REF` = none.
@@ -124,7 +116,7 @@ From commit messages and `FULL_DIFF`:
 **Breaking:** flag if commit contains `BREAKING CHANGE` or `!` after type, or if required
 inputs/outputs are removed or renamed in `action.yml` / workflow yml.
 
-### 8. Generate title and body
+### 9. Generate title and body
 
 **Title:** `<type>(<scope>): <imperative statement>`
 
@@ -138,7 +130,7 @@ inputs/outputs are removed or renamed in `action.yml` / workflow yml.
 | `## Summary` | 2–3 sentences: what changed, why, key result. Be specific — component names, inputs, behaviour. |
 | `## Issue` | `ISSUE_REF` if found; otherwise "No linked issue." Remove placeholder text. |
 | `## Breaking Change?` | Check `[x] Yes` or `[x] No`. If Yes — describe impact. Remove placeholder text. |
-| `## Scope / Project` | `SCOPE` value from step 5. Remove placeholder text. |
+| `## Scope / Project` | `SCOPE` value from step 6. Remove placeholder text. |
 | `## Implementation Notes` | Bullet list of technical decisions and non-obvious changes. For `docs`/`chore` PRs with small diffs: "Documentation update only — no behaviour change." |
 | `## Tests / Evidence` | Test command + result, dry-run output, or manual validation steps. |
 | `## Additional Notes` | Limitations, follow-ups, reviewer instructions. If none: "None." |
@@ -148,7 +140,7 @@ sections using standard markdown headings.
 
 Do not leave any placeholder or instructional text from the template in the output.
 
-### 9. Preview
+### 10. Preview
 
 Show the user:
 
@@ -164,7 +156,7 @@ If `AUDIT_WARNINGS` is non-empty — show them as a warning block before the pre
 **Wait for user confirmation before proceeding.** Ask: "Create/update the PR with this
 title and body?"
 
-### 10. Execute
+### 11. Execute
 
 **If `MODE` = `create`:**
 
@@ -187,13 +179,13 @@ gh pr edit --title "<TITLE>" --body "<BODY>"
 
 After success, print the PR URL.
 
-### 11. Fallback matrix
+### 12. Fallback matrix
 
 | Situation | Behaviour |
 | --- | --- |
-| `gh` not installed | Stop immediately. Inform user: install gh CLI and authenticate. |
+| `gh` not installed or not authenticated | Caught in step 1 — stop immediately. Inform user: install gh CLI and run `gh auth login`. |
 | `gh repo view` fails (no remote) | Fall back to `main` as BASE. Warn user that BASE could not be auto-detected. |
-| No `.github/pull_request_template.md` | Generate body with standard sections (see step 8). |
+| No `.github/pull_request_template.md` | Generate body with standard sections (see step 9). |
 | No commits ahead of BASE | Stop. Inform user. |
 | No issue reference found | Write "No linked issue." in `## Issue` — do not leave placeholder. |
 | `EXISTING_PR` absent in `update` mode | Stop. Inform user. Suggest running without `update`. |
