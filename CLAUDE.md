@@ -151,9 +151,17 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
       SKILL.md        — generate PR title/body, create or update PR via gh CLI
     zizmor/
       SKILL.md        — audit workflow/action yml files for security issues, fix violations
-    md-lint/
-      SKILL.md        — full markdownlint rule coverage (50 rules), audit and fix .md files
+    markdown-rules/
+      SKILL.md        — markdownlint rules from super-linter; apply when writing any .md file
 ```
+
+---
+
+## Markdown authoring rule
+
+Before writing any `.md` file — whether a new skill, guide, or doc update — apply the full
+md-lint ruleset in-memory (all 50 rules from `.claude/skills/md-lint/SKILL.md` step 3).
+Fix all violations before calling Write or Edit. This prevents markdownlint CI failures.
 
 ---
 

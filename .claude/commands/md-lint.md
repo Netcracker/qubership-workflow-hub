@@ -23,4 +23,4 @@ Audit markdown files for markdownlint violations and fix them.
 
 ## What this command does
 
-Execute the markdown skill logic defined in `.claude/skills/md-lint/SKILL.md` with the arguments: $ARGUMENTS
+Execute the markdown-rules skill logic defined in `.claude/skills/markdown-rules/SKILL.md` with the arguments: $ARGUMENTS
