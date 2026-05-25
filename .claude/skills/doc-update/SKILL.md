@@ -188,6 +188,12 @@ jobs:
 Resolve the SHA for the pin by looking up the tag in the repository's remote refs.
 Render the actual SHA into the example; tag as a trailing comment.
 
+If the lookup fails (no network, no remote, tag not found in origin):
+
+- Use the placeholder `<SHA>` literally in the example.
+- Add a comment in the generated doc: `<!-- TODO: replace <SHA> with the full commit SHA for RELEASE_TAG -->`.
+- Continue — do not stop or skip the usage section.
+
 **Notes pin warning** (always last in `## Notes`):
 
 > Pin to a full 40-character commit SHA with the release tag as a trailing comment, e.g.
