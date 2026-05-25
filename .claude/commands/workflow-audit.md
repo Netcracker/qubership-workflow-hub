@@ -25,4 +25,4 @@ Audit GitHub Actions workflow and action files for security issues and fix viola
 
 1. Execute the zizmor skill logic defined in `.claude/skills/zizmor/SKILL.md` with the arguments: $ARGUMENTS
 2. Execute the EditorConfig skill logic defined in `.claude/skills/editorconfig/SKILL.md` on the same files.
-3. Execute the markdown skill logic defined in `.claude/skills/md-lint/SKILL.md` on any `.md` files among the same targets.
+3. Execute the markdown skill logic defined in `.claude/skills/markdown-rules/SKILL.md` on any `.md` files among the same targets.
