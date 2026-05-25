@@ -69,7 +69,7 @@ Collect the diff of `<scope>` relative to the base ref resolved in step 2:
 **If no diff found:**
 
 - If `DOC_PATH` exists and `YML_PATH` exists → ask the user: "No diff found.
-  Resync documentation with the current `action.yml`?" Wait for confirmation before
+  Resync documentation with the current source file (`YML_PATH`)?" Wait for confirmation before
   continuing.
 - If neither condition holds → inform the user and stop.
 
