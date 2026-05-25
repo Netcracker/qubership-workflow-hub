@@ -52,7 +52,7 @@ jobs:
       - name: Checkout current repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Generate matrix from config
         id: set-matrix
@@ -82,7 +82,7 @@ jobs:
       - name: Checkout current repository (for config)
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Process repository ${{ matrix.repo }}
         env:
@@ -218,7 +218,7 @@ jobs:
 
       - name: Upload artifact for ${{ matrix.repo }}
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: images-${{ matrix.repo }}
           path: output/*.yaml
@@ -250,7 +250,7 @@ jobs:
           cat ${IMAGES_CONFIG_FILE} || echo "(empty)"
 
       - name: Upload final artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: 3rd-party-images
           path: ${{ env.IMAGES_CONFIG_FILE }}
@@ -269,12 +269,18 @@ jobs:
           path: final-output
       - name: Read config
         id: config
+        env:
+          INPUT_ONLY_HIGH_CRITICAL: ${{ inputs.only-high-critical }}
+          INPUT_TRIVY_SCAN: ${{ inputs.trivy-scan }}
+          INPUT_GRYPE_SCAN: ${{ inputs.grype-scan }}
+          INPUT_CONTINUE_ON_ERROR: ${{ inputs.continue-on-error }}
+          INPUT_ONLY_FIXED: ${{ inputs.only-fixed }}
         run: |
-          echo "only-high-critical: ${{ inputs.only-high-critical }}"
-          echo "trivy-scan: ${{ inputs.trivy-scan }}"
-          echo "grype-scan: ${{ inputs.grype-scan }}"
-          echo "continue-on-error: ${{ inputs.continue-on-error }}"
-          echo "only-fixed: ${{ inputs.only-fixed }}"
+          echo "only-high-critical: $INPUT_ONLY_HIGH_CRITICAL"
+          echo "trivy-scan: $INPUT_TRIVY_SCAN"
+          echo "grype-scan: $INPUT_GRYPE_SCAN"
+          echo "continue-on-error: $INPUT_CONTINUE_ON_ERROR"
+          echo "only-fixed: $INPUT_ONLY_FIXED"
           echo "1. ==================================================================================="
           yq -oj '.' ${IMAGES_CONFIG_FILE}
           echo "2. ==================================================================================="
@@ -295,7 +301,7 @@ jobs:
       matrix:
         package: "${{ fromJson(needs.load-config.outputs.packages) }}"
     name: "${{ matrix.package.image }}"
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@d11baa8a4b42d1a931808c0766ee23eb344c47dd # v2.2.0
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@6a2de8d62ac5b6998e30f923613c998c263ea9f2 # v2.2.2
     with:
       target: 'docker'
       image: ${{ matrix.package.image }}
@@ -350,7 +356,7 @@ jobs:
           merge-multiple: true
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6.1.0
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
