@@ -52,17 +52,17 @@ Use `RELEASE_TAG` in all usage examples. Never use `@main` or short SHAs.
 
 | `$target` starts with | `YML_PATH` | `DOC_PATH` | `TYPE` |
 | --- | --- | --- | --- |
-| `reusable/` | `.github/workflows/re-<name>.yml` | `docs/reusable/<name>.md` | `workflow` |
+| `reusable/` | `.github/workflows/re-<name>.yml` or `.yaml` — check which exists | `docs/reusable/<name>.md` | `workflow` |
 | anything else | `actions/<target>/action.yml` | `actions/<target>/README.md` | `action` |
 
-For actions, also check `action.yaml` if `action.yml` does not exist.
+For both actions and reusable workflows, check `.yml` first, then `.yaml`. Use whichever exists.
 
 ### 4. Collect diff
 
 Collect the diff of `<scope>` relative to the base ref resolved in step 2:
 
 - Actions: scope = `actions/<target>/`
-- Workflows: scope = `.github/workflows/re-<name>.yml`
+- Workflows: scope = `YML_PATH` resolved in step 3 (`.yml` or `.yaml`)
 
 → `CHANGED_FILES`, `FULL_DIFF`
 
