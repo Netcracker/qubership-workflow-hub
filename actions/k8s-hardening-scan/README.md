@@ -114,7 +114,7 @@ The caller can provide a custom config at `config-file` (default: `.qubership/ha
 
 The custom config supports two sections:
 
-**`global_ignored_checks`** — marks specific rule IDs as non-mandatory for all resources:
+#### `global_ignored_checks` — marks specific rule IDs as non-mandatory for all resources
 
 ```yaml
 global_ignored_checks:
@@ -122,7 +122,7 @@ global_ignored_checks:
   - Critical-Ports
 ```
 
-**`image_ignored_checks`** — skips specific checks only for resources running a named image:
+#### `image_ignored_checks` — skips specific checks only for resources running a named image
 
 ```yaml
 image_ignored_checks:
