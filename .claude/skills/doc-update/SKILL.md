@@ -12,7 +12,7 @@ Update or create documentation for a GitHub Action or reusable workflow.
 
 - `$target` — action name (e.g. `metadata-action`) or workflow name (e.g. `reusable/docker-publish`).
   Required unless `--all` is used.
-- `--all` — find all changed actions/workflows from `git diff main..HEAD` and update each.
+- `--all` — find all changed actions/workflows from the current branch diff and update each.
 
 ## Steps
 
@@ -23,28 +23,30 @@ Update or create documentation for a GitHub Action or reusable workflow.
 
 ### 1a. All mode
 
-```bash
-git diff --name-only main..HEAD
-```
-
-Keep only:
+Resolve changed files from the current branch relative to the base ref (see step 2 for
+base ref resolution). Keep only:
 
 - `actions/*/action.yml`, `actions/*/action.yaml` → action name
 - `actions/*/src/**`, `actions/*/*.py` → action name
 - `.github/workflows/re-*.yml`, `.github/workflows/re-*.yaml` → `reusable/<name>`
 
-Extract unique targets. Run steps 2–13 for each. If none found — stop.
+Extract unique targets. Run steps 2–12 for each. If none found — stop.
 
-### 2. Resolve latest release tag
+### 2. Resolve base ref and release tag
 
-```bash
-git tag --list 'v*' --sort=-version:refname | head -1
-```
+**Base ref:** resolve in priority order:
 
-`RELEASE_TAG` = result, or `v1` if no tags. Use in Usage examples.
+1. `baseRefName` from the open PR for the current branch, if one exists
+1. Default branch of the repository
+1. `main` as final fallback — warn the user if this fallback is used
 
-For the Notes pin warning: recommend a full 40-char SHA as the immutable pin, tag as
-a readable comment. Never `@main` or short SHAs.
+Collect the diff of the target scope relative to this base ref.
+
+**Release tag:** find the most recent semver tag in the repository
+(e.g. the latest `v*` tag by version order). If no tag exists, use `v1` as fallback
+and note it in the output.
+
+Use `RELEASE_TAG` in all usage examples. Never use `@main` or short SHAs.
 
 ### 3. Resolve paths
 
@@ -57,14 +59,19 @@ For actions, also check `action.yaml` if `action.yml` does not exist.
 
 ### 4. Collect diff
 
-```bash
-git diff main..HEAD -- <scope>
-git diff --name-only main..HEAD -- <scope>
-```
+Collect the diff of `<scope>` relative to the base ref resolved in step 2:
 
-`<scope>`: `actions/<target>/` for actions, `.github/workflows/re-<name>.yml` for workflows.
+- Actions: scope = `actions/<target>/`
+- Workflows: scope = `.github/workflows/re-<name>.yml`
 
-If no changed files — inform the user and stop.
+→ `CHANGED_FILES`, `FULL_DIFF`
+
+**If no diff found:**
+
+- If `DOC_PATH` exists and `YML_PATH` exists → ask the user: "No diff found.
+  Resync documentation with the current `action.yml`?" Wait for confirmation before
+  continuing.
+- If neither condition holds → inform the user and stop.
 
 ### 5. Read source files
 
@@ -72,29 +79,43 @@ If no changed files — inform the user and stop.
 - Read `DOC_PATH` if it exists.
 - Read any scripts referenced in the diff (`src/index.js`, `*.py`, `*.sh`).
 
-### 6. Analyse
+### 6. Analyse — diff-first, section-scoped
 
-From the diff, yml, and source files determine:
+**Primary:** extract concrete changes from `FULL_DIFF`:
 
-- Inputs/outputs added, removed, or modified
-- Behaviour added, changed, or fixed
-- README sections that are missing, outdated, or wrong
+- Inputs added, removed, renamed, or modified (description, required, default)
+- Outputs added, removed, or modified
+- Behaviour added, changed, or fixed (steps, conditions, logic)
+- Usage-affecting changes (new required inputs, changed secrets, renamed workflow)
 
-**Composite action checklist** — for each step in `action.yml`:
+Map each change to the doc section it affects:
 
-- `if:` conditions → document when the step is skipped and what effect that has
-- Values read from `env:` not `inputs:` → document how the caller must pass them
-- Input ignored when another input is set → note in the input's Description
-- Precedence/override logic → make explicit in both input description and Additional Information
-- Value normalisation (lowercasing, trimming, character replacement) → document in input/output description
-- Outputs only set under certain conditions → say so in Outputs table and Notes
+| Change area | Affected sections |
+| --- | --- |
+| Input added/removed/modified | `## 📌 Inputs`, `## Additional Information` |
+| Output added/removed/modified | `## 📌 Outputs` |
+| New required input or secret | `## Usage` / `## Usage Example`, `## 📌 Secrets` |
+| Behaviour / logic change | `## How it works`, `## Features`, `## Notes` |
+| Breaking change | `## Notes`, `## Troubleshooting` |
+
+**Secondary (only if diff gives no clear section mapping):** expand analysis to adjacent
+sections that may be affected by the change type. Do not expand to unrelated sections.
+
+**Composite action checklist** — apply only to sections in scope:
+
+- `if:` conditions → document when the step is skipped
+- Values from `env:` not `inputs:` → document how the caller passes them
+- Input ignored when another input is set → note in input Description
+- Precedence/override logic → make explicit in input description and Additional Information
+- Value normalisation (lowercasing, trimming) → document in input/output description
+- Outputs set only under certain conditions → note in Outputs table
 - Deprecated inputs → mark `**Deprecated.**` and name the replacement
 
 ### 7. Decide: create or update
 
-- `DOC_PATH` does not exist → **CREATE**: generate full README from scratch (steps 8–9)
-- `DOC_PATH` exists → **UPDATE**: rewrite every section from current code; never overwrite
-  `## Usage` / `## Usage Example` structure, but always update the version pin to `RELEASE_TAG`
+- `DOC_PATH` does not exist → **CREATE**: generate full README from scratch (steps 8–9).
+- `DOC_PATH` exists → **UPDATE**: patch only the sections identified in step 6.
+  Sections not in scope must not be modified. Never do a full rewrite of an existing file.
 
 ### 8. Section rules
 
@@ -115,8 +136,8 @@ From the diff, yml, and source files determine:
 **Table rules — Inputs:**
 
 - `Name` — backticks
-- `Description` — from yml; enrich from code. State conditional behaviour ("Ignored when `checkout`
-  is `false`"). Lead with `**Deprecated.**` for deprecated inputs.
+- `Description` — from yml; enrich from code. State conditional behaviour ("Ignored when
+  `checkout` is `false`"). Lead with `**Deprecated.**` for deprecated inputs.
 - `Required` — `Yes` / `No`. No footnote markers — put conditional logic in Description.
 - `Default` — literal value from yml in backticks, or `-`. Code fallbacks go in Description.
 
@@ -164,12 +185,7 @@ jobs:
       REQUIRED_SECRET: ${{ secrets.REQUIRED_SECRET }}
 ```
 
-Resolve the SHA for the pin with:
-
-```bash
-git ls-remote https://github.com/netcracker/qubership-workflow-hub refs/tags/RELEASE_TAG
-```
-
+Resolve the SHA for the pin by looking up the tag in the repository's remote refs.
 Render the actual SHA into the example; tag as a trailing comment.
 
 **Notes pin warning** (always last in `## Notes`):
@@ -178,28 +194,34 @@ Render the actual SHA into the example; tag as a trailing comment.
 > `@<SHA> # RELEASE_TAG`. The SHA is the immutable pin; the comment shows which release it
 > points to. Tags alone are mutable. Never use `@main` or short SHAs.
 
-### 10. Sync the catalog
+### 10. Side effects
 
-Open `docs/actions-workflows-catalog.md`:
+These are separate mutations with different risk. Execute only when the condition is met.
 
-- **New entry** — add a row to the Active section (Actions or Reusable Workflows), sorted alphabetically:
+**Catalog sync** (`docs/actions-workflows-catalog.md`):
+
+- Condition: `DOC_PATH` was created (new action/workflow) OR `name`/`description` changed
+  in `YML_PATH`.
+- New entry → add a row to the Active section, sorted alphabetically:
   - Action: `| [<target>](../actions/<target>/README.md) | <one-line description> |`
   - Workflow: `| [<name>](reusable/<name>.md) | <one-line description> |`
-- **Existing entry** — update description if `name` or `description` changed in yml.
+- Existing entry → update description only if it changed.
 - Never modify Deprecated sections.
 
-### 11. Update CLAUDE.md if needed
+**CLAUDE.md count update:**
 
-If a new action was added, update any hardcoded action count in `CLAUDE.md`.
+- Condition: a new action was added (new directory under `actions/`).
+- Update the hardcoded action count in `CLAUDE.md`.
 
-### 12. Markdown compliance
+### 11. Markdown compliance
 
 Before writing any `.md` file, apply the full ruleset from
-`.claude/skills/markdown-rules/SKILL.md` (step 3 — all 50 rules) in-memory.
+`.claude/skills/markdown-rules/SKILL.md` (all 50 rules) in-memory.
 Fix all violations before calling Write or Edit.
 
-### 13. Report
+### 12. Report
 
 - What was created or updated
-- Which sections changed
-- Whether the catalog was updated
+- Which sections changed and why (mapped from diff)
+- Whether catalog or CLAUDE.md was updated
+- Any fallbacks used (base ref, release tag)
