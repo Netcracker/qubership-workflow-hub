@@ -1,7 +1,7 @@
 ---
 name: doc-update
 description: Update or create documentation for a specific action or reusable workflow based on git diff and action.yml
-arguments: [target, commits]
+arguments: [target]
 ---
 
 # doc-updater
@@ -10,16 +10,34 @@ Update or create documentation for a specific GitHub Action or reusable workflow
 
 ## Arguments
 
-- `$target` — action name (e.g. `metadata-action`) or reusable workflow name (e.g. `reusable/docker-publish`). Required.
-- `$commits` — number of past commits to diff against. Default: `1`. Pass `--full` to skip git diff and do a full resync of code vs docs.
+- `$target` — action name (e.g. `metadata-action`) or reusable workflow name (e.g. `reusable/docker-publish`). Required unless `--all` is used.
+- `--all` — find all changed actions and reusable workflows from `git diff main..HEAD` and update their docs. No `$target` needed.
 
 ## Step-by-step instructions
 
 ### 1. Parse arguments
 
-- `TARGET` = `$target` (required)
-- If `$commits` is `--full` or not provided alongside `--full` flag → `MODE` = `full-resync`, skip step 4
-- Otherwise → `MODE` = `diff`, `N` = `$commits` if provided, otherwise `1`
+- If `--all` is present → go to step 1a
+- Otherwise → `TARGET` = `$target` (required)
+
+### 1a. All mode — find targets and process each
+
+Run:
+
+```bash
+git diff --name-only main..HEAD
+```
+
+From the result keep only:
+
+- `actions/*/action.yml`, `actions/*/action.yaml` → target = action name
+- `actions/*/src/**` → target = action name
+- `actions/*/*.py` → target = action name
+- `.github/workflows/re-*.yml`, `.github/workflows/re-*.yaml` → target = `reusable/<name>`
+
+Extract unique targets. For each target, run the full doc-update logic (steps 2–15).
+
+If no relevant files changed — inform the user and stop.
 
 ### 2. Resolve latest release tag
 
@@ -54,14 +72,12 @@ Otherwise:
 - `DOC_PATH` = `actions/<target>/README.md`
 - `TYPE` = `action`
 
-### 4. Collect git diff (diff mode only)
-
-Skip this step if `MODE` = `full-resync`.
+### 4. Collect git diff
 
 Run the following to get full code diff:
 
 ```bash
-git diff HEAD~N..HEAD -- <scope>
+git diff main..HEAD -- <scope>
 ```
 
 Where `<scope>` is:
@@ -72,7 +88,7 @@ Where `<scope>` is:
 Also run to get list of changed files:
 
 ```bash
-git diff --name-only HEAD~N..HEAD -- <scope>
+git diff --name-only main..HEAD -- <scope>
 ```
 
 If no changed files found — inform the user and stop.
@@ -86,21 +102,16 @@ Read `YML_PATH` in full:
 
 Read `DOC_PATH` if it exists — to understand current documentation state.
 
-In `diff` mode: also read any referenced scripts or source files that appear in the diff (e.g. `src/index.js`, `*.py`).
-
-In `full-resync` mode: read ALL source files in the action/workflow directory — `src/index.js`, any `*.py`, any shell scripts referenced in steps.
+Also read any referenced scripts or source files that appear in the diff (e.g. `src/index.js`, `*.py`, `*.sh`).
 
 ### 6. Analyse the changes
 
-**In `diff` mode:** using the full diff content and source files, understand:
+Using the full diff content, current `action.yml`, and source files, understand:
 
 - What new behaviour was added or changed
 - What inputs/outputs were added, removed, or modified
 - What steps or jobs changed and what they do
 - What bug was fixed or feature was introduced
-
-**In `full-resync` mode:** compare current code and `action.yml` against current `README.md` and identify all discrepancies:
-
 - Inputs/outputs in yml but missing or wrong in README
 - Behaviour in code not described in README
 - Descriptions in README that no longer match the code

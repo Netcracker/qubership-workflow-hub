@@ -129,37 +129,30 @@ logger for GitHub Actions. Node.js actions reference it as a local file dependen
 
 | Command                            | What it does                                                                                                                          |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `/doc-update <target> [N\|--full]` | Update or create docs for a specific action or reusable workflow. Uses last N commits diff (default: 1), or `--full` for full resync. |
-| `/sync-docs [N]`                   | Scan last N commits (default: 1), find all changed actions/workflows, update their docs and catalog.                                  |
+| `/doc-update <target>`             | Update or create docs for a specific action or reusable workflow based on `git diff main..HEAD`.                                      |
+| `/doc-update --all`                | Find all changed actions/workflows from `git diff main..HEAD`, update their docs and catalog.                                         |
 | `/pr [update] [base-branch]`       | Generate PR title and body following project conventions, then create or update the PR via `gh`. Runs lint audit before creating.     |
 | `/workflow-audit [files...]`       | Audit workflow and action yml files for security issues (zizmor ruleset) and fix violations.                                          |
 | `/md-lint [files...]`              | Audit `.md` files for markdownlint violations (full 50-rule coverage) and fix them.                                                   |
-| `/lint [base-branch]`              | Run markdown and zizmor audits on all changed files, fix violations, commit fixes.                                                    |
 
 ### Skill files
 
 ```text
 .claude/
   commands/
-    doc-update.md      — /doc-update slash command
-    sync-docs.md       — /sync-docs slash command
+    doc-update.md      — /doc-update slash command (includes --all mode)
     pr.md              — /pr slash command
-    workflow-audit.md    — /workflow-audit slash command
+    workflow-audit.md  — /workflow-audit slash command
     md-lint.md         — /md-lint slash command
-    lint.md            — /lint slash command
   skills/
     doc-update/
-      SKILL.md        — full doc-update logic (parse, analyse, generate, sync catalog)
-    sync-docs/
-      SKILL.md        — scan N commits, extract targets, invoke doc-update logic
+      SKILL.md        — full doc-update logic (parse, analyse, generate, sync catalog; --all batch mode)
     pull-request/
       SKILL.md        — generate PR title/body, create or update PR via gh CLI
     zizmor/
       SKILL.md        — audit workflow/action yml files for security issues, fix violations
     md-lint/
       SKILL.md        — full markdownlint rule coverage (50 rules), audit and fix .md files
-    lint/
-      SKILL.md        — run markdown + zizmor audits, fix violations, commit fixes
 ```
 
 ---
