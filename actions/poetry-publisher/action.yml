@@ -1,6 +1,6 @@
 ---
 name: "Poetry Publisher"
-description: ""
+description: "Build, test, and publish a Poetry-based Python package to Test PyPI, with automatic version bumping and pytest."
 
 inputs:
   package_version:

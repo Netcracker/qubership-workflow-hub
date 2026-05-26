@@ -1,6 +1,6 @@
 ---
 name: Build Maven Artifact
-description: Build Maven artifact
+description: Release a Maven artifact via the Maven Release Plugin — bump version (major/minor/patch), GPG-sign, run prepare and perform; dry-run by default.
 
 inputs:
   version-type:

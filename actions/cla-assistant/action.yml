@@ -1,5 +1,5 @@
 name: "CLA assistant lite"
-description: "An action to handle the Contributor License Agreement (CLA) and Developer Certificate of Orgin (DCO)"
+description: "Enforce CLA / DCO signing on pull requests by collecting signatures via PR comments and storing them in a JSON file (forked from SAP cla-assistant-lite)."
 author: "SAP"
 branding:
   icon: "award"

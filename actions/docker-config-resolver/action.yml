@@ -1,5 +1,5 @@
 name: "Docker config resolver"
-description: "Loads docker components config, applies defaults and security, outputs flat config for CI"
+description: "Read .qubership/docker.cfg (JSON), apply global defaults and security settings, and emit a flat JSON array compatible with the docker-action component input."
 
 inputs:
   file-path:

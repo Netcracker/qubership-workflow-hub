@@ -15,31 +15,31 @@ Always check that document before modifying or depending on a deprecated compone
 
 ## 🔄 Actions
 
-| Action                                                                          | Description                                                             |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [assets-action](../actions/assets-action/README.md)                             | Alternative asset archiving / upload path (legacy alias)                |
-| [branch-action](../actions/branch-action/README.md)                             | Create a new branch from a tag or another branch                        |
-| [cla-assistant](../actions/cla-assistant/README.md)                             | Handle Contributor License Agreement (CLA) and DCO signing              |
-| [cdxgen](../actions/cdxgen/README.md)                                           | Generate SBOM and CycloneDX vulnerability report                        |
-| [charts-values-update-action](../actions/charts-values-update-action/README.md) | Updates images versions in values files                                 |
-| [chart-version](../actions/chart-version/README.md)                             | Update version and appVersion fields in Helm Chart.yaml                 |
-| [container-package-cleanup](../actions/container-package-cleanup/README.md)     | Remove stale container or Maven package versions                        |
-| [custom-event](../actions/custom-event/README.md)                               | Emit repository_dispatch custom event with payload                      |
-| [docker-action](../actions/docker-action/README.md)                             | Build & push (multi-platform) Docker images                             |
-| [docker-config-resolver](../actions/docker-config-resolver/README.md)           | Load, validate, and normalize Docker component configuration            |
-| [ghcr-discover-repo-packages](../actions/ghcr-discover-repo-packages/README.md) | Discover and list all GHCR packages for a repository                    |
-| [k8s-hardening-scan](../actions/k8s-hardening-scan/README.md)                   | Validate container hardening compliance for Kubernetes deployments      |
-| [maven-release](../actions/maven-release/README.md)                             | Build and release a Maven artifact with version bumping and GPG signing |
-| [maven-snapshot-deploy](../actions/maven-snapshot-deploy/README.md)             | Deploy Maven SNAPSHOT artifacts                                         |
-| [metadata-action](../actions/metadata-action/README.md)                         | Produce version / tag metadata outputs                                  |
-| [poetry-publisher](../actions/poetry-publisher/README.md)                       | Build, test & publish Poetry-based Python package                       |
-| [pr-add-messages](../actions/pr-add-messages/README.md)                         | Append commit messages to PR description                                |
-| [pr-assigner](../actions/pr-assigner/README.md)                                 | Auto assign reviewers based on config / CODEOWNERS                      |
-| [smart-download](../actions/smart-download/README.md)                           | Download workflow artifacts by name, IDs, or glob patterns              |
-| [store-input-params](../actions/store-input-params/README.md)                   | Persist workflow_dispatch inputs as artifact                            |
-| [tag-action](../actions/tag-action/README.md)                                   | Create / delete / check tags; optional release creation                 |
-| [verify-json](../actions/verify-json/README.md)                                 | Validate JSON files against a schema                                    |
-| [wait-for-workflow](../actions/wait-for-workflow/README.md)                     | Wait for a specific GitHub Actions workflow to complete                 |
+| Action                                                                          | Description                                                                            |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [assets-action](../actions/assets-action/README.md)                             | Archive a folder and upload it to a GitHub Release as a release asset                  |
+| [branch-action](../actions/branch-action/README.md)                             | Create a new branch from a tag/branch with auto-named conventions and optional push    |
+| [cdxgen](../actions/cdxgen/README.md)                                           | Generate a CycloneDX SBOM and optional vulnerability report for the project            |
+| [chart-version](../actions/chart-version/README.md)                             | Update version/appVersion fields in a Helm Chart.yaml                                  |
+| [charts-values-update-action](../actions/charts-values-update-action/README.md) | Bump image versions in Helm values.yaml and prepare a chart release                    |
+| [cla-assistant](../actions/cla-assistant/README.md)                             | Enforce CLA/DCO signing on pull requests via comment-based signatures                  |
+| [container-package-cleanup](../actions/container-package-cleanup/README.md)     | Delete stale GHCR container images or Maven package versions by age and tag rules      |
+| [custom-event](../actions/custom-event/README.md)                               | Trigger a repository_dispatch event in the same or another repo with a custom payload  |
+| [docker-action](../actions/docker-action/README.md)                             | Build and push multi-platform Docker images, with optional Trivy/Grype scans           |
+| [docker-config-resolver](../actions/docker-config-resolver/README.md)           | Resolve `.qubership/docker.cfg` into a flat JSON config for the docker-action matrix   |
+| [ghcr-discover-repo-packages](../actions/ghcr-discover-repo-packages/README.md) | Discover GHCR container packages owned by a repository and return them as JSON         |
+| [k8s-hardening-scan](../actions/k8s-hardening-scan/README.md)                   | Validate Kubernetes hardening compliance with Kubescape (and optionally Trivy)         |
+| [maven-release](../actions/maven-release/README.md)                             | Release a Maven artifact (version bump, GPG sign, deploy) — dry-run by default         |
+| [maven-snapshot-deploy](../actions/maven-snapshot-deploy/README.md)             | Deploy Maven SNAPSHOT artifacts to Maven Central or GitHub Packages                    |
+| [metadata-action](../actions/metadata-action/README.md)                         | Render version strings and tags from per-branch/per-tag templates using GitHub context |
+| [poetry-publisher](../actions/poetry-publisher/README.md)                       | Build, test, and publish a Poetry Python package to Test PyPI                          |
+| [pr-add-messages](../actions/pr-add-messages/README.md)                         | Append commit messages from a PR into the PR description                               |
+| [pr-assigner](../actions/pr-assigner/README.md)                                 | Auto-assign PR reviewers from config or CODEOWNERS with random shuffle                 |
+| [smart-download](../actions/smart-download/README.md)                           | Download workflow artifacts by name, IDs, or glob pattern                              |
+| [store-input-params](../actions/store-input-params/README.md)                   | Persist workflow_dispatch inputs as a JSON artifact for downstream jobs                |
+| [tag-action](../actions/tag-action/README.md)                                   | Create / delete / check Git tags with optional GitHub Release creation                 |
+| [verify-json](../actions/verify-json/README.md)                                 | Validate a JSON file against a JSON Schema                                             |
+| [wait-for-workflow](../actions/wait-for-workflow/README.md)                     | Poll GitHub until a target workflow run completes successfully                         |
 
 ### Deprecated Actions
 

@@ -1,150 +1,155 @@
 ---
 name: doc-update
 description: Update or create documentation for a specific action or reusable workflow based on git diff and action.yml
-arguments: [target, commits]
+arguments: [target]
 ---
 
-# doc-updater
+# doc-update
 
-Update or create documentation for a specific GitHub Action or reusable workflow.
+Update or create documentation for a GitHub Action or reusable workflow.
 
 ## Arguments
 
-- `$target` — action name (e.g. `metadata-action`) or reusable workflow name (e.g. `reusable/docker-publish`). Required.
-- `$commits` — number of past commits to diff against. Default: `1`. Pass `--full` to skip git diff and do a full resync of code vs docs.
+- `$target` — action name (e.g. `metadata-action`) or workflow name (e.g. `reusable/docker-publish`).
+  Required unless `--all` is used.
+- `--all` — find all changed actions/workflows from the current branch diff and update each.
 
-## Step-by-step instructions
+## Steps
 
 ### 1. Parse arguments
 
-- `TARGET` = `$target` (required)
-- If `$commits` is `--full` or not provided alongside `--full` flag → `MODE` = `full-resync`, skip step 4
-- Otherwise → `MODE` = `diff`, `N` = `$commits` if provided, otherwise `1`
+- `--all` → step 1a
+- Otherwise → `TARGET` = `$target` (required)
 
-### 2. Resolve latest release tag
+### 1a. All mode
 
-Run:
+Resolve changed files from the current branch relative to the base ref (see step 2 for
+base ref resolution). Keep only:
 
-```bash
-git tag --list 'v*' --sort=-version:refname | head -1
-```
+- `actions/*/action.yml`, `actions/*/action.yaml` → action name
+- `actions/*/src/**`, `actions/*/*.py` → action name
+- `.github/workflows/re-*.yml`, `.github/workflows/re-*.yaml` → `reusable/<name>`
 
-- If a tag is found → `RELEASE_TAG` = that tag (e.g. `v2.2.0`)
-- If no tags found → `RELEASE_TAG` = `v1`
+Extract unique targets. Run steps 2–12 for each. If none found — stop.
 
-Use `RELEASE_TAG` everywhere a version pin appears in the generated documentation (Usage examples, Notes).
+### 2. Resolve base ref and release tag
+
+**Base ref:** resolve in priority order:
+
+1. `baseRefName` from the open PR for the current branch, if one exists
+1. Default branch of the repository
+1. `main` as final fallback — warn the user if this fallback is used
+
+Collect the diff of the target scope relative to this base ref.
+
+**Release tag:** find the most recent semver tag in the repository
+(e.g. the latest `v*` tag by version order). If no tag exists, use `v1` as fallback
+and note it in the output.
+
+Use `RELEASE_TAG` in all usage examples. Never use `@main` or short SHAs.
 
 ### 3. Resolve paths
 
-If `$target` starts with `reusable/`:
+| `$target` starts with | `YML_PATH` | `DOC_PATH` | `TYPE` |
+| --- | --- | --- | --- |
+| `reusable/` | `.github/workflows/re-<name>.yml` or `.yaml` — check which exists | `docs/reusable/<name>.md` | `workflow` |
+| anything else | `actions/<target>/action.yml` or `action.yaml` — check which exists | `actions/<target>/README.md` | `action` |
 
-- Extract workflow name: strip `reusable/` prefix
-- `YML_PATH` = `.github/workflows/re-<name>.yml`
-- `DOC_PATH` = `docs/reusable/<name>.md`
-- `TYPE` = `workflow`
+For both actions and reusable workflows, check `.yml` first, then `.yaml`. Use whichever exists.
 
-Otherwise:
+### 4. Collect diff
 
-- `YML_PATH` = `actions/<target>/action.yml`
-- `DOC_PATH` = `actions/<target>/README.md`
-- `TYPE` = `action`
+Collect the diff of `<scope>` relative to the base ref resolved in step 2:
 
-### 4. Collect git diff (diff mode only)
+- Actions: scope = `actions/<target>/`
+- Workflows: scope = `YML_PATH` resolved in step 3 (`.yml` or `.yaml`)
 
-Skip this step if `MODE` = `full-resync`.
+→ `CHANGED_FILES`, `FULL_DIFF`
 
-Run the following to get full code diff:
+**If no diff found:**
 
-```bash
-git diff HEAD~N..HEAD -- <scope>
-```
-
-Where `<scope>` is:
-
-- For action: `actions/<target>/`
-- For workflow: `.github/workflows/re-<name>.yml`
-
-Also run to get list of changed files:
-
-```bash
-git diff --name-only HEAD~N..HEAD -- <scope>
-```
-
-If no changed files found — inform the user and stop.
+- If `DOC_PATH` exists and `YML_PATH` exists → ask the user: "No diff found.
+  Resync documentation with the current source file (`YML_PATH`)?" Wait for confirmation before
+  continuing.
+- If neither condition holds → inform the user and stop.
 
 ### 5. Read source files
 
-Read `YML_PATH` in full:
+- Read `YML_PATH` in full.
+- Read `DOC_PATH` if it exists.
+- Read any scripts referenced in the diff (`src/index.js`, `*.py`, `*.sh`).
 
-- For actions: extract `name`, `description`, `inputs`, `outputs`, `runs.using`, and all `steps`
-- For workflows: extract `name`, `on.workflow_call.inputs`, `on.workflow_call.secrets`, and all `jobs`
+### 6. Analyse — diff-first, section-scoped
 
-Read `DOC_PATH` if it exists — to understand current documentation state.
+**Primary:** extract concrete changes from `FULL_DIFF`:
 
-In `diff` mode: also read any referenced scripts or source files that appear in the diff (e.g. `src/index.js`, `*.py`).
+- Inputs added, removed, renamed, or modified (description, required, default)
+- Outputs added, removed, or modified
+- Behaviour added, changed, or fixed (steps, conditions, logic)
+- Usage-affecting changes (new required inputs, changed secrets, renamed workflow)
 
-In `full-resync` mode: read ALL source files in the action/workflow directory — `src/index.js`, any `*.py`, any shell scripts referenced in steps.
+Map each change to the doc section it affects:
 
-### 6. Analyse the changes
+| Change area | Affected sections |
+| --- | --- |
+| Input added/removed/modified | `## 📌 Inputs`, `## Additional Information` |
+| Output added/removed/modified | `## 📌 Outputs` |
+| New required input or secret | `## Usage` / `## Usage Example`, `## 📌 Secrets` |
+| Behaviour / logic change | `## How it works`, `## Features`, `## Notes` |
+| Breaking change | `## Notes`, `## Troubleshooting` |
 
-**In `diff` mode:** using the full diff content and source files, understand:
+**Secondary (only if diff gives no clear section mapping):** expand analysis to adjacent
+sections that may be affected by the change type. Do not expand to unrelated sections.
 
-- What new behaviour was added or changed
-- What inputs/outputs were added, removed, or modified
-- What steps or jobs changed and what they do
-- What bug was fixed or feature was introduced
+**Composite action checklist** — apply only to sections in scope:
 
-**In `full-resync` mode:** compare current code and `action.yml` against current `README.md` and identify all discrepancies:
-
-- Inputs/outputs in yml but missing or wrong in README
-- Behaviour in code not described in README
-- Descriptions in README that no longer match the code
-- Sections that are outdated, incomplete, or absent
-
-This analysis is the basis for updating all documentation sections.
+- `if:` conditions → document when the step is skipped
+- Values from `env:` not `inputs:` → document how the caller passes them
+- Input ignored when another input is set → note in input Description
+- Precedence/override logic → make explicit in input description and Additional Information
+- Value normalisation (lowercasing, trimming) → document in input/output description
+- Outputs set only under certain conditions → note in Outputs table
+- Deprecated inputs → mark `**Deprecated.**` and name the replacement
 
 ### 7. Decide: create or update
 
-**If `DOC_PATH` does not exist** → CREATE mode: generate full README from scratch using the templates below.
+- `DOC_PATH` does not exist → **CREATE**: generate full README from scratch (steps 8–9).
+- `DOC_PATH` exists → **UPDATE**: patch only the sections identified in step 6.
+  Sections not in scope must not be modified. Never do a full rewrite of an existing file.
 
-**If `DOC_PATH` exists** → UPDATE mode: rewrite every section based on current state of the code and yml. The only section never overwritten is `## Usage` / `## Usage Example` — preserve it as-is.
+### 8. Section rules
 
-### 8. Sections and update rules
+| Section | Rule |
+| --- | --- |
+| Title `# 🚀 Name` | From `action.yml: name` |
+| Short description | From `action.yml: description` |
+| `## Features` | Bullet list derived from steps + inputs + logic |
+| `## 📌 Inputs` | Table: Name, Description, Required, Default — see *Table rules* below |
+| `## 📌 Outputs` | Table: Name, Description — see *Table rules* below |
+| `## 📌 Secrets` | Workflows only. Table: Name, Description, Required |
+| `## How it works` | What the action/workflow produces and what side-effects it has, from the caller's perspective. Include concrete examples (payload shape, output format). Do NOT narrate yml steps line by line. |
+| `## Additional Information` | Subsections for non-obvious inputs. For structured inputs (JSON, config objects) always include a concrete example. |
+| `## Usage` / `## Usage Example` | See *Usage template* below |
+| `## Notes` | Key warnings and tips. Always end with the SHA pin warning. |
+| `## Troubleshooting` | Omit if no known issues |
 
-| Section | CREATE | UPDATE |
-|---|---|---|
-| Title (`# Name`) | Generate from `action.yml: name` | Regenerate |
-| Short description | Generate from `action.yml: description` | Regenerate |
-| `## Features` | Derive from yml steps + inputs + logic | Regenerate from current code |
-| `## 📌 Inputs` | Generate from yml inputs | Regenerate from yml |
-| `## 📌 Outputs` | Generate from yml outputs | Regenerate from yml |
-| `## 📌 Secrets` | Generate from yml secrets (workflows) | Regenerate from yml |
-| `## How it works` | Describe what the action/workflow does from the caller's perspective — what it produces, what side-effects it has, what the outputs/payload look like. Do NOT narrate action.yml steps line by line. | Regenerate from current code |
-| `## Additional Information` | Generate detailed explanations for non-obvious inputs. For inputs that accept structured data (JSON payloads, config objects) — always include a concrete example of the data structure and how it is consumed on the receiving end. | Regenerate |
-| `## Notes` | Generate key usage warnings and tips | Regenerate |
-| `## Troubleshooting` | Omit if no common issues known | Regenerate if exists |
-| `## Usage` / `## Usage Example` | Generate once with required inputs | Never overwrite structure, but always update the version pin (`@vX.Y.Z`) to `RELEASE_TAG` |
+**Table rules — Inputs:**
 
-### 9. README template for new ACTION
+- `Name` — backticks
+- `Description` — from yml; enrich from code. State conditional behaviour ("Ignored when
+  `checkout` is `false`"). Lead with `**Deprecated.**` for deprecated inputs.
+- `Required` — `Yes` / `No`. No footnote markers — put conditional logic in Description.
+- `Default` — literal value from yml in backticks, or `-`. Code fallbacks go in Description.
 
-The `## Usage` section must include a complete workflow example that shows `permissions`, `runs-on`, checkout, and the action step. Derive the `permissions` block from what the action actually needs. Always include at least `contents: read` as a baseline. Place the `permissions` block at the job level, not the workflow level.
+**Table rules — Outputs:**
 
-Generate the README with this structure (all sections separated by `---`):
+- `Name` — backticks
+- `Description` — from yml; enrich from code. State when output is conditionally empty.
+  Note naming inconsistencies (underscore vs dash).
 
-- `# 🚀 <name>` — title from `action.yml: name`
-- short description paragraph
-- `## Features` — bullet list of key capabilities
-- `## 📌 Inputs` — table with columns: Name, Description, Required, Default
-- `## 📌 Outputs` — table with columns: Name, Description
-- `## How it works` — high-level description of what the action does from the caller's perspective:
-  what it produces (outputs, artifacts, events), what side-effects it has, what the output shape
-  looks like. Include a concrete example where helpful (e.g. payload structure, output value format).
-  Do NOT narrate action.yml steps line by line.
-- `## Additional Information` — subsections explaining non-obvious inputs or behaviours
-- `## Usage` — complete workflow YAML example (see format below)
-- `## Notes` — bullet list of key warnings and tips
+### 9. Usage template
 
-The `## Usage` section must contain a fenced yaml block:
+**Action** (`## Usage`):
 
 ```yaml
 name: Example workflow
@@ -158,89 +163,71 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@<sha>  # vX.Y.Z
 
       - name: Run action
-        uses: netcracker/qubership-workflow-hub/actions/<target>@RELEASE_TAG
+        uses: netcracker/qubership-workflow-hub/actions/<target>@<SHA>  # RELEASE_TAG
         with:
           required-input: value
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Always end the Notes section with: `Always pin to @RELEASE_TAG or a specific SHA — never @main in production.`
-
-### 10. README template for new REUSABLE WORKFLOW
-
-Generate with this structure (no `---` separators for workflows):
-
-- `# 🚀 <name>` — title
-- short description paragraph
-- `## Features` — bullet list of key capabilities
-- `## 📌 Inputs` — table with columns: Name, Description, Required, Default
-- `## 📌 Secrets` — table with columns: Name, Description, Required
-- `## How it works` — high-level description of what the workflow does from the caller's perspective:
-  what it produces, what jobs run, what outputs or side-effects result. Include a concrete example
-  where helpful. Do NOT narrate yml jobs/steps line by line.
-- `## Additional Information` — subsections explaining non-obvious inputs
-- `## Usage Example` — fenced yaml block calling the workflow
-- `## Notes` — bullet list of key warnings
-
-The `## Usage Example` section must contain a fenced yaml block:
+**Reusable workflow** (`## Usage Example`):
 
 ```yaml
 jobs:
   call-workflow:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-<name>.yml@RELEASE_TAG
+    uses: netcracker/qubership-workflow-hub/<YML_PATH>@RELEASE_TAG
     with:
       required-input: value
     secrets:
       REQUIRED_SECRET: ${{ secrets.REQUIRED_SECRET }}
 ```
 
-### 11. Inputs table rules
+Resolve the SHA for the pin by looking up the tag in the repository's remote refs.
+Render the actual SHA into the example; tag as a trailing comment.
 
-For each input in `action.yml` / workflow yml:
+If the lookup fails (no network, no remote, tag not found in origin):
 
-- `Name` — wrap in backticks
-- `Description` — from yml `description` field; enrich with context from code if yml description is too short
-- `Required` — `Yes` if `required: true`, otherwise `No`
-- `Default` — wrap value in backticks, or `-` if none
+- Use the placeholder `<SHA>` literally in the example.
+- Add a comment in the generated doc: `<!-- TODO: replace <SHA> with the full commit SHA for RELEASE_TAG -->`.
+- Continue — do not stop or skip the usage section.
 
-### 12. Sync the catalog
+**Notes pin warning** (always last in `## Notes`):
 
-After updating/creating the doc, open `docs/actions-workflows-catalog.md` and:
+> Pin to a full 40-character commit SHA with the release tag as a trailing comment, e.g.
+> `@<SHA> # RELEASE_TAG`. The SHA is the immutable pin; the comment shows which release it
+> points to. Tags alone are mutable. Never use `@main` or short SHAs.
 
-**If new action/workflow (not present in catalog):**
+### 10. Side effects
 
-- Add a new row to the correct table (Actions or Reusable Workflows → Active section)
-- Format for action: `| [<target>](../actions/<target>/README.md) | <one-line description> |`
-- Format for workflow: `| [<name>](reusable/<name>.md) | <one-line description> |`
-- Keep rows sorted alphabetically
+These are separate mutations with different risk. Execute only when the condition is met.
 
-**If existing action/workflow:**
+**Catalog sync** (`docs/actions-workflows-catalog.md`):
 
-- Find the existing row and update the description if `name` or `description` changed in yml
+- Condition: `DOC_PATH` was created (new action/workflow) OR `name`/`description` changed
+  in `YML_PATH`.
+- New entry → add a row to the Active section, sorted alphabetically:
+  - Action: `| [<target>](../actions/<target>/README.md) | <one-line description> |`
+  - Workflow: `| [<name>](reusable/<name>.md) | <one-line description> |`
+- Existing entry → update description only if it changed.
+- Never modify Deprecated sections.
 
-**Never modify the Deprecated sections.**
+**CLAUDE.md count update:**
 
-### 13. Update CLAUDE.md if needed
+- Condition: a new action was added (new directory under `actions/`).
+- Update the hardcoded action count in `CLAUDE.md`.
 
-If a new action was added, check `CLAUDE.md` for any hardcoded action count (e.g. "22 individual GitHub Actions") and update the number.
+### 11. Markdown compliance
 
-### 14. Markdown compliance
+Before writing any `.md` file, apply the full ruleset from
+`.claude/skills/markdown-rules/SKILL.md` (all 50 rules) in-memory.
+Fix all violations before calling Write or Edit.
 
-Before writing any generated or updated `.md` file, apply the full audit logic from
-`.claude/skills/md-lint/SKILL.md` (step 3 — all 50 rules) to the generated content in-memory.
-Fix every violation found before calling the Write tool.
-
-The markdown skill's step 5 ("Self-check before writing") describes exactly this flow —
-follow it for every file this skill produces.
-
-### 15. Report to user
-
-After all changes, print a short summary:
+### 12. Report
 
 - What was created or updated
-- Which sections were changed
-- Whether the catalog was updated
+- Which sections changed and why (mapped from diff)
+- Whether catalog or CLAUDE.md was updated
+- Any fallbacks used (base ref, release tag)

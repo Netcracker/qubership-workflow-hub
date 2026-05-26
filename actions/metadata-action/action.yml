@@ -1,5 +1,5 @@
 name: "Metadata Action"
-description: ""
+description: "Extract metadata from the GitHub context and render a version string (and tags) from a configurable per-branch/per-tag template."
 inputs:
     ref:
         description: "Git ref (branch or tag)."

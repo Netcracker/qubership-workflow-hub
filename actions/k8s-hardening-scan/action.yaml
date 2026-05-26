@@ -1,5 +1,5 @@
 name: Kubescape Hardening Scan
-description: Kubescape Hardening Validation
+description: Scan live Kubernetes Deployments and Helm charts for hardening compliance using Kubescape (NSA/MITRE/DevOpsBest) and Trivy, and gate the workflow on mandatory checks.
 inputs:
   namespaces:
     type: string

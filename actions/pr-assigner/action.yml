@@ -1,5 +1,5 @@
 name: "PR Assigner"
-description: "Assigns a PR to a user based on the PR configuration or CODEOWNERS."
+description: "Auto-assign reviewers to a pull request from a config file or CODEOWNERS using Fisher-Yates shuffle, with optional self-assign and bot-allowlist support."
 inputs:
   assignees:
     description: "List of assignees to assign the PR to."

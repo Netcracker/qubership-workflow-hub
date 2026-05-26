@@ -6,204 +6,199 @@ arguments: [mode, base-branch]
 
 # pull-request
 
-Generate a pull request title and body following the project conventions, then create a new PR or update the existing one.
+Generate a pull request title and body following project conventions.
+Default flow: **preview first** — show title + body, wait for confirmation, then execute `gh`.
 
 ## Arguments
 
 - `$mode` — `update` to update an existing open PR; omit to create a new PR.
-- `$base-branch` — branch to compare against. Default: `main`.
+- `$base-branch` — branch to compare against. Overrides auto-detected base (see step 2).
 
 ## Conventions reference
 
-PR title format (from `docs/code-of-conduct-prs.md`):
+PR title format:
 
 ```text
-<type>(scope): imperative statement
+<type>(<scope>): <imperative statement>
 ```
 
 - Max 72 characters, no trailing period, no issue number in the title.
 - Types: `feat`, `fix`, `docs`, `refactor`, `chore`, `perf`, `ci`, `build`, `test`, `deprecate`, `revert`.
 - Scope: path or component name, e.g. `actions/metadata-action`, `docs`, `.github/workflows`.
 
-## Step-by-step instructions
+## Steps
 
-### 1. Parse arguments
+### 1. Preflight checks
 
-- If first argument is `update` → `MODE` = `update`; remaining argument (if any) = `BASE`
-- Otherwise → `MODE` = `create`; first argument (if any) = `BASE`
-- If `BASE` not provided → `BASE` = `main`
+Verify `gh` is installed and authenticated. If not — stop immediately and inform the user:
+install gh CLI and run `gh auth login`.
 
-### 2. Collect branch information
+### 2. Parse arguments
 
-Run these commands in parallel:
+- If first argument is `update` → `MODE` = `update`; second argument (if any) = `BASE_ARG`
+- Otherwise → `MODE` = `create`; first argument (if any) = `BASE_ARG`
+
+### 3. Resolve BASE branch
+
+Collect in parallel:
+
+- Current branch name → `CURRENT_BRANCH`
+- Open PR for the current branch (fields: `baseRefName`, `number`, `url`, `state`, `isDraft`);
+  if no PR exists or the command fails, treat as empty → `EXISTING_PR`
+- Default branch of the repository → `DEFAULT_BRANCH`; if unavailable, fall back to `main`
+
+Resolve `BASE` in priority order:
+
+1. `$BASE_ARG` if provided
+1. `EXISTING_PR.baseRefName` if `EXISTING_PR` is non-empty **and** `EXISTING_PR.state == "OPEN"`
+1. `DEFAULT_BRANCH` from `gh repo view`
+1. `main` as final fallback if `gh repo view` fails — warn the user
+
+If `CURRENT_BRANCH` == `BASE` — inform the user and stop.
+
+### 4. Collect diff
 
 ```bash
-git rev-parse --abbrev-ref HEAD
+git log BASE..HEAD --oneline
+git diff BASE..HEAD --name-only
+git diff BASE..HEAD
 ```
 
-→ `CURRENT_BRANCH`
+→ `COMMITS`, `CHANGED_FILES`, `FULL_DIFF`
 
-```bash
-git log $BASE..HEAD --oneline
+If `COMMITS` is empty — inform the user there are no commits ahead of `BASE` and stop.
+
+### 5. Lint audit (non-blocking)
+
+Before starting, print:
+
+```text
+Running lint audit on changed files…
 ```
 
-→ `COMMITS` (list of commits on this branch)
+Audit all changed files in sequence. Print a one-line status before each sub-audit:
 
-```bash
-git diff $BASE..HEAD --name-only
-```
+- **EditorConfig** — print `  [1/3] EditorConfig…`, then apply
+  `.claude/skills/editorconfig/SKILL.md` rules to all changed files, fix with Edit.
+- **Markdown** — print `  [2/3] Markdown lint…`, then apply
+  `.claude/skills/markdown-rules/SKILL.md` rules to `.md` files, fix with Edit.
+- **Security (zizmor)** — print `  [3/3] Security audit (zizmor)…`, then apply
+  `.claude/skills/zizmor/SKILL.md` rules to `.yml`/`.yaml` workflow and action files,
+  fix with Edit. Note: this step may fetch remote SHAs for unpinned actions — it can
+  take a moment.
 
-→ `CHANGED_FILES` (list of changed files)
+Fix everything that is safe to auto-fix. For violations that cannot be safely auto-fixed —
+collect them into `AUDIT_WARNINGS` and continue. Never block the preview or the PR flow.
 
-```bash
-git diff $BASE..HEAD
-```
+### 6. Determine scope
 
-→ `FULL_DIFF` (full diff for content analysis)
+From `CHANGED_FILES`:
 
-If `COMMITS` is empty — inform the user that there are no commits ahead of `$BASE` and stop.
+- All under `actions/<name>/` → `SCOPE` = `actions/<name>`
+- All under `.github/workflows/` → `SCOPE` = `.github/workflows`
+- All under `docs/` → `SCOPE` = `docs`
+- All under `packages/<name>/` → `SCOPE` = `packages/<name>`
+- Mixed → most-changed area, or most specific common ancestor path
+- Root-level config only → omit scope from title
 
-### 3. Lint audit
+### 7. Determine type
 
-Before generating the PR, apply the full lint skill logic from
-`.claude/skills/lint/SKILL.md` using `BASE` as the base branch.
+From commit messages and `FULL_DIFF`:
 
-This audits all changed `.md` and workflow/action `.yml` files, fixes violations
-in-place, and commits the fixes. If nothing needs fixing the step completes silently.
-
-### 4. Determine scope
-
-From `CHANGED_FILES`, identify the primary scope:
-
-- If all changes are under `actions/<name>/` → scope = `actions/<name>`
-- If all changes are under `.github/workflows/` → scope = `.github/workflows`
-- If all changes are under `docs/` → scope = `docs`
-- If all changes are under `packages/<name>/` → scope = `packages/<name>`
-- If changes span multiple top-level areas → pick the most significant one (where most files changed), or use the most specific common ancestor path
-- If only root-level config files changed → scope = repo root (omit scope from title)
-
-### 5. Determine type
-
-Analyse commit messages and `FULL_DIFF` to pick the single best type:
-
-| Type | When to use |
-|---|---|
-| `feat` | New feature or capability added |
+| Type | When |
+| --- | --- |
+| `feat` | New feature or capability |
 | `fix` | Bug fix |
-| `docs` | Documentation only changes |
-| `refactor` | Code restructuring without behaviour change |
-| `chore` | Maintenance, dependency updates, config |
+| `docs` | Documentation only |
+| `refactor` | Restructuring without behaviour change |
+| `chore` | Maintenance, deps, config |
 | `perf` | Performance improvement |
-| `ci` | Changes to CI/CD workflows or configuration |
-| `build` | Build system changes |
+| `ci` | CI/CD workflows or configuration |
+| `build` | Build system |
 | `test` | Adding or updating tests |
-| `deprecate` | Marking something as deprecated |
+| `deprecate` | Marking something deprecated |
 | `revert` | Reverting a previous commit |
 
-### 6. Detect issue references
+### 8. Detect issue references and breaking changes
 
-Search commit messages for patterns:
+**Issue:** search commit messages for `Fixes #NNN`, `Closes #NNN`, `Resolves #NNN`,
+`Related to #NNN`. If found → `ISSUE_REF` = full reference. If not → `ISSUE_REF` = none.
 
-- `Fixes #NNN`, `Closes #NNN`, `Related to #NNN`, `Resolves #NNN`
-- If found → `ISSUE_REF` = the full reference (e.g. `Fixes #342`)
-- If not found → `ISSUE_REF` = `<!-- No issue linked — add Fixes #NNN or explain why -->`
+**Breaking:** flag if commit contains `BREAKING CHANGE` or `!` after type, or if required
+inputs/outputs are removed or renamed in `action.yml` / workflow yml.
 
-### 7. Detect breaking changes
+### 9. Generate title and body
 
-A change is breaking if any of these are true:
+**Title:** `<type>(<scope>): <imperative statement>`
 
-- Commit message contains `BREAKING CHANGE` or `!` after type (e.g. `feat!:`)
-- An existing required input is removed or renamed in `action.yml` / workflow yml
-- An existing output is removed or renamed
-- Behaviour that callers depend on changes incompatibly
+- Imperative mood: "add", "fix", "update", "remove"
+- Max 72 characters, no trailing period, no issue number
 
-Set `BREAKING` = `Yes` or `No` accordingly. If `Yes`, describe the impact.
-
-### 8. Generate PR title
-
-Compose: `<type>(<scope>): <imperative statement>`
-
-Rules:
-
-- Imperative mood: "add", "fix", "update", "remove" — not "added", "fixes", "updating"
-- Summarise WHAT changed, not HOW
-- Max 72 characters total
-- No trailing period
-- No issue number
-
-Example: `docs(actions/chart-version): sync README with current action.yml inputs`
-
-### 9. Generate PR body
-
-Read `.github/pull_request_template.md` — this is the authoritative template. Use its exact section headings and structure as the skeleton for the body. Do not add, remove, or rename sections.
-
-Fill each section as follows:
+**Body:** read `.github/pull_request_template.md` as the skeleton. Fill each section:
 
 | Section | How to fill |
-|---|---|
-| `## Summary` | 2–3 technically rich sentences: what changed, why, and what the key result is. For a new action/feature: name the action, what it produces (outputs, artifacts, events), and the key output shape or behaviour. For a fix: name what was broken, what caused it, and how it is now fixed. Be specific — mention component names, inputs, or API behaviour where relevant. |
-| `## Issue` | `ISSUE_REF` value. If no issue found: explain that no linked issue was detected and the change is self-contained (or ask the user to add one). Remove the placeholder hint text. |
-| `## Breaking Change?` | Check the `- [ ] Yes` / `- [ ] No` checkbox that applies (replace `[ ]` with `[x]`). If Yes, add description below the checkboxes. Remove the placeholder hint text. |
-| `## Scope / Project` | The `scope` value determined in step 3. Remove the placeholder hint text. |
-| `## Implementation Notes` | A detailed bullet list of technical decisions, architectural choices, and non-obvious changes. Include: what was added/changed/removed and why; any design choices (e.g. why a specific tool or approach was used); any gotchas or edge cases handled. Do NOT summarise what is already obvious from the diff. Write as many bullets as needed — this section should help a reviewer understand the reasoning, not just the what. If the change is docs-only, write "Documentation update only — no behaviour change." |
-| `## Tests / Evidence` | Specific evidence: test command and result (e.g. "All 42 unit tests pass (`npm test`)"), dry-run output, manual test steps with observed results. If no tests exist, explain why and what manual validation was done. Remove the placeholder hint text and bullet points that don't apply. |
-| `## Additional Notes` | Known limitations, follow-up tasks, reviewer-specific instructions, or external dependencies. If none, write "None." — never leave the placeholder text. |
+| --- | --- |
+| `## Summary` | 2–3 sentences: what changed, why, key result. Be specific — component names, inputs, behaviour. |
+| `## Issue` | `ISSUE_REF` if found; otherwise "No linked issue." Remove placeholder text. |
+| `## Breaking Change?` | Check `[x] Yes` or `[x] No`. If Yes — describe impact. Remove placeholder text. |
+| `## Scope / Project` | `SCOPE` value from step 6. Remove placeholder text. |
+| `## Implementation Notes` | Bullet list of technical decisions and non-obvious changes. For `docs`/`chore` PRs with small diffs: "Documentation update only — no behaviour change." |
+| `## Tests / Evidence` | Test command + result, dry-run output, or manual validation steps. |
+| `## Additional Notes` | Limitations, follow-ups, reviewer instructions. If none: "None." |
 
-Do not leave any placeholder or instructional text from the template in the output — replace every hint with real content.
+If `.github/pull_request_template.md` does not exist — generate body with these same
+sections using standard markdown headings.
 
-### 10. Execute
+Do not leave any placeholder or instructional text from the template in the output.
+
+### 10. Preview
+
+Show the user:
+
+```text
+Title: <TITLE>
+
+Body:
+<BODY>
+```
+
+If `AUDIT_WARNINGS` is non-empty — show them as a warning block before the preview.
+
+**Wait for user confirmation before proceeding.** Ask: "Create/update the PR with this
+title and body?"
+
+### 11. Execute
 
 **If `MODE` = `create`:**
 
-Check whether an open PR already exists for the current branch:
+- If `EXISTING_PR` exists and `state` is `OPEN` → inform user (show number and URL), ask
+  whether to update it or create a new one. Wait for answer.
+- If no open PR → create:
 
 ```bash
-gh pr view --json number,url,state,isDraft 2>/dev/null
+gh pr create --title "<TITLE>" --body "<BODY>" --base BASE
 ```
 
-- If a PR exists AND `state` is `OPEN` (regardless of `isDraft`) → inform the user that an open PR already exists (show number and URL), and ask whether to update it or create a new one. Wait for the user's answer before proceeding.
-- If a PR exists but `state` is `CLOSED` or `MERGED` → treat as no open PR, proceed to create.
-- If no PR exists → create it:
+**If `MODE` = `update`:**
+
+- If no open PR found → inform user and suggest running without `update`. Stop.
+- If open PR found → update:
 
 ```bash
-gh pr create \
-  --title "<TITLE>" \
-  --body "<BODY>" \
-  --base $BASE
+gh pr edit --title "<TITLE>" --body "<BODY>"
 ```
 
 After success, print the PR URL.
 
-**If `MODE` = `update`:**
+### 12. Fallback matrix
 
-Get the current PR:
-
-```bash
-gh pr view --json number,url,title,state,isDraft
-```
-
-- If no PR found, or `state` is `CLOSED` or `MERGED` → inform the user and suggest running `/pull-request` (without `update`) instead. Stop.
-- If found and `state` is `OPEN` (draft or not) → update title and body:
-
-```bash
-gh pr edit \
-  --title "<TITLE>" \
-  --body "<BODY>"
-```
-
-After success, print the PR URL and what changed.
-
-### 11. Markdown authoring rules
-
-All `.md` files written or fixed by this skill must comply with the project markdownlint ruleset.
-Apply the full audit logic from `.claude/skills/md-lint/SKILL.md` (step 3 — all rules) to any
-`.md` file before writing it. Fix all violations in-memory before calling the Write tool.
-
-### 12. Report to user
-
-Print a short summary:
-
-- PR title used
-- PR URL
-- Whether it was created or updated
-- Any sections left blank and why
+| Situation | Behaviour |
+| --- | --- |
+| `gh` not installed or not authenticated | Caught in step 1 — stop immediately. Inform user: install gh CLI and run `gh auth login`. |
+| `gh repo view` fails (no remote) | Fall back to `main` as BASE. Warn user that BASE could not be auto-detected. |
+| No `.github/pull_request_template.md` | Generate body with standard sections (see step 9). |
+| No commits ahead of BASE | Stop. Inform user. |
+| No issue reference found | Write "No linked issue." in `## Issue` — do not leave placeholder. |
+| `EXISTING_PR` absent in `update` mode | Stop. Inform user. Suggest running without `update`. |
+| `EXISTING_PR` present in `create` mode | Ask user: update existing PR or create a new one? Wait for answer. |
+| Audit finds non-auto-fixable violations | Add to `AUDIT_WARNINGS` shown at preview. Never block the flow. |

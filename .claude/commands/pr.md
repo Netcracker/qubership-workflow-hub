@@ -11,7 +11,7 @@ Create or update a pull request with a title and description following the proje
 ## Arguments
 
 - `update` — if provided, update the description of the already-open PR for the current branch instead of creating a new one.
-- `base-branch` — branch to compare against. Default: `main`.
+- `base-branch` — branch to compare against. Default: auto-detected from the open PR or the repository default branch.
 
 ## Examples
 

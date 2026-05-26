@@ -1,5 +1,5 @@
 name: "Docker Build and Publish Composite Action using Buildx"
-description: "Composite action for building and publishing Docker images using Docker Buildx."
+description: "Build and push multi-platform Docker images using Buildx, with optional Trivy/Grype scans; consumes the docker-config-resolver output as a matrix component."
 inputs:
   ref:
     description: "Branch to create a release from."

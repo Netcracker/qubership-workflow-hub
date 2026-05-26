@@ -1,6 +1,6 @@
 ---
 name: Discover GHCR Packages for Repository
-description: List all GHCR container packages associated with a specific repository.
+description: List all GHCR container packages associated with a repository as a JSON array, paginating through the GitHub API.
 author: Nookyo
 inputs:
   owner:

@@ -1,5 +1,5 @@
 name: "Upload Assets to Release"
-description: "Upload all files from a folder to a GitHub release using gh CLI"
+description: "Archive a folder (zip/tar/tar.gz) and upload it to a GitHub Release using the gh CLI, with retries and overwrite-on-conflict."
 inputs:
   tag:
     description: "Git tag of the release"

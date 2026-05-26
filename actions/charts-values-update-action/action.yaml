@@ -1,7 +1,7 @@
 ---
 
 name: "Charts Values Update Action"
-description: "Update helm charts versions in values.yaml file and create a release draft"
+description: "Bump Docker image tags in Helm values.yaml, update Chart.yaml versions, and optionally package and publish charts to GHCR."
 
 inputs:
   release-version:

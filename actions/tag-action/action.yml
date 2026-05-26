@@ -1,5 +1,5 @@
 name: "Tag Composite Action"
-description: "Checkout code and create a tag in the specified branch."
+description: "Create, delete, or check a Git tag on a specified branch, with optional GitHub Release creation (draft, force, dry-run supported)."
 inputs:
   ref:
     description: "Branch to checkout before creating the tag."
