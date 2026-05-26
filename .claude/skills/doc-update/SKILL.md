@@ -53,7 +53,7 @@ Use `RELEASE_TAG` in all usage examples. Never use `@main` or short SHAs.
 | `$target` starts with | `YML_PATH` | `DOC_PATH` | `TYPE` |
 | --- | --- | --- | --- |
 | `reusable/` | `.github/workflows/re-<name>.yml` or `.yaml` — check which exists | `docs/reusable/<name>.md` | `workflow` |
-| anything else | `actions/<target>/action.yml` | `actions/<target>/README.md` | `action` |
+| anything else | `actions/<target>/action.yml` or `action.yaml` — check which exists | `actions/<target>/README.md` | `action` |
 
 For both actions and reusable workflows, check `.yml` first, then `.yaml`. Use whichever exists.
 
