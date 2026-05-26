@@ -75,6 +75,7 @@ Audit all changed files:
 - `.md` files → apply `.claude/skills/markdown-rules/SKILL.md` rules, fix with Edit.
 - `.yml`/`.yaml` workflow and action files → apply `.claude/skills/zizmor/SKILL.md` rules,
   fix with Edit.
+- All changed files → apply `.claude/skills/editorconfig/SKILL.md` rules, fix with Edit.
 
 Fix everything that is safe to auto-fix. For violations that cannot be safely auto-fixed —
 collect them into `AUDIT_WARNINGS` and continue. Never block the preview or the PR flow.
