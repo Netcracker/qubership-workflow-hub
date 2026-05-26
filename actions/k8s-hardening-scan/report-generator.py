@@ -56,14 +56,14 @@ def load_yaml_config(config_path):
     print(f"[DEBUG]: {default_config_data}")
     return default_config_data
 
-def get_resource_ports(resource: Dict) -> List[int]:
+def get_resource_ports(resource: Dict) -> List[str]:
     """Extracts ports from a resource definition."""
     ports = []
 
     def recursive_find(obj, results):
         if isinstance(obj, dict):
             for k, v in obj.items():
-                if k == "containerPort" and isinstance(v, int):
+                if k in ("containerPort") and isinstance(v, str):
                     results.append(v)
                 else:
                     recursive_find(v, results)
