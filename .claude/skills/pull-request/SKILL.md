@@ -70,12 +70,22 @@ If `COMMITS` is empty — inform the user there are no commits ahead of `BASE` a
 
 ### 5. Lint audit (non-blocking)
 
-Audit all changed files:
+Before starting, print:
 
-- `.md` files → apply `.claude/skills/markdown-rules/SKILL.md` rules, fix with Edit.
-- `.yml`/`.yaml` workflow and action files → apply `.claude/skills/zizmor/SKILL.md` rules,
-  fix with Edit.
-- All changed files → apply `.claude/skills/editorconfig/SKILL.md` rules, fix with Edit.
+```text
+Running lint audit on changed files…
+```
+
+Audit all changed files in sequence. Print a one-line status before each sub-audit:
+
+- **EditorConfig** — print `  [1/3] EditorConfig…`, then apply
+  `.claude/skills/editorconfig/SKILL.md` rules to all changed files, fix with Edit.
+- **Markdown** — print `  [2/3] Markdown lint…`, then apply
+  `.claude/skills/markdown-rules/SKILL.md` rules to `.md` files, fix with Edit.
+- **Security (zizmor)** — print `  [3/3] Security audit (zizmor)…`, then apply
+  `.claude/skills/zizmor/SKILL.md` rules to `.yml`/`.yaml` workflow and action files,
+  fix with Edit. Note: this step may fetch remote SHAs for unpinned actions — it can
+  take a moment.
 
 Fix everything that is safe to auto-fix. For violations that cannot be safely auto-fixed —
 collect them into `AUDIT_WARNINGS` and continue. Never block the preview or the PR flow.

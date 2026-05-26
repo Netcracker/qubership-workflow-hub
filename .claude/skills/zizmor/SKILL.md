@@ -77,8 +77,16 @@ For actions not in this table — always fetch the current SHA via API before ap
 
 1. If files provided → audit those files. Otherwise:
 
+   Resolve base ref in priority order:
+
+   - `baseRefName` from the open PR for the current branch (`gh pr view --json baseRefName`)
+   - Default branch of the repository (`gh repo view --json defaultBranchRef`)
+   - `main` as final fallback — warn the user if this fallback is used
+
+   Then collect changed files:
+
    ```bash
-   git diff main..HEAD --name-only
+   git diff <BASE>..HEAD --name-only
    ```
 
    Keep only `.yml`/`.yaml` files matching `.github/workflows/` or `actions/*/action.yml`.

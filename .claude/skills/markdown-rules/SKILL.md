@@ -90,7 +90,10 @@ that has no specific language. Never leave the opening fence bare.
 
 ## When invoked via /md-lint
 
-1. If files provided → audit those files. Otherwise run `git diff main..HEAD --name-only | grep '\.md$'`.
+1. If files provided → audit those files. Otherwise resolve base ref in priority order:
+   `baseRefName` from the open PR (`gh pr view --json baseRefName`), default branch
+   (`gh repo view --json defaultBranchRef`), or `main` as final fallback (warn the user).
+   Then run `git diff <BASE>..HEAD --name-only | grep '\.md$'`.
 2. Read each file, check all rules above, collect violations.
 3. Fix all violations directly with Edit. Do not ask the user.
 4. If a violation cannot be safely auto-fixed (e.g. MD056 with unknown content, MD051 with

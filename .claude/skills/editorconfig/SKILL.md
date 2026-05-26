@@ -19,10 +19,16 @@ Audit files for EditorConfig violations defined in `.editorconfig` and fix them 
 
 If `$files` is provided → use that list.
 
-Otherwise run:
+Otherwise resolve base ref in priority order:
+
+- `baseRefName` from the open PR for the current branch (`gh pr view --json baseRefName`)
+- Default branch of the repository (`gh repo view --json defaultBranchRef`)
+- `main` as final fallback — warn the user if this fallback is used
+
+Then collect changed files:
 
 ```bash
-git diff main..HEAD --name-only
+git diff <BASE>..HEAD --name-only
 ```
 
 If no files changed — report "No changed files" and stop.
