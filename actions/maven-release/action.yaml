@@ -78,6 +78,11 @@ inputs:
     required: false
     default: "false"
     type: string
+  monorepo:
+    description: "Is it a monorepo? If true, the action will interpret the module name as a path in the current repository. If false, the action will interpret the module name as a separate repository name (default behavior)."
+    required: false
+    default: "false"
+    type: string
 outputs:
   release-version:
     description: "Release version"
@@ -92,7 +97,17 @@ runs:
         check_module "${{ inputs.module }}"
         check_token "${{ inputs.token }}"
       shell: bash
-
+    - name: Set module repository variable and working directory
+      shell: bash
+      run: |
+        if [ '${{ inputs.monorepo }}' = 'false' ];
+        then
+          echo 'MODULE_REPO=${{ github.repository_owner }}/${{ inputs.module }}' >> $GITHUB_ENV
+          echo 'WORKING_DIR=${{ inputs.module }}' >> $GITHUB_ENV
+        else
+          echo 'MODULE_REPO=${{ github.repository }}' >> $GITHUB_ENV
+          echo 'WORKING_DIR=${{ inputs.module }}/${{ inputs.module }}' >> $GITHUB_ENV
+        fi
     - name: Set up JDK
       uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
       with:
@@ -113,7 +128,7 @@ runs:
       with:
         ref: ${{ inputs.ref }}
         path: ${{ inputs.module }}
-        repository: ${{ github.repository_owner }}/${{ inputs.module }}
+        repository: ${{ env.MODULE_REPO }}
         token: ${{ inputs.token }}
         persist-credentials: true
     - name: Cache local Maven repository
@@ -170,6 +185,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         PROFILE: ${{ inputs.profile }}
+        WORKING_DIR: ${{ env.WORKING_DIR }}
     - name: Cleanup
       if: ${{ inputs.dry-run == 'false' && inputs.bump-dependencies-after-release == 'true' }}
       run: |
@@ -181,7 +197,7 @@ runs:
       with:
         ref: main
         path: ${{ inputs.module }}
-        repository: ${{ github.repository_owner }}/${{ inputs.module }}
+        repository: ${{ env.MODULE_REPO }}
         token: ${{ inputs.token }}
         persist-credentials: true
     - name: "Bump dependencies versions to next snapshot"
@@ -200,3 +216,4 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         PROFILE: ${{ inputs.profile }}
+        WORKING_DIR: ${{ env.WORKING_DIR }}
