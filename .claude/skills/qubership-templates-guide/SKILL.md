@@ -23,7 +23,14 @@ If no match → return to `qubership-workflow-conventions` Workflow design proce
    build, scan, lint, cleanup, etc.).
 
 1. **Match against the catalog table below.** Pick the closest template
-   by purpose, not by name resemblance.
+   by purpose, not by name resemblance. Then verify it still exists before using it:
+
+   ```bash
+   gh api repos/Netcracker/.github/contents/workflow-templates/<file> --jq '.name'
+   ```
+
+   If the file returns 404 — inform the user, show the current list, and pick the nearest
+   alternative or fall back to building from scratch.
 
 1. **Fetch the template ONCE.** Two equivalent ways:
 
