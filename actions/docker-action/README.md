@@ -283,15 +283,14 @@ on:
       - main
   workflow_dispatch: {}
 
-permissions:
-  contents: read
-  packages: write
-  security-events: write
-  pull-requests: write
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      pull-requests: write
     steps:
       - name: Build and Publish Docker Image
         uses: netcracker/qubership-workflow-hub/actions/docker-action@v2.2.1
