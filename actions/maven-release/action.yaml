@@ -131,6 +131,16 @@ runs:
         repository: ${{ env.MODULE_REPO }}
         token: ${{ inputs.token }}
         persist-credentials: true
+    - name: Debug info
+      shell: bash
+      run: |
+        echo "Module repository: ${{ env.MODULE_REPO }}"
+        echo "Working directory: ${{ env.WORKING_DIR }}"
+        echo "Java version:"
+        java -version
+        echo "Maven version:"
+        mvn -version
+        tree -L 3
     - name: Cache local Maven repository
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae #v5.0.5
       with:
