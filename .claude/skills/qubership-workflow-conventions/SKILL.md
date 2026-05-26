@@ -99,10 +99,9 @@ uses: netcracker/qubership-workflow-hub/actions/<name>@<sha>  # vX.Y.Z
 For actions listed in the Pin table (`qubership-actions-guide` → *Pin table*) —
 always use it.
 
-For actions **not in the Pin table**:
-
-- `actions/*` (GitHub-owned, e.g. `actions/setup-java`, `actions/upload-artifact`) — use the SHA and version known to the model from training. These are stable and well-known.
-- All other third-party actions (e.g. `docker/login-action`, `tj-actions/*`) — add to the Pin table or ask the user to provide the SHA. Do not write third-party SHAs from memory.
+For actions **not in the Pin table** (including `actions/*` and all third-party actions),
+resolve the SHA from a verifiable source (GitHub API/release metadata), then add it to the
+Pin table or ask the user to provide the SHA. Do not write SHAs from memory.
 
 Forbidden: `@main`, short SHAs, bare tags (`@v6`, `@v1.2.3`). Always full SHA.
 
