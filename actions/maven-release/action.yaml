@@ -87,6 +87,9 @@ outputs:
   release-version:
     description: "Release version"
     value: ${{ steps.release.outputs.RELEASE_VERSION }}
+  release-tag:
+    description: "Release tag"
+    value: ${{ steps.release.outputs.RELEASE_TAG }}
 runs:
   using: "composite"
   steps:

@@ -101,6 +101,8 @@ function bump_version_and_build() {
         export RELEASE_VERSION
         echo "✅ Release: successfully prepared ${MODULE} version ${RELEASE_VERSION} release." >> "$GITHUB_STEP_SUMMARY"
     fi
+    RELEASE_TAG=$(mvn help:evaluate -Dexpression=project.scm.tag -q -DforceStdout)
+    echo "RELEASE_TAG=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
     echo "RELEASE_VERSION=${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
     echo "Building ${MODULE} version ${RELEASE_VERSION}"
     if [ "${DRY_RUN}" != "false" ]; then
@@ -153,7 +155,7 @@ function bump_dependencies_versions() {
     fi
     echo "::endgroup::"
     echo "::group::Clean and commit pom.xml with next-snapshot version."
-    echo "Committing pom.xml with release version."
+    echo "Committing pom.xml with next-snapshot version."
     mvn --batch-mode clean
     gitdiffstat=$(git diff --stat)
     if [ -z "${gitdiffstat}" ]
