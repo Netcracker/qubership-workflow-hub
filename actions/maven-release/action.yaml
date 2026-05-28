@@ -10,7 +10,7 @@ inputs:
     type: string
   module:
     description: "Module to build == Repository name."
-    required: true
+    required: false
     default: ""
     type: string
   ref:
@@ -78,10 +78,10 @@ inputs:
     required: false
     default: "false"
     type: string
-  monorepo:
-    description: "Is it a monorepo? If true, the action will interpret the module name as a path in the current repository. If false, the action will interpret the module name as a separate repository name (default behavior)."
+  repository:
+    description: "Repository to release. If not specified, the current repository will be used"
     required: false
-    default: "false"
+    default: ""
     type: string
 outputs:
   release-version:
@@ -91,22 +91,28 @@ runs:
   using: "composite"
   steps:
     - name: "Check inputs"
+      shell: bash
       run: |
         . ${GITHUB_ACTION_PATH}/action-script.sh
         check_version_type "${{ inputs.version-type }}"
-        check_module "${{ inputs.module }}"
         check_token "${{ inputs.token }}"
-      shell: bash
     - name: Set module repository variable and working directory
       shell: bash
       run: |
-        if [ '${{ inputs.monorepo }}' = 'false' ];
-        then
-          echo 'MODULE_REPO=${{ github.repository_owner }}/${{ inputs.module }}' >> $GITHUB_ENV
-          echo 'WORKING_DIR=${{ inputs.module }}' >> $GITHUB_ENV
-        else
+        # If repository input is not provided, use the current repository
+        # Otherwise, use the provided repository
+        # if module not provided, use the current working directory
+        # if module provided, use the module as working directory
+        if [ '${{ inputs.repository }}' = '' ]; then
           echo 'MODULE_REPO=${{ github.repository }}' >> $GITHUB_ENV
-          echo 'WORKING_DIR=${{ inputs.module }}/${{ inputs.module }}' >> $GITHUB_ENV
+        else
+          echo 'MODULE_REPO=${{ inputs.repository }}' >> $GITHUB_ENV
+        fi
+
+        if [ '${{ inputs.module }}' = '' ]; then
+          echo 'WORKING_DIR=${{ github.workspace }}' >> $GITHUB_ENV
+        else
+          echo 'WORKING_DIR=${{ github.workspace }}/${{ inputs.module }}' >> $GITHUB_ENV
         fi
     - name: Set up JDK
       uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
