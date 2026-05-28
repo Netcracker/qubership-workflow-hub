@@ -57,7 +57,7 @@ function compute_release_version() {
     NEXT_DEV_VERSION="${NEXT_MAJOR}.${NEXT_MINOR}.${NEXT_PATCH}-SNAPSHOT"
     RELEASE_VERSION_ARG="-DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${NEXT_DEV_VERSION}"
 
-    export RELEASE_VERSION RELEASE_VERSION_ARG NEXT_DEV_VERSION
+    export RELEASE_VERSION NEXT_DEV_VERSION RELEASE_VERSION_ARG
     echo "Release version:   ${RELEASE_VERSION}"
     echo "Next dev version:  ${NEXT_DEV_VERSION}"
 }

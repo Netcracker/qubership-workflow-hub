@@ -174,8 +174,10 @@ runs:
       run: |
         . "${GITHUB_ACTION_PATH}/action-script.sh"
         compute_release_version
-        echo "RELEASE_VERSION=${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
-        echo "RELEASE_VERSION=${RELEASE_VERSION}" >> "$GITHUB_ENV"
+        echo "RELEASE_VERSION=${RELEASE_VERSION}"           >> "$GITHUB_OUTPUT"
+        echo "RELEASE_VERSION=${RELEASE_VERSION}"           >> "$GITHUB_ENV"
+        echo "RELEASE_VERSION_ARG=${RELEASE_VERSION_ARG}"   >> "$GITHUB_ENV"
+        echo "NEXT_DEV_VERSION=${NEXT_DEV_VERSION}"         >> "$GITHUB_ENV"
 
     # ── Maven release:prepare + release:perform ───────────────────────────────
     - name: Release Maven component
@@ -192,6 +194,8 @@ runs:
         DRY_RUN: ${{ inputs.dry-run }}
         PROFILE: ${{ inputs.profile }}
         WORKING_DIR: ${{ env.WORKING_DIR }}
+        RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+        RELEASE_VERSION_ARG: ${{ env.RELEASE_VERSION_ARG }}
       run: |
         . "${GITHUB_ACTION_PATH}/action-script.sh"
         set_profile
