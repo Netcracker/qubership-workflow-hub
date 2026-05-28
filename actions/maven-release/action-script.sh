@@ -23,7 +23,6 @@ function check_token() {
 
 function set_release_version() {
     # shellcheck disable=2164
-    pwd
     cd "${GITHUB_WORKSPACE}/${WORKING_DIR}"
     git config --global user.name "qubership-actions[bot]"
     git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
@@ -61,7 +60,6 @@ function set_profile() {
 
 function bump_version_and_build() {
     # shellcheck disable=2164
-    pwd
     cd "${GITHUB_WORKSPACE}/${WORKING_DIR}"
     git config --global user.name "qubership-actions[bot]"
     git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
@@ -126,7 +124,6 @@ function bump_version_and_build() {
 
 function bump_dependencies_versions() {
     # shellcheck disable=2164
-    pwd
     cd "${GITHUB_WORKSPACE}/${WORKING_DIR}"
     # To update pom.xml dependencies with the next -SNAPSHOT version need to deploy SNAPSHOT version
     if [ "${DRY_RUN}" != "false" ]; then
