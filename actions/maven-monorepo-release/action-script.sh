@@ -109,7 +109,7 @@ function release_component() {
         mvn --batch-mode release:prepare \
             -DautoVersionSubmodules=true \
             -DpushChanges=true \
-            "-DtagNameFormat=${COMPONENT}-@{project.version}" \
+            -DtagNameFormat="${COMPONENT}-@{project.version}" \
             ${RELEASE_VERSION_ARG} \
             ${PROFILE_ARG} \
             ${MVN_ARGS}
