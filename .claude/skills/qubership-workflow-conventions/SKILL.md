@@ -132,10 +132,11 @@ When a Qubership-authored action accepts an external config file
   in consumer repos.
 - Pass the path explicitly via the action's input — do not rely on the
   action's default path, which may point to `.github/`.
-- **Only create a config file when it is necessary**: if the action's
-  inline inputs (`default-template`, `default-tag`, etc.) are sufficient
-  for the use case, use them directly in the workflow step instead of
-  creating a separate file.
+- **Only create a config file when one of these conditions is met**:
+  the user explicitly asks for it; or the action's inline inputs are
+  not sufficient (e.g. multiple branch patterns, reuse across workflows).
+  If inline inputs cover the use case — use them directly in the step,
+  do not create a file.
 
 This rule applies **only to actions authored by Netcracker/Qubership**.
 Third-party actions (e.g. `actions/checkout`, `helm/kind-action`) keep
