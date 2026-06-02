@@ -3,6 +3,8 @@ description: Triggers for qubership-workflow-hub-usage skills when working on Gi
 applyTo: "**/.github/workflows/*.{yml,yaml}"
 ---
 
+# Qubership Workflow Hub Usage
+
 When designing, writing, reviewing, or debugging `.github/workflows/*.yml` files
 that consume `netcracker/qubership-workflow-hub` actions or `Netcracker/.github` templates,
 apply the `qubership-workflow-conventions` skill.
