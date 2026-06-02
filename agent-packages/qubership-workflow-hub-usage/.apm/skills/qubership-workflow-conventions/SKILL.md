@@ -122,6 +122,25 @@ Forbidden: `@main`, short SHAs, bare tags (`@v6`, `@v1.2.3`). Always full SHA.
 - Boolean inputs default `false`; the input name describes the feature
   when enabled.
 
+### Configuration file placement
+
+When a Qubership-authored action accepts an external config file
+(e.g. `configuration-path`, `config-path`):
+
+- Place the file under **`.qubership/`**, not `.github/`. The `.qubership/`
+  directory is the conventional home for Qubership-specific configuration
+  in consumer repos.
+- Pass the path explicitly via the action's input — do not rely on the
+  action's default path, which may point to `.github/`.
+- **Only create a config file when it is necessary**: if the action's
+  inline inputs (`default-template`, `default-tag`, etc.) are sufficient
+  for the use case, use them directly in the workflow step instead of
+  creating a separate file.
+
+This rule applies **only to actions authored by Netcracker/Qubership**.
+Third-party actions (e.g. `actions/checkout`, `helm/kind-action`) keep
+their configs wherever their own documentation prescribes.
+
 ### Security (zizmor rules)
 
 Read `zizmor-rules.md` and apply all rules while writing the workflow.
