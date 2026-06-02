@@ -1,0 +1,7 @@
+name: qubership-workflow-hub-usage
+version: 1.0.0
+description: Skills for designing, writing, reviewing, and debugging GitHub Actions workflows that consume netcracker/qubership-workflow-hub actions and Netcracker/.github templates.
+author: nookyo
+dependencies:
+  apm: []
+  mcp: []
