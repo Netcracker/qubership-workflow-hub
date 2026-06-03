@@ -67,7 +67,7 @@ inputs:
     description: "Maven Central (Sonatype) username for authentication"
     required: false
     type: string
-  maven-central-password:
+  maven-password:
     description: "Maven Central (Sonatype) password or authentication token"
     required: false
     type: string
