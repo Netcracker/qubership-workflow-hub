@@ -18,6 +18,12 @@ inputs:
     required: true
     type: string
     default: "patch"
+  version-property:
+    description: |
+      Optional: specify the version property to update (e.g., 'project.version' or 'my.component.version').
+      If not provided, defaults to the standard version element in the POM.
+    required: false
+    type: string
   ref:
     description: "Branch to create release from"
     required: false
@@ -164,6 +170,7 @@ runs:
       env:
         COMPONENT: ${{ inputs.component }}
         VERSION_TYPE: ${{ inputs.version-type }}
+        VERSION_PROPERTY: ${{ inputs.version-property }}
         PUBLISH_TARGET: ${{ inputs.publish-target }}
         DRY_RUN: ${{ inputs.dry-run }}
         MAVEN_PROFILE: ${{ inputs.maven-profile }}

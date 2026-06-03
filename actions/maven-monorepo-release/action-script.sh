@@ -171,6 +171,9 @@ update_dependency_version() {
     log_info "Updating $groupid:$artifactid to $new_version in $pom_file"
     mvn versions:use-dep-version -Dincludes="$groupid:$artifactid" \
         -DdepVersion="$new_version" -DgenerateBackupPoms=false -q || true
+    if [ ! -z "${VERSION_PROPERTY:-}" ]; then
+        mvn versions:set-property -Dproperty="${VERSION_PROPERTY:-}" -DnewVersion="$new_version" -DgenerateBackupPoms=false -q || true
+    fi
     git add "$(basename "$pom_file")"
     cd "$top_dir"
 }
