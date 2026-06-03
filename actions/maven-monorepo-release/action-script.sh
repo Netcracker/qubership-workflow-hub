@@ -156,6 +156,7 @@ update_pom_version() {
     mvn versions:set -DnewVersion="$new_version" -DgenerateBackupPoms=false -q
     log_success "Version updated to $new_version"
     cd "$top_dir"
+    git add "$component/pom.xml"
 }
 
 # Update dependency version in a pom.xml file
@@ -170,6 +171,7 @@ update_dependency_version() {
     log_info "Updating $groupid:$artifactid to $new_version in $(basename $pom_file)"
     mvn versions:use-dep-version -Dincludes="$groupid:$artifactid" \
         -DdepVersion="$new_version" -DgenerateBackupPoms=false -q || true
+    git add "$(basename "$pom_file")"
     cd "$top_dir"
 }
 
@@ -191,16 +193,16 @@ create_git_tag() {
 }
 
 # Commit version changes
-commit_version_changes() {
+commit_changes() {
     local component=$1
     local message=$2
 
-    log_info "Committing version changes: $message"
+    log_info "Committing changes: $message"
 
     git config --global user.name "qubership-actions[bot]"
     git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
 
-    git add "$component/pom.xml"
+    # git add "$component/pom.xml"
 
     # Check if there are changes to commit
     if git diff --cached --quiet; then
@@ -345,7 +347,7 @@ release_component() {
     build_and_deploy "$component" "$new_version" "$publish_target" "$maven_args" "$maven_profile"
 
     # Commit release version
-    commit_version_changes "$component" "chore($component): release version $new_version"
+    commit_changes "$component" "chore($component): release version $new_version"
 
     # Create git tag
     create_git_tag "$component" "$new_version"
@@ -356,7 +358,7 @@ release_component() {
     update_pom_version "$component" "$next_snapshot"
 
     # Commit snapshot version
-    commit_version_changes "$component" "chore($component): bump to next snapshot version $next_snapshot"
+    commit_changes "$component" "chore($component): bump to next snapshot version $next_snapshot"
 
     # Update parent version in other components if this was a parent release
     if [[ "$component" == "parent" ]] && [[ "$update_parent_version" == "true" ]]; then
@@ -387,7 +389,7 @@ release_component() {
     done < <(find . -name "pom.xml" -type f -not -path "*/target/*" -not -path "./$component/*")
 
     # Commit dependency updates
-    commit_version_changes "$dep_component" "chore($dep_component): update $artifactid to $new_version"
+    commit_changes "$dep_component" "chore($dep_component): update $artifactid to $new_version"
 
     log_success "=========================================="
     log_success "Release of $component completed successfully!"
@@ -402,5 +404,5 @@ release_component() {
 # Export functions for sourcing
 export -f log_info log_success log_error log_warning validate_inputs validate_monorepo_structure
 export -f get_current_version bump_version get_next_snapshot_version update_pom_version
-export -f update_dependency_version create_git_tag commit_version_changes
+export -f update_dependency_version create_git_tag commit_changes
 export -f build_and_deploy get_component_info release_component
