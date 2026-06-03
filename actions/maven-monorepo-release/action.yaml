@@ -150,8 +150,10 @@ runs:
     - name: Validate Maven structure
       run: |
         . ${GITHUB_ACTION_PATH}/action-script.sh
-        validate_monorepo_structure "${{ inputs.component }}"
+        validate_monorepo_structure "$COMPONENT"
       shell: bash
+      env:
+        COMPONENT: ${{ inputs.component }}
 
     - name: Release component
       id: release

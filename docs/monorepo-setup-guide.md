@@ -1,6 +1,7 @@
 # Maven Monorepo Setup Guide
 
-Complete guide for setting up and managing a Maven monorepo with independent component versioning, suitable for use with the `maven-monorepo-release` GitHub Action.
+Complete guide for setting up and managing a Maven monorepo with independent component versioning,
+suitable for use with the `maven-monorepo-release` GitHub Action.
 
 ---
 
@@ -23,7 +24,7 @@ Complete guide for setting up and managing a Maven monorepo with independent com
 
 Recommended directory layout:
 
-```
+```text
 my-monorepo/
 ├── .github/
 │   └── workflows/
@@ -82,6 +83,7 @@ All `pom.xml` files must follow these principles:
 ```
 
 ❌ **Wrong** - don't inherit version:
+
 ```xml
 <!-- This will cause issues with independent versioning -->
 <parent>
@@ -484,6 +486,7 @@ Each component is a Maven module with its own `pom.xml`.
 ### Local Build
 
 Build entire monorepo:
+
 ```bash
 # Build all components (from each component directory)
 cd my-lib-1 && mvn clean package
@@ -492,6 +495,7 @@ cd my-app && mvn clean package
 ```
 
 Or build specific component:
+
 ```bash
 cd my-app && mvn clean package -Pdevelopment
 ```
@@ -697,7 +701,7 @@ on:
         default: github
         options:
           - github
-          - maven-central
+          - central
           - both
 
 permissions:
@@ -709,7 +713,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Release Component
-        uses: netcracker/qubership-workflow-hub/actions/maven-monorepo-release@v1.0.0
+        uses: netcracker/qubership-workflow-hub/actions/maven-monorepo-release@cabbb90e9471163cfac84bd50ff0296b2803b44c  # v2.3.0
         with:
           component: ${{ inputs.component }}
           version-type: ${{ inputs.version }}
@@ -718,8 +722,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-          maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          maven-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          maven-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           java-version: '21'
           maven-profile: release
 ```
@@ -740,9 +744,9 @@ jobs:
   <servers>
     <!-- Maven Central (Sonatype) -->
     <server>
-      <id>maven-central</id>
-      <username>${env.MAVEN_CENTRAL_USERNAME}</username>
-      <password>${env.MAVEN_CENTRAL_PASSWORD}</password>
+      <id>central</id>
+      <username>${env.MAVEN_USERNAME}</username>
+      <password>${env.MAVEN_PASSWORD}</password>
     </server>
 
     <!-- GitHub Packages -->

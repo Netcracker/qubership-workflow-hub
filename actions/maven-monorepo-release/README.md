@@ -366,7 +366,8 @@ Run locally: `cd <component> && mvn clean package`
 ### Publishing fails
 
 - **Maven Central**: Verify GPG key is imported, passphrase is correct, and `maven-username`/`maven-password` are set
-- **GitHub Packages**: Verify `token` has `packages: write` permission and the repository URL in `distributionManagement` is correct
+- **GitHub Packages**: Verify `token` has `packages: write` permission and the repository URL in
+  `distributionManagement` is correct
 
 ### Git tag already exists
 
