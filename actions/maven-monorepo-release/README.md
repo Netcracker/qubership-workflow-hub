@@ -50,9 +50,9 @@ Automates releasing individual Maven components from a monorepo with **independe
 | `token` | GitHub token for checkout and git operations | Yes | - |
 | `gpg-private-key` | Armored GPG private key (required for Maven Central) | No | - |
 | `gpg-passphrase` | GPG passphrase | No | - |
-| `maven-central-username` | Sonatype username (required for Maven Central) | No | - |
-| `maven-central-password` | Sonatype password or token (required for Maven Central) | No | - |
-| `maven-profile` | Maven profile to activate (e.g., `release`) | No | - |
+| `maven-username` | Sonatype username for Maven Central or GitHub username for GitHub packages | No | - |
+| `maven-password` | Sonatype password or token for Maven Central or GitHub token for GitHub packages | No | - |
+| `maven-profile` | Maven profile to activate (e.g., `github`) | No | - |
 | `update-parent-version` | Set to `'true'` to update parent version in child modules after parent release | No | `'false'` |
 
 ---
@@ -189,8 +189,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-          maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          maven-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          maven-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
 ```
 
 ### Example 3: Release with dependency updates
@@ -207,8 +207,8 @@ jobs:
     token: ${{ secrets.GITHUB_TOKEN }}
     gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
     gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-    maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-    maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+    maven-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+    maven-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
 ```
 
 ---

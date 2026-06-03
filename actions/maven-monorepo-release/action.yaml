@@ -63,7 +63,7 @@ inputs:
     description: "Passphrase for GPG private key"
     required: false
     type: string
-  maven-central-username:
+  maven-username:
     description: "Maven Central (Sonatype) username for authentication"
     required: false
     type: string
@@ -114,8 +114,8 @@ runs:
         VERSION_TYPE: ${{ inputs.version-type }}
         PUBLISH_TARGET: ${{ inputs.publish-target }}
         TOKEN: ${{ inputs.token }}
-        MAVEN_USERNAME: ${{ inputs.maven-central-username }}
-        MAVEN_PASSWORD: ${{ inputs.maven-central-password }}
+        MAVEN_USERNAME: ${{ inputs.maven-username }}
+        MAVEN_PASSWORD: ${{ inputs.maven-password }}
 
     - name: Set up JDK
       uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
@@ -169,6 +169,6 @@ runs:
         MAVEN_PROFILE: ${{ inputs.maven-profile }}
         MAVEN_ARGS: ${{ inputs.maven-args }}
         UPDATE_PARENT_VERSION: ${{ inputs.update-parent-version }}
-        MAVEN_USERNAME: ${{ inputs.maven-central-username }}
-        MAVEN_PASSWORD: ${{ inputs.maven-central-password }}
+        MAVEN_USERNAME: ${{ inputs.maven-username }}
+        MAVEN_PASSWORD: ${{ inputs.maven-password }}
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
