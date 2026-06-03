@@ -49,7 +49,7 @@ inputs:
     description: "Additional Maven arguments for all invocations"
     required: false
     type: string
-    default: "-DskipTests=true -Dmaven.javadoc.skip=true -B"
+    default: "-B"
   dry-run:
     description: |
       Set to 'false' to perform actual release. Default 'true' validates build without pushing.

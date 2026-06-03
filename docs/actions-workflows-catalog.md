@@ -29,6 +29,7 @@ Always check that document before modifying or depending on a deprecated compone
 | [docker-config-resolver](../actions/docker-config-resolver/README.md)           | Resolve `.qubership/docker.cfg` into a flat JSON config for the docker-action matrix   |
 | [ghcr-discover-repo-packages](../actions/ghcr-discover-repo-packages/README.md) | Discover GHCR container packages owned by a repository and return them as JSON         |
 | [k8s-hardening-scan](../actions/k8s-hardening-scan/README.md)                   | Validate Kubernetes hardening compliance with Kubescape (and optionally Trivy)         |
+| [maven-monorepo-release](../actions/maven-monorepo-release/README.md)           | Release Maven components from a monorepo with independent versioning per component      |
 | [maven-release](../actions/maven-release/README.md)                             | Release a Maven artifact (version bump, GPG sign, deploy) — dry-run by default         |
 | [maven-snapshot-deploy](../actions/maven-snapshot-deploy/README.md)             | Deploy Maven SNAPSHOT artifacts to Maven Central or GitHub Packages                    |
 | [metadata-action](../actions/metadata-action/README.md)                         | Render version strings and tags from per-branch/per-tag templates using GitHub context |
