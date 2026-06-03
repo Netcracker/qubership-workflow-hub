@@ -83,9 +83,10 @@ validate_monorepo_structure() {
 
     # For non-parent components, validate parent reference
     if [[ "$component" != "parent" ]]; then
+        local top_dir=$(pwd)
         local parent_groupid
         parent_groupid=$(cd "$component" && mvn help:evaluate -Dexpression=project.parent.groupId -q -DforceStdout 2>/dev/null || echo "")
-
+        cd "$top_dir"
         if [[ -z "$parent_groupid" ]]; then
             log_warning "Component '$component' does not have a parent POM reference"
         else
@@ -98,9 +99,11 @@ validate_monorepo_structure() {
 
 # Get current version of component
 get_current_version() {
+    local top_dir=$(pwd)
     local component=$1
     cd "$component"
     mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null || echo ""
+    cd "$top_dir"
 }
 
 # Parse version and bump it
@@ -144,6 +147,7 @@ get_next_snapshot_version() {
 
 # Update version in pom.xml using Maven
 update_pom_version() {
+    local top_dir=$(pwd)
     local component=$1
     local new_version=$2
 
@@ -151,6 +155,7 @@ update_pom_version() {
     cd "$component"
     mvn versions:set -DnewVersion="$new_version" -DgenerateBackupPoms=false -q
     log_success "Version updated to $new_version"
+    cd "$top_dir"
 }
 
 # Find all inter-module dependencies
@@ -240,6 +245,7 @@ commit_version_changes() {
 
 # Build and deploy component
 build_and_deploy() {
+    local top_dir=$(pwd)
     local component=$1
     local version=$2
     local publish_target=$3
@@ -285,10 +291,13 @@ build_and_deploy() {
         fi
         log_success "Maven Central deployment successful"
     fi
+
+    cd "$top_dir"
 }
 
 # Get component info from pom.xml
 get_component_info() {
+    local top_dir=$(pwd)
     local component=$1
 
     cd "$component"
@@ -300,6 +309,7 @@ get_component_info() {
     artifactid=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout 2>/dev/null || echo "")
 
     echo "$groupid:$artifactid"
+    cd "$top_dir"
 }
 
 # Release component
