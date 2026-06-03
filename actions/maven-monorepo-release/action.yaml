@@ -1,0 +1,174 @@
+---
+name: Maven Monorepo Release
+description: |
+  Release Maven components from a monorepo with independent versioning per component.
+  Supports releasing individual components, parent, and BOM independently. Handles version
+  bumping (major/minor/patch), GPG signing, Maven release plugin, and publishing to Maven
+  Central or GitHub Packages. Dry-run mode available for validation.
+
+inputs:
+  component:
+    description: |
+      Component to release. Use 'parent', 'bom', or the component folder name (e.g., 'my-component').
+      For monorepos with structure: parent/, bom/, component1/, component2/, etc.
+    required: true
+    type: string
+  version-type:
+    description: "Version bump type: major, minor, or patch"
+    required: true
+    type: string
+    default: "patch"
+  ref:
+    description: "Branch to create release from"
+    required: false
+    type: string
+    default: "main"
+  publish-target:
+    description: |
+      Where to publish: 'central' (requires gpg-private-key), 'github' (uses GITHUB_TOKEN).
+      For Maven Central, requires MAVEN_USERNAME and MAVEN_PASSWORD credentials.
+    required: false
+    type: string
+    default: "github"
+  java-version:
+    description: "Java version (LTS recommended: 21, 17, 11)"
+    required: false
+    type: string
+    default: "21"
+  maven-version:
+    description: "Maven version to use. When empty, uses pre-installed Maven on runner"
+    required: false
+    type: string
+  maven-args:
+    description: "Additional Maven arguments for all invocations"
+    required: false
+    type: string
+    default: "-DskipTests=true -Dmaven.javadoc.skip=true -B"
+  dry-run:
+    description: |
+      Set to 'false' to perform actual release. Default 'true' validates build without pushing.
+      In dry-run: builds and deploys SNAPSHOT to target registry without version bump or tagging.
+    required: false
+    type: string
+    default: "true"
+  token:
+    description: "GitHub token for repository checkout and git operations"
+    required: true
+    type: string
+  gpg-private-key:
+    description: "Armored GPG private key for artifact signing (required for Maven Central)"
+    required: false
+    type: string
+  gpg-passphrase:
+    description: "Passphrase for GPG private key"
+    required: false
+    type: string
+  maven-central-username:
+    description: "Maven Central (Sonatype) username for authentication"
+    required: false
+    type: string
+  maven-central-password:
+    description: "Maven Central (Sonatype) password or authentication token"
+    required: false
+    type: string
+  maven-profile:
+    description: "Maven profile to activate (e.g., 'release'). Leave empty to skip"
+    required: false
+    type: string
+  update-parent-version:
+    description: |
+      Set to 'true' to automatically update parent version reference in other components
+      after releasing the parent. Only relevant when component='parent'.
+    required: false
+    type: string
+    default: "false"
+  skip-parent-check:
+    description: |
+      Set to 'true' to skip validation that components inherit from parent POM.
+      Only relevant when releasing a non-parent component.
+    required: false
+    type: string
+    default: "false"
+
+outputs:
+  release-version:
+    description: "The released version (e.g., 2.1.0)"
+    value: ${{ steps.release.outputs.RELEASE_VERSION }}
+  component-released:
+    description: "Component that was released"
+    value: ${{ steps.release.outputs.COMPONENT_RELEASED }}
+  artifacts:
+    description: "Comma-separated list of published artifact coordinates (groupId:artifactId:version)"
+    value: ${{ steps.release.outputs.ARTIFACTS }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate inputs
+      run: |
+        . ${GITHUB_ACTION_PATH}/action-script.sh
+        validate_inputs "$COMPONENT" "$VERSION_TYPE" "$PUBLISH_TARGET" "$TOKEN"
+      shell: bash
+      env:
+        COMPONENT: ${{ inputs.component }}
+        VERSION_TYPE: ${{ inputs.version-type }}
+        PUBLISH_TARGET: ${{ inputs.publish-target }}
+        TOKEN: ${{ inputs.token }}
+        MAVEN_USERNAME: ${{ inputs.maven-central-username }}
+        MAVEN_PASSWORD: ${{ inputs.maven-central-password }}
+
+    - name: Set up JDK
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: "temurin"
+        server-id: "${{ inputs.publish-target == 'central' && 'central' || 'github' }}"
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ inputs.gpg-private-key }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+    - name: Set up Maven
+      if: ${{ inputs.maven-version != '' }}
+      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
+      with:
+        maven-version: ${{ inputs.maven-version }}
+
+    - name: Checkout monorepo
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+      with:
+        ref: ${{ inputs.ref }}
+        token: ${{ inputs.token }}
+        persist-credentials: true
+
+    - name: Cache Maven repository
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae #v5.0.5
+      with:
+        path: ~/.m2/repository
+        key: maven-monorepo-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+        restore-keys: maven-monorepo-${{ runner.os }}-
+
+    - name: Validate Maven structure
+      run: |
+        . ${GITHUB_ACTION_PATH}/action-script.sh
+        validate_monorepo_structure "${{ inputs.component }}"
+      shell: bash
+
+    - name: Release component
+      id: release
+      run: |
+        . ${GITHUB_ACTION_PATH}/action-script.sh
+        release_component "$COMPONENT" "$VERSION_TYPE" "$PUBLISH_TARGET" "$DRY_RUN" \
+          "$MAVEN_PROFILE" "$MAVEN_ARGS" "$UPDATE_PARENT_VERSION"
+      shell: bash
+      env:
+        COMPONENT: ${{ inputs.component }}
+        VERSION_TYPE: ${{ inputs.version-type }}
+        PUBLISH_TARGET: ${{ inputs.publish-target }}
+        DRY_RUN: ${{ inputs.dry-run }}
+        MAVEN_PROFILE: ${{ inputs.maven-profile }}
+        MAVEN_ARGS: ${{ inputs.maven-args }}
+        UPDATE_PARENT_VERSION: ${{ inputs.update-parent-version }}
+        MAVEN_USERNAME: ${{ inputs.maven-central-username }}
+        MAVEN_PASSWORD: ${{ inputs.maven-central-password }}
+        MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
