@@ -158,39 +158,9 @@ update_pom_version() {
     cd "$top_dir"
 }
 
-# Find all inter-module dependencies
-find_monorepo_dependencies() {
-    local component=$1
-    local search_groupid=$2
-    local search_artifactid=$3
-
-    log_info "Finding references to $search_groupid:$search_artifactid in other components..."
-
-    # Search all pom.xml files for the dependency (excluding the component itself)
-    local found_count=0
-    while IFS= read -r pom_file; do
-        local component_dir=$(dirname "$pom_file")
-
-        # Skip the component itself and target directories
-        if [[ "$component_dir" == "$component" ]] || [[ "$component_dir" == *"/target"* ]]; then
-            continue
-        fi
-
-        # Check if pom.xml contains the dependency
-        if grep -q "<artifactId>$search_artifactid</artifactId>" "$pom_file"; then
-            # Verify it's the same groupId
-            if grep -q "<groupId>$search_groupid</groupId>" "$pom_file"; then
-                echo "$component_dir"
-                ((found_count++))
-            fi
-        fi
-    done < <(find . -name "pom.xml" -type f -not -path "*/target/*")
-
-    return $found_count
-}
-
 # Update dependency version in a pom.xml file
 update_dependency_version() {
+    local top_dir=$(pwd)
     local pom_file=$1
     local groupid=$2
     local artifactid=$3
@@ -200,6 +170,7 @@ update_dependency_version() {
     log_info "Updating $groupid:$artifactid to $new_version in $(basename $pom_file)"
     mvn versions:use-dep-version -Dincludes="$groupid:$artifactid" \
         -DdepVersion="$new_version" -DgenerateBackupPoms=false -q || true
+    cd "$top_dir"
 }
 
 # Create git tag
@@ -404,20 +375,19 @@ release_component() {
     fi
 
     # Update dependencies in other components if they depend on this component
-    # if [[ "$component" != "parent" ]] && [[ "$component" != "bom" ]]; then
-        log_info "Checking for internal dependencies on $component..."
+    log_info "Checking for internal dependencies on $component..."
 
-        local comp_info
-        comp_info=$(get_component_info "$component")
-        local groupid="${comp_info%:*}"
-        local artifactid="${comp_info#*:}"
+    local comp_info
+    comp_info=$(get_component_info "$component")
+    local groupid="${comp_info%:*}"
+    local artifactid="${comp_info#*:}"
 
-        while IFS= read -r dep_component; do
-            log_info "Updating dependency in $dep_component..."
-            update_dependency_version "$dep_component/pom.xml" "$groupid" "$artifactid" "$new_version"
-            commit_version_changes "$dep_component" "chore($dep_component): update $artifactid to $new_version"
-        done < <(find_monorepo_dependencies "$component" "$groupid" "$artifactid" 2>/dev/null || true)
-    # fi
+    while IFS= read -r pom_file; do
+        update_dependency_version "$pom_file" "$groupid" "$artifactid" "$new_version"
+    done < <(find . -name "pom.xml" -type f -not -path "*/target/*" -not -path "./$component/*")
+
+    # Commit dependency updates
+    commit_version_changes "$dep_component" "chore($dep_component): update $artifactid to $new_version"
 
     log_success "=========================================="
     log_success "Release of $component completed successfully!"
@@ -432,5 +402,5 @@ release_component() {
 # Export functions for sourcing
 export -f log_info log_success log_error log_warning validate_inputs validate_monorepo_structure
 export -f get_current_version bump_version get_next_snapshot_version update_pom_version
-export -f find_monorepo_dependencies update_dependency_version create_git_tag commit_version_changes
+export -f update_dependency_version create_git_tag commit_version_changes
 export -f build_and_deploy get_component_info release_component
