@@ -389,7 +389,7 @@ release_component() {
     done < <(find . -name "pom.xml" -type f -not -path "*/target/*" -not -path "./$component/*")
 
     # Commit dependency updates
-    commit_changes "$dep_component" "chore($dep_component): update $artifactid to $new_version"
+    commit_changes "$component" "chore($component): update dependencies on $groupid:$artifactid to $new_version"
 
     log_success "=========================================="
     log_success "Release of $component completed successfully!"
