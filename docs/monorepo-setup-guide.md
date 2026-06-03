@@ -58,6 +58,7 @@ my-monorepo/
 ```
 
 **Key principles:**
+
 - Each component is a **separate top-level directory** (not nested)
 - Each component has its **own `pom.xml`**
 - **Independent versioning**: Each component maintains its own version
@@ -263,6 +264,7 @@ The parent POM (`parent/pom.xml`) defines common settings for all modules.
 ### Key Parent POM Points
 
 ✅ **Do this:**
+
 - Define `<dependencyManagement>` with versions
 - Define `<pluginManagement>` with plugin configurations
 - Use `<properties>` for versions
@@ -270,6 +272,7 @@ The parent POM (`parent/pom.xml`) defines common settings for all modules.
 - Define distribution management URLs
 
 ❌ **Don't do this:**
+
 - Add actual `<dependencies>` (only use in `<dependencyManagement>`)
 - Don't define `<modules>` (not needed for independent versioning)
 - Don't include component code in parent (parent is POM-only)
@@ -503,6 +506,7 @@ cd my-app && mvn clean package -Pdevelopment
 ### Publishing to Maven Central
 
 Requires:
+
 1. Sonatype JIRA account
 2. GPG key (sign artifacts)
 3. Proper configuration in `pom.xml` and `settings.xml`
@@ -628,28 +632,33 @@ mvn clean deploy
 ### Manual Release Steps (what the GitHub Action automates)
 
 1. **Determine new version**
+
    ```bash
    # Current: 1.0.0-SNAPSHOT
    # Release: 1.0.1 (patch), 1.1.0 (minor), or 2.0.0 (major)
    ```
 
-2. **Update version in pom.xml**
+3. **Update version in pom.xml**
+
    ```bash
    cd my-lib-1
    mvn versions:set -DnewVersion=1.0.1 -DgenerateBackupPoms=false
    ```
 
-3. **Build and test**
+4. **Build and test**
+
    ```bash
    mvn clean package
    ```
 
-4. **Deploy**
+5. **Deploy**
+
    ```bash
    mvn deploy -Prelease
    ```
 
-5. **Commit and tag**
+6. **Commit and tag**
+
    ```bash
    git add my-lib-1/pom.xml
    git commit -m "chore(my-lib-1): release version 1.0.1"
@@ -658,7 +667,8 @@ mvn clean deploy
    git push origin my-lib-1-1.0.1
    ```
 
-6. **Update to next SNAPSHOT**
+7. **Update to next SNAPSHOT**
+
    ```bash
    mvn versions:set -DnewVersion=1.0.2-SNAPSHOT -DgenerateBackupPoms=false
    git add my-lib-1/pom.xml
@@ -666,7 +676,8 @@ mvn clean deploy
    git push origin main
    ```
 
-7. **Update dependencies in other components** (if needed)
+8. **Update dependencies in other components** (if needed)
+
    ```bash
    cd my-app
    mvn versions:use-dep-version -Dincludes="com.example:my-lib-1" \
@@ -827,6 +838,7 @@ permissions:
 ### Version Management
 
 ✅ **Do:**
+
 - Use semantic versioning: MAJOR.MINOR.PATCH (e.g., 1.2.3)
 - Keep -SNAPSHOT between releases
 - Version each component independently
@@ -834,6 +846,7 @@ permissions:
 - Document version changes
 
 ❌ **Don't:**
+
 - Inherit version from parent
 - Use custom version formats
 - Share versions between independent components
@@ -843,12 +856,14 @@ permissions:
 ### Dependency Management
 
 ✅ **Do:**
+
 - Use `<dependencyManagement>` in parent for version centralization
 - Use explicit versions in `<dependency>` of child modules
 - Use parent's BOM for downstream users
 - Update dependencies systematically when releasing
 
 ❌ **Don't:**
+
 - Use wildcard versions
 - Use version ranges (e.g., `[1.0,2.0)`)
 - Add circular dependencies
@@ -858,6 +873,7 @@ permissions:
 ### Git Workflow
 
 ✅ **Do:**
+
 - Create semantic tags: `component-name-version` (e.g., `my-lib-1.0.1`)
 - Commit changes per component
 - Use conventional commits: `chore(component): message`
@@ -865,6 +881,7 @@ permissions:
 - Keep history clean
 
 ❌ **Don't:**
+
 - Mix releases from multiple components in one commit
 - Create ambiguous tags
 - Rebase after release
@@ -873,6 +890,7 @@ permissions:
 ### Documentation
 
 ✅ **Do:**
+
 - Keep README.md in each component
 - Document dependencies and relationships
 - Include build instructions
@@ -880,6 +898,7 @@ permissions:
 - Document API changes
 
 ❌ **Don't:**
+
 - Leave code uncommented
 - Ignore breaking changes
 - Publish without docs
@@ -888,6 +907,7 @@ permissions:
 ### Testing & Quality
 
 ✅ **Do:**
+
 - Run full test suite before release
 - Use CI/CD to validate builds
 - Test releases in staging first
@@ -895,6 +915,7 @@ permissions:
 - Run integration tests
 
 ❌ **Don't:**
+
 - Skip tests for releases
 - Release untested code
 - Ignore deprecation warnings
@@ -907,23 +928,29 @@ permissions:
 ### Build issues
 
 **Problem**: `Cannot find parent: com.example:parent:1.0.0`
+
 - **Solution**: Ensure parent/pom.xml exists and version matches
 
 **Problem**: `Dependency cycle detected`
+
 - **Solution**: Check for circular dependencies, refactor components
 
 ### Publishing issues
 
 **Problem**: `Authentication failed for Maven Central`
+
 - **Solution**: Verify MAVEN_CENTRAL_USERNAME and _PASSWORD are correct
 
 **Problem**: `GPG signature verification failed`
+
 - **Solution**: Check GPG key is imported, passphrase is correct
 
 ### Version management issues
 
 **Problem**: `Versions plugin cannot update version`
+
 - **Solution**: Ensure pom.xml has valid `<version>` element
 
 **Problem**: SNAPSHOT version not updating
+
 - **Solution**: Check versions:set plugin is working correctly, verify file permissions
