@@ -55,7 +55,7 @@ validate_inputs() {
 
     if [[ "$publish_target" == "central" ]]; then
         if [[ -z "${MAVEN_USERNAME:-}" ]] || [[ -z "${MAVEN_PASSWORD:-}" ]]; then
-            log_error "maven-central-username and maven-central-password required for Maven Central publishing"
+            log_error "maven-username and maven-password required for Maven Central publishing"
             exit 1
         fi
     fi
