@@ -345,8 +345,6 @@ release_component() {
 
     # Build and deploy
     echo "[DEBUG] build_and_deploy args: component=$component, new_version=$new_version, publish_target=$publish_target, maven_args='$maven_args', maven_profile='$maven_profile'"
-    echo "[DEBUG] Current directory: $(pwd)"
-    echo "[DEBUG] Directory contents: $(ls -la)"
     build_and_deploy "$component" "$new_version" "$publish_target" "$maven_args" "$maven_profile"
 
     # Commit release version

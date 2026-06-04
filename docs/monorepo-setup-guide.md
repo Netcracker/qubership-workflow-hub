@@ -810,6 +810,7 @@ jobs:
 Create these secrets in GitHub (Settings → Secrets and variables → Actions):
 
 1. **MAVEN_GPG_PRIVATE_KEY**: Your GPG private key (armored)
+
    ```bash
    gpg --export-secret-keys --armor YOUR_KEY_ID | xclip -selection clipboard
    ```
