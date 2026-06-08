@@ -27,6 +27,7 @@ Always check that document before modifying or depending on a deprecated compone
 | [custom-event](../actions/custom-event/README.md)                               | Trigger a repository_dispatch event in the same or another repo with a custom payload  |
 | [docker-action](../actions/docker-action/README.md)                             | Build and push multi-platform Docker images, with optional Trivy/Grype scans           |
 | [docker-config-resolver](../actions/docker-config-resolver/README.md)           | Resolve `.qubership/docker.cfg` into a flat JSON config for the docker-action matrix   |
+| [email-action](../actions/email-action/README.md)                               | Send email notifications via SMTP with fallback to repository variables for connection settings |
 | [ghcr-discover-repo-packages](../actions/ghcr-discover-repo-packages/README.md) | Discover GHCR container packages owned by a repository and return them as JSON         |
 | [k8s-hardening-scan](../actions/k8s-hardening-scan/README.md)                   | Validate Kubernetes hardening compliance with Kubescape (and optionally Trivy)         |
 | [maven-release](../actions/maven-release/README.md)                             | Release a Maven artifact (version bump, GPG sign, deploy) — dry-run by default         |
