@@ -22,7 +22,7 @@ jobs:
           persist-credentials: false
 
       - name: Send plain-text email
-        uses: ./actions/email-action
+        uses: netcracker/qubership-workflow-hub/actions/email-action@765-featactions-add-reusable-email-notification-action
         with:
           server-address: smtp.gmail.com
           server-port: "587"
@@ -38,7 +38,7 @@ jobs:
             Triggered by: ${{ github.actor }}
 
       - name: Send HTML email
-        uses: ./actions/email-action
+        uses: netcracker/qubership-workflow-hub/actions/email-action@765-featactions-add-reusable-email-notification-action
         with:
           server-address: smtp.gmail.com
           server-port: "587"
