@@ -1,9 +1,7 @@
 # 🚀 Email Notification Action
 
 Send email notifications via SMTP with fallback to repository variables for connection settings.
-
-A composite wrapper over [dawidd6/action-send-mail](https://github.com/dawidd6/action-send-mail)
-that resolves connection parameters from inputs, environment variables, or hardcoded defaults —
+Resolves connection parameters from inputs, environment variables, or hardcoded defaults —
 so callers only need to supply secrets explicitly.
 
 ## Features
