@@ -6,9 +6,6 @@
 .claude/skills/qubership-workflow-conventions
 .claude/rules/
 .claude/skills/apm-authoring
-apm.lock.yaml
-apm.yml
-
 
 # APM dependencies
 apm_modules/
