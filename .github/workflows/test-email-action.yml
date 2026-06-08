@@ -63,7 +63,7 @@ jobs:
           persist-credentials: false
 
       - name: Send email via env fallback
-        uses: ./actions/email-action
+        uses: netcracker/qubership-workflow-hub/actions/email-action@765-featactions-add-reusable-email-notification-action
         env:
           EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
           EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
