@@ -1,0 +1,80 @@
+name: TEST email-action
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipient:
+        description: "Email address to send test emails to"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test-explicit-inputs:
+    name: Test — explicit inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Send plain-text email
+        uses: ./actions/email-action
+        with:
+          server-address: smtp.gmail.com
+          server-port: "587"
+          username: ${{ vars.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          from: ${{ vars.EMAIL_FROM }}
+          to: ${{ inputs.recipient }}
+          subject: "[TEST email-action] plain-text — run ${{ github.run_id }}"
+          body: |
+            This is a plain-text test email from the email-action test workflow.
+            Repository: ${{ github.repository }}
+            Run ID: ${{ github.run_id }}
+            Triggered by: ${{ github.actor }}
+
+      - name: Send HTML email
+        uses: ./actions/email-action
+        with:
+          server-address: smtp.gmail.com
+          server-port: "587"
+          username: ${{ vars.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          from: ${{ vars.EMAIL_FROM }}
+          to: ${{ inputs.recipient }}
+          subject: "[TEST email-action] HTML — run ${{ github.run_id }}"
+          html-body: |
+            <h2>email-action HTML test</h2>
+            <p>Repository: <strong>${{ github.repository }}</strong></p>
+            <p>Run ID: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.run_id }}</a></p>
+            <p>Triggered by: ${{ github.actor }}</p>
+
+  test-env-fallback:
+    name: Test — env var fallback
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Send email via env fallback
+        uses: ./actions/email-action
+        env:
+          EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
+          EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
+          EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_USERNAME: ${{ vars.EMAIL_FROM }}
+        with:
+          to: ${{ inputs.recipient }}
+          subject: "[TEST email-action] env fallback — run ${{ github.run_id }}"
+          body: |
+            This email was sent using connection settings resolved from env vars (EMAIL_SMTP_HOST,
+            EMAIL_SMTP_PORT, EMAIL_FROM, EMAIL_PASSWORD) without explicit inputs.
+            Repository: ${{ github.repository }}
+            Run ID: ${{ github.run_id }}
