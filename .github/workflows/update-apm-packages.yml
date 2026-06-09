@@ -1,0 +1,88 @@
+name: Update APM packages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+
+    outputs:
+      repos: ${{ steps.read-repos.outputs.repos }}
+
+    steps:
+      - name: Checkout controller repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4
+
+      - name: Read repositories config
+        id: read-repos
+        run: |
+          REPOS=$(jq -c . .qubership/apm-update-repos.json)
+          echo "repos=$REPOS" >> "$GITHUB_OUTPUT"
+
+  update-apm:
+    needs: prepare
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        repo: ${{ fromJson(needs.prepare.outputs.repos) }}
+
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4
+        with:
+          repository: ${{ matrix.repo }}
+          token: ${{ secrets.APM_UPDATE_TOKEN }}
+          path: target-repo
+          fetch-depth: 1
+
+      - name: Setup APM
+        uses: microsoft/apm-action@ce02c22416172beb70072c5910b2163ee3f006f6  # v1.9.1
+        with:
+          setup-only: 'true'
+
+      - name: Update APM packages
+        working-directory: target-repo
+        run: |
+          echo "::group::Processing ${{ matrix.repo }}"
+          apm update --yes
+          echo "::endgroup::"
+
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+        with:
+          token: ${{ secrets.APM_UPDATE_TOKEN }}
+          path: target-repo
+          branch: chore/update-apm-packages
+          delete-branch: true
+          title: "Update APM packages"
+          commit-message: "Update APM packages"
+          body: |
+            This PR updates APM-managed packages using `apm update --yes`.
+
+            Target repository: `${{ matrix.repo }}`
+
+            Please review changes in:
+            - `apm.lock.yaml`
+            - deployed APM files
+
+      - name: Log result
+        run: |
+          if [ "${{ steps.create-pr.outputs.pull-request-url }}" != "" ]; then
+            echo "::notice title=PR created (${{ matrix.repo }})::${{ steps.create-pr.outputs.pull-request-url }}"
+            echo "### ${{ matrix.repo }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "PR created: ${{ steps.create-pr.outputs.pull-request-url }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No changes in ${{ matrix.repo }}, skipping PR"
+            echo "### ${{ matrix.repo }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "No changes, PR skipped" >> "$GITHUB_STEP_SUMMARY"
+          fi
