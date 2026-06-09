@@ -122,10 +122,12 @@ Always resolve the latest release SHA dynamically:
 
 ```text
 1. WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/releases/latest
-   → extract .tag_name (e.g. v2.3.0) and note the SHA from .target_commitish or
-     WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/git/ref/tags/<tag_name>
-     → extract .object.sha (if .object.type == "tag", follow .object.url to get the tagged commit SHA)
-2. Use that SHA in uses: lines.
+   → extract .tag_name (e.g. v2.3.0)
+2. WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/git/ref/tags/<tag_name>
+   → extract .object.sha and .object.type
+   - if .object.type == "commit" → use .object.sha directly
+   - if .object.type == "tag" (annotated tag) → WebFetch .object.url → extract .object.sha (the commit SHA)
+3. Use that commit SHA in uses: lines. Never use .target_commitish — it is a branch name, not a SHA.
 ```
 
 If the GitHub API is unavailable, fall back to the last known SHA: `cabbb90e9471163cfac84bd50ff0296b2803b44c` (v2.3.0).
@@ -149,6 +151,7 @@ When the catalog purpose line is not enough to write the `with:` block — fetch
 
 ```text
 1. WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/releases/latest
-   → extract .tag_name and .target_commitish (or resolve tag SHA via /git/ref/tags/<tag>)
-2. WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<sha>/actions/<name>/README.md
+   → extract .tag_name
+2. Resolve commit SHA via /git/ref/tags/<tag_name> (see Pin table above for the exact procedure)
+3. WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<commit-sha>/actions/<name>/README.md
 ```

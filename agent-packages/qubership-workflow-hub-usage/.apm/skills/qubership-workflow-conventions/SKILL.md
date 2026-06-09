@@ -41,9 +41,9 @@ is missing after reading. Return the full updated workflow file — preserve exi
 ### Path B — starting from scratch
 
 Hand off to `qubership-actions-guide` Step 1 — it routes to the relevant
-domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`/`notifications.md`) or returns
-to the catalog for operations without a guide (Maven, npm, Python, Cleanup).
-Clarifying questions for catalog-only operations live in the catalog (see `qubership-actions-guide` → *Publishing* / *Cleanup*).
+domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`/`notifications.md`/`maven.md`/`cleanup.md`/`utilities.md`) or returns
+to the catalog for operations without a guide (npm, Python).
+Clarifying questions for catalog-only operations live in the catalog (see `qubership-actions-guide` → *Publishing*).
 
 **Infer the trigger from the request** — do not ask unless truly ambiguous.
 See `workflow-patterns.md` → *Trigger rules* for the three standard patterns.
