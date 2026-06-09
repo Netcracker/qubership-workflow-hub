@@ -36,6 +36,12 @@ on:
         required: false
         type: string
         default: "main"
+      gh_app_id:
+        required: false
+        type: string
+    secrets:
+      GH_APP_KEY:
+        required: false
 
 env:
   VERSION: ${{ inputs.version }}
@@ -45,21 +51,29 @@ jobs:
     permissions:
       contents: write
       packages: write
-      id-token: write
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
+      - name: "Prepare app token"
+        if: ${{ inputs.gh_app_id }}
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          app-id: ${{ inputs.gh_app_id }}
+          private-key: ${{ secrets.GH_APP_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.ref}}
           fetch-depth: 0
           persist-credentials: false
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: ${{ inputs.node-version }}
           registry-url: ${{ inputs.registry-url }}
@@ -132,11 +146,17 @@ jobs:
           git diff --color
           git diff >> changes.txt
 
-      - name: Commit Changes
+      - name: Update Source on GitHub
         if: ${{ !inputs.dry-run }}
-        uses: netcracker/qubership-workflow-hub/actions/commit-and-push@cabbb90e9471163cfac84bd50ff0296b2803b44c #v2.3.0
-        with:
-          commit_message: "Update package.json version to $VERSION"
+        env:
+          VERSION: ${{ env.VERSION }}
+          REF: ${{ inputs.ref }}
+        run: |
+          git config --global user.email "qubership-actions[bot]@users.noreply.github.com"
+          git config --global user.name "qubership-actions[bot]"
+          git add .
+          git commit -m "chore: update package.json version to ${VERSION}"
+          git push -u origin ${REF}
 
       - name: Get package version
         if: ${{ !inputs.dry-run }}
