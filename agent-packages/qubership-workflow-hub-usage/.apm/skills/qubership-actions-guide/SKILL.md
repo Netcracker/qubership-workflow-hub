@@ -14,6 +14,7 @@ the relevant supporting document:
 | --- | --- |
 | Docker build, push, image migration | `docker.md` |
 | Security scan (images, source/deps, k8s cluster) | `security.md` |
+| Email notifications | `notifications.md` |
 | Helm chart release, values update | `helm.md` |
 | Git tag, GitHub Release, release assets | `release.md` |
 | PR automation (assigners, commit messages) | `pr.md` |
@@ -90,6 +91,12 @@ Ask only what is missing after inferring from context:
 | `pr-assigner` | Auto-assign reviewers based on config / CODEOWNERS |
 | `pr-add-messages` | Append commit messages to PR description |
 
+### Notifications
+
+| Action | Purpose |
+| --- | --- |
+| `email-action` | Send email notifications via SMTP with fallback to repository variables for connection settings |
+
 ### Utilities
 
 | Action | Purpose |
@@ -111,7 +118,7 @@ Update this table manually when intentionally upgrading to a new release.
 
 | Repo | Latest tag | SHA |
 | --- | --- | --- |
-| `netcracker/qubership-workflow-hub` | `v2.2.1` | `e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1` |
+| `netcracker/qubership-workflow-hub` | `v2.3.0` | `cabbb90e9471163cfac84bd50ff0296b2803b44c` |
 | `netcracker/release-drafter` | `v1.0.0` | `86f4276a3894b5af70480e826c32fe3648ac6a70` |
 | `actions/checkout` | `v6.0.2` | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` |
 | `actions/upload-artifact` | `v7.0.1` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` |
@@ -120,11 +127,11 @@ Update this table manually when intentionally upgrading to a new release.
 | `actions/create-github-app-token` | `v3.2.0` | `bcd2ba49218906704ab6c1aa796996da409d3eb1` |
 
 ```yaml
-uses: netcracker/qubership-workflow-hub/actions/docker-action@e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1  # v2.2.1
+uses: netcracker/qubership-workflow-hub/actions/docker-action@cabbb90e9471163cfac84bd50ff0296b2803b44c  # v2.3.0
 ```
 
 When the catalog purpose line is not enough to write the `with:` block — fetch the action README. Never write inputs from memory.
 
 ```text
-WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1/actions/<name>/README.md
+WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/cabbb90e9471163cfac84bd50ff0296b2803b44c/actions/<name>/README.md
 ```
