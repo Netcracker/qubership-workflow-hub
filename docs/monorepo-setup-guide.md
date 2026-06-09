@@ -638,26 +638,26 @@ mvn clean deploy
    # Release: 1.0.1 (patch), 1.1.0 (minor), or 2.0.0 (major)
    ```
 
-3. **Update version in pom.xml**
+2. **Update version in pom.xml**
 
    ```bash
    cd my-lib-1
    mvn versions:set -DnewVersion=1.0.1 -DgenerateBackupPoms=false
    ```
 
-4. **Build and test**
+3. **Build and test**
 
    ```bash
    mvn clean package
    ```
 
-5. **Deploy**
+4. **Deploy**
 
    ```bash
    mvn deploy -Prelease
    ```
 
-6. **Commit and tag**
+5. **Commit and tag**
 
    ```bash
    git add my-lib-1/pom.xml
@@ -667,7 +667,7 @@ mvn clean deploy
    git push origin my-lib-1-1.0.1
    ```
 
-7. **Update to next SNAPSHOT**
+6. **Update to next SNAPSHOT**
 
    ```bash
    mvn versions:set -DnewVersion=1.0.2-SNAPSHOT -DgenerateBackupPoms=false
@@ -676,7 +676,7 @@ mvn clean deploy
    git push origin main
    ```
 
-8. **Update dependencies in other components** (if needed)
+7. **Update dependencies in other components** (if needed)
 
    ```bash
    cd my-app

@@ -18,7 +18,7 @@ When invoked via `/md-lint [files]`, audit and fix target files directly.
   "MD007": { "indent": 2 },
   "MD013": { "line_length": 120, "code_blocks": false, "tables": false },
   "MD024": { "siblings_only": true },
-  "MD029": { "style": "one" },
+  "MD029": { "style": "ordered" },
   "MD033": { "allowed_elements": ["img", "br", "a", "p"] },
   "MD041": false,
   "MD046": { "style": "fenced" }
@@ -50,7 +50,7 @@ When invoked via `/md-lint [files]`, audit and fix target files directly.
 | MD025 | More than one `#` heading in file | Demote extras to `##` |
 | MD026 | Heading ends with `.`, `,`, `;`, `!`, `?`, `:` | Remove trailing punctuation |
 | MD027 | Multiple spaces after `>` in blockquote | Reduce to one space |
-| MD029 | Ordered list item prefix ≠ `1.` | Replace all prefixes with `1.` |
+| MD029 | Ordered list item numbers are not sequential (e.g. `1, 3, 4` or gap after code block) | Renumber sequentially: `1. 2. 3.` — never skip, never repeat |
 | MD030 | More than one space after list marker | Normalise to one space |
 | MD031 | No blank line before/after fenced code block | Insert missing blank lines |
 | MD032 | List not surrounded by blank lines | Insert blank lines before first and after last item |
@@ -82,8 +82,12 @@ When invoked via `/md-lint [files]`, audit and fix target files directly.
 Tilde fences (`~~~`) are also prohibited (MD048). Solution: close the outer block, show the
 inner example as a standalone fenced block in a separate paragraph.
 
-**MD029 + code fences in lists** — a code fence between list items resets the counter.
-For lists that contain embedded code blocks, use bullet points (`-`) instead of numbered lists.
+**MD029 + code fences in lists** — a fenced code block inside a list item (indented 3+ spaces)
+continues the list without resetting the counter, provided the fence is indented under the item.
+An unindented fence breaks the list and resets the counter — the next item must start from `1.`
+again. When auditing: scan the whole list, detect any counter gaps or resets, and renumber the
+entire sequence `1. 2. 3. …` end-to-end. If a gap is caused by a misplaced unindented fence,
+either indent the fence under its list item or convert the list to bullet points (`-`).
 
 **MD040 language identifiers** — use `text` for plain text, directory trees, or any content
 that has no specific language. Never leave the opening fence bare.
