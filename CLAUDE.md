@@ -223,3 +223,33 @@ Domain guides: `docker.md`, `helm.md`, `security.md`, `release.md`, `notificatio
 - Security rules, pinning policy, permissions → `qubership-workflow-conventions/SKILL.md` only
 - Pipeline patterns, clarifying questions → domain guide files
 - Action inputs/outputs → action `README.md` is the source of truth
+
+### Support playbook
+
+Treat the two skill systems separately:
+
+- Local repo skills in `.claude/skills/` support contributor workflows inside this repo
+- APM skills in `agent-packages/qubership-workflow-hub-usage/.apm/` support workflow generation in consumer repos
+
+When changing a local `.claude/skills/*/SKILL.md` file:
+
+1. Update only the skill that owns the behaviour (`doc-update`, `pull-request`, `zizmor`, etc.)
+2. Keep repo-specific rules here; do not copy APM workflow-generation guidance into local skills
+3. If the skill edits markdown, re-apply `.claude/skills/markdown-rules/SKILL.md`
+4. If the skill audits workflow/action files, keep its pin references aligned with current upstream tags and SHAs
+
+When changing an action or workflow-consumption pattern:
+
+1. Update the action or workflow source first
+2. Update the action README
+3. Update the matching APM domain guide
+4. Update the APM catalog / routing entry if the action is new or the route changed
+5. Update `qubership-workflow-conventions/SKILL.md` only if orchestration or global policy changed
+
+Maintenance checks after any skill change:
+
+- Search for old SHAs across `.claude/skills/` and `agent-packages/`
+- Check that every guide mentioned in APM routing actually exists
+- Check that every active action exposed in the APM catalog still exists under `actions/`
+- Keep shared rules in one place: local repo workflow-security rules in `.claude/skills/zizmor/SKILL.md`, APM generation rules in `qubership-workflow-conventions/`
+- Run diagnostics on the touched markdown files and fix any new issues before finishing
