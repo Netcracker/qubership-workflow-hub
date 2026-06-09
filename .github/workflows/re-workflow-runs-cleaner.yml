@@ -1,0 +1,71 @@
+name: "[REUSABLE] Workflow Runs Cleaner"
+
+on:
+  workflow_call:
+    inputs:
+      workflow-name:
+        description: "Workflow name or filename pattern to clean up (e.g. 'CI Build' or 'ci.yml')"
+        required: true
+        type: string
+      keep-minimum-runs:
+        description: "Number of most-recent runs to keep per workflow. Mutually exclusive with retain-days."
+        required: false
+        type: number
+        default: 0
+      retain-days:
+        description: "Retain runs younger than this many days. Mutually exclusive with keep-minimum-runs."
+        required: false
+        type: number
+        default: 0
+      dry-run:
+        description: "Simulate deletions without performing them"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  clean-workflow-runs:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Validate mutually exclusive inputs
+        env:
+          KEEP_MINIMUM_RUNS: ${{ inputs.keep-minimum-runs }}
+          RETAIN_DAYS: ${{ inputs.retain-days }}
+        run: |
+          if [ "$KEEP_MINIMUM_RUNS" -gt 0 ] && [ "$RETAIN_DAYS" -gt 0 ]; then
+            echo "Error: keep-minimum-runs and retain-days are mutually exclusive. Set only one."
+            exit 1
+          fi
+          if [ "$KEEP_MINIMUM_RUNS" -eq 0 ] && [ "$RETAIN_DAYS" -eq 0 ]; then
+            echo "Error: one of keep-minimum-runs or retain-days must be set to a positive value."
+            exit 1
+          fi
+
+      - name: Delete workflow runs (by count)
+        if: ${{ inputs.keep-minimum-runs > 0 }}
+        uses: Mattraks/delete-workflow-runs@b3018382ca039b53d238908238bd35d1fb14f8ee  # v2.1.0
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          delete_workflow_pattern: ${{ inputs.workflow-name }}
+          retain_days: "0"
+          keep_minimum_runs: ${{ inputs.keep-minimum-runs }}
+          delete_workflow_by_state_pattern: "ALL"
+          delete_run_by_conclusion_pattern: "ALL"
+          dry_run: ${{ inputs.dry-run }}
+
+      - name: Delete workflow runs (by age)
+        if: ${{ inputs.retain-days > 0 }}
+        uses: Mattraks/delete-workflow-runs@b3018382ca039b53d238908238bd35d1fb14f8ee  # v2.1.0
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          delete_workflow_pattern: ${{ inputs.workflow-name }}
+          retain_days: ${{ inputs.retain-days }}
+          keep_minimum_runs: "0"
+          delete_workflow_by_state_pattern: "ALL"
+          delete_run_by_conclusion_pattern: "ALL"
+          dry_run: ${{ inputs.dry-run }}
