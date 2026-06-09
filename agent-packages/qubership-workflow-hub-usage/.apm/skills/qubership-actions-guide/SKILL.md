@@ -22,7 +22,7 @@ the relevant supporting document:
 | Maven build, SNAPSHOT deploy, release | `maven.md` |
 | npm, Python publish | catalog below — no guide file needed |
 | Cleanup (container images, Maven packages) | `cleanup.md` |
-| Utilities | catalog below — no guide file needed |
+| Utilities (wait-for-workflow, custom-event, store-input-params) | `utilities.md` |
 
 Each guide contains: clarifying questions for the user, config file schemas,
 and pipeline patterns for that domain. Read it before picking actions or
