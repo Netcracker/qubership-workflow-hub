@@ -175,3 +175,51 @@ or Edit. This prevents markdownlint CI failures.
 - Do not commit `node_modules/`
 - Do not modify deprecated catalog entries
 - Do not escalate permissions beyond what the action actually needs
+
+---
+
+## APM skill package
+
+The APM skill package for this repo lives at:
+
+```text
+agent-packages/qubership-workflow-hub-usage/.apm/skills/
+```
+
+These are **not** the same as `.claude/skills/` — the three APM skills do not exist in `.claude/skills/`.
+
+### Three-layer model
+
+| Layer | File |
+| --- | --- |
+| Orchestration + conventions | `qubership-workflow-conventions/SKILL.md` |
+| Action catalog + routing | `qubership-actions-guide/SKILL.md` |
+| Domain guides | `qubership-actions-guide/<domain>.md` |
+
+Domain guides: `docker.md`, `helm.md`, `security.md`, `release.md`, `notifications.md`, `maven.md`, `cleanup.md`, `utilities.md`, `pr.md`, `cla.md`
+
+### Update order when changing an action
+
+1. `actions/<name>/README.md`
+2. `qubership-actions-guide/<domain>.md`
+3. Catalog table in `qubership-actions-guide/SKILL.md`
+4. Path A + Path B in `qubership-workflow-conventions/SKILL.md` — only if the route changes
+
+### Checklist
+
+- [ ] Action README updated
+- [ ] Catalog line updated
+- [ ] Domain guide updated (or new guide created if new domain)
+- [ ] Path A and Path B in conventions cover the guide
+- [ ] Pin table SHA updated; grep old SHA across `agent-packages/` to catch drift
+
+### Pinning
+
+- `netcracker/qubership-workflow-hub`: resolve SHA dynamically via GitHub API at use time — never hardcode.
+- Third-party actions: hardcoded in Pin table in `qubership-actions-guide/SKILL.md`, update manually on upgrade.
+
+### No-duplication rule
+
+- Security rules, pinning policy, permissions → `qubership-workflow-conventions/SKILL.md` only
+- Pipeline patterns, clarifying questions → domain guide files
+- Action inputs/outputs → action `README.md` is the source of truth
