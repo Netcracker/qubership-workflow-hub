@@ -10,22 +10,30 @@ permissions:
 
 jobs:
   prepare:
+    name: Prepare repositories matrix
     runs-on: ubuntu-latest
 
     outputs:
-      repos: ${{ steps.read-repos.outputs.repos }}
+      repos: ${{ steps.read-config.outputs.repos }}
 
     steps:
       - name: Checkout controller repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
 
       - name: Read repositories config
-        id: read-repos
+        id: read-config
         run: |
-          REPOS=$(jq -c . .qubership/apm-update-repos.json)
+          REPOS=$(yq -o=json '.repositories | map(select(.enabled != false))' .github/apm-update-repos.yml | jq -c .)
           echo "repos=$REPOS" >> "$GITHUB_OUTPUT"
 
   update-apm:
+    name: Update APM in ${{ matrix.repo.name }}
     needs: prepare
     runs-on: ubuntu-latest
 
@@ -37,9 +45,10 @@ jobs:
 
     steps:
       - name: Checkout target repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
-          repository: ${{ matrix.repo }}
+          repository: ${{ matrix.repo.name }}
+          ref: ${{ matrix.repo.branch }}
           token: ${{ secrets.APM_UPDATE_TOKEN }}
           path: target-repo
           fetch-depth: 1
@@ -47,12 +56,24 @@ jobs:
       - name: Setup APM
         uses: microsoft/apm-action@ce02c22416172beb70072c5910b2163ee3f006f6  # v1.9.1
         with:
-          setup-only: 'true'
+          setup-only: "true"
+
+      - name: Ensure APM target is configured
+        working-directory: target-repo
+        run: |
+          if [ -f apm.yml ]; then
+            if ! yq '.targets' apm.yml | grep -q "${{ matrix.repo.target }}"; then
+              yq -i '.targets = ["${{ matrix.repo.target }}"]' apm.yml
+            fi
+          else
+            echo "apm.yml not found"
+            exit 1
+          fi
 
       - name: Update APM packages
         working-directory: target-repo
         run: |
-          echo "::group::Processing ${{ matrix.repo }}"
+          echo "::group::Processing ${{ matrix.repo.name }}"
           apm update --yes
           echo "::endgroup::"
 
@@ -62,27 +83,35 @@ jobs:
         with:
           token: ${{ secrets.APM_UPDATE_TOKEN }}
           path: target-repo
+          base: ${{ matrix.repo.branch }}
           branch: chore/update-apm-packages
           delete-branch: true
           title: "Update APM packages"
           commit-message: "Update APM packages"
           body: |
-            This PR updates APM-managed packages using `apm update --yes`.
+            This PR updates APM-managed packages using:
 
-            Target repository: `${{ matrix.repo }}`
+            ```bash
+            apm update --yes
+            ```
+
+            Target repository: `${{ matrix.repo.name }}`
+            Target branch: `${{ matrix.repo.branch }}`
+            APM target: `${{ matrix.repo.target }}`
 
             Please review changes in:
+            - `apm.yml`
             - `apm.lock.yaml`
             - deployed APM files
 
       - name: Log result
         run: |
           if [ "${{ steps.create-pr.outputs.pull-request-url }}" != "" ]; then
-            echo "::notice title=PR created (${{ matrix.repo }})::${{ steps.create-pr.outputs.pull-request-url }}"
-            echo "### ${{ matrix.repo }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice title=PR created (${{ matrix.repo.name }})::${{ steps.create-pr.outputs.pull-request-url }}"
+            echo "### ${{ matrix.repo.name }}" >> "$GITHUB_STEP_SUMMARY"
             echo "PR created: ${{ steps.create-pr.outputs.pull-request-url }}" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "No changes in ${{ matrix.repo }}, skipping PR"
-            echo "### ${{ matrix.repo }}" >> "$GITHUB_STEP_SUMMARY"
-            echo "No changes, PR skipped" >> "$GITHUB_STEP_SUMMARY"
+            echo "No changes in ${{ matrix.repo.name }}, PR not created"
+            echo "### ${{ matrix.repo.name }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "No changes, PR not created" >> "$GITHUB_STEP_SUMMARY"
           fi

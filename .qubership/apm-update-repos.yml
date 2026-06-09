@@ -1,0 +1,11 @@
+repositories:
+  - name: Netcracker/qubership-workflow-hub
+    enabled: true
+    branch: main
+    target: claude
+
+  # пример для следующих репозиториев
+  # - name: Netcracker/another-repo
+  #   enabled: true
+  #   branch: main
+  #   target: claude
