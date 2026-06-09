@@ -7,3 +7,7 @@ rules:
     disable: true
   secrets-outside-env:
     disable: true
+  dangerous-triggers:
+    ignore:
+      - cla.yaml
+      - pr-assigner.yml

@@ -22,6 +22,7 @@ Organization-level secrets and variables referenced across actions and reusable 
 | `secrets.PYPI_API_USER` | API user name for publishing Python packages to PyPI. | Company |
 | `secrets.SONAR_TOKEN` | Token to authenticate with SonarQube / SonarCloud for code quality analysis. | Company |
 | `secrets.WORKFLOWS_TOKEN` | Classic PAT including `workflow` scope (needed to trigger/modify workflows or dispatch across repository). Deprecated. Replaced by `secrets.GH_ACCESS_TOKEN`. | Company |
+| `secrets.EMAIL_PASSWORD` | SMTP password or Gmail App Password for sending email notifications via `email-action`. | Company |
 
 ## Organization Variables
 
@@ -31,6 +32,9 @@ Organization-level secrets and variables referenced across actions and reusable 
 | `SONAR_HOST_URL` | URL of the SonarQube/SonarCloud server for code quality analysis. |
 | `SONAR_ORGANIZATION` | Organization identifier in SonarQube/SonarCloud for project association. |
 | `SONAR_PLUGIN_VERSION` | Version of the SonarQube plugin to use in analysis workflows. |
+| `EMAIL_SMTP_HOST` | SMTP server hostname for email notifications (e.g. `smtp.gmail.com`). Used by `email-action`. |
+| `EMAIL_SMTP_PORT` | SMTP server port for email notifications (e.g. `587` for STARTTLS). Used by `email-action`. |
+| `EMAIL_FROM` | Sender email address for notifications (e.g. `noreply.qubership@gmail.com`). Used by `email-action`. |
 
 ## Usage Guidelines
 

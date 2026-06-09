@@ -1,0 +1,144 @@
+name: "Email Notification"
+description: "Send email notifications via SMTP with fallback to repository variables for connection settings."
+
+inputs:
+  server-address:
+    description: "SMTP server address. Falls back to EMAIL_SMTP_HOST env var."
+    required: false
+    default: ""
+  server-port:
+    description: "SMTP server port. Falls back to EMAIL_SMTP_PORT env var."
+    required: false
+    default: ""
+  secure:
+    description: "Use TLS. Set to 'true' for port 465, leave empty for STARTTLS on port 587."
+    required: false
+    default: ""
+  username:
+    description: "SMTP username. Falls back to EMAIL_USERNAME env var."
+    required: false
+    default: ""
+  password:
+    description: "SMTP password or app password. Falls back to EMAIL_PASSWORD env var."
+    required: false
+    default: ""
+  from:
+    description: "Sender address or display name with address, e.g. 'Bot <bot@example.com>'. Falls back to EMAIL_FROM env var."
+    required: false
+    default: ""
+  to:
+    description: "Recipient addresses, comma-separated. Falls back to EMAIL_TO env var."
+    required: false
+    default: ""
+  subject:
+    description: "Email subject."
+    required: true
+  body:
+    description: "Plain-text body or path prefixed with file://."
+    required: false
+    default: ""
+  html-body:
+    description: "HTML body or path prefixed with file://. Takes precedence over body when set."
+    required: false
+    default: ""
+  cc:
+    description: "Carbon copy recipients, comma-separated."
+    required: false
+    default: ""
+  bcc:
+    description: "Blind carbon copy recipients, comma-separated."
+    required: false
+    default: ""
+  reply-to:
+    description: "Reply-To address."
+    required: false
+    default: ""
+  attachments:
+    description: "Attachment file paths, comma-separated."
+    required: false
+    default: ""
+  priority:
+    description: "Email priority: 'high', 'normal', or 'low'."
+    required: false
+    default: ""
+  convert-markdown:
+    description: "Convert body from Markdown to HTML."
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Resolve connection parameters
+      id: resolve
+      shell: bash
+      env:
+        INPUT_SERVER_ADDRESS: ${{ inputs.server-address }}
+        INPUT_SERVER_PORT: ${{ inputs.server-port }}
+        INPUT_SECURE: ${{ inputs.secure }}
+        INPUT_USERNAME: ${{ inputs.username }}
+        INPUT_PASSWORD: ${{ inputs.password }}
+        INPUT_FROM: ${{ inputs.from }}
+        INPUT_TO: ${{ inputs.to }}
+      run: |
+        set -euo pipefail
+
+        SERVER_ADDRESS="${INPUT_SERVER_ADDRESS:-${EMAIL_SMTP_HOST:-smtp.gmail.com}}"
+        SERVER_PORT="${INPUT_SERVER_PORT:-${EMAIL_SMTP_PORT:-587}}"
+        SECURE="${INPUT_SECURE:-${EMAIL_SECURE:-false}}"
+        USERNAME="${INPUT_USERNAME:-${EMAIL_USERNAME:-}}"
+        PASSWORD="${INPUT_PASSWORD:-${EMAIL_PASSWORD:-}}"
+        FROM="${INPUT_FROM:-${EMAIL_FROM:-}}"
+        TO="${INPUT_TO:-${EMAIL_TO:-}}"
+
+        if [ -z "$PASSWORD" ]; then
+          echo "::error::SMTP password is required. Provide via 'password' input or EMAIL_PASSWORD env var."
+          exit 1
+        fi
+        if [ -z "$FROM" ]; then
+          echo "::error::Sender address is required. Provide via 'from' input or EMAIL_FROM env var."
+          exit 1
+        fi
+        if [ -z "$TO" ]; then
+          echo "::error::Recipient address is required. Provide via 'to' input or EMAIL_TO env var."
+          exit 1
+        fi
+
+        # Mask password before any output so it never appears in logs
+        echo "::add-mask::$PASSWORD"
+
+        echo "server-address=$SERVER_ADDRESS" >> "$GITHUB_OUTPUT"
+        echo "server-port=$SERVER_PORT"       >> "$GITHUB_OUTPUT"
+        echo "secure=$SECURE"                 >> "$GITHUB_OUTPUT"
+        echo "username=$USERNAME"             >> "$GITHUB_OUTPUT"
+        echo "from=$FROM"                     >> "$GITHUB_OUTPUT"
+        echo "to=$TO"                         >> "$GITHUB_OUTPUT"
+
+        # Password is passed via env to avoid exposing it in GITHUB_OUTPUT
+        echo "RESOLVED_SMTP_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
+
+        echo "Resolved SMTP: ${SERVER_ADDRESS}:${SERVER_PORT} (secure=${SECURE})"
+        echo "From: ${FROM} → To: ${TO}"
+
+    - name: Send email
+      uses: dawidd6/action-send-mail@6d98ae34d733f9a723a9e04e94f2f24ba05e1402 #v6
+      env:
+        RESOLVED_SMTP_PASSWORD: ${{ env.RESOLVED_SMTP_PASSWORD }}
+      with:
+        server_address: ${{ steps.resolve.outputs.server-address }}
+        server_port:    ${{ steps.resolve.outputs.server-port }}
+        secure:         ${{ steps.resolve.outputs.secure }}
+        username:       ${{ steps.resolve.outputs.username }}
+        password:       ${{ env.RESOLVED_SMTP_PASSWORD }}
+        from:           ${{ steps.resolve.outputs.from }}
+        to:             ${{ steps.resolve.outputs.to }}
+        subject:        ${{ inputs.subject }}
+        body:           ${{ inputs.body }}
+        html_body:      ${{ inputs.html-body }}
+        cc:             ${{ inputs.cc }}
+        bcc:            ${{ inputs.bcc }}
+        reply_to:       ${{ inputs.reply-to }}
+        attachments:    ${{ inputs.attachments }}
+        priority:       ${{ inputs.priority }}
+        convert_markdown: ${{ inputs.convert-markdown }}
+
