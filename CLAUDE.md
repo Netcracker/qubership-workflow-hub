@@ -196,7 +196,8 @@ These are **not** the same as `.claude/skills/` — the three APM skills do not 
 | Action catalog + routing | `qubership-actions-guide/SKILL.md` |
 | Domain guides | `qubership-actions-guide/<domain>.md` |
 
-Domain guides: `docker.md`, `helm.md`, `security.md`, `release.md`, `notifications.md`, `maven.md`, `cleanup.md`, `utilities.md`, `pr.md`, `cla.md`
+Domain guides: `docker.md`, `helm.md`, `security.md`, `release.md`, `notifications.md`,
+`maven.md`, `cleanup.md`, `utilities.md`, `pr.md`, `cla.md`
 
 ### Update order when changing an action
 
@@ -251,5 +252,6 @@ Maintenance checks after any skill change:
 - Search for old SHAs across `.claude/skills/` and `agent-packages/`
 - Check that every guide mentioned in APM routing actually exists
 - Check that every active action exposed in the APM catalog still exists under `actions/`
-- Keep shared rules in one place: local repo workflow-security rules in `.claude/skills/zizmor/SKILL.md`, APM generation rules in `qubership-workflow-conventions/`
+- Keep shared rules in one place: local repo workflow-security rules in `.claude/skills/zizmor/SKILL.md`,
+  APM generation rules in `qubership-workflow-conventions/`
 - Run diagnostics on the touched markdown files and fix any new issues before finishing

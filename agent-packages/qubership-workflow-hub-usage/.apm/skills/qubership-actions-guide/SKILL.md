@@ -28,7 +28,8 @@ Each guide contains: clarifying questions for the user, config file schemas,
 and pipeline patterns for that domain. Read it before picking actions or
 asking questions.
 
-Reusable workflows (`re-*.yml` in `netcracker/qubership-workflow-hub`) are out of scope — consume them as documented, do not redesign them here.
+Reusable workflows (`re-*.yml` in `netcracker/qubership-workflow-hub`) are out of scope —
+consume them as documented, do not redesign them here.
 
 ## Step 2 — pick actions from the catalog
 
