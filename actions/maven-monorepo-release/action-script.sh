@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+TOP_DIR="${GITHUB_WORKSPACE}"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -83,10 +85,9 @@ validate_monorepo_structure() {
 
     # For non-parent components, validate parent reference
     if [[ "$component" != "parent" ]]; then
-        local top_dir=$(pwd)
         local parent_groupid
         parent_groupid=$(cd "$component" && mvn help:evaluate -Dexpression=project.parent.groupId -q -DforceStdout 2>/dev/null || echo "")
-        cd "$top_dir"
+        cd "$TOP_DIR"
         if [[ -z "$parent_groupid" ]]; then
             log_warning "Component '$component' does not have a parent POM reference"
         else
@@ -99,11 +100,10 @@ validate_monorepo_structure() {
 
 # Get current version of component
 get_current_version() {
-    local top_dir=$(pwd)
     local component=$1
     cd "$component"
     mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null || echo ""
-    cd "$top_dir"
+    cd "$TOP_DIR"
 }
 
 # Parse version and bump it
@@ -147,7 +147,6 @@ get_next_snapshot_version() {
 
 # Update version in pom.xml using Maven
 update_pom_version() {
-    local top_dir=$(pwd)
     local component=$1
     local new_version=$2
 
@@ -155,13 +154,12 @@ update_pom_version() {
     cd "$component"
     mvn versions:set -DnewVersion="$new_version" -DgenerateBackupPoms=false -q
     log_success "Version updated to $new_version"
-    cd "$top_dir"
+    cd "$TOP_DIR"
     git add "$component/pom.xml"
 }
 
 # Update dependency version in a pom.xml file
 update_dependency_version() {
-    local top_dir=$(pwd)
     local pom_file=$1
     local groupid=$2
     local artifactid=$3
@@ -175,7 +173,7 @@ update_dependency_version() {
         mvn versions:set-property -Dproperty="${VERSION_PROPERTY:-}" -DnewVersion="$new_version" -DgenerateBackupPoms=false -q || true
     fi
     git add "$(basename "$pom_file")"
-    cd "$top_dir"
+    cd "$TOP_DIR"
 }
 
 # Create git tag
@@ -221,7 +219,6 @@ commit_changes() {
 
 # Build and deploy component
 build_and_deploy() {
-    local top_dir=$(pwd)
     local component=$1
     local version=$2
     local publish_target=$3
@@ -268,12 +265,11 @@ build_and_deploy() {
         log_success "Maven Central deployment successful"
     fi
 
-    cd "$top_dir"
+    cd "$TOP_DIR"
 }
 
 # Get component info from pom.xml
 get_component_info() {
-    local top_dir=$(pwd)
     local component=$1
 
     cd "$component"
@@ -285,7 +281,7 @@ get_component_info() {
     artifactid=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout 2>/dev/null || echo "")
 
     echo "$groupid:$artifactid"
-    cd "$top_dir"
+    cd "$TOP_DIR"
 }
 
 # Release component
@@ -334,9 +330,11 @@ release_component() {
         eval "$build_cmd"
 
         log_success "Dry run validation successful"
-        echo "RELEASE_VERSION=$new_version" >> "$GITHUB_OUTPUT"
-        echo "COMPONENT_RELEASED=$component" >> "$GITHUB_OUTPUT"
-        echo "ARTIFACTS=$component_info:$new_version" >> "$GITHUB_OUTPUT"
+        {
+            echo "RELEASE_VERSION=$new_version"
+            echo "COMPONENT_RELEASED=$component"
+            echo "ARTIFACTS=$component_info:$new_version"
+        } >> "$GITHUB_OUTPUT"
         return 0
     fi
 
@@ -374,7 +372,7 @@ release_component() {
             update_dependency_version "$dep_component/pom.xml" "${parent_info%:*}" "${parent_info#*:}" "$new_version"
             update_pom_version "$dep_component" "$(get_current_version "$dep_component")"
         done < <(find . -maxdepth 2 -name "pom.xml" -type f -not -path "*/target/*" \
-            -exec grep -l "parent" {} \; | xargs -I {} dirname {} | sort -u)
+            -exec grep -lq "parent" {} \; -printf '%h\n' | sort -u)
     fi
 
     # Update dependencies in other components if they depend on this component
@@ -397,9 +395,11 @@ release_component() {
     log_success "Release version: $new_version"
     log_success "=========================================="
 
-    echo "RELEASE_VERSION=$new_version" >> "$GITHUB_OUTPUT"
-    echo "COMPONENT_RELEASED=$component" >> "$GITHUB_OUTPUT"
-    echo "ARTIFACTS=$component_info:$new_version" >> "$GITHUB_OUTPUT"
+    {
+        echo "RELEASE_VERSION=$new_version"
+        echo "COMPONENT_RELEASED=$component"
+        echo "ARTIFACTS=$component_info:$new_version"
+    } >> "$GITHUB_OUTPUT"
 }
 
 # Export functions for sourcing
