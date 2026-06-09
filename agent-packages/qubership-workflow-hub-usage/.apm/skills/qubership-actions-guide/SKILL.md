@@ -116,22 +116,39 @@ Deprecated (do not use): `commit-and-push`, `pom-updater`, `tag-checker`, `archi
 Use these exact SHAs in `uses:` lines. For SHA pinning rules see `qubership-workflow-conventions` → *Pinning*.
 Update this table manually when intentionally upgrading to a new release.
 
+### netcracker/qubership-workflow-hub
+
+Always resolve the latest release SHA dynamically:
+
+```text
+1. WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/releases/latest
+   → extract .tag_name (e.g. v2.3.0) and note the SHA from .target_commitish or
+     WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/git/ref/tags/<tag_name>
+     → extract .object.sha (if .object.type == "tag", follow .object.url to get the tagged commit SHA)
+2. Use that SHA in uses: lines.
+```
+
+If the GitHub API is unavailable, fall back to the last known SHA: `cabbb90e9471163cfac84bd50ff0296b2803b44c` (v2.3.0).
+
+```yaml
+uses: netcracker/qubership-workflow-hub/actions/docker-action@<resolved-sha>  # <resolved-tag>
+```
+
+### Third-party actions (update manually on upgrade)
+
 | Repo | Latest tag | SHA |
 | --- | --- | --- |
-| `netcracker/qubership-workflow-hub` | `v2.3.0` | `cabbb90e9471163cfac84bd50ff0296b2803b44c` |
 | `netcracker/release-drafter` | `v1.0.0` | `86f4276a3894b5af70480e826c32fe3648ac6a70` |
-| `actions/checkout` | `v6.0.2` | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` |
+| `actions/checkout` | `v6.0.3` | `df4cb1c069e1874edd31b4311f1884172cec0e10` |
 | `actions/upload-artifact` | `v7.0.1` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` |
 | `actions/download-artifact` | `v8.0.1` | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` |
 | `actions/setup-python` | `v6.2.0` | `a309ff8b426b58ec0e2a45f0f869d46889d02405` |
 | `actions/create-github-app-token` | `v3.2.0` | `bcd2ba49218906704ab6c1aa796996da409d3eb1` |
 
-```yaml
-uses: netcracker/qubership-workflow-hub/actions/docker-action@cabbb90e9471163cfac84bd50ff0296b2803b44c  # v2.3.0
-```
-
 When the catalog purpose line is not enough to write the `with:` block — fetch the action README. Never write inputs from memory.
 
 ```text
-WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/cabbb90e9471163cfac84bd50ff0296b2803b44c/actions/<name>/README.md
+1. WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/releases/latest
+   → extract .tag_name and .target_commitish (or resolve tag SHA via /git/ref/tags/<tag>)
+2. WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<sha>/actions/<name>/README.md
 ```

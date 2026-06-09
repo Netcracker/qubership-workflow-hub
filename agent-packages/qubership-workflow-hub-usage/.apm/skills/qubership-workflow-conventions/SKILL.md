@@ -34,14 +34,14 @@ this question and go straight to *Path A*.
 ### Path A — existing workflow or configs
 
 Read the workflow and any config files it references. Load the relevant
-domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) from
+domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`/`notifications.md`) from
 `qubership-actions-guide` and use its migration table. Ask only about what
 is missing after reading. Return the full updated workflow file — preserve existing structure, change only what needs changing.
 
 ### Path B — starting from scratch
 
 Hand off to `qubership-actions-guide` Step 1 — it routes to the relevant
-domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) or returns
+domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`/`notifications.md`) or returns
 to the catalog for operations without a guide (Maven, npm, Python, Cleanup).
 Clarifying questions for catalog-only operations live in the catalog (see `qubership-actions-guide` → *Publishing* / *Cleanup*).
 
