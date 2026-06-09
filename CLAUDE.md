@@ -175,3 +175,83 @@ or Edit. This prevents markdownlint CI failures.
 - Do not commit `node_modules/`
 - Do not modify deprecated catalog entries
 - Do not escalate permissions beyond what the action actually needs
+
+---
+
+## APM skill package
+
+The APM skill package for this repo lives at:
+
+```text
+agent-packages/qubership-workflow-hub-usage/.apm/skills/
+```
+
+These are **not** the same as `.claude/skills/` — the three APM skills do not exist in `.claude/skills/`.
+
+### Three-layer model
+
+| Layer | File |
+| --- | --- |
+| Orchestration + conventions | `qubership-workflow-conventions/SKILL.md` |
+| Action catalog + routing | `qubership-actions-guide/SKILL.md` |
+| Domain guides | `qubership-actions-guide/<domain>.md` |
+
+Domain guides: `docker.md`, `helm.md`, `security.md`, `release.md`, `notifications.md`,
+`maven.md`, `cleanup.md`, `utilities.md`, `pr.md`, `cla.md`
+
+### Update order when changing an action
+
+1. `actions/<name>/README.md`
+2. `qubership-actions-guide/<domain>.md`
+3. Catalog table in `qubership-actions-guide/SKILL.md`
+4. Path A + Path B in `qubership-workflow-conventions/SKILL.md` — only if the route changes
+
+### Checklist
+
+- [ ] Action README updated
+- [ ] Catalog line updated
+- [ ] Domain guide updated (or new guide created if new domain)
+- [ ] Path A and Path B in conventions cover the guide
+- [ ] Pin table SHA updated; grep old SHA across `agent-packages/` to catch drift
+
+### Pinning
+
+- `netcracker/qubership-workflow-hub`: resolve SHA dynamically via GitHub API at use time — never hardcode.
+- Third-party actions: hardcoded in Pin table in `qubership-actions-guide/SKILL.md`, update manually on upgrade.
+
+### No-duplication rule
+
+- Security rules, pinning policy, permissions → `qubership-workflow-conventions/SKILL.md` only
+- Pipeline patterns, clarifying questions → domain guide files
+- Action inputs/outputs → action `README.md` is the source of truth
+
+### Support playbook
+
+Treat the two skill systems separately:
+
+- Local repo skills in `.claude/skills/` support contributor workflows inside this repo
+- APM skills in `agent-packages/qubership-workflow-hub-usage/.apm/` support workflow generation in consumer repos
+
+When changing a local `.claude/skills/*/SKILL.md` file:
+
+1. Update only the skill that owns the behaviour (`doc-update`, `pull-request`, `zizmor`, etc.)
+2. Keep repo-specific rules here; do not copy APM workflow-generation guidance into local skills
+3. If the skill edits markdown, re-apply `.claude/skills/markdown-rules/SKILL.md`
+4. If the skill audits workflow/action files, keep its pin references aligned with current upstream tags and SHAs
+
+When changing an action or workflow-consumption pattern:
+
+1. Update the action or workflow source first
+2. Update the action README
+3. Update the matching APM domain guide
+4. Update the APM catalog / routing entry if the action is new or the route changed
+5. Update `qubership-workflow-conventions/SKILL.md` only if orchestration or global policy changed
+
+Maintenance checks after any skill change:
+
+- Search for old SHAs across `.claude/skills/` and `agent-packages/`
+- Check that every guide mentioned in APM routing actually exists
+- Check that every active action exposed in the APM catalog still exists under `actions/`
+- Keep shared rules in one place: local repo workflow-security rules in `.claude/skills/zizmor/SKILL.md`,
+  APM generation rules in `qubership-workflow-conventions/`
+- Run diagnostics on the touched markdown files and fix any new issues before finishing

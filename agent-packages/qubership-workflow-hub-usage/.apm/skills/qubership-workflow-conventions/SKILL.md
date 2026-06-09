@@ -33,17 +33,18 @@ this question and go straight to *Path A*.
 
 ### Path A — existing workflow or configs
 
-Read the workflow and any config files it references. Load the relevant
-domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) from
-`qubership-actions-guide` and use its migration table. Ask only about what
+Read the workflow and any config files it references. Load the relevant domain guide from
+`qubership-actions-guide` (`docker.md`, `helm.md`, `security.md`, `release.md`, `notifications.md`,
+`maven.md`, `cleanup.md`, `utilities.md`, `pr.md`, `cla.md`) and use its migration table. Ask only about what
 is missing after reading. Return the full updated workflow file — preserve existing structure, change only what needs changing.
 
 ### Path B — starting from scratch
 
-Hand off to `qubership-actions-guide` Step 1 — it routes to the relevant
-domain guide (`docker.md`/`helm.md`/`security.md`/`release.md`) or returns
-to the catalog for operations without a guide (Maven, npm, Python, Cleanup).
-Clarifying questions for catalog-only operations live in the catalog (see `qubership-actions-guide` → *Publishing* / *Cleanup*).
+Hand off to `qubership-actions-guide` Step 1 — it routes to the relevant domain guide
+(`docker.md`, `helm.md`, `security.md`, `release.md`, `notifications.md`, `maven.md`,
+`cleanup.md`, `utilities.md`, `pr.md`, `cla.md`) or returns to the catalog for operations
+without a guide (npm, Python).
+Clarifying questions for catalog-only operations live in the catalog (see `qubership-actions-guide` → *Publishing*).
 
 **Infer the trigger from the request** — do not ask unless truly ambiguous.
 See `workflow-patterns.md` → *Trigger rules* for the three standard patterns.

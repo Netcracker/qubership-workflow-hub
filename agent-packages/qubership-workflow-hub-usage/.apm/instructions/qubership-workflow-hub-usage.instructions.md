@@ -11,7 +11,7 @@ apply the `qubership-workflow-conventions` skill.
 
 When a workflow step needs a specific Qubership action (Docker build/push,
 version/tag rendering, Maven/npm/Python publishing, package cleanup, Helm charts,
-security scans, etc.) and you need to find the right action or read its README,
+security scans, email notifications, etc.) and you need to find the right action or read its README,
 apply the `qubership-actions-guide` skill.
 
 When the user asks for a CI/CD workflow that may already exist as a curated

@@ -14,6 +14,7 @@ the relevant supporting document:
 | --- | --- |
 | Docker build, push, image migration | `docker.md` |
 | Security scan (images, source/deps, k8s cluster) | `security.md` |
+| Email notifications | `notifications.md` |
 | Helm chart release, values update | `helm.md` |
 | Git tag, GitHub Release, release assets | `release.md` |
 | PR automation (assigners, commit messages) | `pr.md` |
@@ -21,13 +22,14 @@ the relevant supporting document:
 | Maven build, SNAPSHOT deploy, release | `maven.md` |
 | npm, Python publish | catalog below — no guide file needed |
 | Cleanup (container images, Maven packages) | `cleanup.md` |
-| Utilities | catalog below — no guide file needed |
+| Utilities (wait-for-workflow, custom-event, store-input-params) | `utilities.md` |
 
 Each guide contains: clarifying questions for the user, config file schemas,
 and pipeline patterns for that domain. Read it before picking actions or
 asking questions.
 
-Reusable workflows (`re-*.yml` in `netcracker/qubership-workflow-hub`) are out of scope — consume them as documented, do not redesign them here.
+Reusable workflows (`re-*.yml` in `netcracker/qubership-workflow-hub`) are out of scope —
+consume them as documented, do not redesign them here.
 
 ## Step 2 — pick actions from the catalog
 
@@ -90,6 +92,12 @@ Ask only what is missing after inferring from context:
 | `pr-assigner` | Auto-assign reviewers based on config / CODEOWNERS |
 | `pr-add-messages` | Append commit messages to PR description |
 
+### Notifications
+
+| Action | Purpose |
+| --- | --- |
+| `email-action` | Send email notifications via SMTP with fallback to repository variables for connection settings |
+
 ### Utilities
 
 | Action | Purpose |
@@ -109,22 +117,42 @@ Deprecated (do not use): `commit-and-push`, `pom-updater`, `tag-checker`, `archi
 Use these exact SHAs in `uses:` lines. For SHA pinning rules see `qubership-workflow-conventions` → *Pinning*.
 Update this table manually when intentionally upgrading to a new release.
 
+### netcracker/qubership-workflow-hub
+
+Always resolve the latest release SHA dynamically:
+
+```text
+1. WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/releases/latest
+   → extract .tag_name (e.g. v2.3.0)
+2. WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/git/ref/tags/<tag_name>
+   → extract .object.sha and .object.type
+   - if .object.type == "commit" → use .object.sha directly
+   - if .object.type == "tag" (annotated tag) → WebFetch .object.url → extract .object.sha (the commit SHA)
+3. Use that commit SHA in uses: lines. Never use .target_commitish — it is a branch name, not a SHA.
+```
+
+If the GitHub API is unavailable, fall back to the last known SHA: `cabbb90e9471163cfac84bd50ff0296b2803b44c` (v2.3.0).
+
+```yaml
+uses: netcracker/qubership-workflow-hub/actions/docker-action@<resolved-sha>  # <resolved-tag>
+```
+
+### Third-party actions (update manually on upgrade)
+
 | Repo | Latest tag | SHA |
 | --- | --- | --- |
-| `netcracker/qubership-workflow-hub` | `v2.2.1` | `e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1` |
 | `netcracker/release-drafter` | `v1.0.0` | `86f4276a3894b5af70480e826c32fe3648ac6a70` |
-| `actions/checkout` | `v6.0.2` | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` |
+| `actions/checkout` | `v6.0.3` | `df4cb1c069e1874edd31b4311f1884172cec0e10` |
 | `actions/upload-artifact` | `v7.0.1` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` |
 | `actions/download-artifact` | `v8.0.1` | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` |
 | `actions/setup-python` | `v6.2.0` | `a309ff8b426b58ec0e2a45f0f869d46889d02405` |
 | `actions/create-github-app-token` | `v3.2.0` | `bcd2ba49218906704ab6c1aa796996da409d3eb1` |
 
-```yaml
-uses: netcracker/qubership-workflow-hub/actions/docker-action@e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1  # v2.2.1
-```
-
 When the catalog purpose line is not enough to write the `with:` block — fetch the action README. Never write inputs from memory.
 
 ```text
-WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/e64a1ee2fc2f68ab44a4ef416c27d83ce36ba8e1/actions/<name>/README.md
+1. WebFetch → https://api.github.com/repos/netcracker/qubership-workflow-hub/releases/latest
+   → extract .tag_name
+2. Resolve commit SHA via /git/ref/tags/<tag_name> (see Pin table above for the exact procedure)
+3. WebFetch → https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/<commit-sha>/actions/<name>/README.md
 ```
