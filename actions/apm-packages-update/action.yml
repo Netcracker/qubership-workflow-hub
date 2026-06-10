@@ -15,9 +15,9 @@ inputs:
     required: false
     default: "false"
   target:
-    description: APM target name (e.g. claude)
+    description: Optional APM target override; accepts a single target or comma-separated list
     required: false
-    default: claude
+    default: ""
   token:
     description: GitHub token with permission to create branches and pull requests
     required: true
@@ -32,11 +32,13 @@ runs:
         sudo chmod +x /usr/local/bin/yq
         yq --version
 
-    - name: Ensure APM target is configured
+    - name: Resolve APM target
+      id: resolve-target
       shell: bash
       env:
-        APM_TARGET: ${{ inputs.target }}
+        INPUT_APM_TARGET: ${{ inputs.target }}
       run: |
+        set -eu
         if [ ! -f apm.yml ]; then
           echo "apm.yml not found"
           exit 1
@@ -45,9 +47,36 @@ runs:
         if [ "$(yq '.target' apm.yml)" != "null" ]; then
           yq -i '.targets = .target | del(.target)' apm.yml
         fi
-        if ! yq '.targets[]' apm.yml | grep -qxF "$APM_TARGET"; then
-          yq -i '.targets += [env(APM_TARGET)]' apm.yml
+
+        if [ -n "$INPUT_APM_TARGET" ]; then
+          resolved_target="$INPUT_APM_TARGET"
+        else
+          resolved_target="$(yq -r '(.targets // []) | join(",")' apm.yml)"
         fi
+
+        OLDIFS="$IFS"
+        IFS=','
+        read -r -a raw_targets <<< "$resolved_target"
+        IFS="$OLDIFS"
+
+        normalized_targets=()
+        for target in "${raw_targets[@]}"; do
+          target="${target#"${target%%[![:space:]]*}"}"
+          target="${target%"${target##*[![:space:]]}"}"
+          if [ -n "$target" ]; then
+            normalized_targets+=("$target")
+          fi
+        done
+
+        if [ "${#normalized_targets[@]}" -eq 0 ]; then
+          echo "apm.yml does not define any APM targets and no target override was provided"
+          exit 1
+        fi
+
+        resolved_target="$(IFS=,; echo "${normalized_targets[*]}")"
+
+        echo "Resolved APM target: $resolved_target"
+        echo "target=$resolved_target" >> "$GITHUB_OUTPUT"
 
     - name: Setup APM
       uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
@@ -59,7 +88,7 @@ runs:
       if: ${{ inputs.debug == 'true' }}
       shell: bash
       env:
-        APM_TARGET: ${{ inputs.target }}
+        APM_TARGET: ${{ steps.resolve-target.outputs.target }}
       run: |
         set -eu
         echo "== Workspace =="
@@ -102,7 +131,7 @@ runs:
       shell: bash
       env:
         APM_DRY_RUN: ${{ inputs.dry-run }}
-        APM_TARGET: ${{ inputs.target }}
+        APM_TARGET: ${{ steps.resolve-target.outputs.target }}
       run: |
         set -eu
         args=(update --yes --target "$APM_TARGET")
@@ -120,19 +149,30 @@ runs:
         base: ${{ inputs.branch }}
         branch: chore/update-apm-packages
         delete-branch: true
-        title: "chore: update APM packages"
-        commit-message: "chore: update APM packages"
+        title: "chore(apm): update packages for ${{ steps.resolve-target.outputs.target }}"
+        commit-message: "chore(apm): update packages for ${{ steps.resolve-target.outputs.target }}"
         body: |
-          This PR updates APM-managed packages using:
+          ## Summary
+
+          This PR updates APM-managed packages for target `${{ steps.resolve-target.outputs.target }}`.
+          The changes were generated automatically from workflow run `${{ github.run_id }}` against base branch `${{ inputs.branch }}`.
+
+          ## Command
 
           ```bash
-          apm update --yes --target ${{ inputs.target }}
+          apm update --yes --target ${{ steps.resolve-target.outputs.target }}
           ```
 
-          Target branch: `${{ inputs.branch }}`
-          Ensured APM target in apm.yml: `${{ inputs.target }}`
+          ## Context
 
-          Please review changes in:
+          - Repository: `${{ github.repository }}`
+          - Base branch: `${{ inputs.branch }}`
+          - Resolved APM target: `${{ steps.resolve-target.outputs.target }}`
+          - Triggered by: `${{ github.actor }}`
+          - Workflow run: `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+
+          ## Review focus
+
           - `apm.yml`
           - `apm.lock.yaml`
           - deployed APM files
