@@ -45,6 +45,7 @@ runs:
       uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
       with:
         setup-only: "true"
+        apm-version: "0.15.0"
 
     - name: Update APM packages
       shell: bash
