@@ -1,7 +1,28 @@
 name: TEST apm-packages-update
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Base branch for the update PR
+        required: false
+        default: main
+        type: string
+      target:
+        description: APM target to update
+        required: false
+        default: claude
+        type: string
+      debug:
+        description: Print APM and runner diagnostics
+        required: false
+        default: true
+        type: boolean
+      dry-run:
+        description: Skip pull request creation and run APM in dry-run mode
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -20,10 +41,10 @@ jobs:
       - name: Run apm-packages-update action
         uses: ./actions/apm-packages-update
         with:
-          branch: main
-          debug: "true"
-          dry-run: "true"
-          target: claude
+          branch: ${{ inputs.branch }}
+          debug: ${{ inputs.debug && 'true' || 'false' }}
+          dry-run: ${{ inputs['dry-run'] && 'true' || 'false' }}
+          target: ${{ inputs.target }}
           token: ${{ secrets.APM_UPDATE_TOKEN }}
 
       - name: Verify job summary
