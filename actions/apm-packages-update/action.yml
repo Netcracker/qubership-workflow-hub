@@ -102,9 +102,10 @@ runs:
       shell: bash
       env:
         APM_DRY_RUN: ${{ inputs.dry-run }}
+        APM_TARGET: ${{ inputs.target }}
       run: |
         set -eu
-        args=(update --yes)
+        args=(update --yes --target "$APM_TARGET")
         if [ "$APM_DRY_RUN" = "true" ]; then
           args+=(--dry-run)
         fi
@@ -125,11 +126,11 @@ runs:
           This PR updates APM-managed packages using:
 
           ```bash
-          apm update --yes
+          apm update --yes --target ${{ inputs.target }}
           ```
 
           Target branch: `${{ inputs.branch }}`
-          Ensured APM target in apm.yml: `${{ inputs.target }}`
+          APM target: `${{ inputs.target }}`
 
           Please review changes in:
           - `apm.yml`
