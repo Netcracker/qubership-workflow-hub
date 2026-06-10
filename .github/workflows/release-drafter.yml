@@ -52,7 +52,7 @@ jobs:
           ref: ${{ inputs.ref ||  github.ref_name }}
 
       - name: Run Release Drafter
-        uses: netcracker/release-drafter@86f4276a3894b5af70480e826c32fe3648ac6a70 # v1.0.0
+        uses: netcracker/release-drafter@130c08399304912ffe90e9604e4328f2fdcd7619 # v1.0.1
         with:
           config-name: ${{ inputs.config-name }}
           publish: ${{ inputs.publish }}
