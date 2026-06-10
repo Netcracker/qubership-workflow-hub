@@ -2,7 +2,7 @@ name: qubership-workflow-hub
 version: 1.0.0
 description: APM project for qubership-workflow-hub
 author: nookyo
-target:
+targets:
   - claude
 dependencies:
   apm: []
