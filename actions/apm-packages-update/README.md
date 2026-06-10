@@ -6,7 +6,7 @@ Updates APM-managed packages in the current repository and creates a pull reques
 
 - Validates that `apm.yml` exists and contains the specified APM target — adds it automatically if missing
 - Installs [yq](https://github.com/mikefarah/yq) v4.53.3 for YAML manipulation
-- Runs `apm update --yes` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM)
+- Runs `apm update --yes --target <target>` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM)
 - Opens a pull request on branch `chore/update-apm-packages` with the resulting changes
 - Reports the PR URL or "no changes" to the workflow job summary
 
@@ -22,9 +22,9 @@ Updates APM-managed packages in the current repository and creates a pull reques
 
 1. Installs `yq` v4.53.3.
 2. Reads `apm.yml` and verifies that `inputs.target` is listed under `.targets`.
-   If the entry is missing, it is added automatically.
+  If the entry is missing, it is appended automatically without replacing existing targets.
 3. Sets up APM via `microsoft/apm-action` (setup-only mode).
-4. Runs `apm update --yes` to update all managed packages.
+4. Runs `apm update --yes --target <target>` to update the selected target explicitly.
 5. Creates or updates a PR on branch `chore/update-apm-packages` (base: `inputs.branch`).
    The branch is deleted automatically after merge.
 6. Logs the PR URL to the job summary, or reports "no changes" if nothing was updated.
@@ -63,6 +63,7 @@ jobs:
 
 - The caller workflow must check out the repository before invoking this action.
 - `apm.yml` must exist at the repository root. The action fails with exit code 1 if it is not found.
+- The action passes `--target` to APM explicitly, so CI updates the requested integration target even if auto-detection would choose a different one.
 - The PR branch is always `chore/update-apm-packages`. If a branch with that name already exists,
   `peter-evans/create-pull-request` updates the existing PR rather than opening a new one.
 - The `token` input must have permission to push branches and open pull requests.

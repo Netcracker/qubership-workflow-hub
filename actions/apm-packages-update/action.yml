@@ -37,8 +37,8 @@ runs:
         if [ "$(yq '.target' apm.yml)" != "null" ]; then
           yq -i '.targets = .target | del(.target)' apm.yml
         fi
-        if ! yq '.targets[]' apm.yml | grep -qF "$APM_TARGET"; then
-          yq -i ".targets += [\"$APM_TARGET\"]" apm.yml
+        if ! yq '.targets[]' apm.yml | grep -qxF "$APM_TARGET"; then
+          yq -i '.targets += [env(APM_TARGET)]' apm.yml
         fi
 
     - name: Setup APM
@@ -49,7 +49,9 @@ runs:
 
     - name: Update APM packages
       shell: bash
-      run: apm update --yes
+      env:
+        APM_TARGET: ${{ inputs.target }}
+      run: apm update --yes --target "$APM_TARGET"
 
     - name: Create Pull Request
       id: create-pr
@@ -65,7 +67,7 @@ runs:
           This PR updates APM-managed packages using:
 
           ```bash
-          apm update --yes
+          apm update --yes --target ${{ inputs.target }}
           ```
 
           Target branch: `${{ inputs.branch }}`
