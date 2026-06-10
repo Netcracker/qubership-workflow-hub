@@ -130,7 +130,7 @@ runs:
           ```
 
           Target branch: `${{ inputs.branch }}`
-          APM target: `${{ inputs.target }}`
+          Ensured APM target in apm.yml: `${{ inputs.target }}`
 
           Please review changes in:
           - `apm.yml`

@@ -29,7 +29,7 @@ Updates APM-managed packages in the current repository and creates a pull reques
   If the entry is missing, it is appended automatically without replacing existing targets.
 3. Sets up APM via `microsoft/apm-action` (setup-only mode).
 4. Optionally prints runner diagnostics, `apm targets`, and dry-run update output when `debug: true`.
-5. Runs `apm update --yes --target <target>` to update the selected target explicitly.
+5. Runs `apm update --yes`, relying on the configured `apm.yml` targets after any required target migration.
 6. If `dry-run: true`, skips pull request creation after printing the update result.
 7. Otherwise creates or updates a PR on branch `chore/update-apm-packages` (base: `inputs.branch`).
    The branch is deleted automatically after merge.
