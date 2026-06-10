@@ -9,9 +9,9 @@ on:
         default: main
         type: string
       target:
-        description: APM target to update
+        description: Optional APM target override; leave empty to use apm.yml
         required: false
-        default: claude
+        default: ""
         type: string
       debug:
         description: Print APM and runner diagnostics
