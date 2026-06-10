@@ -6,6 +6,14 @@ inputs:
     description: Target branch to update
     required: false
     default: main
+  dry-run:
+    description: Run APM update in dry-run mode and skip pull request creation
+    required: false
+    default: "false"
+  debug:
+    description: Print runner and APM diagnostics before updating packages
+    required: false
+    default: "false"
   target:
     description: APM target name (e.g. claude)
     required: false
@@ -29,25 +37,81 @@ runs:
       env:
         APM_TARGET: ${{ inputs.target }}
       run: |
-        if [ -f apm.yml ]; then
-          if ! yq '.targets' apm.yml | grep -qF "$APM_TARGET"; then
-            yq -i ".targets = [\"$APM_TARGET\"]" apm.yml
-          fi
-        else
+        if [ ! -f apm.yml ]; then
           echo "apm.yml not found"
           exit 1
+        fi
+        # Migrate singular 'target:' to canonical plural 'targets:'
+        if [ "$(yq '.target' apm.yml)" != "null" ]; then
+          yq -i '.targets = .target | del(.target)' apm.yml
+        fi
+        if ! yq '.targets[]' apm.yml | grep -qxF "$APM_TARGET"; then
+          yq -i '.targets += [env(APM_TARGET)]' apm.yml
         fi
 
     - name: Setup APM
       uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
       with:
         setup-only: "true"
+        apm-version: "0.15.0"
+
+    - name: Debug APM target resolution
+      if: ${{ inputs.debug == 'true' }}
+      shell: bash
+      env:
+        APM_TARGET: ${{ inputs.target }}
+      run: |
+        set -eu
+        echo "== Workspace =="
+        pwd
+        ls -la
+        echo
+        echo "== Runner =="
+        printf 'RUNNER_OS=%s\n' "${RUNNER_OS:-}"
+        printf 'RUNNER_ARCH=%s\n' "${RUNNER_ARCH:-}"
+        printf 'CI=%s\n' "${CI:-}"
+        printf 'GITHUB_ACTIONS=%s\n' "${GITHUB_ACTIONS:-}"
+        printf 'GITHUB_WORKSPACE=%s\n' "${GITHUB_WORKSPACE:-}"
+        printf 'HOME=%s\n' "${HOME:-}"
+        echo
+        echo "== Harness markers =="
+        for path in .claude .github .github/instructions .agents .codex .cursor .gemini .opencode .windsurf AGENTS.md CLAUDE.md GEMINI.md; do
+          if [ -e "$path" ]; then
+            printf '[present] %s\n' "$path"
+          else
+            printf '[missing] %s\n' "$path"
+          fi
+        done
+        echo
+        echo "== apm.yml =="
+        cat apm.yml
+        echo
+        echo "== APM version =="
+        apm --version
+        echo
+        echo "== Resolved targets =="
+        apm targets
+        echo
+        echo "== Dry-run without explicit target =="
+        apm update --yes --dry-run -v
+        echo
+        echo "== Dry-run with explicit target =="
+        apm update --yes --dry-run -v --target "$APM_TARGET"
 
     - name: Update APM packages
       shell: bash
-      run: apm update --yes
+      env:
+        APM_DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        set -eu
+        args=(update --yes)
+        if [ "$APM_DRY_RUN" = "true" ]; then
+          args+=(--dry-run)
+        fi
+        apm "${args[@]}"
 
     - name: Create Pull Request
+      if: ${{ inputs.dry-run != 'true' }}
       id: create-pr
       uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
       with:
@@ -61,7 +125,7 @@ runs:
           This PR updates APM-managed packages using:
 
           ```bash
-          apm update --yes
+          apm update --yes --target ${{ inputs.target }}
           ```
 
           Target branch: `${{ inputs.branch }}`
@@ -75,6 +139,11 @@ runs:
     - name: Log result
       shell: bash
       run: |
+        if [ "${{ inputs.dry-run }}" = "true" ]; then
+          echo "Dry-run mode enabled, pull request creation skipped"
+          echo "Dry-run mode enabled, pull request creation skipped" >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
         if [ "${{ steps.create-pr.outputs.pull-request-url }}" != "" ]; then
           echo "::notice title=PR created::${{ steps.create-pr.outputs.pull-request-url }}"
           echo "PR created: ${{ steps.create-pr.outputs.pull-request-url }}" >> "$GITHUB_STEP_SUMMARY"
