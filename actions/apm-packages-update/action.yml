@@ -102,9 +102,10 @@ runs:
       shell: bash
       env:
         APM_DRY_RUN: ${{ inputs.dry-run }}
+        APM_TARGET: ${{ inputs.target }}
       run: |
         set -eu
-        args=(update --yes)
+        args=(update --yes --target "$APM_TARGET")
         if [ "$APM_DRY_RUN" = "true" ]; then
           args+=(--dry-run)
         fi

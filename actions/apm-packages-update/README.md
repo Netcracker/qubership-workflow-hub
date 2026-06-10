@@ -71,7 +71,7 @@ jobs:
 
 - The caller workflow must check out the repository before invoking this action.
 - `apm.yml` must exist at the repository root. The action fails with exit code 1 if it is not found.
-- The action ensures the requested target is present in `apm.yml` before running `apm update --yes`.
+- The action ensures the requested target is present in `apm.yml` before running `apm update --yes --target <target>`.
 - `debug: true` prints runner state, active harness markers, `apm targets`, and two dry-run plans: one without an explicit target and one with `--target`.
 - `dry-run: true` skips pull request creation entirely and is intended for diagnostics or validation workflows.
 - The PR branch is always `chore/update-apm-packages`. If a branch with that name already exists,
