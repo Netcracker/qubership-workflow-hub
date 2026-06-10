@@ -29,13 +29,16 @@ runs:
       env:
         APM_TARGET: ${{ inputs.target }}
       run: |
-        if [ -f apm.yml ]; then
-          if ! yq '.targets' apm.yml | grep -qF "$APM_TARGET"; then
-            yq -i ".targets = [\"$APM_TARGET\"]" apm.yml
-          fi
-        else
+        if [ ! -f apm.yml ]; then
           echo "apm.yml not found"
           exit 1
+        fi
+        # Migrate singular 'target:' to canonical plural 'targets:'
+        if [ "$(yq '.target' apm.yml)" != "null" ]; then
+          yq -i '.targets = .target | del(.target)' apm.yml
+        fi
+        if ! yq '.targets[]' apm.yml | grep -qF "$APM_TARGET"; then
+          yq -i ".targets += [\"$APM_TARGET\"]" apm.yml
         fi
 
     - name: Setup APM
