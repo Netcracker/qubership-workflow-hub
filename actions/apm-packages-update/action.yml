@@ -125,7 +125,7 @@ runs:
           This PR updates APM-managed packages using:
 
           ```bash
-          apm update --yes
+          apm update --yes --target ${{ inputs.target }}
           ```
 
           Target branch: `${{ inputs.branch }}`

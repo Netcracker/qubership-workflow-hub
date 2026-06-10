@@ -8,7 +8,7 @@ Updates APM-managed packages in the current repository and creates a pull reques
 - Supports a safe `dry-run` mode for diagnostics and validation without creating a pull request
 - Supports an opt-in `debug` mode that prints runner context and APM target-resolution diagnostics
 - Installs [yq](https://github.com/mikefarah/yq) v4.53.3 for YAML manipulation
-- Runs `apm update --yes` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM)
+- Runs `apm update --yes --target <target>` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM)
 - Opens a pull request on branch `chore/update-apm-packages` with the resulting changes
 - Reports the PR URL or "no changes" to the workflow job summary
 
