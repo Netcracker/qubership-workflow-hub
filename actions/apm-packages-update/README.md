@@ -5,6 +5,8 @@ Updates APM-managed packages in the current repository and creates a pull reques
 ## Features
 
 - Validates that `apm.yml` exists and contains the specified APM target — adds it automatically if missing
+- Supports a safe `dry-run` mode for diagnostics and validation without creating a pull request
+- Supports an opt-in `debug` mode that prints runner context and APM target-resolution diagnostics
 - Installs [yq](https://github.com/mikefarah/yq) v4.53.3 for YAML manipulation
 - Runs `apm update --yes --target <target>` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM)
 - Opens a pull request on branch `chore/update-apm-packages` with the resulting changes
@@ -15,6 +17,8 @@ Updates APM-managed packages in the current repository and creates a pull reques
 | Name     | Description                                                       | Required | Default  |
 | -------- | ----------------------------------------------------------------- | -------- | -------- |
 | `branch` | Base branch for the pull request (must match the checked-out ref) | No       | `main`   |
+| `dry-run` | Run `apm update` in dry-run mode and skip pull request creation   | No       | `false`  |
+| `debug`  | Print runner and APM diagnostics before updating packages         | No       | `false`  |
 | `target` | APM target name configured in `apm.yml` (e.g. `claude`)           | No       | `claude` |
 | `token`  | GitHub token with permission to create branches and pull requests | Yes      | -        |
 
@@ -24,10 +28,12 @@ Updates APM-managed packages in the current repository and creates a pull reques
 2. Reads `apm.yml` and verifies that `inputs.target` is listed under `.targets`.
   If the entry is missing, it is appended automatically without replacing existing targets.
 3. Sets up APM via `microsoft/apm-action` (setup-only mode).
-4. Runs `apm update --yes --target <target>` to update the selected target explicitly.
-5. Creates or updates a PR on branch `chore/update-apm-packages` (base: `inputs.branch`).
+4. Optionally prints runner diagnostics, `apm targets`, and dry-run update output when `debug: true`.
+5. Runs `apm update --yes --target <target>` to update the selected target explicitly.
+6. If `dry-run: true`, skips pull request creation after printing the update result.
+7. Otherwise creates or updates a PR on branch `chore/update-apm-packages` (base: `inputs.branch`).
    The branch is deleted automatically after merge.
-6. Logs the PR URL to the job summary, or reports "no changes" if nothing was updated.
+8. Logs the PR URL to the job summary, or reports "no changes" if nothing was updated.
 
 ## Usage
 
@@ -56,6 +62,8 @@ jobs:
       - name: Update APM packages
         uses: netcracker/qubership-workflow-hub/actions/apm-packages-update@cabbb90e9471163cfac84bd50ff0296b2803b44c  # v2.3.0
         with:
+          debug: "true"
+          dry-run: "true"
           token: ${{ secrets.APM_UPDATE_TOKEN }}
 ```
 
@@ -64,6 +72,8 @@ jobs:
 - The caller workflow must check out the repository before invoking this action.
 - `apm.yml` must exist at the repository root. The action fails with exit code 1 if it is not found.
 - The action passes `--target` to APM explicitly, so CI updates the requested integration target even if auto-detection would choose a different one.
+- `debug: true` prints runner state, active harness markers, `apm targets`, and two dry-run plans: one without an explicit target and one with `--target`.
+- `dry-run: true` skips pull request creation entirely and is intended for diagnostics or validation workflows.
 - The PR branch is always `chore/update-apm-packages`. If a branch with that name already exists,
   `peter-evans/create-pull-request` updates the existing PR rather than opening a new one.
 - The `token` input must have permission to push branches and open pull requests.

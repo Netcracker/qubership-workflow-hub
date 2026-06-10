@@ -18,9 +18,11 @@ jobs:
           persist-credentials: false
 
       - name: Run apm-packages-update action
-        uses: netcracker/qubership-workflow-hub/actions/apm-packages-update@781-feat-new-action-and-workflow-for-update-apm-packages-for-all-repositories
+        uses: ./actions/apm-packages-update
         with:
           branch: main
+          debug: "true"
+          dry-run: "true"
           target: claude
           token: ${{ secrets.APM_UPDATE_TOKEN }}
 
