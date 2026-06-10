@@ -1,4 +1,63 @@
-# Utilities — wait-for-workflow, custom-event, store-input-params
+# Utilities — apm-packages-update, wait-for-workflow, custom-event, store-input-params
+
+## apm-packages-update
+
+Runs `apm update --yes` in the current repository and opens a pull request with the
+resulting changes. Designed to be placed in each consumer repository and triggered on a
+schedule or manually.
+
+### When to use
+
+- A repository uses APM-managed skill packages and needs periodic updates.
+- You want to automate APM package bumps without touching the repository manually.
+
+### Prerequisites
+
+- `apm.yml` must exist at the repository root.
+- The specified `target` must be configured in `apm.yml` (the action adds it automatically
+  if missing).
+
+### Permissions
+
+```yaml
+permissions:
+  contents: read
+```
+
+The `token` input must have permission to push branches and open pull requests.
+Use the org-level secret `APM_UPDATE_TOKEN`.
+
+### Inputs
+
+| Input | Required | Default | Notes |
+| --- | --- | --- | --- |
+| `branch` | No | `main` | Target branch to update |
+| `target` | No | `claude` | APM target name in `apm.yml` |
+| `token` | Yes | — | Use `secrets.APM_UPDATE_TOKEN` |
+
+### Usage pattern
+
+```yaml
+name: Update APM packages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Update APM packages
+        uses: netcracker/qubership-workflow-hub/actions/apm-packages-update@<resolved-sha>  # <resolved-tag>
+        with:
+          token: ${{ secrets.APM_UPDATE_TOKEN }}
+```
+
+---
 
 ## wait-for-workflow
 
