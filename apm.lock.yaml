@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-08T08:01:35.904298+00:00'
+generated_at: '2026-06-10T06:15:33.514317+00:00'
 apm_version: 0.15.0
 dependencies:
 - repo_url: Netcracker/qubership-ai-packages
@@ -22,7 +22,7 @@ dependencies:
   - .claude/skills/qubership-templates-guide
   - .claude/skills/qubership-workflow-conventions
   deployed_file_hashes:
-    .claude/rules/qubership-workflow-hub-usage.md: sha256:b1605dcfd8afc0a1b656b6a7de9321a974057d96fec0461e5d16115e728b8e0c
+    .claude/rules/qubership-workflow-hub-usage.md: sha256:2a972c3b785eebeb533d44ea91ede95c40b9121ee4db18dff10900e592938803
   source: local
   local_path: ./agent-packages/qubership-workflow-hub-usage
   is_dev: true

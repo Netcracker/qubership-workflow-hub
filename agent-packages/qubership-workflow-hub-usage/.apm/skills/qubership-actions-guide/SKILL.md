@@ -22,6 +22,7 @@ the relevant supporting document:
 | Maven build, SNAPSHOT deploy, release | `maven.md` |
 | npm, Python publish | catalog below — no guide file needed |
 | Cleanup (container images, Maven packages) | `cleanup.md` |
+| APM packages update | `utilities.md` |
 | Utilities (wait-for-workflow, custom-event, store-input-params) | `utilities.md` |
 
 Each guide contains: clarifying questions for the user, config file schemas,
@@ -102,6 +103,7 @@ Ask only what is missing after inferring from context:
 
 | Action | Purpose |
 | --- | --- |
+| `apm-packages-update` | Run `apm update --yes` and open a PR with the changes in the current repo |
 | `ghcr-discover-repo-packages` | Discover all GHCR packages for a repo — feeds security scan, cleanup, or any step needing the image list |
 | `custom-event` | Emit `repository_dispatch` event with JSON payload |
 | `smart-download` | Download workflow artifacts by name, IDs, or glob pattern |

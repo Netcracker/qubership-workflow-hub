@@ -1,0 +1,84 @@
+name: Update APM packages
+description: Updates APM-managed packages in the current repository and creates a pull request with the changes.
+
+inputs:
+  branch:
+    description: Target branch to update
+    required: false
+    default: main
+  target:
+    description: APM target name (e.g. claude)
+    required: false
+    default: claude
+  token:
+    description: GitHub token with permission to create branches and pull requests
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install yq
+      shell: bash
+      run: |
+        sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64
+        sudo chmod +x /usr/local/bin/yq
+        yq --version
+
+    - name: Ensure APM target is configured
+      shell: bash
+      env:
+        APM_TARGET: ${{ inputs.target }}
+      run: |
+        if [ -f apm.yml ]; then
+          if ! yq '.targets' apm.yml | grep -qF "$APM_TARGET"; then
+            yq -i ".targets = [\"$APM_TARGET\"]" apm.yml
+          fi
+        else
+          echo "apm.yml not found"
+          exit 1
+        fi
+
+    - name: Setup APM
+      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
+      with:
+        setup-only: "true"
+
+    - name: Update APM packages
+      shell: bash
+      run: apm update --yes
+
+    - name: Create Pull Request
+      id: create-pr
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+      with:
+        token: ${{ inputs.token }}
+        base: ${{ inputs.branch }}
+        branch: chore/update-apm-packages
+        delete-branch: true
+        title: "chore: update APM packages"
+        commit-message: "chore: update APM packages"
+        body: |
+          This PR updates APM-managed packages using:
+
+          ```bash
+          apm update --yes
+          ```
+
+          Target branch: `${{ inputs.branch }}`
+          APM target: `${{ inputs.target }}`
+
+          Please review changes in:
+          - `apm.yml`
+          - `apm.lock.yaml`
+          - deployed APM files
+
+    - name: Log result
+      shell: bash
+      run: |
+        if [ "${{ steps.create-pr.outputs.pull-request-url }}" != "" ]; then
+          echo "::notice title=PR created::${{ steps.create-pr.outputs.pull-request-url }}"
+          echo "PR created: ${{ steps.create-pr.outputs.pull-request-url }}" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "No changes detected, PR not created"
+          echo "No changes detected, PR not created" >> "$GITHUB_STEP_SUMMARY"
+        fi
