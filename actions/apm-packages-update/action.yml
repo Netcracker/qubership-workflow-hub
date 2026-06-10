@@ -101,11 +101,10 @@ runs:
     - name: Update APM packages
       shell: bash
       env:
-        APM_TARGET: ${{ inputs.target }}
         APM_DRY_RUN: ${{ inputs.dry-run }}
       run: |
         set -eu
-        args=(update --yes --target "$APM_TARGET")
+        args=(update --yes)
         if [ "$APM_DRY_RUN" = "true" ]; then
           args+=(--dry-run)
         fi
