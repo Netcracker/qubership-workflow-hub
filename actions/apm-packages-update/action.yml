@@ -125,11 +125,11 @@ runs:
           This PR updates APM-managed packages using:
 
           ```bash
-          apm update --yes --target ${{ inputs.target }}
+          apm update --yes
           ```
 
           Target branch: `${{ inputs.branch }}`
-          APM target: `${{ inputs.target }}`
+          Ensured APM target in apm.yml: `${{ inputs.target }}`
 
           Please review changes in:
           - `apm.yml`
