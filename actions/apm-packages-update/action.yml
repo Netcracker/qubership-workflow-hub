@@ -149,19 +149,30 @@ runs:
         base: ${{ inputs.branch }}
         branch: chore/update-apm-packages
         delete-branch: true
-        title: "chore: update APM packages"
-        commit-message: "chore: update APM packages"
+        title: "chore(apm): update packages for ${{ steps.resolve-target.outputs.target }}"
+        commit-message: "chore(apm): update packages for ${{ steps.resolve-target.outputs.target }}"
         body: |
-          This PR updates APM-managed packages using:
+          ## Summary
+
+          This PR updates APM-managed packages for target `${{ steps.resolve-target.outputs.target }}`.
+          The changes were generated automatically from workflow run `${{ github.run_id }}` against base branch `${{ inputs.branch }}`.
+
+          ## Command
 
           ```bash
           apm update --yes --target ${{ steps.resolve-target.outputs.target }}
           ```
 
-          Target branch: `${{ inputs.branch }}`
-          Resolved APM target: `${{ steps.resolve-target.outputs.target }}`
+          ## Context
 
-          Please review changes in:
+          - Repository: `${{ github.repository }}`
+          - Base branch: `${{ inputs.branch }}`
+          - Resolved APM target: `${{ steps.resolve-target.outputs.target }}`
+          - Triggered by: `${{ github.actor }}`
+          - Workflow run: `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+
+          ## Review focus
+
           - `apm.yml`
           - `apm.lock.yaml`
           - deployed APM files

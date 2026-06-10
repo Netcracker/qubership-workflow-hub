@@ -10,6 +10,7 @@ Updates APM-managed packages in the current repository and creates a pull reques
 - Installs [yq](https://github.com/mikefarah/yq) v4.53.3 for YAML manipulation
 - Runs `apm update --yes --target <target>` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM), using `apm.yml` by default and `target` as an override
 - Opens a pull request on branch `chore/update-apm-packages` with the resulting changes
+- Uses a dynamic PR title and body that include the resolved target, base branch, and workflow run link
 - Reports the PR URL or "no changes" to the workflow job summary
 
 ## 📌 Inputs
@@ -33,7 +34,9 @@ Updates APM-managed packages in the current repository and creates a pull reques
 5. Runs `apm update --yes --target <target>` using the resolved target.
 6. If `dry-run: true`, skips pull request creation after printing the update result.
 7. Otherwise creates or updates a PR on branch `chore/update-apm-packages` (base: `inputs.branch`).
-   The branch is deleted automatically after merge.
+  The PR title includes the resolved target, and the body includes the executed command,
+  base branch, workflow run link, and a short review checklist. The branch is deleted
+  automatically after merge.
 8. Logs the PR URL to the job summary, or reports "no changes" if nothing was updated.
 
 ## Usage
@@ -78,6 +81,8 @@ jobs:
 - `dry-run: true` skips pull request creation entirely and is intended for diagnostics or validation workflows.
 - The PR branch is always `chore/update-apm-packages`. If a branch with that name already exists,
   `peter-evans/create-pull-request` updates the existing PR rather than opening a new one.
+- The generated PR title is `chore(apm): update packages for <resolved-target>` and the body
+  includes the resolved target, base branch, actor, and a link back to the originating workflow run.
 - The `token` input must have permission to push branches and open pull requests.
   The org-level secret `APM_UPDATE_TOKEN` is the recommended value.
 - Pin to a full 40-character commit SHA with the release tag as a trailing comment, e.g.
