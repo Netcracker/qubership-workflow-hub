@@ -33,10 +33,12 @@ runs:
 
     - name: Ensure APM target is configured
       shell: bash
+      env:
+        APM_TARGET: ${{ inputs.target }}
       run: |
         if [ -f apm.yml ]; then
-          if ! yq '.targets' apm.yml | grep -q "${{ inputs.target }}"; then
-            yq -i '.targets = ["${{ inputs.target }}"]' apm.yml
+          if ! yq '.targets' apm.yml | grep -qF "$APM_TARGET"; then
+            yq -i ".targets = [\"$APM_TARGET\"]" apm.yml
           fi
         else
           echo "apm.yml not found"

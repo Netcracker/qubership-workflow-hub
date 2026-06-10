@@ -10,7 +10,7 @@ duplicate pipeline scripts.
 ## Repository structure
 
 ```text
-actions/          — 24 individual GitHub Actions (each self-contained)
+actions/          — 25 individual GitHub Actions (each self-contained)
 packages/         — Shared internal packages used by Node.js actions
   action-logger/  — Lightweight colored logger (@qubership/action-logger)
 .github/

@@ -17,6 +17,7 @@ Always check that document before modifying or depending on a deprecated compone
 
 | Action                                                                          | Description                                                                            |
 | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [apm-packages-update](../actions/apm-packages-update/README.md)                 | Update APM-managed packages in the current repository and open a pull request          |
 | [assets-action](../actions/assets-action/README.md)                             | Archive a folder and upload it to a GitHub Release as a release asset                  |
 | [branch-action](../actions/branch-action/README.md)                             | Create a new branch from a tag/branch with auto-named conventions and optional push    |
 | [cdxgen](../actions/cdxgen/README.md)                                           | Generate a CycloneDX SBOM and optional vulnerability report for the project            |
