@@ -48,7 +48,7 @@ jobs:
       contents: read
     steps:
       - name: Update APM packages
-        uses: netcracker/qubership-workflow-hub/actions/update-apm-packages@cabbb90e9471163cfac84bd50ff0296b2803b44c  # v2.3.0
+        uses: netcracker/qubership-workflow-hub/actions/apm-packages-update@cabbb90e9471163cfac84bd50ff0296b2803b44c  # v2.3.0
         with:
           token: ${{ secrets.APM_UPDATE_TOKEN }}
 ```

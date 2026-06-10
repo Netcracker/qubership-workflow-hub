@@ -22,6 +22,7 @@ runs:
       with:
         ref: ${{ inputs.branch }}
         token: ${{ inputs.token }}
+        persist-credentials: false
         fetch-depth: 1
 
     - name: Install yq
@@ -46,7 +47,7 @@ runs:
         fi
 
     - name: Setup APM
-      uses: microsoft/apm-action@ce02c22416172beb70072c5910b2163ee3f006f6  # v1.9.1
+      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
       with:
         setup-only: "true"
 
