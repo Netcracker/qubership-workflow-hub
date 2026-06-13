@@ -20,7 +20,7 @@
     "@qubership/action-logger": "file:../../packages/action-logger"
   },
   "devDependencies": {
-    "esbuild": "^0.28.0",
+    "esbuild": "^0.28.1",
     "jest": "^30.2.0"
   }
 }
