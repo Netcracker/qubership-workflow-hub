@@ -22,7 +22,7 @@ jobs:
           persist-credentials: false
 
       - name: Send plain-text email
-        uses: netcracker/qubership-workflow-hub/actions/email-action@main
+        uses: netcracker/qubership-workflow-hub/actions/email-action@v2.4.0
         with:
           server-address: smtp.gmail.com
           server-port: "587"
@@ -38,7 +38,7 @@ jobs:
             Triggered by: ${{ github.actor }}
 
       - name: Send HTML email
-        uses: netcracker/qubership-workflow-hub/actions/email-action@main
+        uses: netcracker/qubership-workflow-hub/actions/email-action@v2.4.0
         with:
           server-address: smtp.gmail.com
           server-port: "587"
@@ -63,7 +63,7 @@ jobs:
           persist-credentials: false
 
       - name: Send email via env fallback
-        uses: netcracker/qubership-workflow-hub/actions/email-action@main
+        uses: netcracker/qubership-workflow-hub/actions/email-action@v2.4.0
         env:
           EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
           EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
