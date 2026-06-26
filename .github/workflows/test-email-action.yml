@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
       - name: Send plain-text email
-        uses: netcracker/qubership-workflow-hub/actions/email-action@main
+        uses: ./actions/email-action
         with:
           server-address: smtp.gmail.com
           server-port: "587"
@@ -38,7 +38,7 @@ jobs:
             Triggered by: ${{ github.actor }}
 
       - name: Send HTML email
-        uses: netcracker/qubership-workflow-hub/actions/email-action@main
+        uses: ./actions/email-action
         with:
           server-address: smtp.gmail.com
           server-port: "587"
@@ -58,12 +58,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
       - name: Send email via env fallback
-        uses: netcracker/qubership-workflow-hub/actions/email-action@main
+        uses: ./actions/email-action
         env:
           EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
           EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
