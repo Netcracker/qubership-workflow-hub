@@ -3,14 +3,14 @@ version: 1.0.0
 description: APM project for qubership-workflow-hub
 author: nookyo
 targets:
-  - claude
+- claude
 dependencies:
-  apm: []
+  apm:
+  - Netcracker/qubership-ai-agent-telemetry/agent-packages/ai-agent-telemetry
   mcp: []
 includes: auto
 scripts: {}
 devDependencies:
   apm:
-    - Netcracker/qubership-ai-packages/agent-packages/apm-authoring
-    - ./agent-packages/qubership-workflow-hub-usage
-
+  - Netcracker/qubership-ai-packages/agent-packages/apm-authoring
+  - ./agent-packages/qubership-workflow-hub-usage

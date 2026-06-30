@@ -2,6 +2,32 @@ lockfile_version: '1'
 generated_at: '2026-06-10T06:15:33.514317+00:00'
 apm_version: 0.15.0
 dependencies:
+- repo_url: Netcracker/qubership-ai-agent-telemetry
+  host: github.com
+  resolved_commit: 69458a90c1983a33f9cbcb74a69cd12a3e2a85c4
+  virtual_path: agent-packages/ai-agent-telemetry
+  is_virtual: true
+  package_type: apm_package
+  content_hash: sha256:1b9631fa5e9da4ff8f89fba74223c3f632dc0ff55b46eb29b52521a039235435
+- repo_url: Netcracker/qubership-ai-agent-telemetry
+  host: github.com
+  resolved_commit: 69458a90c1983a33f9cbcb74a69cd12a3e2a85c4
+  virtual_path: agent-packages/ai-agent-telemetry-configure
+  is_virtual: true
+  package_type: apm_package
+  deployed_files:
+  - .claude/rules/ai-agent-telemetry-configure.md
+  - .claude/skills/ai-agent-telemetry-configure
+  - .claude/skills/ai-agent-telemetry-configure/SKILL.md
+  - .claude/skills/ai-agent-telemetry-configure/references/codex-sandbox.md
+  - .claude/skills/ai-agent-telemetry-configure/references/deployment.md
+  deployed_file_hashes:
+    .claude/rules/ai-agent-telemetry-configure.md: sha256:6fbe0341af5021fc07271dc8a35015207ec4a91162fc551a0b38185e5029d082
+    .claude/skills/ai-agent-telemetry-configure/SKILL.md: sha256:a815fd765dfe6b65e557f305187e2fb153c92e5803313282f835967b7344b9c0
+    .claude/skills/ai-agent-telemetry-configure/references/codex-sandbox.md: sha256:41e3ddb5c1164bfa3ab8452696540d7d564601d06420e131ca15ae82609f6623
+    .claude/skills/ai-agent-telemetry-configure/references/deployment.md: sha256:f27d656fcf7d3fdce04413a49a343ed5e50dd5cd5f79a273505d9980fa84474a
+  content_hash: sha256:6ec674201223e51a743c1f1294e4f21cc8168e67254ce8d27ccea9e095f23367
+  is_dev: true
 - repo_url: Netcracker/qubership-ai-packages
   host: github.com
   resolved_commit: 302126a6a537708d93e524af2d1d1df808c43b13
