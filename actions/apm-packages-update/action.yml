@@ -106,6 +106,11 @@ runs:
           This PR updates APM-managed packages.
           The changes were generated automatically from workflow run `${{ github.run_id }}` against base branch `${{ inputs.branch }}`.
 
+          ## What changed
+
+          - Refreshed APM dependency references to the latest allowed revisions.
+          - Updated lockfile and related generated APM-managed files.
+
           ## Command
 
           ```bash
@@ -125,6 +130,11 @@ runs:
           - `apm.yml`
           - `apm.lock.yaml`
           - deployed APM files
+
+          ## Risks
+
+          - Dependency refresh can introduce behavioral changes in downstream tooling.
+          - CI checks should pass before merge to confirm compatibility.
 
     - name: Log result
       shell: bash
