@@ -29,7 +29,6 @@ runs:
       uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
       with:
         setup-only: "true"
-        apm-version: "1.10.0"
 
     - name: Debug APM update context
       if: ${{ inputs.debug == 'true' }}
