@@ -39,7 +39,7 @@ jobs:
           persist-credentials: false
 
       - name: Run apm-packages-update action
-        uses: ./actions/apm-packages-update
+        uses: netcracker/qubership-workflow-hub/actions/apm-packages-update@fix/try-to-fix-microsoft-apm-action
         with:
           branch: ${{ inputs.branch }}
           debug: ${{ inputs.debug && 'true' || 'false' }}
