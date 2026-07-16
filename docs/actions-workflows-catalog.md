@@ -24,6 +24,7 @@ Always check that document before modifying or depending on a deprecated compone
 | [chart-version](../actions/chart-version/README.md)                             | Update version/appVersion fields in a Helm Chart.yaml                                  |
 | [charts-values-update-action](../actions/charts-values-update-action/README.md) | Bump image versions in Helm values.yaml and prepare a chart release                    |
 | [cla-assistant](../actions/cla-assistant/README.md)                             | Enforce CLA/DCO signing on pull requests via comment-based signatures                  |
+| [config-resolver](../actions/config-resolver/README.md)                         | Schema-aware config resolver emitting flat JSON — docker/v1 by default, generic flattening for any other schema |
 | [container-package-cleanup](../actions/container-package-cleanup/README.md)     | Delete stale GHCR container images or Maven package versions by age and tag rules      |
 | [custom-event](../actions/custom-event/README.md)                               | Trigger a repository_dispatch event in the same or another repo with a custom payload  |
 | [docker-action](../actions/docker-action/README.md)                             | Build and push multi-platform Docker images, with optional Trivy/Grype scans           |

@@ -1,11 +1,11 @@
-name: TEST docker-config-resolver
+name: TEST config-resolver
 
 on:
   workflow_dispatch: {}
   pull_request:
     paths:
-      - "actions/docker-config-resolver/**"
-      - ".github/workflows/test-docker-config-resolver.yml"
+      - "actions/config-resolver/**"
+      - ".github/workflows/test-config-resolver.yml"
 
 permissions:
   contents: read
@@ -44,7 +44,7 @@ jobs:
 
       - name: Resolve Legacy Config
         id: resolve
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/docker-legacy.cfg
 
@@ -102,14 +102,14 @@ jobs:
 
       - name: Resolve with Schema Input
         id: resolve-input
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/docker-legacy.cfg
           schema: docker/v1
 
       - name: Resolve with File-Declared Schema
         id: resolve-file
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/docker-declared.cfg
 
@@ -167,13 +167,13 @@ jobs:
 
       - name: Resolve via File-Declared Schema
         id: resolve-file
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/workflow-policy.cfg
 
       - name: Resolve Root Array via Schema Input
         id: resolve-array
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/root-array.cfg
           schema: my-schema/v1
@@ -247,21 +247,21 @@ jobs:
       - name: Malformed JSON Must Fail
         id: malformed
         continue-on-error: true
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/malformed.cfg
 
       - name: Missing File Must Fail
         id: missing-file
         continue-on-error: true
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/does-not-exist.cfg
 
       - name: Schema Mismatch Must Fail
         id: schema-mismatch
         continue-on-error: true
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/policy.cfg
           schema: docker/v1
@@ -269,21 +269,21 @@ jobs:
       - name: Docker Component Without Name Must Fail
         id: docker-no-name
         continue-on-error: true
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/docker-no-name.cfg
 
       - name: Non-String Schema Field Must Fail
         id: schema-not-string
         continue-on-error: true
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/schema-not-string.cfg
 
       - name: Scalar Root Must Fail In Generic Mode
         id: root-scalar
         continue-on-error: true
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/root-scalar.cfg
           schema: any/v1
@@ -291,14 +291,14 @@ jobs:
       - name: Docker Config Without Components Must Fail
         id: docker-no-components
         continue-on-error: true
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/docker-no-components.cfg
 
       - name: Flatten Key Collision Must Fail
         id: collision
         continue-on-error: true
-        uses: ./actions/docker-config-resolver
+        uses: ./actions/config-resolver
         with:
           file-path: /tmp/fixtures/collision.cfg
 
