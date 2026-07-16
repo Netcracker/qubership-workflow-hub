@@ -1,10 +1,11 @@
 # Docker — config, pipelines, and security
 
-> **Note:** `docker-config-resolver` is deprecated — superseded by `config-resolver`, a
-> drop-in replacement (same `file-path` input and identical output in docker mode, plus an
-> optional `schema` input for non-docker configs). Use `config-resolver` when the pinned
-> release contains `actions/config-resolver`; for older releases `docker-config-resolver`
-> remains valid. All pipeline shapes in this guide apply to both.
+> **Note:** `docker-config-resolver` is deprecated — superseded by `config-resolver`.
+> In docker mode, `config-resolver` keeps the same output shape for valid Docker configs and
+> adds stricter validation (`components` is required), plus an optional `schema` input for
+> non-docker configs. Use `config-resolver` when the pinned release contains
+> `actions/config-resolver`; for older releases `docker-config-resolver` remains valid.
+> All pipeline shapes in this guide apply to both.
 
 ## Migrating an existing workflow
 
@@ -21,7 +22,7 @@
 | Manual `docker build` + `docker push` shell steps | `docker-action` |
 | `docker/metadata-action` for tags | `metadata-action` |
 | Manual tag string construction in shell | `metadata-action` |
-| Hardcoded component list in matrix or env vars | `docker-config-resolver` + config file, or inline JSON array |
+| Hardcoded component list in matrix or env vars | `config-resolver` + config file, or inline JSON array |
 | Non-Qubership config file format (custom YAML/JSON) | Migrate into `.qubership/docker.cfg` format |
 | `docker login` steps | Built into `docker-action` via `registry` + `GITHUB_TOKEN` env |
 | `actions/download-artifact` before Docker build | `download-artifact: true` input on `docker-action` |
@@ -69,9 +70,9 @@ Use collected answers to pick the pipeline and generate output in this order:
 | Config file? | Release? | Pipeline |
 | --- | --- | --- |
 | No | No | `metadata-action` → `docker-action` (inline component) |
-| Yes | No | `docker-config-resolver` → `metadata-action` → `docker-action` (matrix) |
+| Yes | No | `config-resolver` → `metadata-action` → `docker-action` (matrix) |
 | No | Yes | `tag-action` (check) → `tag-action` (create) → `docker-action` → `github-release` |
-| Yes | Yes | `tag-action` (check) → `docker-config-resolver` → `tag-action` (create) → `docker-action` (matrix) → `github-release` |
+| Yes | Yes | `tag-action` (check) → `config-resolver` → `tag-action` (create) → `docker-action` (matrix) → `github-release` |
 
 If release assets needed → append `assets-action` after `github-release` in any release pipeline.
 

@@ -2,10 +2,10 @@
 
 Reads a JSON configuration file, validates it against the selected schema, normalizes it, and
 outputs flat JSON ready for use in CI/CD workflows. By default it resolves the Docker
-components format (`docker/v1`) — the same behaviour as
-[docker-config-resolver](../docker-config-resolver/README.md), making this action a drop-in
-replacement. Any other schema is resolved generically: the file is flattened into prefixed
-keys with no schema-specific fields required.
+components format (`docker/v1`) using the same normalization pipeline as
+[docker-config-resolver](../docker-config-resolver/README.md), with stricter validation
+(`components` is required). Any other schema is resolved generically: the file is flattened
+into prefixed keys with no schema-specific fields required.
 
 ---
 
@@ -14,7 +14,7 @@ keys with no schema-specific fields required.
 - **Schema-aware:** the `schema` input (or a top-level `"schema"` field in the file) selects
   the resolver mode; files without a schema are resolved as `docker/v1`.
 - **`docker/v1` mode:** validates components, auto-generates `image` paths, merges `defaults`
-  and `security` settings — identical output to `docker-config-resolver`.
+  and `security` settings; output stays compatible with `docker-action` matrix consumption.
 - **Generic mode** for any other schema: no schema-specific fields are known or required —
   nested objects are flattened into prefixed keys (`sonar.skip` → `sonar_skip`), arrays are
   preserved, and key collisions fail loudly instead of silently overwriting values.
@@ -109,7 +109,8 @@ instead of silently resolving to an empty array.
 ```
 
 See [docker-config-resolver](../docker-config-resolver/README.md) for the full description of
-the Docker components file format — the format and the resolved output are identical.
+the Docker components file format. `config-resolver` keeps the same normalization logic but is
+stricter: missing `components` fails fast.
 
 ### Any other schema — generic resolution
 
@@ -162,8 +163,9 @@ The top-level `"schema"` field is optional in every mode:
 | `schema` | No       | Schema id (e.g. `docker/v1`, `workflow-policy/v1`). Must match the `schema` input if both set. |
 
 For `docker/v1` the remaining fields (`registry`, `defaults`, `security`, `components`) are
-described in [docker-config-resolver](../docker-config-resolver/README.md) — the format and
-the resolved output are identical. For any other schema the content is free-form JSON.
+described in [docker-config-resolver](../docker-config-resolver/README.md). `config-resolver`
+uses the same merge/normalization logic with stricter validation (`components` is required).
+For any other schema the content is free-form JSON.
 
 ### Using the Output with docker-action
 
@@ -296,8 +298,8 @@ a human may rerun or synchronize a pull request that was authored by a bot.
   file is present in the checked-out repository before this step runs.
 - Configuration files must **not** contain secrets — the resolved configuration is printed to
   the workflow log in pretty-printed JSON.
-- In `docker/v1` mode this action is a drop-in replacement for `docker-config-resolver`: same
-  default `file-path`, identical `config` output for the same file.
+- In `docker/v1` mode this action supersedes `docker-config-resolver` with the same output
+  shape for valid Docker configs, but stricter validation (`components` is required).
 - Pin to a full 40-character commit SHA with the release tag as a trailing comment, e.g.
   `@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 # v2.4.0`. The SHA is the immutable pin; the
   comment shows which release it points to. Tags alone are mutable. Never use `@main` or

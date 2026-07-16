@@ -42,7 +42,7 @@ For full input/output details fetch the action README on demand (see *Pin table*
 
 | Action | Purpose |
 | --- | --- |
-| `config-resolver` | Schema-aware config resolver: docker mode by default (drop-in for `docker-config-resolver`), generic flattening for any other schema |
+| `config-resolver` | Schema-aware config resolver: docker mode by default (same output shape for valid Docker configs, stricter validation), generic flattening for any other schema |
 | `docker-config-resolver` | **Deprecated — use `config-resolver`.** Read docker config file, validate, output JSON array for matrix builds |
 | `docker-action` | Build & push multi-platform Docker images |
 

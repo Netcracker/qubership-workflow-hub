@@ -48,7 +48,7 @@ Always check that document before modifying or depending on a deprecated compone
 
 | Action                      | Replacement / Note                                                  |
 | --------------------------- | ------------------------------------------------------------------- |
-| [docker-config-resolver](../actions/docker-config-resolver/README.md) | Superseded by [config-resolver](../actions/config-resolver/README.md) — drop-in replacement, same output in docker mode |
+| [docker-config-resolver](../actions/docker-config-resolver/README.md) | Superseded by [config-resolver](../actions/config-resolver/README.md) — same docker output shape for valid configs, stricter validation (`components` is required) |
 | [commit-and-push]           | (DELETED) Use native Git steps                                      |
 | [pom-updater]               | (DELETED) Prefer metadata-action + build tooling                    |
 | [tag-checker]               | (DELETED) Functionality superseded by tag-action                    |
