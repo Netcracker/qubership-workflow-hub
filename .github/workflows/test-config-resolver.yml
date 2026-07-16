@@ -1,0 +1,336 @@
+name: TEST config-resolver
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "actions/config-resolver/**"
+      - ".github/workflows/test-config-resolver.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-legacy-docker:
+    name: Test Legacy Docker Config (schema-less)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create Fixture
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/docker-legacy.cfg <<'EOF'
+          {
+            "registry": "ghcr.io",
+            "defaults": { "dockerfile": "Dockerfile", "context": "." },
+            "security": { "scan": true, "trivy_scan": true },
+            "components": [
+              { "name": "api" },
+              { "name": "worker", "dockerfile": "Dockerfile.worker", "security": { "scan": false } }
+            ]
+          }
+          EOF
+
+      - name: Resolve Legacy Config
+        id: resolve
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/docker-legacy.cfg
+
+      - name: Verify Legacy Output Identical
+        shell: bash
+        env:
+          CONFIG: ${{ steps.resolve.outputs.config }}
+          SCHEMA: ${{ steps.resolve.outputs.schema }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          EXPECTED='[{"name":"api","image":"ghcr.io/'"$OWNER"'/api","registry":"ghcr.io","dockerfile":"Dockerfile","context":".","security_scan":true,"security_trivy_scan":true},{"name":"worker","image":"ghcr.io/'"$OWNER"'/worker","registry":"ghcr.io","dockerfile":"Dockerfile.worker","context":".","security_scan":false,"security_trivy_scan":true}]'
+
+          if [ "$CONFIG" != "$EXPECTED" ]; then
+            echo "❌ ERROR: legacy output differs from the historical normalized output"
+            echo "Expected: $EXPECTED"
+            echo "Actual:   $CONFIG"
+            exit 1
+          fi
+
+          if [ "$SCHEMA" != "docker/v1" ]; then
+            echo "❌ ERROR: effective schema should default to docker/v1, got: $SCHEMA"
+            exit 1
+          fi
+
+          echo "✅ Legacy schema-less config resolves identically!"
+
+  test-explicit-docker-schema:
+    name: Test Explicit docker/v1 Schema
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create Fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/docker-legacy.cfg <<'EOF'
+          {
+            "registry": "ghcr.io",
+            "components": [ { "name": "api" } ]
+          }
+          EOF
+          cat > /tmp/fixtures/docker-declared.cfg <<'EOF'
+          {
+            "schema": "docker/v1",
+            "registry": "ghcr.io",
+            "components": [ { "name": "api" } ]
+          }
+          EOF
+
+      - name: Resolve with Schema Input
+        id: resolve-input
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/docker-legacy.cfg
+          schema: docker/v1
+
+      - name: Resolve with File-Declared Schema
+        id: resolve-file
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/docker-declared.cfg
+
+      - name: Verify Both Modes Match Legacy Output
+        shell: bash
+        env:
+          CONFIG_INPUT: ${{ steps.resolve-input.outputs.config }}
+          CONFIG_FILE: ${{ steps.resolve-file.outputs.config }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          EXPECTED='[{"name":"api","image":"ghcr.io/'"$OWNER"'/api","registry":"ghcr.io"}]'
+
+          if [ "$CONFIG_INPUT" != "$EXPECTED" ]; then
+            echo "❌ ERROR: schema input docker/v1 output differs"
+            echo "Expected: $EXPECTED"
+            echo "Actual:   $CONFIG_INPUT"
+            exit 1
+          fi
+
+          if [ "$CONFIG_FILE" != "$EXPECTED" ]; then
+            echo "❌ ERROR: file-declared docker/v1 output differs"
+            echo "Expected: $EXPECTED"
+            echo "Actual:   $CONFIG_FILE"
+            exit 1
+          fi
+
+          echo "✅ Explicit docker/v1 (input and file-declared) matches legacy output!"
+
+  test-generic-schema:
+    name: Test Generic Schema (flatten)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create Fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/workflow-policy.cfg <<'EOF'
+          {
+            "schema": "workflow-policy/v1",
+            "restricted-actor-ids": ["49699333", "29139614"],
+            "sonar": { "skip": true, "quality": { "gate": "strict" } },
+            "envs": [ { "name": "dev", "meta": { "region": "eu" } }, "prod" ]
+          }
+          EOF
+          cat > /tmp/fixtures/root-array.cfg <<'EOF'
+          [ { "name": "a", "opts": { "x": 1 } }, { "name": "b" } ]
+          EOF
+
+      - name: Resolve via File-Declared Schema
+        id: resolve-file
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/workflow-policy.cfg
+
+      - name: Resolve Root Array via Schema Input
+        id: resolve-array
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/root-array.cfg
+          schema: my-schema/v1
+
+      - name: Verify Generic Output
+        shell: bash
+        env:
+          CONFIG_FILE: ${{ steps.resolve-file.outputs.config }}
+          SCHEMA_FILE: ${{ steps.resolve-file.outputs.schema }}
+          CONFIG_ARRAY: ${{ steps.resolve-array.outputs.config }}
+          SCHEMA_ARRAY: ${{ steps.resolve-array.outputs.schema }}
+        run: |
+          EXPECTED='{"schema":"workflow-policy/v1","restricted-actor-ids":["49699333","29139614"],"sonar_skip":true,"sonar_quality_gate":"strict","envs":[{"name":"dev","meta_region":"eu"},"prod"]}'
+
+          if [ "$CONFIG_FILE" != "$EXPECTED" ]; then
+            echo "❌ ERROR: generic output mismatch (nested objects must flatten to prefixed keys)"
+            echo "Expected: $EXPECTED"
+            echo "Actual:   $CONFIG_FILE"
+            exit 1
+          fi
+
+          if [ "$SCHEMA_FILE" != "workflow-policy/v1" ]; then
+            echo "❌ ERROR: schema output should pass the declared schema through, got: $SCHEMA_FILE"
+            exit 1
+          fi
+
+          EXPECTED_ARR='[{"name":"a","opts_x":1},{"name":"b"}]'
+          if [ "$CONFIG_ARRAY" != "$EXPECTED_ARR" ]; then
+            echo "❌ ERROR: root array output mismatch (object elements must be flattened)"
+            echo "Expected: $EXPECTED_ARR"
+            echo "Actual:   $CONFIG_ARRAY"
+            exit 1
+          fi
+
+          if [ "$SCHEMA_ARRAY" != "my-schema/v1" ]; then
+            echo "❌ ERROR: schema output should reflect the schema input, got: $SCHEMA_ARRAY"
+            exit 1
+          fi
+
+          # Example of a consumer-side actor check (the resolver itself never decides)
+          if ! echo "$CONFIG_FILE" | jq -e --arg id "49699333" '."restricted-actor-ids" | index($id)' > /dev/null; then
+            echo "❌ ERROR: consumer-side actor lookup failed"
+            exit 1
+          fi
+
+          echo "✅ Generic schema flattening works!"
+
+  test-failure-modes:
+    name: Test Failure Modes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create Fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          echo '{ not json' > /tmp/fixtures/malformed.cfg
+          echo '{ "components": [ { "dockerfile": "Dockerfile" } ] }' > /tmp/fixtures/docker-no-name.cfg
+          echo '{ "schema": 42 }' > /tmp/fixtures/schema-not-string.cfg
+          echo '"just a string"' > /tmp/fixtures/root-scalar.cfg
+          echo '{ "schema": "workflow-policy/v1" }' > /tmp/fixtures/policy.cfg
+          echo '{ "registry": "ghcr.io" }' > /tmp/fixtures/docker-no-components.cfg
+          echo '{ "schema": "x/v1", "sonar": { "skip": true }, "sonar_skip": false }' > /tmp/fixtures/collision.cfg
+
+      - name: Malformed JSON Must Fail
+        id: malformed
+        continue-on-error: true
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/malformed.cfg
+
+      - name: Missing File Must Fail
+        id: missing-file
+        continue-on-error: true
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/does-not-exist.cfg
+
+      - name: Schema Mismatch Must Fail
+        id: schema-mismatch
+        continue-on-error: true
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/policy.cfg
+          schema: docker/v1
+
+      - name: Docker Component Without Name Must Fail
+        id: docker-no-name
+        continue-on-error: true
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/docker-no-name.cfg
+
+      - name: Non-String Schema Field Must Fail
+        id: schema-not-string
+        continue-on-error: true
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/schema-not-string.cfg
+
+      - name: Scalar Root Must Fail In Generic Mode
+        id: root-scalar
+        continue-on-error: true
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/root-scalar.cfg
+          schema: any/v1
+
+      - name: Docker Config Without Components Must Fail
+        id: docker-no-components
+        continue-on-error: true
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/docker-no-components.cfg
+
+      - name: Flatten Key Collision Must Fail
+        id: collision
+        continue-on-error: true
+        uses: ./actions/config-resolver
+        with:
+          file-path: /tmp/fixtures/collision.cfg
+
+      - name: Verify All Failure Modes
+        shell: bash
+        env:
+          MALFORMED: ${{ steps.malformed.outcome }}
+          MISSING_FILE: ${{ steps.missing-file.outcome }}
+          MISMATCH: ${{ steps.schema-mismatch.outcome }}
+          NO_NAME: ${{ steps.docker-no-name.outcome }}
+          BAD_SCHEMA_TYPE: ${{ steps.schema-not-string.outcome }}
+          ROOT_SCALAR: ${{ steps.root-scalar.outcome }}
+          NO_COMPONENTS: ${{ steps.docker-no-components.outcome }}
+          COLLISION: ${{ steps.collision.outcome }}
+        run: |
+          FAILED=0
+          expect_failure() {
+            if [ "$2" != "failure" ]; then
+              echo "❌ ERROR: $1 should have failed, outcome: $2"
+              FAILED=1
+            else
+              echo "✅ $1 failed as expected"
+            fi
+          }
+
+          expect_failure "malformed JSON" "$MALFORMED"
+          expect_failure "missing file" "$MISSING_FILE"
+          expect_failure "input/file schema mismatch" "$MISMATCH"
+          expect_failure "docker component without name" "$NO_NAME"
+          expect_failure "non-string schema field" "$BAD_SCHEMA_TYPE"
+          expect_failure "scalar root in generic mode" "$ROOT_SCALAR"
+          expect_failure "docker config without components" "$NO_COMPONENTS"
+          expect_failure "flatten key collision" "$COLLISION"
+
+          exit $FAILED

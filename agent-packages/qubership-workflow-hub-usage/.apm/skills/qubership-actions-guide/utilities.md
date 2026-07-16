@@ -1,4 +1,93 @@
-# Utilities — apm-packages-update, wait-for-workflow, custom-event, store-input-params
+# Utilities — config-resolver, apm-packages-update, wait-for-workflow, custom-event, store-input-params
+
+## config-resolver (generic configuration files)
+
+Reads a JSON configuration file from the repository, validates it, and outputs flat JSON.
+Without a schema it resolves the Docker components format (that flow lives in `docker.md`);
+with any non-docker `schema` it resolves **generically** — no schema-specific fields are
+required, nested objects are flattened into prefixed keys (`sonar.skip` → `sonar_skip`),
+arrays are preserved.
+
+The action only validates and normalizes. Deciding what to do with the resolved values
+(skip a job, force dry-run, gate a release) always stays in the consuming workflow.
+
+### When to use
+
+- A repository keeps workflow behaviour settings in a config file — e.g. a workflow policy
+  with `restricted-actor-ids` used to force Docker dry-runs, skip Sonar submission, or skip
+  integration tests for bot-authored PRs.
+- Any custom JSON config that jobs need as a flat object or as a `matrix:` source, without
+  parsing files manually with `jq`.
+- Requires a hub release that contains `actions/config-resolver`; check before pinning.
+
+### Inputs
+
+| Input | Required | Default | Notes |
+| --- | --- | --- | --- |
+| `file-path` | No | `.qubership/docker.cfg` | Path to the JSON config file — always set it explicitly for non-Docker configs |
+| `schema` | No | `""` | Empty or `docker/v1` → Docker mode; any other value → generic flattening. Must match the file's optional top-level `"schema"` field if both are set |
+
+### Outputs
+
+| Output | Description |
+| --- | --- |
+| `config` | Resolved flat JSON (object or array, matching the file root) |
+| `schema` | Effective schema id (`docker/v1` when none declared) |
+
+### Usage pattern
+
+Config file `.qubership/workflow-policy.cfg`:
+
+```json
+{
+  "schema": "workflow-policy/v1",
+  "restricted-actor-ids": ["49699333", "29139614"]
+}
+```
+
+Workflow — resolve, then evaluate in the consuming job:
+
+```yaml
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      restricted: ${{ steps.check.outputs.restricted }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Resolve workflow policy
+        id: resolve
+        uses: netcracker/qubership-workflow-hub/actions/config-resolver@<resolved-sha>  # <resolved-tag>
+        with:
+          file-path: .qubership/workflow-policy.cfg
+          schema: workflow-policy/v1
+
+      - name: Evaluate actor
+        id: check
+        env:
+          CONFIG: ${{ steps.resolve.outputs.config }}
+          ACTOR_ID: ${{ github.actor_id }}
+          PR_AUTHOR_ID: ${{ github.event.pull_request.user.id }}
+        run: |
+          RESTRICTED=false
+          for id in "$ACTOR_ID" "$PR_AUTHOR_ID"; do
+            [ -n "$id" ] || continue
+            if echo "$CONFIG" | jq -e --arg id "$id" '."restricted-actor-ids" // [] | index($id)' > /dev/null; then
+              RESTRICTED=true
+            fi
+          done
+          echo "restricted=$RESTRICTED" >> "$GITHUB_OUTPUT"
+```
+
+Check the PR author id in addition to `github.actor_id` — a human may rerun or synchronize
+a bot-authored pull request.
+
+---
 
 ## apm-packages-update
 

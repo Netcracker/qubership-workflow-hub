@@ -24,10 +24,10 @@ Always check that document before modifying or depending on a deprecated compone
 | [chart-version](../actions/chart-version/README.md)                             | Update version/appVersion fields in a Helm Chart.yaml                                  |
 | [charts-values-update-action](../actions/charts-values-update-action/README.md) | Bump image versions in Helm values.yaml and prepare a chart release                    |
 | [cla-assistant](../actions/cla-assistant/README.md)                             | Enforce CLA/DCO signing on pull requests via comment-based signatures                  |
+| [config-resolver](../actions/config-resolver/README.md)                         | Schema-aware config resolver emitting flat JSON — docker/v1 by default, generic flattening for any other schema |
 | [container-package-cleanup](../actions/container-package-cleanup/README.md)     | Delete stale GHCR container images or Maven package versions by age and tag rules      |
 | [custom-event](../actions/custom-event/README.md)                               | Trigger a repository_dispatch event in the same or another repo with a custom payload  |
 | [docker-action](../actions/docker-action/README.md)                             | Build and push multi-platform Docker images, with optional Trivy/Grype scans           |
-| [docker-config-resolver](../actions/docker-config-resolver/README.md)           | Resolve `.qubership/docker.cfg` into a flat JSON config for the docker-action matrix   |
 | [email-action](../actions/email-action/README.md)                               | Send email notifications via SMTP with fallback to repository variables for connection settings |
 | [ghcr-discover-repo-packages](../actions/ghcr-discover-repo-packages/README.md) | Discover GHCR container packages owned by a repository and return them as JSON         |
 | [k8s-hardening-scan](../actions/k8s-hardening-scan/README.md)                   | Validate Kubernetes hardening compliance with Kubescape (and optionally Trivy)         |
@@ -48,6 +48,7 @@ Always check that document before modifying or depending on a deprecated compone
 
 | Action                      | Replacement / Note                                                  |
 | --------------------------- | ------------------------------------------------------------------- |
+| [docker-config-resolver](../actions/docker-config-resolver/README.md) | Superseded by [config-resolver](../actions/config-resolver/README.md) — same docker output shape for valid configs, stricter validation (`components` is required) |
 | [commit-and-push]           | (DELETED) Use native Git steps                                      |
 | [pom-updater]               | (DELETED) Prefer metadata-action + build tooling                    |
 | [tag-checker]               | (DELETED) Functionality superseded by tag-action                    |
