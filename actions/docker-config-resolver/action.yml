@@ -1,34 +1,25 @@
 name: "Docker config resolver"
-description: "Read a JSON configuration file, normalize it, and emit flat JSON. Docker components format by default (legacy behaviour); any other schema is flattened generically."
+description: "Read .qubership/docker.cfg (JSON), apply global defaults and security settings, and emit a flat JSON array compatible with the docker-action component input."
 
 inputs:
   file-path:
-    description: "Path to the configuration file (JSON)"
+    description: "Path to docker components config file"
     required: false
     default: ".qubership/docker.cfg"
-  schema:
-    description: "Schema to resolve the configuration with. Empty or docker/v1 keeps the legacy docker behaviour; any other value flattens the file generically."
-    required: false
-    default: ""
 
 outputs:
   config:
-    description: "Resolved configuration in compact flat JSON format"
+    description: "Resolved docker components configuration in JSON format"
     value: ${{ steps.normalize.outputs.normalized }}
-  schema:
-    description: "Effective schema id the configuration was resolved with (docker/v1 when none is declared)"
-    value: ${{ steps.normalize.outputs.schema }}
 
 runs:
   using: "composite"
   steps:
-    - name: Resolve configuration
+    - name: Resolve docker configuration
       id: normalize
       shell: bash
       env:
         FILE_PATH: ${{ inputs.file-path }}
-        INPUT_SCHEMA: ${{ inputs.schema }}
-        OWNER: ${{ github.repository_owner }}
       run: |
         set -euo pipefail
 
@@ -36,101 +27,40 @@ runs:
           echo "Config file not found: $FILE_PATH" >&2
           exit 1
         fi
+        OWNER='${{ github.repository_owner }}'
 
-        if ! jq -e . "$FILE_PATH" > /dev/null 2>&1; then
-          echo "Config file is not valid JSON: $FILE_PATH" >&2
-          exit 1
-        fi
-
-        FILE_SCHEMA=$(jq -r '
-          if (type == "object") and has("schema") then
-            (.schema | if type == "string" then . else error("\"schema\" must be a string") end)
-          else
-            ""
-          end
-        ' "$FILE_PATH")
-
-        if [ -n "$INPUT_SCHEMA" ] && [ -n "$FILE_SCHEMA" ] && [ "$INPUT_SCHEMA" != "$FILE_SCHEMA" ]; then
-          echo "Schema mismatch: input requests \"$INPUT_SCHEMA\" but $FILE_PATH declares \"$FILE_SCHEMA\"" >&2
-          exit 1
-        fi
-
-        # The schema input switches the resolver mode; a schema declared inside the
-        # file is used when the input is empty. No schema anywhere -> legacy docker.
-        EFFECTIVE_SCHEMA="${INPUT_SCHEMA:-${FILE_SCHEMA:-docker/v1}}"
-
-        if [ "$EFFECTIVE_SCHEMA" = "docker/v1" ]; then
-          CONFIG=$(jq -c --arg owner "$OWNER" '
-            if (type != "object") or (has("components") | not) then
-              error("docker/v1: \"components\" is required — not a docker config? Declare \"schema\" in the file or pass the schema input")
-            else
-              .
-            end
-            | (.registry // "") as $reg
-            | (.security // {}) as $globalSec
-            | (.defaults // {}) as $def
-            | [
-                (.components // [])[]
-                | . as $c
-                | if ($c | has("name") | not) or ($c.name == null) or ($c.name == "") then
-                    error("component.name is required")
-                  else
-                    $c
-                  end
-                | . as $c
-                | ($globalSec + ($c.security // {})) as $sec
-                | ($def + $c) as $merged
-                | {
-                    name: $c.name,
-                    image: (
-                       if $reg == "" then
-                         $owner + "/" + $c.name
-                       else
-                         $reg + "/" + $owner + "/" + $c.name
-                       end
-                    ),
-                    registry: $reg
-                  }
-                  + ($merged | del(.name, .security))
-                  + ($sec | with_entries(.key = ("security_" + .key)))
-              ]
-          ' "$FILE_PATH")
-        else
-          # Generic mode: no schema-specific fields are known or required.
-          # Nested objects are flattened into prefixed keys (a.b -> a_b),
-          # arrays are preserved and object elements inside them are flattened too.
-          # Flattened keys must stay unique - a collision fails instead of silently
-          # overwriting a value.
-          CONFIG=$(jq -c '
-            def merge_unique($add):
-              reduce ($add | keys_unsorted[]) as $k (.;
-                if has($k) then
-                  error("key collision after flattening: \"" + $k + "\"")
+        CONFIG=$(jq -c --arg owner "$OWNER" '
+          (.registry // "") as $reg
+          | (.security // {}) as $globalSec
+          | (.defaults // {}) as $def
+          | [
+              (.components // [])[]
+              | . as $c
+              | if ($c | has("name") | not) or ($c.name == null) or ($c.name == "") then
+                  error("component.name is required")
                 else
-                  . + { ($k): $add[$k] }
+                  $c
                 end
-              );
-            def flatten_obj:
-              reduce to_entries[] as $e ({};
-                merge_unique(
-                  if ($e.value | type) == "object" then
-                    ($e.value | flatten_obj | with_entries(.key = ($e.key + "_" + .key)))
-                  elif ($e.value | type) == "array" then
-                    { ($e.key): ($e.value | map(if type == "object" then flatten_obj else . end)) }
-                  else
-                    { ($e.key): $e.value }
-                  end
-                )
-              );
-            if type == "object" then flatten_obj
-            elif type == "array" then map(if type == "object" then flatten_obj else . end)
-            else error("configuration root must be a JSON object or array")
-            end
-          ' "$FILE_PATH")
-        fi
+              | . as $c
+              | ($globalSec + ($c.security // {})) as $sec
+              | ($def + $c) as $merged
+              | {
+                  name: $c.name,
+                  image: (
+                     if $reg == "" then
+                       $owner + "/" + $c.name
+                     else
+                       $reg + "/" + $owner + "/" + $c.name
+                     end
+                  ),
+                  registry: $reg
+                }
+                + ($merged | del(.name, .security))
+                + ($sec | with_entries(.key = ("security_" + .key)))
+            ]
+        ' "$FILE_PATH")
 
         echo "Resolved configuration (pretty):"
         echo "$CONFIG" | jq .
 
-        echo "schema=$EFFECTIVE_SCHEMA" >> "$GITHUB_OUTPUT"
         echo "normalized=$CONFIG" >> "$GITHUB_OUTPUT"
