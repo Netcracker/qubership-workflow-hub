@@ -148,6 +148,56 @@ The file is validated as JSON and normalized to flat form:
 
 ---
 
+## Additional Information
+
+### Configuration File Format
+
+The configuration file must be valid **JSON**. YAML is not supported — `jq` is used to parse
+the file and it requires JSON input.
+
+The top-level `"schema"` field is optional in every mode:
+
+| Field    | Required | Description                                                                                    |
+| -------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `schema` | No       | Schema id (e.g. `docker/v1`, `workflow-policy/v1`). Must match the `schema` input if both set. |
+
+For `docker/v1` the remaining fields (`registry`, `defaults`, `security`, `components`) are
+described in [docker-config-resolver](../docker-config-resolver/README.md) — the format and
+the resolved output are identical. For any other schema the content is free-form JSON.
+
+### Using the Output with docker-action
+
+In `docker/v1` mode the `config` output is directly compatible with the `component` input of
+`docker-action`:
+
+```yaml
+- id: resolve
+  uses: netcracker/qubership-workflow-hub/actions/config-resolver@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 # v2.4.0
+
+- uses: netcracker/qubership-workflow-hub/actions/docker-action@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 # v2.4.0
+  with:
+    component: ${{ steps.resolve.outputs.config }}
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Branching on the Effective Schema
+
+The `schema` output lets a workflow branch without re-parsing the file:
+
+```yaml
+- id: resolve
+  uses: netcracker/qubership-workflow-hub/actions/config-resolver@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 # v2.4.0
+  with:
+    file-path: .qubership/my.cfg
+
+- name: Docker-specific step
+  if: steps.resolve.outputs.schema == 'docker/v1'
+  run: echo "docker mode"
+```
+
+---
+
 ## Usage
 
 ### Docker components (default mode)
