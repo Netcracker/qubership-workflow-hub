@@ -1,5 +1,11 @@
 # Docker — config, pipelines, and security
 
+> **Note:** `docker-config-resolver` is deprecated — superseded by `config-resolver`, a
+> drop-in replacement (same `file-path` input and identical output in docker mode, plus an
+> optional `schema` input for non-docker configs). Use `config-resolver` when the pinned
+> release contains `actions/config-resolver`; for older releases `docker-config-resolver`
+> remains valid. All pipeline shapes in this guide apply to both.
+
 ## Migrating an existing workflow
 
 1. Read the workflow file (ask user for path or let them paste it).
@@ -111,9 +117,11 @@ tags: ${{ steps.metadata-release.outputs.result || steps.metadata-push.outputs.r
 
 ### Key action inputs reference
 
-**`docker-config-resolver`:**
+**`config-resolver` / `docker-config-resolver` (deprecated):**
 
 - `file-path` — path to config file
+- `schema` — `config-resolver` only, optional: empty or `docker/v1` for docker mode; any
+  other value flattens the file generically (see the action README)
 
 **`metadata-action`:**
 
