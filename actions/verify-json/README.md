@@ -16,6 +16,8 @@ The primary output of this action is the `is-valid` output indicating the valida
 For example, `0` means the JSON file is valid against the schema, and any non-zero value signals a failure.
 The step also exits with code `1` on failure, which will halt the workflow unless `continue-on-error: true` is set.
 
+The action passes input paths via environment variables and quotes them in the validation command, so paths containing spaces are handled correctly.
+
 ## 📌 Inputs
 
 | Name | Description | Required | Default |
@@ -72,4 +74,4 @@ jobs:
 ## Troubleshooting
 
 - **`sudo: apt: command not found`:** This action installs `python3-jsonschema` via `apt` and requires an Ubuntu-based runner (`ubuntu-latest`). It will not work on Windows or macOS runners.
-- **Validation error details not surfaced:** When validation fails, the exit code is logged but the raw `jsonschema` output is captured into a variable that is not printed. Check the step log for the `jsonschema` stderr output directly.
+- **Validation failed with schema errors:** The action prints full `jsonschema` diagnostics in both the step log and the GitHub Step Summary.

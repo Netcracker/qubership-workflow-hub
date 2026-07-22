@@ -35,16 +35,27 @@ runs:
     - name: "Validate"
       shell: bash
       id: validate
+      env:
+        JSON_FILE: ${{ inputs.json-file }}
+        SCHEMA_FILE: ${{ inputs.schema-file }}
       run: |
         set +e
-        validate_res=$(jsonschema -i ${{ inputs.json-file }} ${{ inputs.schema-file }} 2>&1)
+        validate_res=$(jsonschema -i "${JSON_FILE}" "${SCHEMA_FILE}" 2>&1)
         validate=$?
-        echo "isvalid=${validate}" >> $GITHUB_OUTPUT
-        if [ "${validate} != "0" ]; then
+        echo "result=${validate}" >> "$GITHUB_OUTPUT"
+        if [ "${validate}" -ne 0 ]; then
           echo "❗ JSON validation failed."
           echo "❗ JSON validation failed." >> $GITHUB_STEP_SUMMARY
           echo "❗ Error: ${validate}"
           echo "❗ Error: ${validate}" >> $GITHUB_STEP_SUMMARY
+          echo "${validate_res}"
+          {
+            echo "### jsonschema diagnostics"
+            echo
+            echo '```text'
+            echo "${validate_res}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
           exit 1
         else
           echo "✅ JSON file is valid."
