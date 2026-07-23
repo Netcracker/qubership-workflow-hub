@@ -99,13 +99,25 @@ jobs:
 
       - name: Run verify-json (must fail on schema violation)
         id: verify
+        continue-on-error: true
         uses: ./actions/verify-json
         with:
           json-file: /tmp/fixtures/invalid.json
           schema-file: /tmp/fixtures/schema.json
 
-      - name: Regression — action accepted invalid input
+      - name: Verify it failed for the right reason
         shell: bash
+        env:
+          OUTCOME: ${{ steps.verify.outcome }}
         run: |
-          echo "FAIL: verify-json should have failed on schema-violating input (version: 999) but reported success"
-          exit 1
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: verify-json should have failed on schema-violating input (version: 999) but outcome was '$OUTCOME'"
+            exit 1
+          fi
+          if ! grep -qF "999 is not of type 'string'" "$GITHUB_STEP_SUMMARY"; then
+            echo "FAIL: verify-json failed, but not with the expected schema-violation diagnostic"
+            echo "--- Step summary content ---"
+            cat "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "PASS: verify-json correctly rejected schema-violating input (999 is not of type 'string')"
