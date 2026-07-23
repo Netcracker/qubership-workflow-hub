@@ -29,7 +29,7 @@ runs:
         python3 -m pip install --quiet "jsonschema>=4.0.0"
 
     - name: "Validate JSON"
-      shell: python3
+      shell: python3 {0}
       id: validate
       env:
         JSON_FILE: ${{ inputs.json-file }}
