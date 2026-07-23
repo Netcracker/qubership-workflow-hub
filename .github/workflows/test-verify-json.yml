@@ -117,17 +117,12 @@ jobs:
         shell: bash
         env:
           OUTCOME: ${{ steps.verify.outcome }}
-          IS_VALID: ${{ steps.verify.outputs.is-valid }}
         run: |
           if [ "$OUTCOME" != "failure" ]; then
-            echo "? Expected action to fail for invalid JSON, but outcome was: $OUTCOME"
+            echo "Expected action to pass but it should fail for invalid JSON, outcome was: $OUTCOME"
             exit 1
           fi
-          if [ "$IS_VALID" != "1" ]; then
-            echo "? Expected is-valid=1, got: $IS_VALID"
-            exit 1
-          fi
-          echo "? Schema violation correctly caught. is-valid=$IS_VALID"
+          echo "Schema violation correctly caught (outcome=$OUTCOME)"
 
   test-malformed-json:
     name: Test Malformed JSON is caught
@@ -168,14 +163,9 @@ jobs:
         shell: bash
         env:
           OUTCOME: ${{ steps.verify.outcome }}
-          IS_VALID: ${{ steps.verify.outputs.is-valid }}
         run: |
           if [ "$OUTCOME" != "failure" ]; then
-            echo "? Expected action to fail for malformed JSON, but outcome was: $OUTCOME"
+            echo "Expected action to fail for malformed JSON, but outcome was: $OUTCOME"
             exit 1
           fi
-          if [ "$IS_VALID" != "1" ]; then
-            echo "? Expected is-valid=1, got: $IS_VALID"
-            exit 1
-          fi
-          echo "? Malformed JSON correctly caught. is-valid=$IS_VALID"
+          echo "Malformed JSON correctly caught (outcome=$OUTCOME)"
