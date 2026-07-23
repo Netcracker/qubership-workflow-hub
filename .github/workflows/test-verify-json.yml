@@ -1,4 +1,4 @@
-﻿name: TEST verify-json
+name: TEST verify-json
 
 on:
   workflow_dispatch: {}
@@ -22,7 +22,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -64,10 +64,10 @@ jobs:
           IS_VALID: ${{ steps.verify.outputs.is-valid }}
         run: |
           if [ "$IS_VALID" != "0" ]; then
-            echo "❌ Expected is-valid=0, got: $IS_VALID"
+            echo "? Expected is-valid=0, got: $IS_VALID"
             exit 1
           fi
-          echo "✅ is-valid output is correct: $IS_VALID"
+          echo "? is-valid output is correct: $IS_VALID"
 
   test-invalid-json-schema-violation:
     name: Test Schema violation is caught
@@ -76,7 +76,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -120,14 +120,14 @@ jobs:
           IS_VALID: ${{ steps.verify.outputs.is-valid }}
         run: |
           if [ "$OUTCOME" != "failure" ]; then
-            echo "❌ Expected action to fail for invalid JSON, but outcome was: $OUTCOME"
+            echo "? Expected action to fail for invalid JSON, but outcome was: $OUTCOME"
             exit 1
           fi
           if [ "$IS_VALID" != "1" ]; then
-            echo "❌ Expected is-valid=1, got: $IS_VALID"
+            echo "? Expected is-valid=1, got: $IS_VALID"
             exit 1
           fi
-          echo "✅ Schema violation correctly caught. is-valid=$IS_VALID"
+          echo "? Schema violation correctly caught. is-valid=$IS_VALID"
 
   test-malformed-json:
     name: Test Malformed JSON is caught
@@ -136,7 +136,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -171,11 +171,11 @@ jobs:
           IS_VALID: ${{ steps.verify.outputs.is-valid }}
         run: |
           if [ "$OUTCOME" != "failure" ]; then
-            echo "❌ Expected action to fail for malformed JSON, but outcome was: $OUTCOME"
+            echo "? Expected action to fail for malformed JSON, but outcome was: $OUTCOME"
             exit 1
           fi
           if [ "$IS_VALID" != "1" ]; then
-            echo "❌ Expected is-valid=1, got: $IS_VALID"
+            echo "? Expected is-valid=1, got: $IS_VALID"
             exit 1
           fi
-          echo "✅ Malformed JSON correctly caught. is-valid=$IS_VALID"
+          echo "? Malformed JSON correctly caught. is-valid=$IS_VALID"
