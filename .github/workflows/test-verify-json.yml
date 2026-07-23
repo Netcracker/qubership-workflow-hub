@@ -31,46 +31,42 @@ jobs:
         run: |
           mkdir -p /tmp/fixtures
           cat > /tmp/fixtures/valid.json <<'EOF'
-          {
-            "name": "test-service",
-            "version": "1.0.0",
-            "port": 8080
-          }
+          {"name":"test-service","version":"1.0.0","port":8080}
           EOF
           cat > /tmp/fixtures/schema.json <<'EOF'
           {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
-            "required": ["name", "version", "port"],
+            "required": ["name","version","port"],
             "properties": {
-              "name":    { "type": "string" },
-              "version": { "type": "string" },
-              "port":    { "type": "integer", "minimum": 1, "maximum": 65535 }
+              "name":    {"type":"string"},
+              "version": {"type":"string"},
+              "port":    {"type":"integer","minimum":1,"maximum":65535}
             },
             "additionalProperties": false
           }
           EOF
 
-      - name: Verify JSON (should pass)
+      - name: Run verify-json
         id: verify
         uses: ./actions/verify-json
         with:
           json-file: /tmp/fixtures/valid.json
           schema-file: /tmp/fixtures/schema.json
 
-      - name: Check output
+      - name: Assert passed with is-valid=0
         shell: bash
         env:
           IS_VALID: ${{ steps.verify.outputs.is-valid }}
         run: |
           if [ "$IS_VALID" != "0" ]; then
-            echo "? Expected is-valid=0, got: $IS_VALID"
+            echo "FAIL: expected is-valid=0, got '$IS_VALID'"
             exit 1
           fi
-          echo "? is-valid output is correct: $IS_VALID"
+          echo "PASS: is-valid=$IS_VALID"
 
-  test-invalid-json-schema-violation:
-    name: Test Schema violation is caught
+  test-schema-violation:
+    name: Test Schema violation fails the action
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -85,27 +81,23 @@ jobs:
         run: |
           mkdir -p /tmp/fixtures
           cat > /tmp/fixtures/invalid.json <<'EOF'
-          {
-            "name": "test-service",
-            "version": 999,
-            "port": 99999
-          }
+          {"name":"test-service","version":999,"port":99999}
           EOF
           cat > /tmp/fixtures/schema.json <<'EOF'
           {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
-            "required": ["name", "version", "port"],
+            "required": ["name","version","port"],
             "properties": {
-              "name":    { "type": "string" },
-              "version": { "type": "string" },
-              "port":    { "type": "integer", "minimum": 1, "maximum": 65535 }
+              "name":    {"type":"string"},
+              "version": {"type":"string"},
+              "port":    {"type":"integer","minimum":1,"maximum":65535}
             },
             "additionalProperties": false
           }
           EOF
 
-      - name: Verify JSON (should fail)
+      - name: Run verify-json (expected to fail)
         id: verify
         uses: ./actions/verify-json
         with:
@@ -113,19 +105,19 @@ jobs:
           schema-file: /tmp/fixtures/schema.json
         continue-on-error: true
 
-      - name: Check that validation failed
+      - name: Assert action failed
         shell: bash
         env:
           OUTCOME: ${{ steps.verify.outcome }}
         run: |
           if [ "$OUTCOME" != "failure" ]; then
-            echo "Expected action to pass but it should fail for invalid JSON, outcome was: $OUTCOME"
+            echo "FAIL: expected outcome=failure, got '$OUTCOME'"
             exit 1
           fi
-          echo "Schema violation correctly caught (outcome=$OUTCOME)"
+          echo "PASS: action correctly failed (outcome=$OUTCOME)"
 
   test-malformed-json:
-    name: Test Malformed JSON is caught
+    name: Test Malformed JSON fails the action
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -145,13 +137,13 @@ jobs:
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
             "properties": {
-              "name":    { "type": "string" },
-              "version": { "type": "string" }
+              "name":    {"type":"string"},
+              "version": {"type":"string"}
             }
           }
           EOF
 
-      - name: Verify JSON (should fail on parse error)
+      - name: Run verify-json (expected to fail)
         id: verify
         uses: ./actions/verify-json
         with:
@@ -159,13 +151,13 @@ jobs:
           schema-file: /tmp/fixtures/schema.json
         continue-on-error: true
 
-      - name: Check that parse error was caught
+      - name: Assert action failed
         shell: bash
         env:
           OUTCOME: ${{ steps.verify.outcome }}
         run: |
           if [ "$OUTCOME" != "failure" ]; then
-            echo "Expected action to fail for malformed JSON, but outcome was: $OUTCOME"
+            echo "FAIL: expected outcome=failure, got '$OUTCOME'"
             exit 1
           fi
-          echo "Malformed JSON correctly caught (outcome=$OUTCOME)"
+          echo "PASS: action correctly failed (outcome=$OUTCOME)"
