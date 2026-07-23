@@ -161,3 +161,75 @@ jobs:
             exit 1
           fi
           echo "PASS: action correctly failed (outcome=$OUTCOME)"
+
+  test-missing-file:
+    name: Test Missing file fails the action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Create fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/valid.json <<'EOF'
+          {"name":"test-service","version":"1.0.0","port":8080}
+          EOF
+          cat > /tmp/fixtures/schema.json <<'EOF'
+          {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "required": ["name","version","port"],
+            "properties": {
+              "name":    {"type":"string"},
+              "version": {"type":"string"},
+              "port":    {"type":"integer","minimum":1,"maximum":65535}
+            },
+            "additionalProperties": false
+          }
+          EOF
+
+      - name: Run verify-json (missing json-file, expected to fail)
+        id: missing-json
+        uses: ./actions/verify-json
+        with:
+          json-file: /tmp/fixtures/does-not-exist.json
+          schema-file: /tmp/fixtures/schema.json
+        continue-on-error: true
+
+      - name: Run verify-json (missing schema-file, expected to fail)
+        id: missing-schema
+        uses: ./actions/verify-json
+        with:
+          json-file: /tmp/fixtures/valid.json
+          schema-file: /tmp/fixtures/does-not-exist.json
+        continue-on-error: true
+
+      - name: Assert both failed
+        shell: bash
+        env:
+          MISSING_JSON_OUTCOME: ${{ steps.missing-json.outcome }}
+          MISSING_SCHEMA_OUTCOME: ${{ steps.missing-schema.outcome }}
+        run: |
+          FAILED=0
+
+          if [ "$MISSING_JSON_OUTCOME" != "failure" ]; then
+            echo "FAIL: missing json-file — expected outcome=failure, got '$MISSING_JSON_OUTCOME'"
+            FAILED=1
+          else
+            echo "PASS: missing json-file correctly failed"
+          fi
+
+          if [ "$MISSING_SCHEMA_OUTCOME" != "failure" ]; then
+            echo "FAIL: missing schema-file — expected outcome=failure, got '$MISSING_SCHEMA_OUTCOME'"
+            FAILED=1
+          else
+            echo "PASS: missing schema-file correctly failed"
+          fi
+
+          exit $FAILED
