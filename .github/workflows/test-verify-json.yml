@@ -97,24 +97,18 @@ jobs:
           }
           EOF
 
-      - name: Run verify-json (expected to fail)
+      - name: Run verify-json (must fail on schema violation)
         id: verify
         uses: ./actions/verify-json
         with:
           json-file: /tmp/fixtures/invalid.json
           schema-file: /tmp/fixtures/schema.json
-        continue-on-error: true
 
-      - name: Assert action failed
+      - name: Regression — action accepted invalid input
         shell: bash
-        env:
-          OUTCOME: ${{ steps.verify.outcome }}
         run: |
-          if [ "$OUTCOME" != "failure" ]; then
-            echo "FAIL: expected outcome=failure, got '$OUTCOME'"
-            exit 1
-          fi
-          echo "PASS: action correctly failed (outcome=$OUTCOME)"
+          echo "FAIL: verify-json should have failed on schema-violating input (version: 999) but reported success"
+          exit 1
 
   test-malformed-json:
     name: Test Malformed JSON fails the action
@@ -143,27 +137,63 @@ jobs:
           }
           EOF
 
-      - name: Run verify-json (expected to fail)
+      - name: Run verify-json (must fail on malformed JSON)
         id: verify
         uses: ./actions/verify-json
         with:
           json-file: /tmp/fixtures/malformed.json
           schema-file: /tmp/fixtures/schema.json
-        continue-on-error: true
 
-      - name: Assert action failed
+      - name: Regression — action accepted malformed JSON
         shell: bash
-        env:
-          OUTCOME: ${{ steps.verify.outcome }}
         run: |
-          if [ "$OUTCOME" != "failure" ]; then
-            echo "FAIL: expected outcome=failure, got '$OUTCOME'"
-            exit 1
-          fi
-          echo "PASS: action correctly failed (outcome=$OUTCOME)"
+          echo "FAIL: verify-json should have failed on malformed JSON but reported success"
+          exit 1
 
-  test-missing-file:
-    name: Test Missing file fails the action
+  test-missing-json-file:
+    name: Test Missing json-file fails the action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Create fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/schema.json <<'EOF'
+          {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "required": ["name","version","port"],
+            "properties": {
+              "name":    {"type":"string"},
+              "version": {"type":"string"},
+              "port":    {"type":"integer","minimum":1,"maximum":65535}
+            },
+            "additionalProperties": false
+          }
+          EOF
+
+      - name: Run verify-json (must fail — json-file missing)
+        id: verify
+        uses: ./actions/verify-json
+        with:
+          json-file: /tmp/fixtures/does-not-exist.json
+          schema-file: /tmp/fixtures/schema.json
+
+      - name: Regression — action accepted a missing json-file
+        shell: bash
+        run: |
+          echo "FAIL: verify-json should have failed when json-file does not exist but reported success"
+          exit 1
+
+  test-missing-schema-file:
+    name: Test Missing schema-file fails the action
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -180,56 +210,16 @@ jobs:
           cat > /tmp/fixtures/valid.json <<'EOF'
           {"name":"test-service","version":"1.0.0","port":8080}
           EOF
-          cat > /tmp/fixtures/schema.json <<'EOF'
-          {
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object",
-            "required": ["name","version","port"],
-            "properties": {
-              "name":    {"type":"string"},
-              "version": {"type":"string"},
-              "port":    {"type":"integer","minimum":1,"maximum":65535}
-            },
-            "additionalProperties": false
-          }
-          EOF
 
-      - name: Run verify-json (missing json-file, expected to fail)
-        id: missing-json
-        uses: ./actions/verify-json
-        with:
-          json-file: /tmp/fixtures/does-not-exist.json
-          schema-file: /tmp/fixtures/schema.json
-        continue-on-error: true
-
-      - name: Run verify-json (missing schema-file, expected to fail)
-        id: missing-schema
+      - name: Run verify-json (must fail — schema-file missing)
+        id: verify
         uses: ./actions/verify-json
         with:
           json-file: /tmp/fixtures/valid.json
           schema-file: /tmp/fixtures/does-not-exist.json
-        continue-on-error: true
 
-      - name: Assert both failed
+      - name: Regression — action accepted a missing schema-file
         shell: bash
-        env:
-          MISSING_JSON_OUTCOME: ${{ steps.missing-json.outcome }}
-          MISSING_SCHEMA_OUTCOME: ${{ steps.missing-schema.outcome }}
         run: |
-          FAILED=0
-
-          if [ "$MISSING_JSON_OUTCOME" != "failure" ]; then
-            echo "FAIL: missing json-file — expected outcome=failure, got '$MISSING_JSON_OUTCOME'"
-            FAILED=1
-          else
-            echo "PASS: missing json-file correctly failed"
-          fi
-
-          if [ "$MISSING_SCHEMA_OUTCOME" != "failure" ]; then
-            echo "FAIL: missing schema-file — expected outcome=failure, got '$MISSING_SCHEMA_OUTCOME'"
-            FAILED=1
-          else
-            echo "PASS: missing schema-file correctly failed"
-          fi
-
-          exit $FAILED
+          echo "FAIL: verify-json should have failed when schema-file does not exist but reported success"
+          exit 1
