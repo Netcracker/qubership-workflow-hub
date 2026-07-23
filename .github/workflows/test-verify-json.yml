@@ -1,0 +1,181 @@
+﻿name: TEST verify-json
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "actions/verify-json/**"
+      - ".github/workflows/test-verify-json.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-valid-json:
+    name: Test Valid JSON passes validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/valid.json <<'EOF'
+          {
+            "name": "test-service",
+            "version": "1.0.0",
+            "port": 8080
+          }
+          EOF
+          cat > /tmp/fixtures/schema.json <<'EOF'
+          {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "required": ["name", "version", "port"],
+            "properties": {
+              "name":    { "type": "string" },
+              "version": { "type": "string" },
+              "port":    { "type": "integer", "minimum": 1, "maximum": 65535 }
+            },
+            "additionalProperties": false
+          }
+          EOF
+
+      - name: Verify JSON (should pass)
+        id: verify
+        uses: ./actions/verify-json
+        with:
+          json-file: /tmp/fixtures/valid.json
+          schema-file: /tmp/fixtures/schema.json
+
+      - name: Check output
+        shell: bash
+        env:
+          IS_VALID: ${{ steps.verify.outputs.is-valid }}
+        run: |
+          if [ "$IS_VALID" != "0" ]; then
+            echo "❌ Expected is-valid=0, got: $IS_VALID"
+            exit 1
+          fi
+          echo "✅ is-valid output is correct: $IS_VALID"
+
+  test-invalid-json-schema-violation:
+    name: Test Schema violation is caught
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/invalid.json <<'EOF'
+          {
+            "name": "test-service",
+            "version": 999,
+            "port": 99999
+          }
+          EOF
+          cat > /tmp/fixtures/schema.json <<'EOF'
+          {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "required": ["name", "version", "port"],
+            "properties": {
+              "name":    { "type": "string" },
+              "version": { "type": "string" },
+              "port":    { "type": "integer", "minimum": 1, "maximum": 65535 }
+            },
+            "additionalProperties": false
+          }
+          EOF
+
+      - name: Verify JSON (should fail)
+        id: verify
+        uses: ./actions/verify-json
+        with:
+          json-file: /tmp/fixtures/invalid.json
+          schema-file: /tmp/fixtures/schema.json
+        continue-on-error: true
+
+      - name: Check that validation failed
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.verify.outcome }}
+          IS_VALID: ${{ steps.verify.outputs.is-valid }}
+        run: |
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "❌ Expected action to fail for invalid JSON, but outcome was: $OUTCOME"
+            exit 1
+          fi
+          if [ "$IS_VALID" != "1" ]; then
+            echo "❌ Expected is-valid=1, got: $IS_VALID"
+            exit 1
+          fi
+          echo "✅ Schema violation correctly caught. is-valid=$IS_VALID"
+
+  test-malformed-json:
+    name: Test Malformed JSON is caught
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          printf '{"name":"broken","version":}' > /tmp/fixtures/malformed.json
+          cat > /tmp/fixtures/schema.json <<'EOF'
+          {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+              "name":    { "type": "string" },
+              "version": { "type": "string" }
+            }
+          }
+          EOF
+
+      - name: Verify JSON (should fail on parse error)
+        id: verify
+        uses: ./actions/verify-json
+        with:
+          json-file: /tmp/fixtures/malformed.json
+          schema-file: /tmp/fixtures/schema.json
+        continue-on-error: true
+
+      - name: Check that parse error was caught
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.verify.outcome }}
+          IS_VALID: ${{ steps.verify.outputs.is-valid }}
+        run: |
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "❌ Expected action to fail for malformed JSON, but outcome was: $OUTCOME"
+            exit 1
+          fi
+          if [ "$IS_VALID" != "1" ]; then
+            echo "❌ Expected is-valid=1, got: $IS_VALID"
+            exit 1
+          fi
+          echo "✅ Malformed JSON correctly caught. is-valid=$IS_VALID"
