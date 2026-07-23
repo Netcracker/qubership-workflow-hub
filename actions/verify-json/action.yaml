@@ -41,14 +41,12 @@ runs:
         from jsonschema import validate, ValidationError
 
         def write_output(value):
-            """Write to GITHUB_OUTPUT if available."""
             output_file = os.environ.get('GITHUB_OUTPUT')
             if output_file:
                 with open(output_file, 'a') as f:
                     f.write(f'result={value}\n')
 
         def write_summary(content):
-            """Write to GITHUB_STEP_SUMMARY if available."""
             summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
             if summary_file:
                 with open(summary_file, 'a') as f:
@@ -60,19 +58,19 @@ runs:
         if not json_file or not schema_file:
             print("❗ Missing required environment variables", file=sys.stderr)
             write_output(1)
-            sys.exit(1)
+            sys.exit(0)
 
         if not os.path.exists(json_file):
             print(f"❗ JSON file not found: {json_file}", file=sys.stderr)
             write_summary(f"❗ JSON file not found: {json_file}\n")
             write_output(1)
-            sys.exit(1)
+            sys.exit(0)
 
         if not os.path.exists(schema_file):
             print(f"❗ Schema file not found: {schema_file}", file=sys.stderr)
             write_summary(f"❗ Schema file not found: {schema_file}\n")
             write_output(1)
-            sys.exit(1)
+            sys.exit(0)
 
         try:
             with open(json_file, 'r') as f:
@@ -89,17 +87,23 @@ runs:
             print(f"❗ JSON validation failed: {str(e).split(chr(10))[0]}", file=sys.stderr)
             write_summary(f"❗ JSON validation failed.\n\n### jsonschema diagnostics\n\n```\n{e}\n```\n")
             write_output(1)
-            sys.exit(1)
 
         except json.JSONDecodeError as e:
             print(f"❗ JSON decode error in {json_file}: {e}", file=sys.stderr)
             write_summary(f"❗ JSON decode error: {e}\n")
             write_output(1)
-            sys.exit(1)
 
         except Exception as e:
             print(f"❗ Unexpected error: {e}", file=sys.stderr)
             write_summary(f"❗ Unexpected error: {e}\n")
             write_output(1)
-            sys.exit(1)
+
+    - name: "Fail on invalid"
+      shell: bash
+      env:
+        RESULT: ${{ steps.validate.outputs.result }}
+      run: |
+        if [ "${RESULT}" != "0" ]; then
+          exit 1
+        fi
 
