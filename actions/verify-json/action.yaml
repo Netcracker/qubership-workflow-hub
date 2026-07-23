@@ -1,4 +1,4 @@
----
+﻿---
 
 # To access files from action use path snippet
 # ${GITHUB_WORKSPACE}/../../_actions/<action-owner>/<action-name>/<action-version>
@@ -26,7 +26,7 @@ runs:
       shell: bash
       run: |
         set -e
-        python3 -m pip install --quiet jsonschema
+        python3 -m pip install --quiet "jsonschema>=4.0.0"
 
     - name: "Validate JSON"
       shell: python3

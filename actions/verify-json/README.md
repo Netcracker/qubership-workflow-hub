@@ -1,4 +1,4 @@
-# 🚀 Verify JSON Action
+﻿# 🚀 Verify JSON Action
 
 This **Verify JSON** GitHub Action validates a JSON file against a JSON Schema using Python's `jsonschema` library, reporting pass/fail results to the GitHub Step Summary.
 

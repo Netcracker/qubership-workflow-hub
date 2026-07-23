@@ -1,4 +1,4 @@
-name: TEST verify-json
+﻿name: TEST verify-json
 
 on:
   workflow_dispatch: {}
