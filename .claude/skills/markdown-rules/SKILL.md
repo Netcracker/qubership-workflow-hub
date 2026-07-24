@@ -12,9 +12,8 @@ When invoked via `/md-lint [files]`, audit and fix target files directly.
 ## Configuration
 
 This mirrors `.github/linters/.markdown-lint.yml` — the file super-linter actually loads in CI.
-**That file is the source of truth.** If it changes, update this block to match — do not let it
-drift again (see the *2026-07-24 drift incident* note below). When auditing a different repo,
-read its actual config instead of assuming these values.
+That file is the source of truth; if it changes, update this block to match. When auditing a
+different repo, read its actual config instead of assuming these values.
 
 ```json
 {
@@ -37,17 +36,8 @@ read its actual config instead of assuming these values.
 
 `default: true` — all rules enabled at their markdownlint-tool default unless overridden above.
 Rules not listed here (MD004, MD007, MD029, MD041, MD046, etc.) run at the plain markdownlint
-v0.37.4 default for that rule — not necessarily the value this file's Rules table used to assume.
-Notably **MD041 is not disabled** in this repo's config (unlike an earlier version of this
-skill claimed) — it runs at the tool default, which checks that the file starts with a
-top-level heading.
-
-**2026-07-24 drift incident:** this block previously said `MD013.line_length: 120` with
-`code_blocks: false`, and separately listed MD026 as active and MD033 as restricted to
-`img/br/a/p`. None of that matched `.github/linters/.markdown-lint.yml`. It caused a real
-CI failure — a heading at 116 chars passed the in-memory check (limit believed to be 120)
-but failed real super-linter (heading limit is actually 100, a *separate* setting from the
-general 500-char body limit). Fixed by copying the real file's values here verbatim.
+v0.37.4 default for that rule. MD041 is not disabled in this repo's config — it runs at the
+tool default, which checks that the file starts with a top-level heading.
 
 ## Rules
 
