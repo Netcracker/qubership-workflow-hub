@@ -25,6 +25,7 @@ the relevant supporting document:
 | APM packages update | `utilities.md` |
 | Utilities (wait-for-workflow, custom-event, store-input-params) | `utilities.md` |
 | Repository config file resolution without Docker (workflow policy, custom JSON configs) | `utilities.md` |
+| JSON Schema validation (validate a JSON file against a schema, fail the pipeline on violations) | `utilities.md` |
 
 Each guide contains: clarifying questions for the user, config file schemas,
 and pipeline patterns for that domain. Read it before picking actions or
