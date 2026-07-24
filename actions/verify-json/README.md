@@ -1,6 +1,7 @@
-﻿# 🚀 Verify JSON Action
+# 🚀 Verify JSON Action
 
-This **Verify JSON** GitHub Action validates a JSON file against a JSON Schema using Python's `jsonschema` library, reporting pass/fail results to the GitHub Step Summary.
+This **Verify JSON** GitHub Action validates a JSON file against a JSON Schema using Python's `jsonschema` library,
+reporting pass/fail results to the GitHub Step Summary.
 
 ---
 
@@ -16,6 +17,7 @@ This **Verify JSON** GitHub Action validates a JSON file against a JSON Schema u
 ### Action Result
 
 The primary output of this action is the `is-valid` output indicating the validation exit code:
+
 - `0` means the JSON file is valid against the schema
 - `1` indicates a validation failure or error
 
@@ -76,7 +78,10 @@ jobs:
 
 ## Troubleshooting
 
-- **`FileNotFoundError: JSON file not found`** — Verify that the `json-file` path is correct and relative to the repository root (or that the file is checked out).
+- **`FileNotFoundError: JSON file not found`** — Verify that the `json-file` path is correct and relative to the
+  repository root (or that the file is checked out).
 - **`FileNotFoundError: Schema file not found`** — Verify that the `schema-file` path is correct.
-- **`JSON validation failed`** — The JSON file does not conform to the schema. The action prints detailed validation errors in both the step log and GitHub Step Summary to help diagnose the issue.
-- **`JSON decode error`** — The JSON file contains invalid JSON syntax. Check for syntax errors like missing commas, trailing commas, or unescaped quotes.
+- **`JSON validation failed`** — The JSON file does not conform to the schema. The action prints detailed validation
+  errors in both the step log and GitHub Step Summary to help diagnose the issue.
+- **`JSON decode error`** — The JSON file contains invalid JSON syntax. Check for syntax errors like missing commas,
+  trailing commas, or unescaped quotes.

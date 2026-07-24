@@ -1,4 +1,4 @@
-﻿---
+---
 
 # To access files from action use path snippet
 # ${GITHUB_WORKSPACE}/../../_actions/<action-owner>/<action-name>/<action-version>
