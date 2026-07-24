@@ -1,28 +1,69 @@
 lockfile_version: '1'
-generated_at: '2026-06-10T06:15:33.514317+00:00'
-apm_version: 0.15.0
+generated_at: '2026-07-24T09:56:09.352248+00:00'
+apm_version: 0.23.0
 dependencies:
 - repo_url: Netcracker/qubership-ai-packages
+  name: apm-authoring
   host: github.com
-  resolved_commit: 302126a6a537708d93e524af2d1d1df808c43b13
+  resolved_commit: b5c51a1eaa16ac523d94008db6dd5ed5d946ea08
+  version: 1.0.0
   virtual_path: agent-packages/apm-authoring
   is_virtual: true
   package_type: apm_package
   deployed_files:
   - .claude/rules/apm-authoring.md
+  - .claude/skills/apm-authoring
+  - .claude/skills/apm-authoring/SKILL.md
   deployed_file_hashes:
-    .claude/rules/apm-authoring.md: sha256:0149a17b87bed3e19e36ef8b8c246a523aed0d8e34e815c5aa9491def2b16945
-  content_hash: sha256:67d86cc0cae0313cfbfa3e6a16d52c0184bc477711a4d2d668236fca5f7c2c47
+    .claude/rules/apm-authoring.md: sha256:5c4185d3d69333a810c01f5e26a8ea46b033e7082a21f1551433d6c97d8a24a2
+    .claude/skills/apm-authoring/SKILL.md: sha256:1832abc93a14884504dc87d97cc0c2825c7e7b4a6786f2daccf1d6ef172bc907
+  content_hash: sha256:1d731d0a26376eda0b82629e6e1cff1b41dfeae13fe8d7e5debb24a1699ea4a8
   is_dev: true
 - repo_url: _local/qubership-workflow-hub-usage
+  name: qubership-workflow-hub-usage
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/rules/qubership-workflow-hub-usage.md
   - .claude/skills/qubership-actions-guide
+  - .claude/skills/qubership-actions-guide/SKILL.md
+  - .claude/skills/qubership-actions-guide/cla.md
+  - .claude/skills/qubership-actions-guide/cleanup.md
+  - .claude/skills/qubership-actions-guide/docker.md
+  - .claude/skills/qubership-actions-guide/helm.md
+  - .claude/skills/qubership-actions-guide/maven.md
+  - .claude/skills/qubership-actions-guide/notifications.md
+  - .claude/skills/qubership-actions-guide/pr.md
+  - .claude/skills/qubership-actions-guide/release.md
+  - .claude/skills/qubership-actions-guide/security.md
+  - .claude/skills/qubership-actions-guide/utilities.md
   - .claude/skills/qubership-templates-guide
+  - .claude/skills/qubership-templates-guide/SKILL.md
   - .claude/skills/qubership-workflow-conventions
+  - .claude/skills/qubership-workflow-conventions/SKILL.md
+  - .claude/skills/qubership-workflow-conventions/debugging-playbook.md
+  - .claude/skills/qubership-workflow-conventions/security-model.md
+  - .claude/skills/qubership-workflow-conventions/workflow-patterns.md
+  - .claude/skills/qubership-workflow-conventions/zizmor-rules.md
   deployed_file_hashes:
-    .claude/rules/qubership-workflow-hub-usage.md: sha256:2a972c3b785eebeb533d44ea91ede95c40b9121ee4db18dff10900e592938803
+    .claude/rules/qubership-workflow-hub-usage.md: sha256:3b936301f81645936d916eb4b21578b8721dc373b521062860d7ed7731681636
+    .claude/skills/qubership-actions-guide/SKILL.md: sha256:209a8bf5a0099b9298013616bfd74f169fb3d46237d80914a782b3ba90cdb130
+    .claude/skills/qubership-actions-guide/cla.md: sha256:245533ccd1f9c6413e0a1b83cdb2d9f7d8e065a9fdb2d5a0fe9694b8b59b57f1
+    .claude/skills/qubership-actions-guide/cleanup.md: sha256:05b82bb4f1933c39981600ac53f916c510741eb25d3636b8b99bc31a600f7560
+    .claude/skills/qubership-actions-guide/docker.md: sha256:50859ac4df9bc845d383cf47cb3dcf8a8846fae4b9d3bbbbd42e265338bcb65b
+    .claude/skills/qubership-actions-guide/helm.md: sha256:2ea93804c4b487ead21619bd17858d9576f71e1def26531548f4ff1d22a00824
+    .claude/skills/qubership-actions-guide/maven.md: sha256:05e2975120a9e482630d35084ef44a86a0a85a686f99bfd39f3a84cf0055d134
+    .claude/skills/qubership-actions-guide/notifications.md: sha256:924424eb5dcdc17fdcb155a090af714a09e906e0808a520262dc7c2b0a4c5f5c
+    .claude/skills/qubership-actions-guide/pr.md: sha256:b584affbec960cac32d107806ebf7fe10394609788941579c42c1b38c478f1f9
+    .claude/skills/qubership-actions-guide/release.md: sha256:d26279c090f6e75733683c93e2c9f75413dd4293004d83960d784a2ee24303c8
+    .claude/skills/qubership-actions-guide/security.md: sha256:1c9ccbc41dd3524783efa0891036ea6c5680f4aacf74452ee65716a5a9f825aa
+    .claude/skills/qubership-actions-guide/utilities.md: sha256:48d8766f47b1831682f4701ab323855bbc04e6689feda7eb2f8892a47a37cdcf
+    .claude/skills/qubership-templates-guide/SKILL.md: sha256:1b8c37cfd3e230a3b145118957d7545baa73eee1d47a25d9186ae680e051fc44
+    .claude/skills/qubership-workflow-conventions/SKILL.md: sha256:4e73031615cf16fa3ed72ff1bd66c2a2e1ddf4e44c9cf34cd931ce0e105aa1bf
+    .claude/skills/qubership-workflow-conventions/debugging-playbook.md: sha256:4609eff134db5534ed21be6772e0595369c32525aecd25c9b9d8b0ffcbeabcfa
+    .claude/skills/qubership-workflow-conventions/security-model.md: sha256:fe3f48341fa66504572e3b0779244e77d608e1fb437997eae6ab45c0c5cd133b
+    .claude/skills/qubership-workflow-conventions/workflow-patterns.md: sha256:5e3162d18c8d8a205dd5a42a30e7d20447135de535786fb43ce384f184707b25
+    .claude/skills/qubership-workflow-conventions/zizmor-rules.md: sha256:f0b1e9aa4def06f87e0bb8fff6ef23cdcfbd0565891cd64b274460e8029034dc
   source: local
   local_path: ./agent-packages/qubership-workflow-hub-usage
   is_dev: true
