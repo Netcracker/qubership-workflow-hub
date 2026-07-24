@@ -1,0 +1,125 @@
+name: TEST verify-json
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "actions/verify-json/**"
+      - ".github/workflows/test-verify-json.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-valid-json:
+    name: Test Valid JSON passes validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Create fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/valid.json <<'EOF'
+          {"name":"test-service","version":"1.0.0","port":8080}
+          EOF
+          cat > /tmp/fixtures/schema.json <<'EOF'
+          {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "required": ["name","version","port"],
+            "properties": {
+              "name":    {"type":"string"},
+              "version": {"type":"string"},
+              "port":    {"type":"integer","minimum":1,"maximum":65535}
+            },
+            "additionalProperties": false
+          }
+          EOF
+
+      - name: Run verify-json
+        id: verify
+        uses: ./actions/verify-json
+        with:
+          json-file: /tmp/fixtures/valid.json
+          schema-file: /tmp/fixtures/schema.json
+
+      - name: PASS — valid=true as expected
+        if: steps.verify.outputs.valid == 'true'
+        shell: bash
+        run: |
+          echo "PASS: valid JSON correctly reported valid=true"
+
+      - name: FAIL — valid was not true
+        if: steps.verify.outputs.valid != 'true'
+        shell: bash
+        env:
+          VALID: ${{ steps.verify.outputs.valid }}
+        run: |
+          echo "FAIL: expected valid=true, got '$VALID'"
+          exit 1
+
+  test-schema-violation:
+    name: Test Schema violation fails the action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Create fixtures
+        shell: bash
+        run: |
+          mkdir -p /tmp/fixtures
+          cat > /tmp/fixtures/invalid.json <<'EOF'
+          {"name":"test-service","version":999,"port":99999}
+          EOF
+          cat > /tmp/fixtures/schema.json <<'EOF'
+          {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "required": ["name","version","port"],
+            "properties": {
+              "name":    {"type":"string"},
+              "version": {"type":"string"},
+              "port":    {"type":"integer","minimum":1,"maximum":65535}
+            },
+            "additionalProperties": false
+          }
+          EOF
+
+      - name: Run verify-json (must fail on schema violation)
+        id: verify
+        continue-on-error: true
+        uses: ./actions/verify-json
+        with:
+          json-file: /tmp/fixtures/invalid.json
+          schema-file: /tmp/fixtures/schema.json
+
+      - name: PASS — valid=false as expected
+        if: steps.verify.outputs.valid == 'false'
+        shell: bash
+        run: |
+          echo "PASS: verify-json correctly rejected schema-violating input (valid=false)"
+
+      - name: FAIL — valid was not false
+        if: steps.verify.outputs.valid != 'false'
+        shell: bash
+        env:
+          VALID: ${{ steps.verify.outputs.valid }}
+        run: |
+          echo "FAIL: verify-json should have set valid=false for schema-violating input (version: 999), got '$VALID'"
+          exit 1

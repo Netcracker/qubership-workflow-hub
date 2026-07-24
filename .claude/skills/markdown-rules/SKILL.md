@@ -11,21 +11,33 @@ When invoked via `/md-lint [files]`, audit and fix target files directly.
 
 ## Configuration
 
+This mirrors `.github/linters/.markdown-lint.yml` — the file super-linter actually loads in CI.
+That file is the source of truth; if it changes, update this block to match. When auditing a
+different repo, read its actual config instead of assuming these values.
+
 ```json
 {
   "default": true,
-  "MD004": { "style": "consistent" },
-  "MD007": { "indent": 2 },
-  "MD013": { "line_length": 120, "code_blocks": false, "tables": false },
+  "MD013": {
+    "line_length": 500,
+    "heading_line_length": 100,
+    "code_block_line_length": 500,
+    "code_blocks": true,
+    "tables": false,
+    "headings": true,
+    "strict": false,
+    "stern": false
+  },
   "MD024": { "siblings_only": true },
-  "MD029": { "style": "ordered" },
-  "MD033": { "allowed_elements": ["img", "br", "a", "p"] },
-  "MD041": false,
-  "MD046": { "style": "fenced" }
+  "MD026": false,
+  "MD033": false
 }
 ```
 
-`default: true` — all rules enabled unless overridden above.
+`default: true` — all rules enabled at their markdownlint-tool default unless overridden above.
+Rules not listed here (MD004, MD007, MD029, MD041, MD046, etc.) run at the plain markdownlint
+v0.37.4 default for that rule. MD041 is not disabled in this repo's config — it runs at the
+tool default, which checks that the file starts with a top-level heading.
 
 ## Rules
 
@@ -40,7 +52,7 @@ When invoked via `/md-lint [files]`, audit and fix target files directly.
 | MD010 | Hard tab `\t` | Replace with spaces (2 for lists, 4 for code alignment) |
 | MD011 | Reversed link `(text)[url]` | Swap to `[text](url)` |
 | MD012 | Two or more consecutive blank lines | Collapse to one blank line |
-| MD013 | Prose line > 120 chars (code blocks and tables exempt) | Wrap at word boundary; leave URLs as-is |
+| MD013 | Heading > 100 chars, or body/list-item/code-block line > 500 chars (tables exempt) | Shorten the heading; wrap body text at a word boundary if it ever hits 500 |
 | MD014 | `$`-prefixed commands in code block with no output shown | Remove `$` prefixes |
 | MD018 | No space after `#` in heading | Add space: `# Heading` |
 | MD019 | Multiple spaces after `#` in heading | Reduce to one space |
@@ -48,13 +60,13 @@ When invoked via `/md-lint [files]`, audit and fix target files directly.
 | MD023 | Heading indented (leading spaces) | Remove leading spaces |
 | MD024 | Duplicate sibling heading (same level, no higher-level between them) | Rename one to be distinct |
 | MD025 | More than one `#` heading in file | Demote extras to `##` |
-| MD026 | Heading ends with `.`, `,`, `;`, `!`, `?`, `:` | Remove trailing punctuation |
+| MD026 | **Disabled in this repo** — trailing punctuation in headings is allowed | — |
 | MD027 | Multiple spaces after `>` in blockquote | Reduce to one space |
 | MD029 | Ordered list item numbers are not sequential (e.g. `1, 3, 4` or gap after code block) | Renumber sequentially: `1. 2. 3.` — never skip, never repeat |
 | MD030 | More than one space after list marker | Normalise to one space |
 | MD031 | No blank line before/after fenced code block | Insert missing blank lines |
 | MD032 | List not surrounded by blank lines | Insert blank lines before first and after last item |
-| MD033 | Inline HTML other than `img`, `br`, `a`, `p` | Replace with markdown equivalent |
+| MD033 | **Disabled in this repo** — all inline HTML is allowed | — |
 | MD034 | Bare URL not wrapped | Wrap: `<https://…>` or `[label](url)` |
 | MD035 | Mixed horizontal rule styles | Standardise to `---` |
 | MD036 | Lone `**text**` or `_text_` used as fake heading | Replace with proper heading |
@@ -62,7 +74,7 @@ When invoked via `/md-lint [files]`, audit and fix target files directly.
 | MD038 | Spaces inside code span `` ` value ` `` | Remove inner spaces |
 | MD039 | Spaces inside link text `[ text ](url)` | Remove inner spaces |
 | MD040 | Fenced code block has no language identifier | Add language (`bash`, `yaml`, `json`, `text`, etc.) |
-| MD041 | **Disabled** — files need not start with `#` | — |
+| MD041 | File does not start with a top-level heading (not overridden in this repo — tool default applies) | Add an H1 as the first line, or restructure so the first line is a heading |
 | MD042 | Empty link target `[text]()` | Add URL or remove link |
 | MD045 | Image with no alt text `![]()` | Add descriptive alt text |
 | MD046 | 4-space indented code block | Replace with fenced block |

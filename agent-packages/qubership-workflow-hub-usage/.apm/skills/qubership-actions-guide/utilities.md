@@ -1,4 +1,4 @@
-# Utilities — config-resolver, apm-packages-update, wait-for-workflow, custom-event, store-input-params
+# Utilities — config-resolver, apm-packages-update, wait-for-workflow, custom-event, verify-json
 
 ## config-resolver (generic configuration files)
 
@@ -366,3 +366,55 @@ Download in a downstream job:
       - name: Read params
         run: cat input_params.json
 ```
+
+---
+
+## verify-json
+
+Validates a JSON file against a JSON Schema file using the `jsonschema` Python library.
+Fails the step on schema violations, malformed JSON, or a missing `json-file`/`schema-file`,
+halting the pipeline unless the step sets `continue-on-error: true`.
+
+### When to use
+
+- Gate a pipeline on a repository config file matching a schema before consuming it
+  (e.g. validate `.qubership/*.cfg` or any project JSON before `config-resolver` or a
+  downstream job reads it).
+- Any step needs a plain pass/fail JSON Schema check without hand-rolling `jq`/`ajv` calls.
+
+### Inputs
+
+| Input | Required | Default | Notes |
+| --- | --- | --- | --- |
+| `json-file` | Yes | — | Path to the JSON file to validate |
+| `schema-file` | Yes | — | Path to the JSON Schema file to validate against |
+
+### Outputs
+
+| Output | Description |
+| --- | --- |
+| `valid` | `'true'` or `'false'` — always a string, never a real boolean |
+
+`steps.<id>.outputs.valid` is a string even when it holds `'false'`, and GitHub Actions
+treats any non-empty string as truthy in `if:`. Always compare explicitly
+(`== 'true'` / `== 'false'`) — never use the output bare in an `if:` condition.
+
+### Usage pattern
+
+```yaml
+- name: Verify config against schema
+  id: verify
+  continue-on-error: true
+  uses: netcracker/qubership-workflow-hub/actions/verify-json@<resolved-sha>  # <resolved-tag>
+  with:
+    json-file: .qubership/workflow-policy.cfg
+    schema-file: .qubership/workflow-policy.schema.json
+
+- name: Fail if invalid
+  if: steps.verify.outputs.valid != 'true'
+  run: exit 1
+```
+
+Omit `continue-on-error: true` when the step should simply fail the job on invalid JSON —
+the action already exits non-zero on its own; the `if:`-gated follow-up step above is only
+needed when the caller wants to inspect or react to the result before deciding to fail.
