@@ -16,12 +16,15 @@ reporting pass/fail results to the GitHub Step Summary.
 
 ### Action Result
 
-The primary output of this action is the `is-valid` output indicating the validation exit code:
+The primary output of this action is the `valid` output, a boolean-style string:
 
-- `0` means the JSON file is valid against the schema
-- `1` indicates a validation failure or error
+- `'true'` means the JSON file is valid against the schema
+- `'false'` indicates a validation failure or error
 
-The step exits with code `1` on failure, which will halt the workflow unless `continue-on-error: true` is set.
+The step also exits with a non-zero status on failure, which will halt the workflow unless
+`continue-on-error: true` is set. In an `if:` condition, always compare explicitly
+(`steps.<id>.outputs.valid == 'true'`) — GitHub Actions treats any non-empty string, including
+`"false"`, as truthy.
 
 ## 📌 Inputs
 
@@ -36,7 +39,7 @@ The step exits with code `1` on failure, which will halt the workflow unless `co
 
 | Name | Description | Example |
 | ---- | ----------- | ------- |
-| `is-valid` | Indicates whether the JSON file passed schema validation (`0` = valid, `1` = invalid). | `0` |
+| `valid` | Whether the JSON file passed schema validation (`'true'` or `'false'`). | `true` |
 
 ---
 

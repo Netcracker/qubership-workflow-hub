@@ -16,9 +16,9 @@ inputs:
     description: "Path to the schema file"
     required: true
 outputs:
-  is-valid:
-    description: "JSON file valid or not"
-    value: ${{ steps.validate.outputs.result }}
+  valid:
+    description: "Whether the JSON file is valid against the schema ('true' or 'false')"
+    value: ${{ steps.validate.outputs.valid }}
 runs:
   using: "composite"
   steps:
@@ -40,11 +40,11 @@ runs:
         import os
         from jsonschema import validate, ValidationError
 
-        def write_output(value):
+        def write_output(valid):
             output_file = os.environ.get('GITHUB_OUTPUT')
             if output_file:
                 with open(output_file, 'a') as f:
-                    f.write(f'result={value}\n')
+                    f.write(f"valid={'true' if valid else 'false'}\n")
 
         def write_summary(content):
             summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
@@ -57,19 +57,19 @@ runs:
 
         if not json_file or not schema_file:
             print("❗ Missing required environment variables", file=sys.stderr)
-            write_output(1)
+            write_output(False)
             sys.exit(0)
 
         if not os.path.exists(json_file):
             print(f"❗ JSON file not found: {json_file}", file=sys.stderr)
             write_summary(f"❗ JSON file not found: {json_file}\n")
-            write_output(1)
+            write_output(False)
             sys.exit(0)
 
         if not os.path.exists(schema_file):
             print(f"❗ Schema file not found: {schema_file}", file=sys.stderr)
             write_summary(f"❗ Schema file not found: {schema_file}\n")
-            write_output(1)
+            write_output(False)
             sys.exit(0)
 
         try:
@@ -81,29 +81,29 @@ runs:
             validate(instance=instance, schema=schema)
             print("✅ JSON file is valid.")
             write_summary("✅ JSON file is valid.\n")
-            write_output(0)
+            write_output(True)
 
         except ValidationError as e:
             print(f"❗ JSON validation failed: {str(e).split(chr(10))[0]}", file=sys.stderr)
             write_summary(f"❗ JSON validation failed.\n\n### jsonschema diagnostics\n\n```\n{e}\n```\n")
-            write_output(1)
+            write_output(False)
 
         except json.JSONDecodeError as e:
             print(f"❗ JSON decode error in {json_file}: {e}", file=sys.stderr)
             write_summary(f"❗ JSON decode error: {e}\n")
-            write_output(1)
+            write_output(False)
 
         except Exception as e:
             print(f"❗ Unexpected error: {e}", file=sys.stderr)
             write_summary(f"❗ Unexpected error: {e}\n")
-            write_output(1)
+            write_output(False)
 
     - name: "Fail on invalid"
       shell: bash
       env:
-        RESULT: ${{ steps.validate.outputs.result }}
+        VALID: ${{ steps.validate.outputs.valid }}
       run: |
-        if [ "${RESULT}" != "0" ]; then
+        if [ "${VALID}" != "true" ]; then
           exit 1
         fi
 
