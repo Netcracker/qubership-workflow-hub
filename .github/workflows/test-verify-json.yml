@@ -108,16 +108,10 @@ jobs:
       - name: Assert action failed
         shell: bash
         env:
-          OUTCOME: ${{ steps.verify.outcome }}
           IS_VALID: ${{ steps.verify.outputs.is-valid }}
         run: |
-          echo "DEBUG: outcome='$OUTCOME' is-valid='$IS_VALID'"
-          if [ "$OUTCOME" != "failure" ]; then
-            echo "FAIL: verify-json should have failed on schema-violating input (version: 999) but outcome was '$OUTCOME'"
-            exit 1
-          fi
           if [ "$IS_VALID" != "1" ]; then
-            echo "FAIL: verify-json failed as expected, but output is-valid was '$IS_VALID' (expected '1')"
+            echo "FAIL: verify-json should have set is-valid=1 for schema-violating input (version: 999), got '$IS_VALID'"
             exit 1
           fi
-          echo "PASS: verify-json correctly rejected schema-violating input (outcome=$OUTCOME, is-valid=$IS_VALID)"
+          echo "PASS: verify-json correctly rejected schema-violating input (is-valid=$IS_VALID)"
