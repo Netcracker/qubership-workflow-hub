@@ -9,14 +9,13 @@ on:
   pull_request:
     types: [opened, edited, reopened]
 
-permissions:
-  issues: write
-  pull-requests: write
-
 jobs:
   apply-filter:
     name: "Apply Profanity Filter"
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
     - name: Scan issue or pull request for profanity
       # Conditionally run the step if the actor isn't a bot
@@ -29,3 +28,7 @@ jobs:
         replacement-strategy: middle-asterisk # See Replacement strategy
         custom-profane-words-url: https://github.com/Hesham-Elbadawi/list-of-banned-words/raw/refs/heads/master/ru
         exclude-profane-words: mongo,robot
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
+  cancel-in-progress: true
