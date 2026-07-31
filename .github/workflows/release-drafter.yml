@@ -37,11 +37,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Input parameters
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_TAG: ${{ inputs.tag || format('v{0}', inputs.version) }}
+          INPUT_PUBLISH: ${{ inputs.publish }}
         run: |
           {
-            echo "Release version: ${{ inputs.version }}"
-            echo "Tag: ${{ inputs.tag || format('v{0}', inputs.version) }}"
-            echo "Enable publish release: ${{ inputs.publish }}"
+            echo "Release version: $INPUT_VERSION"
+            echo "Tag: $INPUT_TAG"
+            echo "Enable publish release: $INPUT_PUBLISH"
            } >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout code
