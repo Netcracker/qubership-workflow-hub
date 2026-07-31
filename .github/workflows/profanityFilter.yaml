@@ -20,19 +20,17 @@
 name: "[REUSABLE] Profanity filter"
 on: [workflow_call]
 
-# Required permissions
-permissions:
-  issues: write
-  pull-requests: write
-
 jobs:
   apply-filter:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
     - name: Scan issue or pull request for profanity
       # Conditionally run the step if the actor isn't a bot
-      if: ${{ github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]' }}
-      uses: IEvangelist/profanity-filter@917075453631f528be8f9160e08aab70bff74ac5 #1.0.0
+      if: ${{ github.event.sender.type != 'Bot' }}
+      uses: IEvangelist/profanity-filter@917075453631f528be8f9160e08aab70bff74ac5 #13.4.6.1
       id: profanity-filter
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
