@@ -1,5 +1,6 @@
 name: PR Auto-Assignment
 run-name: "Assigning reviewers for PR #${{ github.event.pull_request.number }}"
+# zizmor: ignore[dangerous-triggers]
 on:
   pull_request_target:
     types: [opened, reopened, synchronize]
@@ -18,18 +19,21 @@ jobs:
       contents: read
     steps:
       - name: "Check if PR is from a fork"
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
         run: |
-          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.event.pull_request.base.repo.full_name }}" ]; then
+          if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
             echo "⚠️ Pull request is from a fork — skipping assignee assignment (no write permissions)."
             exit 0
           fi
 
       - name: "Checkout Repository"
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: "Assign Reviewers"
-        uses: netcracker/qubership-workflow-hub/actions/pr-assigner@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 #2.4.0
+        uses: netcracker/qubership-workflow-hub/actions/pr-assigner@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 # v2.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
