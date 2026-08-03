@@ -29,11 +29,11 @@ jobs:
           fi
 
       - name: "Checkout Repository"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 #v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: "Assign Reviewers"
-        uses: netcracker/qubership-workflow-hub/actions/pr-assigner@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 #v2.4.0
+        uses: netcracker/qubership-workflow-hub/actions/pr-assigner@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 # v2.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

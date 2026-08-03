@@ -29,13 +29,13 @@ jobs:
   apply-filter:
     runs-on: ubuntu-latest
     steps:
-    - name: Scan issue or pull request for profanity
-      # Conditionally run the step if the actor isn't a bot
-      if: ${{ github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]' }}
-      uses: IEvangelist/profanity-filter@4655e7a15cd4a13a5c9b13affed04a487f556083 #13.4.0
-      id: profanity-filter
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        # See https://bit.ly/potty-mouth-replacement-strategies
-        replacement-strategy: middle-asterisk # See Replacement strategy
-        custom-profane-words-url: https://github.com/Hesham-Elbadawi/list-of-banned-words/raw/refs/heads/master/ru
+      - name: Scan issue or pull request for profanity
+        # Conditionally run the step if the actor isn't a bot
+        if: ${{ github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]' }}
+        uses: IEvangelist/profanity-filter@4655e7a15cd4a13a5c9b13affed04a487f556083 # 13.4.0
+        id: profanity-filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # See https://bit.ly/potty-mouth-replacement-strategies
+          replacement-strategy: middle-asterisk # See Replacement strategy
+          custom-profane-words-url: https://github.com/Hesham-Elbadawi/list-of-banned-words/raw/refs/heads/master/ru
