@@ -87,7 +87,7 @@ jobs:
 
       - name: Check if tag exists
         id: check_tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-action@8c6dbeb901920bae9f40d7d7b646d8d9127e1ce7 # v2.4.0
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@b6bee6f61fdc8b367777c1173fc852a58878a6a7 # v2.5.0
         with:
           tag-name: "v${{ steps.generate_version.outputs.version }}"
           ref: ${{ github.ref }}
