@@ -105,15 +105,19 @@ schedule or manually.
 - `apm.yml` must exist at the repository root.
 - The specified `target` must be configured in `apm.yml` (the action adds it automatically
   if missing).
+- Enabling `auto-merge` requires the repository setting "Allow auto-merge" to be turned on;
+  the merge still waits on required checks and reviews.
 
 ### Permissions
 
 ```yaml
 permissions:
   contents: read
+  pull-requests: write
 ```
 
-The `token` input must have permission to push branches and open pull requests.
+The `token` input must have permission to push branches and open pull requests. Using
+`team-reviewers` additionally requires the token to read organization membership.
 Use the org-level secret `APM_UPDATE_TOKEN`.
 
 ### Inputs
@@ -122,6 +126,12 @@ Use the org-level secret `APM_UPDATE_TOKEN`.
 | --- | --- | --- | --- |
 | `branch` | No | `main` | Target branch to update |
 | `target` | No | `claude` | APM target name in `apm.yml` |
+| `auto-merge` | No | `false` | Enable GitHub auto-merge on the created PR; has no effect in `dry-run` mode or when no PR is opened |
+| `merge-method` | No | `squash` | `merge`, `squash`, or `rebase`; used only when `auto-merge` is `true` |
+| `delete-branch` | No | `true` | Delete the `chore/update-apm-packages` branch after the PR is merged |
+| `sign-off` | No | `false` | Sign off commits on the created PR |
+| `reviewers` | No | `""` | Comma-separated GitHub usernames to request review from |
+| `team-reviewers` | No | `""` | Comma-separated GitHub team slugs to request review from |
 | `token` | Yes | — | Use `secrets.APM_UPDATE_TOKEN` |
 
 ### Usage pattern
@@ -139,11 +149,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
     steps:
       - name: Update APM packages
         uses: netcracker/qubership-workflow-hub/actions/apm-packages-update@<resolved-sha>  # <resolved-tag>
         with:
-          token: ${{ secrets.APM_UPDATE_TOKEN }}
+          token: ${{ secrets.APM_UPDATE_TOKEN }}  # PAT with `repo` scope (+ `read:org` for team-reviewers)
 ```
 
 ---
