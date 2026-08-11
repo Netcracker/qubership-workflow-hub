@@ -11,6 +11,8 @@ Updates APM-managed packages in the current repository and creates a pull reques
 - Runs `apm update --yes --target <target>` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM), using `apm.yml` by default and `target` as an override
 - Opens a pull request on branch `chore/update-apm-packages` with the resulting changes
 - Uses a dynamic PR title and body that include the resolved target, base branch, and workflow run link
+- Supports commit sign-off, requesting user/team reviewers, and a configurable branch-deletion policy on the created pull request
+- Optionally enables GitHub auto-merge on the created pull request with a configurable merge method (`merge`, `squash`, or `rebase`)
 - Reports the PR URL or "no changes" to the workflow job summary
 
 ## 📌 Inputs
@@ -21,6 +23,12 @@ Updates APM-managed packages in the current repository and creates a pull reques
 | `dry-run` | Run `apm update` in dry-run mode and skip pull request creation   | No       | `false`  |
 | `debug`  | Print runner and APM diagnostics before updating packages         | No       | `false`  |
 | `target` | Optional APM target override; accepts one target or a comma-separated list | No | `""` |
+| `auto-merge` | Automatically enable auto-merge for the created pull request. Has no effect in `dry-run` mode or when no pull request was created | No | `false` |
+| `merge-method` | Merge method to use for auto-merge; one of `merge`, `squash`, or `rebase` (case-insensitive). Ignored unless `auto-merge` is `true` | No | `squash` |
+| `delete-branch` | Automatically delete the `chore/update-apm-packages` branch after the pull request is merged | No | `true` |
+| `sign-off` | Sign off commits in the pull request | No | `false` |
+| `reviewers` | Comma-separated list of GitHub usernames to request review from | No | `""` |
+| `team-reviewers` | Comma-separated list of GitHub team slugs to request review from | No | `""` |
 | `token`  | GitHub token with permission to create branches and pull requests | Yes      | -        |
 
 ## How it works
@@ -35,9 +43,13 @@ Updates APM-managed packages in the current repository and creates a pull reques
 6. If `dry-run: true`, skips pull request creation after printing the update result.
 7. Otherwise creates or updates a PR on branch `chore/update-apm-packages` (base: `inputs.branch`).
   The PR title includes the resolved target, and the body includes the executed command,
-  base branch, workflow run link, and a short review checklist. The branch is deleted
-  automatically after merge.
-8. Logs the PR URL to the job summary, or reports "no changes" if nothing was updated.
+  base branch, workflow run link, and a short review checklist. Commit sign-off, requested
+  reviewers/team reviewers, and post-merge branch deletion are controlled by the `sign-off`,
+  `reviewers`, `team-reviewers`, and `delete-branch` inputs respectively.
+8. If `auto-merge: true` and a pull request was created (skipped in `dry-run` mode or when no
+  PR was opened), enables GitHub auto-merge on the PR using `merge-method`. The step fails if
+  `merge-method` is not `merge`, `squash`, or `rebase`.
+9. Logs the PR URL to the job summary, or reports "no changes" if nothing was updated.
 
 ## Usage
 
@@ -56,6 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
@@ -69,7 +82,7 @@ jobs:
           debug: "true"
           dry-run: "true"
           target: ""
-          token: ${{ secrets.APM_UPDATE_TOKEN }}
+          token: ${{ secrets.APM_UPDATE_TOKEN }}  # PAT with `repo` scope (+ `read:org` for team-reviewers)
 ```
 
 ## Notes
@@ -83,7 +96,13 @@ jobs:
   `peter-evans/create-pull-request` updates the existing PR rather than opening a new one.
 - The generated PR title is `chore(apm): update packages for <resolved-target>` and the body
   includes the resolved target, base branch, actor, and a link back to the originating workflow run.
-- The `token` input must have permission to push branches and open pull requests.
+- `auto-merge: true` only takes effect when a pull request was actually created (not in
+  `dry-run` mode) and requires the "Allow auto-merge" repository setting to be enabled;
+  merging itself still waits on required checks and reviews.
+- `merge-method` accepts `merge`, `squash`, or `rebase` (case-insensitive). Any other value
+  fails the "Enable auto-merge" step.
+- The `token` input must have permission to push branches and open pull requests. Using
+  `team-reviewers` additionally requires the token to read organization membership.
   The org-level secret `APM_UPDATE_TOKEN` is the recommended value.
 - Pin to a full 40-character commit SHA with the release tag as a trailing comment, e.g.
   `@cabbb90e9471163cfac84bd50ff0296b2803b44c # v2.3.0`. The SHA is the immutable pin;

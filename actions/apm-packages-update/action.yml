@@ -3,23 +3,47 @@ description: Updates APM-managed packages in the current repository and creates 
 
 inputs:
   branch:
-    description: Target branch to update
+    description: Target branch to update.
     required: false
     default: main
   dry-run:
-    description: Run APM update in dry-run mode and skip pull request creation
+    description: Run APM update in dry-run mode and skip pull request creation.
     required: false
     default: "false"
   debug:
-    description: Print runner and APM diagnostics before updating packages
+    description: Print runner and APM diagnostics before updating packages.
     required: false
     default: "false"
   target:
-    description: Optional APM target override; accepts a single target or comma-separated list
+    description: Optional APM target override; accepts a single target or comma-separated list.
+    required: false
+    default: ""
+  auto-merge:
+    description: Automatically enable auto-merge for the created pull request.
+    required: false
+    default: "false"
+  merge-method:
+    description: Merge method to use for auto-merge; valid values are 'merge', 'squash', or 'rebase'.
+    required: false
+    default: "squash"
+  delete-branch:
+    description: Automatically delete the branch after the pull request is merged.
+    required: false
+    default: "true"
+  sign-off:
+    description: Sign off commits in the pull request.
+    required: false
+    default: "false"
+  reviewers:
+    description: Comma-separated list of GitHub usernames to request review from.
+    required: false
+    default: ""
+  team-reviewers:
+    description: Comma-separated list of GitHub team slugs to request review from.
     required: false
     default: ""
   token:
-    description: GitHub token with permission to create branches and pull requests
+    description: GitHub token with permission to create branches and pull requests.
     required: true
 
 runs:
@@ -148,8 +172,11 @@ runs:
         token: ${{ inputs.token }}
         base: ${{ inputs.branch }}
         branch: chore/update-apm-packages
-        delete-branch: true
+        delete-branch: ${{ inputs.delete-branch }}
         title: "chore(apm): update packages for ${{ steps.resolve-target.outputs.target }}"
+        signoff: ${{ inputs.sign-off }}
+        reviewers: ${{ inputs.reviewers }}
+        team-reviewers: ${{ inputs.team-reviewers }}
         commit-message: "chore(apm): update packages for ${{ steps.resolve-target.outputs.target }}"
         body: |
           ## Summary
@@ -177,17 +204,41 @@ runs:
           - `apm.lock.yaml`
           - deployed APM files
 
+    - name: Enable auto-merge
+      if: ${{ inputs.dry-run != 'true' && inputs.auto-merge == 'true' && steps.create-pr.outputs.pull-request-number != '' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+        MERGE_METHOD: ${{ inputs.merge-method }}
+      run: |
+        set -eu
+        normalized_merge_method="${MERGE_METHOD,,}"
+        case "$normalized_merge_method" in
+          merge|squash|rebase)
+            ;;
+          *)
+            echo "Unsupported merge method '$MERGE_METHOD'. Expected one of: merge, squash, rebase"
+            exit 1
+            ;;
+        esac
+
+        gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --auto --"$normalized_merge_method"
+
     - name: Log result
       shell: bash
+      env:
+        DRY_RUN: ${{ inputs.dry-run }}
+        PR_URL: ${{ steps.create-pr.outputs.pull-request-url }}
       run: |
-        if [ "${{ inputs.dry-run }}" = "true" ]; then
+        if [ "$DRY_RUN" = "true" ]; then
           echo "Dry-run mode enabled, pull request creation skipped"
           echo "Dry-run mode enabled, pull request creation skipped" >> "$GITHUB_STEP_SUMMARY"
           exit 0
         fi
-        if [ "${{ steps.create-pr.outputs.pull-request-url }}" != "" ]; then
-          echo "::notice title=PR created::${{ steps.create-pr.outputs.pull-request-url }}"
-          echo "PR created: ${{ steps.create-pr.outputs.pull-request-url }}" >> "$GITHUB_STEP_SUMMARY"
+        if [ -n "$PR_URL" ]; then
+          echo "::notice title=PR created::${PR_URL}"
+          echo "PR created: ${PR_URL}" >> "$GITHUB_STEP_SUMMARY"
         else
           echo "No changes detected, PR not created"
           echo "No changes detected, PR not created" >> "$GITHUB_STEP_SUMMARY"
