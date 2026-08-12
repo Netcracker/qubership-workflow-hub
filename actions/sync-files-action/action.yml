@@ -1,0 +1,280 @@
+name: "Sync Files"
+description: "Copies files and directories inside the workspace according to a JSON mapping, then opens a pull request with the changes"
+
+inputs:
+  files:
+    description: "JSON array of { from, to, overwrite? } source/destination mappings, paths relative to the repository root"
+    required: true
+  branch:
+    description: "Base branch for the pull request (must match the checked-out ref)"
+    required: false
+    default: main
+  pr-branch:
+    description: "Branch to create/update with synced changes"
+    required: false
+    default: chore/sync-files
+  title:
+    description: "Pull request title"
+    required: false
+    default: "chore: sync files"
+  commit-message:
+    description: "Commit message for the synced files"
+    required: false
+    default: "chore: sync files"
+  dry-run:
+    description: "Copy files but skip pull request creation"
+    required: false
+    default: "false"
+  auto-merge:
+    description: "Automatically enable auto-merge for the created pull request"
+    required: false
+    default: "false"
+  merge-method:
+    description: "Merge method to use for auto-merge; valid values are 'merge', 'squash', or 'rebase'"
+    required: false
+    default: "squash"
+  delete-branch:
+    description: "Automatically delete the pull request branch after it is merged"
+    required: false
+    default: "true"
+  sign-off:
+    description: "Sign off commits in the pull request"
+    required: false
+    default: "false"
+  reviewers:
+    description: "Comma-separated list of GitHub usernames to request review from"
+    required: false
+    default: ""
+  team-reviewers:
+    description: "Comma-separated list of GitHub team slugs to request review from"
+    required: false
+    default: ""
+  token:
+    description: "GitHub token with permission to create branches and pull requests"
+    required: true
+
+outputs:
+  changed:
+    description: "Whether any files were changed (true/false)"
+    value: ${{ steps.sync.outputs.changed }}
+  changed-count:
+    description: "Number of files actually written (new or with different content)"
+    value: ${{ steps.sync.outputs.changed-count }}
+  skipped-count:
+    description: "Number of files skipped because the destination already existed with overwrite: false, or was already identical"
+    value: ${{ steps.sync.outputs.skipped-count }}
+  pull-request-number:
+    description: "Number of the created/updated pull request, if any"
+    value: ${{ steps.create-pr.outputs.pull-request-number }}
+  pull-request-url:
+    description: "URL of the created/updated pull request, if any"
+    value: ${{ steps.create-pr.outputs.pull-request-url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Sync files
+      id: sync
+      shell: bash
+      env:
+        FILES_JSON: ${{ inputs.files }}
+      run: |
+        set -eu
+
+        if ! command -v jq >/dev/null 2>&1; then
+          echo "jq is required but was not found in PATH" >&2
+          exit 1
+        fi
+
+        workspace="${GITHUB_WORKSPACE:-$(pwd)}"
+        workspace="$(cd "$workspace" && pwd -P)"
+
+        resolve_in_workspace() {
+          local rel="$1"
+          if [[ "$rel" = /* ]]; then
+            echo "Path must be relative to repository root: $rel" >&2
+            exit 1
+          fi
+
+          local resolved
+          resolved="$(realpath -m "$workspace/$rel")"
+          if [[ "$resolved" != "$workspace" && "$resolved" != "$workspace"/* ]]; then
+            echo "Path escapes workspace: $rel" >&2
+            exit 1
+          fi
+
+          printf '%s\n' "$resolved"
+        }
+
+        if ! jq -e 'type == "array" and length > 0' <<< "$FILES_JSON" >/dev/null; then
+          echo "Input 'files' must be a non-empty JSON array" >&2
+          exit 1
+        fi
+
+        if ! jq -e 'all(.[]; type == "object" and (.from|type=="string") and (.from|length>0) and (.to|type=="string") and (.to|length>0) and ((has("overwrite")|not) or (.overwrite|type=="boolean")))' <<< "$FILES_JSON" >/dev/null; then
+          echo "Each mapping must be an object with non-empty string fields 'from' and 'to', and optional boolean 'overwrite'" >&2
+          exit 1
+        fi
+
+        changed=0
+        skipped=0
+
+        assert_no_symlink_in_path() {
+          local workspace="$1" target="$2"
+          local rel current
+          rel="${target#"$workspace"/}"
+          current="$workspace"
+          local IFS=/
+          for part in $rel; do
+            current="$current/$part"
+            if [ -L "$current" ]; then
+              echo "Destination path contains a symlink: $current" >&2
+              exit 1
+            fi
+          done
+        }
+
+        copy_one() {
+          local from="$1" to="$2" overwrite="$3"
+          assert_no_symlink_in_path "$workspace" "$to"
+          mkdir -p "$(dirname "$to")"
+          if [ -d "$to" ]; then
+            echo "Cannot sync file to directory: $to" >&2
+            exit 1
+          fi
+          if [ -e "$to" ]; then
+            if [ "$overwrite" != "true" ]; then
+              echo "  skipped (exists): $to"
+              skipped=$((skipped + 1))
+              return
+            fi
+            if [ -f "$to" ] && cmp -s "$from" "$to"; then
+              echo "  skipped (unchanged): $to"
+              skipped=$((skipped + 1))
+              return
+            fi
+          fi
+          cp "$from" "$to"
+          echo "  copied: $from -> $to"
+          changed=$((changed + 1))
+        }
+
+        while IFS= read -r mapping; do
+          from=$(jq -r '.from' <<< "$mapping")
+          to=$(jq -r '.to' <<< "$mapping")
+          overwrite=$(jq -r 'if has("overwrite") then .overwrite else true end' <<< "$mapping")
+
+          from_abs="$(resolve_in_workspace "$from")"
+          to_abs="$(resolve_in_workspace "$to")"
+
+          if [ ! -e "$from_abs" ]; then
+            echo "Source path does not exist: $from" >&2
+            exit 1
+          fi
+
+          if [ -L "$from_abs" ]; then
+            echo "Source symlink is not supported: $from" >&2
+            exit 1
+          fi
+
+          if [ -d "$from_abs" ]; then
+            echo "Syncing directory: $from -> $to (overwrite: $overwrite)"
+            assert_no_symlink_in_path "$workspace" "$to_abs"
+            mkdir -p "$to_abs"
+            if find "$from_abs" -type l -print -quit | grep -q .; then
+              echo "Directory source contains symlink(s), not supported: $from" >&2
+              exit 1
+            fi
+            while IFS= read -r -d '' f; do
+              rel="${f#"$from_abs"/}"
+              copy_one "$f" "$to_abs/$rel" "$overwrite"
+            done < <(find "$from_abs" -type f -print0)
+          else
+            echo "Syncing file: $from -> $to (overwrite: $overwrite)"
+            copy_one "$from_abs" "$to_abs" "$overwrite"
+          fi
+        done < <(jq -c '.[]' <<< "$FILES_JSON")
+
+        echo "Changed: $changed"
+        echo "Skipped: $skipped"
+
+        if [ "$changed" -gt 0 ]; then
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        fi
+        echo "changed-count=$changed" >> "$GITHUB_OUTPUT"
+        echo "skipped-count=$skipped" >> "$GITHUB_OUTPUT"
+
+    - name: Create Pull Request
+      if: ${{ inputs.dry-run != 'true' && steps.sync.outputs.changed == 'true' }}
+      id: create-pr
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+      with:
+        token: ${{ inputs.token }}
+        base: ${{ inputs.branch }}
+        branch: ${{ inputs.pr-branch }}
+        delete-branch: ${{ inputs.delete-branch }}
+        title: ${{ inputs.title }}
+        signoff: ${{ inputs.sign-off }}
+        reviewers: ${{ inputs.reviewers }}
+        team-reviewers: ${{ inputs.team-reviewers }}
+        commit-message: ${{ inputs.commit-message }}
+        body: |
+          ## Summary
+
+          This PR syncs files according to the configured mapping.
+          Changed: `${{ steps.sync.outputs.changed-count }}`, skipped: `${{ steps.sync.outputs.skipped-count }}`.
+          The changes were generated automatically from workflow run `${{ github.run_id }}` against base branch `${{ inputs.branch }}`.
+
+          ## Context
+
+          - Repository: `${{ github.repository }}`
+          - Base branch: `${{ inputs.branch }}`
+          - Triggered by: `${{ github.actor }}`
+          - Workflow run: `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+
+    - name: Enable auto-merge
+      if: ${{ inputs.dry-run != 'true' && inputs.auto-merge == 'true' && steps.create-pr.outputs.pull-request-number != '' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+        MERGE_METHOD: ${{ inputs.merge-method }}
+      run: |
+        set -eu
+        if ! command -v gh >/dev/null 2>&1; then
+          echo "gh CLI is required to enable auto-merge but was not found in PATH" >&2
+          exit 1
+        fi
+
+        normalized_merge_method="${MERGE_METHOD,,}"
+        case "$normalized_merge_method" in
+          merge|squash|rebase)
+            ;;
+          *)
+            echo "Unsupported merge method '$MERGE_METHOD'. Expected one of: merge, squash, rebase"
+            exit 1
+            ;;
+        esac
+
+        gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --auto --"$normalized_merge_method"
+
+    - name: Log result
+      shell: bash
+      env:
+        DRY_RUN: ${{ inputs.dry-run }}
+        PR_URL: ${{ steps.create-pr.outputs.pull-request-url }}
+      run: |
+        if [ "$DRY_RUN" = "true" ]; then
+          echo "Dry-run mode enabled, pull request creation skipped"
+          echo "Dry-run mode enabled, pull request creation skipped" >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+        if [ -n "$PR_URL" ]; then
+          echo "::notice title=PR created::${PR_URL}"
+          echo "PR created: ${PR_URL}" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "No changes detected, PR not created"
+          echo "No changes detected, PR not created" >> "$GITHUB_STEP_SUMMARY"
+        fi

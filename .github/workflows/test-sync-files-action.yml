@@ -1,0 +1,58 @@
+name: TEST sync-files-action
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Skip pull request creation and only test the copy step
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  test-sync:
+    name: Test sync-files-action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Create Fixtures
+        shell: bash
+        run: |
+          mkdir -p test-fixtures/docs
+          echo "content-a" > test-fixtures/docs/a.md
+
+      - name: Run sync-files-action
+        id: sync
+        uses: ./actions/sync-files-action
+        with:
+          files: |
+            [
+              { "from": "test-fixtures/docs/a.md", "to": "test-fixtures/out/a.md" }
+            ]
+          dry-run: ${{ inputs['dry-run'] && 'true' || 'false' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify result
+        env:
+          CHANGED: ${{ steps.sync.outputs.changed }}
+          CHANGED_COUNT: ${{ steps.sync.outputs.changed-count }}
+          PR_URL: ${{ steps.sync.outputs.pull-request-url }}
+        run: |
+          [ "$CHANGED" = "true" ] || { echo "❌ expected changed=true, got: $CHANGED"; exit 1; }
+          [ "$CHANGED_COUNT" = "1" ] || { echo "❌ expected changed-count=1, got: $CHANGED_COUNT"; exit 1; }
+          [ -f test-fixtures/out/a.md ] || { echo "❌ expected file to be copied"; exit 1; }
+          echo "✅ sync-files-action copied files correctly"
+          if [ -n "$PR_URL" ]; then
+            echo "✅ PR created: $PR_URL"
+            echo "⚠️ Remember to close/clean up this test PR manually"
+          fi
