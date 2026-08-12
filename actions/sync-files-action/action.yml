@@ -1,0 +1,27 @@
+name: "Sync Files"
+description: "Synchronize files and directories inside the current workspace"
+
+inputs:
+  files:
+    description: "JSON array of source and destination mappings"
+    required: true
+
+  create-pr:
+    description: "Create a pull request when changes are detected"
+    required: false
+    default: "false"
+
+  auto-merge:
+    description: "Enable auto-merge for the created pull request"
+    required: false
+    default: "false"
+
+outputs:
+  copied:
+    description: "Number of files copied"
+  skipped:
+    description: "Number of files skipped because the destination already existed and overwrite was false"
+
+runs:
+  using: "node24"
+  main: "dist/index.js"
