@@ -7,10 +7,10 @@ inputs:
     required: true
 
 outputs:
-  copied:
-    description: "Number of files copied"
+  changed:
+    description: "Number of files actually written (new or with different content)"
   skipped:
-    description: "Number of files skipped because the destination already existed and overwrite was false"
+    description: "Number of files skipped because the destination already existed with overwrite: false, or was already identical"
 
 runs:
   using: "node24"

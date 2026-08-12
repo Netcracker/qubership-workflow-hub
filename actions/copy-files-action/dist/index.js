@@ -19456,10 +19456,10 @@ function resolveWithinWorkspace(workspace, relativePath, label) {
   }
   return resolved;
 }
-function assertNoSymlink(targetPath) {
+function assertNoSymlink(targetPath, label) {
   const stat2 = import_node_fs.default.lstatSync(targetPath);
   if (stat2.isSymbolicLink()) {
-    throw new Error(`Symlinks are not supported: ${targetPath}`);
+    throw new Error(`${label} symlinks are not supported: ${targetPath}`);
   }
   return stat2;
 }
@@ -19469,7 +19469,7 @@ function collectRelativeFiles(root) {
     for (const entry of import_node_fs.default.readdirSync(dir, { withFileTypes: true })) {
       const full = import_node_path.default.join(dir, entry.name);
       if (entry.isSymbolicLink()) {
-        throw new Error(`Symlinks are not supported: ${full}`);
+        throw new Error(`Source symlinks are not supported: ${full}`);
       }
       if (entry.isDirectory()) {
         walk(full);
@@ -19481,15 +19481,41 @@ function collectRelativeFiles(root) {
   walk(root);
   return results;
 }
+function filesEqual(source, destination) {
+  if (!import_node_fs.default.existsSync(destination)) {
+    return false;
+  }
+  const sourceStat = import_node_fs.default.statSync(source);
+  const destinationStat = import_node_fs.default.statSync(destination);
+  if (!destinationStat.isFile() || sourceStat.size !== destinationStat.size) {
+    return false;
+  }
+  return import_node_fs.default.readFileSync(source).equals(import_node_fs.default.readFileSync(destination));
+}
 function copyOne(fromAbs, toAbs, overwrite, stats) {
   import_node_fs.default.mkdirSync(import_node_path.default.dirname(toAbs), { recursive: true });
-  if (!overwrite && import_node_fs.default.existsSync(toAbs)) {
-    action_logger_default.info(`  skipped (exists): ${toAbs}`);
-    stats.skipped += 1;
-    return;
+  if (import_node_fs.default.existsSync(toAbs)) {
+    const toStat = import_node_fs.default.lstatSync(toAbs);
+    if (toStat.isSymbolicLink()) {
+      throw new Error(`Destination symlinks are not supported: ${toAbs}`);
+    }
+    if (toStat.isDirectory()) {
+      throw new Error(`Cannot sync file to directory: ${toAbs}`);
+    }
+    if (!overwrite) {
+      action_logger_default.info(`  skipped (exists): ${toAbs}`);
+      stats.skipped += 1;
+      return;
+    }
+    if (filesEqual(fromAbs, toAbs)) {
+      action_logger_default.info(`  skipped (unchanged): ${toAbs}`);
+      stats.skipped += 1;
+      return;
+    }
   }
   import_node_fs.default.copyFileSync(fromAbs, toAbs);
-  stats.copied += 1;
+  action_logger_default.info(`  copied: ${fromAbs} -> ${toAbs}`);
+  stats.changed += 1;
 }
 function parseFilesInput() {
   const input = getInput("files", { required: true });
@@ -19526,7 +19552,7 @@ async function run() {
   try {
     const files = parseFilesInput();
     const workspace = process.env.GITHUB_WORKSPACE ?? process.cwd();
-    const stats = { copied: 0, skipped: 0 };
+    const stats = { changed: 0, skipped: 0 };
     action_logger_default.info(`Loaded ${files.length} sync mapping(s)`);
     for (const { from, to, overwrite } of files) {
       const fromAbs = resolveWithinWorkspace(workspace, from, "from");
@@ -19534,8 +19560,17 @@ async function run() {
       if (!import_node_fs.default.existsSync(fromAbs)) {
         throw new Error(`Source path does not exist: ${from}`);
       }
-      const fromStat = assertNoSymlink(fromAbs);
+      const fromStat = assertNoSymlink(fromAbs, "Source");
       if (fromStat.isDirectory()) {
+        if (import_node_fs.default.existsSync(toAbs)) {
+          const toStat = import_node_fs.default.lstatSync(toAbs);
+          if (toStat.isSymbolicLink()) {
+            throw new Error(`Destination symlinks are not supported: ${toAbs}`);
+          }
+          if (!toStat.isDirectory()) {
+            throw new Error(`Cannot sync directory to file: ${toAbs}`);
+          }
+        }
         action_logger_default.info(`Syncing directory: ${from} -> ${to} (overwrite: ${overwrite})`);
         for (const relativeFile of collectRelativeFiles(fromAbs)) {
           copyOne(
@@ -19550,9 +19585,9 @@ async function run() {
         copyOne(fromAbs, toAbs, overwrite, stats);
       }
     }
-    action_logger_default.info(`Copied: ${stats.copied}`);
+    action_logger_default.info(`Changed: ${stats.changed}`);
     action_logger_default.info(`Skipped: ${stats.skipped}`);
-    setOutput("copied", stats.copied);
+    setOutput("changed", stats.changed);
     setOutput("skipped", stats.skipped);
   } catch (error2) {
     action_logger_default.fail(error2 instanceof Error ? error2.message : String(error2));
