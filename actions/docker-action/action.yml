@@ -87,6 +87,12 @@ inputs:
     description: "Setup Docker Buildx."
     required: false
     default: "true"
+  cache-from:
+    description: "Cache sources for the build."
+    required: false
+  cache-to:
+    description: "Cache destinations for the build."
+    required: false
 
 outputs:
   image-name:
@@ -156,7 +162,14 @@ runs:
         component_name=$(echo "$component_from_json" | jq -r '.name // "default"')
         component_file=$(echo "$component_from_json" | jq -r '.dockerfile // .file // "./Dockerfile"')
         component_context=$(echo "$component_from_json" | jq -r '.build_context // .context // "."')
-        component_build_args=$(echo "$component_from_json" | jq -r '.arguments // empty')
+        component_build_args_raw=$(echo "$component_from_json" | jq -c '.arguments // .build_args // empty')
+
+        # Convert a JSON object of build args (e.g. {"key1":"value1"}) to key=value pairs
+        if [ -n "$component_build_args_raw" ] && [ "$(echo "$component_build_args_raw" | jq -r 'type')" == "object" ]; then
+          component_build_args=$(echo "$component_build_args_raw" | jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")')
+        else
+          component_build_args=$(echo "$component_from_json" | jq -r '.arguments // .build_args // empty')
+        fi
 
         # Convert comma-separated build args to newline-separated
         if [ -n "$component_build_args" ] && [[ "$component_build_args" == *","* ]]; then
@@ -308,6 +321,8 @@ runs:
         PLATFORMS_INPUT: ${{ inputs.platforms }}
         GHCR_URL: ${{ env.GHCR_URL }}
         DOCKER_URL: ${{ env.DOCKER_URL }}
+        CACHE_FROM: ${{ inputs.cache-from }}
+        CACHE_TO: ${{ inputs.cache-to }}
       run: |
         set -euo pipefail
 
@@ -408,6 +423,8 @@ runs:
         labels: ${{ env.FINAL_LABELS }}
         platforms: ${{ env.FINAL_PLATFORMS }}
         build-args: ${{ env.FINAL_BUILD_ARGS }}
+        cache-from: ${{ env.CACHE_FROM }}
+        cache-to: ${{ env.CACHE_TO }}
 
     - name: Output result
       if: ${{ ! (inputs.dry-run == 'true') }}
