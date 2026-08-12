@@ -19463,6 +19463,21 @@ function assertNoSymlink(targetPath, label) {
   }
   return stat2;
 }
+function assertNoSymlinkInPath(workspace, targetPath) {
+  const base = import_node_path.default.resolve(workspace);
+  const relative = import_node_path.default.relative(base, targetPath);
+  const parts = relative.split(import_node_path.default.sep).filter(Boolean);
+  let current = base;
+  for (const part of parts) {
+    current = import_node_path.default.join(current, part);
+    if (!import_node_fs.default.existsSync(current)) {
+      continue;
+    }
+    if (import_node_fs.default.lstatSync(current).isSymbolicLink()) {
+      throw new Error(`Destination path contains a symlink: ${current}`);
+    }
+  }
+}
 function collectRelativeFiles(root) {
   const results = [];
   const walk = (dir) => {
@@ -19492,13 +19507,11 @@ function filesEqual(source, destination) {
   }
   return import_node_fs.default.readFileSync(source).equals(import_node_fs.default.readFileSync(destination));
 }
-function copyOne(fromAbs, toAbs, overwrite, stats) {
+function copyOne(workspace, fromAbs, toAbs, overwrite, stats) {
+  assertNoSymlinkInPath(workspace, toAbs);
   import_node_fs.default.mkdirSync(import_node_path.default.dirname(toAbs), { recursive: true });
   if (import_node_fs.default.existsSync(toAbs)) {
     const toStat = import_node_fs.default.lstatSync(toAbs);
-    if (toStat.isSymbolicLink()) {
-      throw new Error(`Destination symlinks are not supported: ${toAbs}`);
-    }
     if (toStat.isDirectory()) {
       throw new Error(`Cannot sync file to directory: ${toAbs}`);
     }
@@ -19562,33 +19575,33 @@ async function run() {
       }
       const fromStat = assertNoSymlink(fromAbs, "Source");
       if (fromStat.isDirectory()) {
-        if (import_node_fs.default.existsSync(toAbs)) {
-          const toStat = import_node_fs.default.lstatSync(toAbs);
-          if (toStat.isSymbolicLink()) {
-            throw new Error(`Destination symlinks are not supported: ${toAbs}`);
-          }
-          if (!toStat.isDirectory()) {
-            throw new Error(`Cannot sync directory to file: ${toAbs}`);
-          }
+        assertNoSymlinkInPath(workspace, toAbs);
+        if (import_node_fs.default.existsSync(toAbs) && !import_node_fs.default.lstatSync(toAbs).isDirectory()) {
+          throw new Error(`Cannot sync directory to file: ${toAbs}`);
         }
         action_logger_default.info(`Syncing directory: ${from} -> ${to} (overwrite: ${overwrite})`);
+        import_node_fs.default.mkdirSync(toAbs, { recursive: true });
         for (const relativeFile of collectRelativeFiles(fromAbs)) {
           copyOne(
+            workspace,
             import_node_path.default.join(fromAbs, relativeFile),
             import_node_path.default.join(toAbs, relativeFile),
             overwrite,
             stats
           );
         }
-      } else {
+      } else if (fromStat.isFile()) {
         action_logger_default.info(`Syncing file: ${from} -> ${to} (overwrite: ${overwrite})`);
-        copyOne(fromAbs, toAbs, overwrite, stats);
+        copyOne(workspace, fromAbs, toAbs, overwrite, stats);
+      } else {
+        throw new Error(`Unsupported source type: ${from}`);
       }
     }
     action_logger_default.info(`Changed: ${stats.changed}`);
     action_logger_default.info(`Skipped: ${stats.skipped}`);
-    setOutput("changed", stats.changed);
-    setOutput("skipped", stats.skipped);
+    setOutput("changed", stats.changed > 0);
+    setOutput("changed-count", stats.changed);
+    setOutput("skipped-count", stats.skipped);
   } catch (error2) {
     action_logger_default.fail(error2 instanceof Error ? error2.message : String(error2));
   }

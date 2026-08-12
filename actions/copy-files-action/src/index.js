@@ -24,6 +24,26 @@ function assertNoSymlink(targetPath, label) {
   return stat;
 }
 
+function assertNoSymlinkInPath(workspace, targetPath) {
+  const base = path.resolve(workspace);
+  const relative = path.relative(base, targetPath);
+  const parts = relative.split(path.sep).filter(Boolean);
+
+  let current = base;
+
+  for (const part of parts) {
+    current = path.join(current, part);
+
+    if (!fs.existsSync(current)) {
+      continue;
+    }
+
+    if (fs.lstatSync(current).isSymbolicLink()) {
+      throw new Error(`Destination path contains a symlink: ${current}`);
+    }
+  }
+}
+
 function collectRelativeFiles(root) {
   const results = [];
 
@@ -62,15 +82,12 @@ function filesEqual(source, destination) {
   return fs.readFileSync(source).equals(fs.readFileSync(destination));
 }
 
-function copyOne(fromAbs, toAbs, overwrite, stats) {
+function copyOne(workspace, fromAbs, toAbs, overwrite, stats) {
+  assertNoSymlinkInPath(workspace, toAbs);
   fs.mkdirSync(path.dirname(toAbs), { recursive: true });
 
   if (fs.existsSync(toAbs)) {
     const toStat = fs.lstatSync(toAbs);
-
-    if (toStat.isSymbolicLink()) {
-      throw new Error(`Destination symlinks are not supported: ${toAbs}`);
-    }
 
     if (toStat.isDirectory()) {
       throw new Error(`Cannot sync file to directory: ${toAbs}`);
@@ -155,37 +172,37 @@ async function run() {
       const fromStat = assertNoSymlink(fromAbs, "Source");
 
       if (fromStat.isDirectory()) {
-        if (fs.existsSync(toAbs)) {
-          const toStat = fs.lstatSync(toAbs);
+        assertNoSymlinkInPath(workspace, toAbs);
 
-          if (toStat.isSymbolicLink()) {
-            throw new Error(`Destination symlinks are not supported: ${toAbs}`);
-          }
-
-          if (!toStat.isDirectory()) {
-            throw new Error(`Cannot sync directory to file: ${toAbs}`);
-          }
+        if (fs.existsSync(toAbs) && !fs.lstatSync(toAbs).isDirectory()) {
+          throw new Error(`Cannot sync directory to file: ${toAbs}`);
         }
 
         log.info(`Syncing directory: ${from} -> ${to} (overwrite: ${overwrite})`);
+        fs.mkdirSync(toAbs, { recursive: true });
+
         for (const relativeFile of collectRelativeFiles(fromAbs)) {
           copyOne(
+            workspace,
             path.join(fromAbs, relativeFile),
             path.join(toAbs, relativeFile),
             overwrite,
             stats,
           );
         }
-      } else {
+      } else if (fromStat.isFile()) {
         log.info(`Syncing file: ${from} -> ${to} (overwrite: ${overwrite})`);
-        copyOne(fromAbs, toAbs, overwrite, stats);
+        copyOne(workspace, fromAbs, toAbs, overwrite, stats);
+      } else {
+        throw new Error(`Unsupported source type: ${from}`);
       }
     }
 
     log.info(`Changed: ${stats.changed}`);
     log.info(`Skipped: ${stats.skipped}`);
-    core.setOutput("changed", stats.changed);
-    core.setOutput("skipped", stats.skipped);
+    core.setOutput("changed", stats.changed > 0);
+    core.setOutput("changed-count", stats.changed);
+    core.setOutput("skipped-count", stats.skipped);
   } catch (error) {
     log.fail(error instanceof Error ? error.message : String(error));
   }

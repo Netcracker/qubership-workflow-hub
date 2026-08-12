@@ -8,8 +8,10 @@ inputs:
 
 outputs:
   changed:
+    description: "Whether any files were changed (true/false)"
+  changed-count:
     description: "Number of files actually written (new or with different content)"
-  skipped:
+  skipped-count:
     description: "Number of files skipped because the destination already existed with overwrite: false, or was already identical"
 
 runs:
