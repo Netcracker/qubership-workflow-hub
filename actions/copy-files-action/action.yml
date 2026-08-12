@@ -1,20 +1,10 @@
-name: "Sync Files"
-description: "Synchronize files and directories inside the current workspace"
+name: "Copy Files"
+description: "Copies files and directories inside the workspace according to a JSON mapping of from/to entries"
 
 inputs:
   files:
     description: "JSON array of source and destination mappings"
     required: true
-
-  create-pr:
-    description: "Create a pull request when changes are detected"
-    required: false
-    default: "false"
-
-  auto-merge:
-    description: "Enable auto-merge for the created pull request"
-    required: false
-    default: "false"
 
 outputs:
   copied:

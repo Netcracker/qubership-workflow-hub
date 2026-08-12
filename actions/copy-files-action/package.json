@@ -1,5 +1,5 @@
 {
-  "name": "sync-files-action",
+  "name": "copy-files-action",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -13,7 +13,6 @@
   "license": "ISC",
   "dependencies": {
     "@actions/core": "^3.0.1",
-    "@actions/github": "^9.1.1",
     "@qubership/action-logger": "file:../../packages/action-logger"
   },
   "devDependencies": {
