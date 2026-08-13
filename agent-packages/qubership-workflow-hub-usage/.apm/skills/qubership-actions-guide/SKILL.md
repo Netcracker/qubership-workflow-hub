@@ -23,6 +23,7 @@ the relevant supporting document:
 | npm, Python publish | catalog below — no guide file needed |
 | Cleanup (container images, Maven packages) | `cleanup.md` |
 | APM packages update | `utilities.md` |
+| Sync/copy files across paths and open a PR with the changes | `utilities.md` |
 | Utilities (wait-for-workflow, custom-event, store-input-params) | `utilities.md` |
 | Repository config file resolution without Docker (workflow policy, custom JSON configs) | `utilities.md` |
 | JSON Schema validation (validate a JSON file against a schema, fail the pipeline on violations) | `utilities.md` |
@@ -108,6 +109,7 @@ Ask only what is missing after inferring from context:
 | --- | --- |
 | `config-resolver` | Resolve any JSON config file to flat JSON (also listed under Docker) — generic mode for non-Docker configs, e.g. workflow policy |
 | `apm-packages-update` | Run `apm update --yes` and open a PR with the changes in the current repo |
+| `sync-files-action` | Copy files/directories per a JSON from/to mapping and open a PR with the changes |
 | `ghcr-discover-repo-packages` | Discover all GHCR packages for a repo — feeds security scan, cleanup, or any step needing the image list |
 | `custom-event` | Emit `repository_dispatch` event with JSON payload |
 | `smart-download` | Download workflow artifacts by name, IDs, or glob pattern |

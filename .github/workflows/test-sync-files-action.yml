@@ -3,10 +3,10 @@ name: TEST sync-files-action
 on:
   workflow_dispatch:
     inputs:
-      dry-run:
-        description: Skip pull request creation and only test the copy step
+      create-pr:
+        description: Create a real pull request (uncheck to only test the copy step)
         required: false
-        default: true
+        default: false
         type: boolean
 
 permissions:
@@ -46,7 +46,7 @@ jobs:
               { "from": "test-fixtures/docs/a.md", "to": "test-fixtures/out/a.md", "overwrite": false },
               { "from": "test-fixtures/docs/examples", "to": "test-fixtures/out/examples", "overwrite": true }
             ]
-          dry-run: ${{ inputs['dry-run'] && 'true' || 'false' }}
+          create-pr: ${{ inputs['create-pr'] && 'true' || 'false' }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify result
@@ -80,7 +80,7 @@ jobs:
             [
               { "from": "../outside.md", "to": "test-fixtures/out/outside.md" }
             ]
-          dry-run: "true"
+          create-pr: "false"
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify path-escape is rejected

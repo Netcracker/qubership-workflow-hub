@@ -21,8 +21,8 @@ Copies files and directories inside the checked-out workspace according to a JSO
   symlink — all with a clear error instead of silently following or overwriting them.
 - Opens a pull request only when files actually changed; a run that produces no changes is a
   no-op — no empty PR is created.
-- Supports a `dry-run` mode that copies files but skips pull request creation, for validating a
-  mapping without touching the repository.
+- Pull request creation is controlled by `create-pr` (default `true`) — set it to `false` to
+  only copy files, without touching branches or opening a PR.
 - Supports commit sign-off, requesting user/team reviewers, and a configurable branch-deletion
   policy on the created pull request.
 - Optionally enables GitHub auto-merge on the created pull request with a configurable merge
@@ -38,8 +38,8 @@ Copies files and directories inside the checked-out workspace according to a JSO
 | `pr-branch` | Branch to create/update with the synced files. | No | `chore/sync-files` |
 | `title` | Pull request title. | No | `chore: sync files` |
 | `commit-message` | Commit message for the synced files. | No | `chore: sync files` |
-| `dry-run` | Copy files but skip pull request creation. | No | `false` |
-| `auto-merge` | Automatically enable auto-merge for the created pull request. Has no effect in `dry-run` mode, when no files changed, or when no pull request was created. | No | `false` |
+| `create-pr` | Open a pull request with the synced changes. Set to `false` to only copy files. | No | `true` |
+| `auto-merge` | Automatically enable auto-merge for the created pull request. Has no effect when `create-pr` is `false`, when no files changed, or when no pull request was created. | No | `false` |
 | `merge-method` | Merge method to use for auto-merge; one of `merge`, `squash`, or `rebase` (case-insensitive). Ignored unless `auto-merge` is `true`. | No | `squash` |
 | `delete-branch` | Automatically delete `pr-branch` after it is merged. | No | `true` |
 | `sign-off` | Sign off commits in the pull request. | No | `false` |
@@ -89,7 +89,7 @@ Actions treats any non-empty string, including `"false"`, as truthy.
    identical content is skipped, and `overwrite: false` leaves an existing destination file
    untouched. Copying a file onto an existing directory (or a directory onto an existing file)
    fails with a clear error.
-5. If `dry-run: true`, stops here — no branch, commit, or pull request is created.
+5. If `create-pr: false`, stops here — no branch, commit, or pull request is created.
 6. If nothing changed, stops here as well — no empty pull request is opened.
 7. Otherwise opens or updates a pull request on `pr-branch` (base: `branch`) via
    [`peter-evans/create-pull-request`](https://github.com/peter-evans/create-pull-request),

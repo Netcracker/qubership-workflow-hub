@@ -21,10 +21,10 @@ inputs:
     description: "Commit message for the synced files"
     required: false
     default: "chore: sync files"
-  dry-run:
-    description: "Copy files but skip pull request creation"
+  create-pr:
+    description: "Open a pull request with the synced changes; set to false to only copy files"
     required: false
-    default: "false"
+    default: "true"
   auto-merge:
     description: "Automatically enable auto-merge for the created pull request"
     required: false
@@ -222,7 +222,7 @@ runs:
         echo "skipped-count=$skipped" >> "$GITHUB_OUTPUT"
 
     - name: Create Pull Request
-      if: ${{ inputs.dry-run != 'true' && steps.sync.outputs.changed == 'true' }}
+      if: ${{ inputs.create-pr == 'true' && steps.sync.outputs.changed == 'true' }}
       id: create-pr
       uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
       with:
@@ -250,7 +250,7 @@ runs:
           - Workflow run: `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
 
     - name: Enable auto-merge
-      if: ${{ inputs.dry-run != 'true' && inputs.auto-merge == 'true' && steps.create-pr.outputs.pull-request-number != '' }}
+      if: ${{ inputs.create-pr == 'true' && inputs.auto-merge == 'true' && steps.create-pr.outputs.pull-request-number != '' }}
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
@@ -278,12 +278,12 @@ runs:
     - name: Log result
       shell: bash
       env:
-        DRY_RUN: ${{ inputs.dry-run }}
+        CREATE_PR: ${{ inputs.create-pr }}
         PR_URL: ${{ steps.create-pr.outputs.pull-request-url }}
       run: |
-        if [ "$DRY_RUN" = "true" ]; then
-          echo "Dry-run mode enabled, pull request creation skipped"
-          echo "Dry-run mode enabled, pull request creation skipped" >> "$GITHUB_STEP_SUMMARY"
+        if [ "$CREATE_PR" != "true" ]; then
+          echo "create-pr is false, only files were synced (no pull request)"
+          echo "create-pr is false, only files were synced (no pull request)" >> "$GITHUB_STEP_SUMMARY"
           exit 0
         fi
         if [ -n "$PR_URL" ]; then
