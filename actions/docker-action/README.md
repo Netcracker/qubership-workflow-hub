@@ -139,10 +139,10 @@ The `component` input accepts either a JSON object or a single-element array. Fi
 | `name`                      | Component name — used for image naming                          | `"default"`      |
 | `dockerfile`                | Path to the Dockerfile                                          | `"./Dockerfile"` |
 | `build_context`             | Docker build context path                                       | `"."`            |
-| `arguments` or `build_args` | Build arguments (comma-separated or newline or JSON dictionary) | `""`             |
+| `build_args`                | Build arguments (comma-separated or newline or JSON dictionary) | `""`             |
 
 Deprecated field aliases still accepted for compatibility: `file` → `dockerfile`,
-`context` → `build_context`.
+`context` → `build_context`, `arguments` → `build_args`.
 
 **Example (comma-separated arguments):**
 
@@ -154,7 +154,7 @@ with:
         "name": "my-service",
         "dockerfile": "./docker/Dockerfile.prod",
         "build_context": "./src",
-        "arguments": "NODE_ENV=production,DEBUG=false"
+        "build_args": "NODE_ENV=production,DEBUG=false"
       }
     ]
 ```
@@ -169,7 +169,7 @@ with:
         "name": "my-service",
         "dockerfile": "./docker/Dockerfile.prod",
         "build_context": "./src",
-        "arguments":
+        "build_args":
           {
             "NODE_ENV": "production",
             "DEBUG": "false"
