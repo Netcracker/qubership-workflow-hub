@@ -1,4 +1,7 @@
-# Utilities — config-resolver, apm-packages-update, sync-files-action, wait-for-workflow, custom-event, verify-json
+# Utilities
+
+Covers: config-resolver, apm-packages-update, sync-files-action, wait-for-workflow,
+custom-event, store-input-params, verify-json.
 
 ## config-resolver (generic configuration files)
 
