@@ -203,7 +203,7 @@ permissions:
 | `sign-off` | No | `false` | Sign off commits on the created PR |
 | `reviewers` | No | `""` | Comma-separated GitHub usernames to request review from |
 | `team-reviewers` | No | `""` | Comma-separated GitHub team slugs to request review from |
-| `token` | Yes | — | Needs push + PR-create permission in the target repo |
+| `token` | No | `""` | Required when `create-pr` is `true`; not needed when `create-pr` is `false`. Needs push + PR-create permission in the target repo |
 
 ### Usage pattern
 

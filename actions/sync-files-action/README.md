@@ -45,7 +45,7 @@ Copies files and directories inside the checked-out workspace according to a JSO
 | `sign-off` | Sign off commits in the pull request. | No | `false` |
 | `reviewers` | Comma-separated list of GitHub usernames to request review from. | No | `""` |
 | `team-reviewers` | Comma-separated list of GitHub team slugs to request review from. | No | `""` |
-| `token` | GitHub token with permission to create branches and pull requests. | Yes | - |
+| `token` | GitHub token with permission to create branches and pull requests. Required when `create-pr` is `true`; not needed when `create-pr` is `false`. | No | `""` |
 
 ### `files` format
 
@@ -110,6 +110,15 @@ permissions:
   pull-requests: write
 ```
 
+Only needed when `create-pr: true` (the default). With `create-pr: false`, the action only
+writes to the local filesystem of the runner and needs no `token`/permissions beyond what
+`actions/checkout` requires:
+
+```yaml
+permissions:
+  contents: read
+```
+
 ---
 
 ## Usage
@@ -147,6 +156,19 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+Copy-only, no PR (no `token`/write permissions needed):
+
+```yaml
+      - name: Copy files
+        uses: netcracker/qubership-workflow-hub/actions/sync-files-action@<sha> # v1.0.0
+        with:
+          files: |
+            [
+              { "from": "custom_doc/troubleshooting.md", "to": "out/troubleshooting.md" }
+            ]
+          create-pr: "false"
+```
+
 ---
 
 ## Notes
@@ -165,6 +187,9 @@ jobs:
 
 ## Troubleshooting
 
+- **`Input 'token' is required when create-pr is true`** — `token` was left empty (or omitted)
+  while `create-pr` is `true` (the default). Either pass a `token`, or set `create-pr: "false"`
+  for copy-only runs.
 - **`Input 'files' must be a non-empty JSON array`** — `files` is not valid JSON, its root is
   not an array, or the array is empty. Wrap a single mapping in `[ ... ]`.
 - **`Each mapping must be an object with non-empty string fields 'from' and 'to' ...`** — a

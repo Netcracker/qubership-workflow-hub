@@ -50,8 +50,9 @@ inputs:
     required: false
     default: ""
   token:
-    description: "GitHub token with permission to create branches and pull requests"
-    required: true
+    description: "GitHub token with permission to create branches and pull requests; required when create-pr is true"
+    required: false
+    default: ""
 
 outputs:
   changed:
@@ -73,6 +74,17 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Validate token
+      shell: bash
+      env:
+        CREATE_PR: ${{ inputs.create-pr }}
+        TOKEN: ${{ inputs.token }}
+      run: |
+        if [ "$CREATE_PR" = "true" ] && [ -z "$TOKEN" ]; then
+          echo "Input 'token' is required when create-pr is true" >&2
+          exit 1
+        fi
+
     - name: Sync files
       id: sync
       shell: bash
