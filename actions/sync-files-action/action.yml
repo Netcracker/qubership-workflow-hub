@@ -97,7 +97,7 @@ runs:
           fi
 
           local resolved
-          resolved="$(realpath -m "$workspace/$rel")"
+          resolved="$(realpath -sm "$workspace/$rel")"
           if [[ "$resolved" != "$workspace" && "$resolved" != "$workspace"/* ]]; then
             echo "Path escapes workspace: $rel" >&2
             exit 1
@@ -137,7 +137,9 @@ runs:
         copy_one() {
           local from="$1" to="$2" overwrite="$3"
           assert_no_symlink_in_path "$workspace" "$to"
-          mkdir -p "$(dirname "$to")"
+          if ! mkdir -p "$(dirname "$to")"; then
+            exit 1
+          fi
           if [ -d "$to" ]; then
             echo "Cannot sync file to directory: $to" >&2
             exit 1
@@ -154,7 +156,10 @@ runs:
               return
             fi
           fi
-          cp "$from" "$to"
+          if ! cp "$from" "$to"; then
+            echo "Failed to copy $from -> $to" >&2
+            exit 1
+          fi
           echo "  copied: $from -> $to"
           changed=$((changed + 1))
         }
@@ -164,8 +169,12 @@ runs:
           to=$(jq -r '.to' <<< "$mapping")
           overwrite=$(jq -r 'if has("overwrite") then .overwrite else true end' <<< "$mapping")
 
-          from_abs="$(resolve_in_workspace "$from")"
-          to_abs="$(resolve_in_workspace "$to")"
+          if ! from_abs="$(resolve_in_workspace "$from")"; then
+            exit 1
+          fi
+          if ! to_abs="$(resolve_in_workspace "$to")"; then
+            exit 1
+          fi
 
           if [ ! -e "$from_abs" ]; then
             echo "Source path does not exist: $from" >&2
@@ -180,7 +189,13 @@ runs:
           if [ -d "$from_abs" ]; then
             echo "Syncing directory: $from -> $to (overwrite: $overwrite)"
             assert_no_symlink_in_path "$workspace" "$to_abs"
-            mkdir -p "$to_abs"
+            if [ -e "$to_abs" ] && [ ! -d "$to_abs" ]; then
+              echo "Cannot sync directory to file: $to" >&2
+              exit 1
+            fi
+            if ! mkdir -p "$to_abs"; then
+              exit 1
+            fi
             if find "$from_abs" -type l -print -quit | grep -q .; then
               echo "Directory source contains symlink(s), not supported: $from" >&2
               exit 1
