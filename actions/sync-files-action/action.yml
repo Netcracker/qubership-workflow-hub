@@ -132,15 +132,20 @@ runs:
         skipped=0
 
         assert_no_symlink_in_path() {
-          local workspace="$1" target="$2"
+          local workspace="$1" target="$2" kind="$3"
           local rel current
+
+          if [ "$target" = "$workspace" ]; then
+            return
+          fi
+
           rel="${target#"$workspace"/}"
           current="$workspace"
           local IFS=/
           for part in $rel; do
             current="$current/$part"
             if [ -L "$current" ]; then
-              echo "Destination path contains a symlink: $current" >&2
+              echo "$kind path contains a symlink: $current" >&2
               exit 1
             fi
           done
@@ -148,7 +153,7 @@ runs:
 
         copy_one() {
           local from="$1" to="$2" overwrite="$3"
-          assert_no_symlink_in_path "$workspace" "$to"
+          assert_no_symlink_in_path "$workspace" "$to" "Destination"
           if ! mkdir -p "$(dirname "$to")"; then
             exit 1
           fi
@@ -188,6 +193,8 @@ runs:
             exit 1
           fi
 
+          assert_no_symlink_in_path "$workspace" "$from_abs" "Source"
+
           if [ ! -e "$from_abs" ]; then
             echo "Source path does not exist: $from" >&2
             exit 1
@@ -200,7 +207,7 @@ runs:
 
           if [ -d "$from_abs" ]; then
             echo "Syncing directory: $from -> $to (overwrite: $overwrite)"
-            assert_no_symlink_in_path "$workspace" "$to_abs"
+            assert_no_symlink_in_path "$workspace" "$to_abs" "Destination"
             if [ -e "$to_abs" ] && [ ! -d "$to_abs" ]; then
               echo "Cannot sync directory to file: $to" >&2
               exit 1
