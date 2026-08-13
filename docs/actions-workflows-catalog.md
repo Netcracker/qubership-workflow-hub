@@ -40,6 +40,7 @@ Always check that document before modifying or depending on a deprecated compone
 | [pr-assigner](../actions/pr-assigner/README.md)                                 | Auto-assign PR reviewers from config or CODEOWNERS with random shuffle                 |
 | [smart-download](../actions/smart-download/README.md)                           | Download workflow artifacts by name, IDs, or glob pattern                              |
 | [store-input-params](../actions/store-input-params/README.md)                   | Persist workflow_dispatch inputs as a JSON artifact for downstream jobs                |
+| [sync-files-action](../actions/sync-files-action/README.md)                     | Copy files per a JSON from/to mapping and open a pull request with the changes         |
 | [tag-action](../actions/tag-action/README.md)                                   | Create / delete / check Git tags with optional GitHub Release creation                 |
 | [verify-json](../actions/verify-json/README.md)                                 | Validate a JSON file against a JSON Schema                                             |
 | [wait-for-workflow](../actions/wait-for-workflow/README.md)                     | Poll GitHub until a target workflow run completes successfully                         |

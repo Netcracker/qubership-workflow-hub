@@ -1,0 +1,92 @@
+name: TEST sync-files-action
+
+on:
+  workflow_dispatch:
+    inputs:
+      create-pr:
+        description: Create a real pull request (uncheck to only test the copy step)
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  test-sync:
+    name: Test sync-files-action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Create Fixtures
+        shell: bash
+        run: |
+          mkdir -p test-fixtures/docs/examples test-fixtures/out/examples
+          echo "content-a-v2" > test-fixtures/docs/a.md
+          echo "content-b" > test-fixtures/docs/examples/b.md
+          echo "content-c" > test-fixtures/docs/examples/c.md
+
+          echo "content-a-v1" > test-fixtures/out/a.md
+          echo "content-b" > test-fixtures/out/examples/b.md
+          echo "keep-me" > test-fixtures/out/examples/old.md
+
+      - name: Run sync-files-action
+        id: sync
+        uses: ./actions/sync-files-action
+        with:
+          files: |
+            [
+              { "from": "test-fixtures/docs/a.md", "to": "test-fixtures/out/a.md", "overwrite": false },
+              { "from": "test-fixtures/docs/examples", "to": "test-fixtures/out/examples", "overwrite": true }
+            ]
+          create-pr: ${{ inputs['create-pr'] && 'true' || 'false' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify result
+        env:
+          CHANGED: ${{ steps.sync.outputs.changed }}
+          CHANGED_COUNT: ${{ steps.sync.outputs.changed-count }}
+          SKIPPED_COUNT: ${{ steps.sync.outputs.skipped-count }}
+          PR_URL: ${{ steps.sync.outputs.pull-request-url }}
+        run: |
+          [ "$CHANGED" = "true" ] || { echo "❌ expected changed=true, got: $CHANGED"; exit 1; }
+          [ "$CHANGED_COUNT" = "1" ] || { echo "❌ expected changed-count=1, got: $CHANGED_COUNT"; exit 1; }
+          [ "$SKIPPED_COUNT" = "2" ] || { echo "❌ expected skipped-count=2, got: $SKIPPED_COUNT"; exit 1; }
+
+          [ "$(cat test-fixtures/out/a.md)" = "content-a-v1" ] || { echo "❌ expected a.md to stay unchanged with overwrite=false"; exit 1; }
+          [ "$(cat test-fixtures/out/examples/b.md)" = "content-b" ] || { echo "❌ expected b.md to remain equal content"; exit 1; }
+          [ "$(cat test-fixtures/out/examples/c.md)" = "content-c" ] || { echo "❌ expected c.md to be copied"; exit 1; }
+          [ "$(cat test-fixtures/out/examples/old.md)" = "keep-me" ] || { echo "❌ expected old.md to remain (no delete-extra in v1)"; exit 1; }
+
+          echo "✅ sync-files-action runtime checks passed"
+          if [ -n "$PR_URL" ]; then
+            echo "✅ PR created: $PR_URL"
+            echo "⚠️ Remember to close/clean up this test PR manually"
+          fi
+
+      - name: Run path-escape negative test
+        id: escape
+        continue-on-error: true
+        uses: ./actions/sync-files-action
+        with:
+          files: |
+            [
+              { "from": "../outside.md", "to": "test-fixtures/out/outside.md" }
+            ]
+          create-pr: "false"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify path-escape is rejected
+        if: ${{ always() }}
+        env:
+          ESCAPE_OUTCOME: ${{ steps.escape.outcome }}
+        run: |
+          [ "$ESCAPE_OUTCOME" = "failure" ] || { echo "❌ expected path-escape test to fail, got: $ESCAPE_OUTCOME"; exit 1; }
+          echo "✅ path-escape protection is enforced"
