@@ -85,8 +85,8 @@ Actions treats any non-empty string, including `"false"`, as truthy.
 2. For each mapping, resolves `from` and `to` against `GITHUB_WORKSPACE`, rejecting paths that
    are absolute or that escape the workspace (e.g. via `../`).
 3. Rejects a source that is a symlink, a source directory that contains a symlink, a source
-  whose parent path contains a symlink, a destination that is a symlink, and a destination
-  whose parent path contains a symlink.
+   whose parent path contains a symlink, a destination that is a symlink, and a destination
+   whose parent path contains a symlink.
 4. Copies the file, or recursively copies every file in the directory — a destination file with
    identical content is skipped, and `overwrite: false` leaves an existing destination file
    untouched. Copying a file onto an existing directory (or a directory onto an existing file)
