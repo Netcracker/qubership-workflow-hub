@@ -351,7 +351,9 @@ jobs:
   Avoid placing secrets directly in `ARG` / `ENV` instructions in the Dockerfile — use
   `--secret` mounts or build-time secrets instead.
 - Always pin to `@v2.2.1` or a specific SHA — never `@main` in production.
-- Full documentation of `cache-from` and `cache-to` inputs can be found on [docker/build-push-action page](https://github.com/docker/build-push-action)
+- Full documentation of `cache-from` and `cache-to` inputs can be found on the
+  [docker/build-push-action page](https://github.com/docker/build-push-action).
+
 ---
 
 ## Troubleshooting
