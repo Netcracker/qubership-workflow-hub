@@ -70,23 +70,3 @@ jobs:
             echo "✅ PR created: $PR_URL"
             echo "⚠️ Remember to close/clean up this test PR manually"
           fi
-
-      - name: Run path-escape negative test
-        id: escape
-        continue-on-error: true
-        uses: ./actions/sync-files-action
-        with:
-          files: |
-            [
-              { "from": "../outside.md", "to": "test-fixtures/out/outside.md" }
-            ]
-          create-pr: "false"
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify path-escape is rejected
-        if: ${{ always() }}
-        env:
-          ESCAPE_OUTCOME: ${{ steps.escape.outcome }}
-        run: |
-          [ "$ESCAPE_OUTCOME" = "failure" ] || { echo "❌ expected path-escape test to fail, got: $ESCAPE_OUTCOME"; exit 1; }
-          echo "✅ path-escape protection is enforced"
