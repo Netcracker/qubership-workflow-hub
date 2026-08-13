@@ -17,8 +17,9 @@ Copies files and directories inside the checked-out workspace according to a JSO
 - **Workspace-scoped:** every `from`/`to` is resolved against `GITHUB_WORKSPACE` and rejected
   if it would resolve outside of it (e.g. via `../`).
 - **Symlink-safe:** rejects a source that is a symlink, a source directory that contains a
-  symlink, a destination that is a symlink, and a destination whose parent path contains a
-  symlink — all with a clear error instead of silently following or overwriting them.
+  symlink, a source whose parent path contains a symlink, a destination that is a symlink, and
+  a destination whose parent path contains a symlink — all with a clear error instead of
+  silently following or overwriting them.
 - Opens a pull request only when files actually changed; a run that produces no changes is a
   no-op — no empty PR is created.
 - Pull request creation is controlled by `create-pr` (default `true`) — set it to `false` to
@@ -83,8 +84,9 @@ Actions treats any non-empty string, including `"false"`, as truthy.
    and an optional boolean `overwrite`.
 2. For each mapping, resolves `from` and `to` against `GITHUB_WORKSPACE`, rejecting paths that
    are absolute or that escape the workspace (e.g. via `../`).
-3. Rejects a source that is a symlink, a source directory that contains a symlink, a destination
-   that is a symlink, and a destination whose parent path contains a symlink.
+3. Rejects a source that is a symlink, a source directory that contains a symlink, a source
+  whose parent path contains a symlink, a destination that is a symlink, and a destination
+  whose parent path contains a symlink.
 4. Copies the file, or recursively copies every file in the directory — a destination file with
    identical content is skipped, and `overwrite: false` leaves an existing destination file
    untouched. Copying a file onto an existing directory (or a directory onto an existing file)
@@ -200,9 +202,10 @@ Copy-only, no PR (no `token`/write permissions needed):
   from a `../` that walks past the repository root.
 - **`Source path does not exist`** — the `from` path is not present in the checked-out
   repository. Check the path and that `actions/checkout` ran first.
-- **`Source symlink is not supported`** / **`Directory source contains symlink(s), not
-  supported`** — `from` (or a file inside a source directory) is a symlink. Replace it with a
-  real file, or exclude it from the mapping.
+- **`Source path contains a symlink`** / **`Source symlink is not supported`** /
+  **`Directory source contains symlink(s), not supported`** — `from`, one of its existing parent
+  directories, or a file inside a source directory is a symlink. Replace it with a real file, or
+  exclude it from the mapping.
 - **`Destination path contains a symlink`** — `to`, or one of its existing parent directories,
   is a symlink. This is rejected unconditionally, since writing through it could reach outside
   the intended destination.
