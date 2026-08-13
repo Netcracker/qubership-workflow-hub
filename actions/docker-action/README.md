@@ -29,28 +29,30 @@ and produces a signed metadata JSON artifact after a successful push.
 
 | Name                               | Description                                                                                                | Required | Default                                                                     |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
-| `ref`                              | Git ref (branch, tag, or SHA) to checkout. Ignored when `checkout` is `false`.                             | No       | `""`                                                                        |
-| `custom-image-name`                | Override for the Docker image name. If not set, derived from component name or repository name.            | No       | `""`                                                                        |
-| `context`                          | Context mode for `docker/metadata-action`: `git` reads metadata from git history, `workflow` reads it from the workflow event payload. Affects auto-generated tags. | No       | `"git"`                                                                     |
-| `dry-run`                          | Build without pushing. Skips registry login validation, push, and metadata upload.                         | No       | `"false"`                                                                   |
-| `download-artifact`                | Download a workflow artifact before the build.                                                             | No       | `"false"`                                                                   |
-| `component`                        | Component descriptor in JSON format. Accepts an object or a single-element array.                          | No       | `[{"name": "default", "dockerfile": "./Dockerfile", "build_context": "."}]` |
-| `platforms`                        | Target platforms for the build (comma-separated, e.g. `linux/amd64,linux/arm64`).                          | No       | `"linux/amd64"`                                                             |
-| `tags`                             | Comma-separated image tags. If empty, tags are auto-generated from branch/semver/PR metadata.              | No       | `""`                                                                        |
-| `download-artifact-name`           | Name of the artifact to download. Mutually exclusive with `download-artifact-ids`.                         | No       | `""`                                                                        |
-| `download-artifact-ids`            | Comma-separated artifact IDs to download. Mutually exclusive with `download-artifact-name`.                | No       | `""`                                                                        |
-| `download-artifact-path`           | Destination path for downloaded artifacts. Defaults to `$GITHUB_WORKSPACE`.                                | No       | `""`                                                                        |
-| `download-artifact-pattern`        | Glob pattern for artifacts to download. Ignored if `download-artifact-name` is set.                        | No       | `""`                                                                        |
-| `download-artifact-merge-multiple` | Unpack multiple artifacts into a single directory (`true`) or separate directories (`false`).              | No       | `"false"`                                                                   |
-| `sbom`                             | Enable SBOM (Software Bill of Materials) generation.                                                       | No       | `"false"`                                                                   |
 | `build-args`                       | Build arguments for Docker. Supports comma-separated or newline-delimited format.                          | No       | `""`                                                                        |
-| `checkout`                         | Checkout the repository before the build. Set to `false` when the calling workflow already checked out the repo. | No       | `"true"`                                                                    |
-| `registry`                         | Target registry: `ghcr.io`, `docker.io`, or `ghcr.io,docker.io` for both.                                  | No       | `"ghcr.io"`                                                                 |
+| `cache-from`                       | List of external cache sources for buildx (e.g., user/app:cache, type=local,src=path/to/dir)               | No       | `""`                                                                        |
+| `cache-to`                         | List of cache export destinations for buildx (e.g., user/app:cache, type=local,dest=path/to/dir)           | No       | `""`                                                                        |
+| `checkout`                         | Checkout the repository before the build. Set to `false` when the calling workflow already checked out the repo. | No | `"true"`                                                                    |
+| `component`                        | Component descriptor in JSON format. Accepts an object or a single-element array.                          | No       | `[{"name": "default", "dockerfile": "./Dockerfile", "build_context": "."}]` |
+| `context`                          | Context mode for `docker/metadata-action`: `git` reads metadata from git history, `workflow` reads it from the workflow event payload. Affects auto-generated tags. | No       |`"git"`             |
+| `custom-image-name`                | Override for the Docker image name. If not set, derived from component name or repository name.            | No       | `""`                                                                        |
 | `docker-io-login`                  | Username for Docker Hub login. Required when `registry` contains `docker.io` and `dry-run` is `false`.     | No       | -                                                                           |
 | `docker-io-token`                  | Access token for Docker Hub login. Required when `registry` contains `docker.io` and `dry-run` is `false`. | No       | -                                                                           |
-| `skip-qemu-buildx`                 | **Deprecated.** Use `setup-qemu` and `setup-buildx` instead. Skips both QEMU and Buildx setup when `true`. | No       | `"false"`                                                                   |
-| `setup-qemu`                       | Set up QEMU for multi-platform builds.                                                                     | No       | `"true"`                                                                    |
+| `download-artifact`                | Download a workflow artifact before the build.                                                             | No       | `"false"`                                                                   |
+| `download-artifact-ids`            | Comma-separated artifact IDs to download. Mutually exclusive with `download-artifact-name`.                | No       | `""`                                                                        |
+| `download-artifact-merge-multiple` | Unpack multiple artifacts into a single directory (`true`) or separate directories (`false`).              | No       | `"false"`                                                                   |
+| `download-artifact-name`           | Name of the artifact to download. Mutually exclusive with `download-artifact-ids`.                         | No       | `""`                                                                        |
+| `download-artifact-path`           | Destination path for downloaded artifacts. Defaults to `$GITHUB_WORKSPACE`.                                | No       | `""`                                                                        |
+| `download-artifact-pattern`        | Glob pattern for artifacts to download. Ignored if `download-artifact-name` is set.                        | No       | `""`                                                                        |
+| `dry-run`                          | Build without pushing. Skips registry login validation, push, and metadata upload.                         | No       | `"false"`                                                                   |
+| `platforms`                        | Target platforms for the build (comma-separated, e.g. `linux/amd64,linux/arm64`).                          | No       | `"linux/amd64"`                                                             |
+| `ref`                              | Git ref (branch, tag, or SHA) to checkout. Ignored when `checkout` is `false`.                             | No       | `""`                                                                        |
+| `registry`                         | Target registry: `ghcr.io`, `docker.io`, or `ghcr.io,docker.io` for both.                                  | No       | `"ghcr.io"`                                                                 |
+| `sbom`                             | Enable SBOM (Software Bill of Materials) generation.                                                       | No       | `"false"`                                                                   |
 | `setup-buildx`                     | Set up Docker Buildx.                                                                                      | No       | `"true"`                                                                    |
+| `setup-qemu`                       | Set up QEMU for multi-platform builds.                                                                     | No       | `"true"`                                                                    |
+| `skip-qemu-buildx`                 | **Deprecated.** Use `setup-qemu` and `setup-buildx` instead. Skips both QEMU and Buildx setup when `true`. | No       | `"false"`                                                                   |
+| `tags`                             | Comma-separated image tags. If empty, tags are auto-generated from branch/semver/PR metadata.              | No       | `""`                                                                        |
 
 ---
 
@@ -132,17 +134,17 @@ Place the `permissions` block at the **job level**, not the workflow level.
 
 The `component` input accepts either a JSON object or a single-element array. Fields:
 
-| Field           | Description                                  | Default          |
-| --------------- | -------------------------------------------- | ---------------- |
-| `name`          | Component name — used for image naming       | `"default"`      |
-| `dockerfile`    | Path to the Dockerfile                       | `"./Dockerfile"` |
-| `build_context` | Docker build context path                    | `"."`            |
-| `arguments`     | Build arguments (comma-separated or newline) | `""`             |
+| Field                       | Description                                                     | Default          |
+| --------------------------- | --------------------------------------------------------------- | ---------------- |
+| `name`                      | Component name — used for image naming                          | `"default"`      |
+| `dockerfile`                | Path to the Dockerfile                                          | `"./Dockerfile"` |
+| `build_context`             | Docker build context path                                       | `"."`            |
+| `build_args`                | Build arguments (comma-separated or newline or JSON dictionary) | `""`             |
 
 Deprecated field aliases still accepted for compatibility: `file` → `dockerfile`,
-`context` → `build_context`.
+`context` → `build_context`, `arguments` → `build_args`.
 
-**Example:**
+**Example (comma-separated arguments):**
 
 ```yaml
 with:
@@ -152,7 +154,26 @@ with:
         "name": "my-service",
         "dockerfile": "./docker/Dockerfile.prod",
         "build_context": "./src",
-        "arguments": "NODE_ENV=production,DEBUG=false"
+        "build_args": "NODE_ENV=production,DEBUG=false"
+      }
+    ]
+```
+
+**Example (JSON dictionary arguments):**
+
+```yaml
+with:
+  component: |
+    [
+      {
+        "name": "my-service",
+        "dockerfile": "./docker/Dockerfile.prod",
+        "build_context": "./src",
+        "build_args":
+          {
+            "NODE_ENV": "production",
+            "DEBUG": "false"
+          }
       }
     ]
 ```
@@ -309,6 +330,8 @@ jobs:
             BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           setup-qemu: false
           setup-buildx: false
+          cache-from: type=gha,scope=my-custom-image
+          cache-to: type=gha,mode=max,scope=my-custom-image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -328,6 +351,8 @@ jobs:
   Avoid placing secrets directly in `ARG` / `ENV` instructions in the Dockerfile — use
   `--secret` mounts or build-time secrets instead.
 - Always pin to `@v2.2.1` or a specific SHA — never `@main` in production.
+- Full documentation of `cache-from` and `cache-to` inputs can be found on the
+  [docker/build-push-action page](https://github.com/docker/build-push-action).
 
 ---
 
