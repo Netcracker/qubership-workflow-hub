@@ -71,7 +71,7 @@ jobs:
 
           config_file="${{ env.CONFIG_FILE }}"
           files_file=".github/outputs/all_changed_files.json"
-          out_file="${{ env.CONFIG_FILE }}"
+          out_file="${{ env.CONFIG_FILE }}-filtered"
 
           if [ ! -f "$config_file" ]; then
             echo "Config file not found: $config_file" >&2
@@ -106,6 +106,7 @@ jobs:
 
           # Inject filtered components into the original config and write output
           jq --argjson comps "$filtered" '.components = $comps' "$config_file" > "$out_file"
+          cp -f $out_file ${{ env.CONFIG_FILE }}
 
       - name: Load Config
         id: load-config
