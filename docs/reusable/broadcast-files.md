@@ -17,11 +17,9 @@ If new functionality needed please create the [issue](https://github.com/Netcrac
 | ----------------- | --------------------------------------------------------------------------- | -------- | ------- |
 | `repo_name`       | The name of target repository to propagate.                                 | No       | None    |
 
-
 ### Detailed Description of Variables
 
 - `repo_name`: The name of target repository to propagate. If not set files will be propagated to all repos in organization except the REPOS_TO_IGNORE list
-
 
 ## Usage Example
 
