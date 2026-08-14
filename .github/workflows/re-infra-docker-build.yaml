@@ -9,7 +9,7 @@ on:
         default: ""
         description: "Tags"
       dry-run:
-        required: true
+        required: false
         type: string
         default: "false"
         description: "Dry run mode"
