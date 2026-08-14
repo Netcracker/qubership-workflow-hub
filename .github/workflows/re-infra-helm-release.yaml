@@ -1,0 +1,213 @@
+---
+
+name: "[REUSABLE] [INFRA] Helm Charts Release"
+
+on:
+  workflow_call:
+    inputs:
+      release:
+        description: 'Release version'
+        required: true
+        type: string
+      docker-config-file:
+        description: 'Path to docker config file'
+        required: false
+        type: string
+        default: ".qubership/dev-build-config.cfg"
+      helm-charts-config-file:
+        description: 'Path to helm charts config file'
+        required: false
+        type: string
+        default: ".qubership/helm-charts-release-config.yaml"
+      max-parallel:
+        description: 'Maximum number of parallel jobs'
+        required: false
+        type: number
+        default: 4
+
+permissions:
+  contents: read
+
+jobs:
+  check-tag:
+    env:
+      RELEASE_VERSION: ${{ inputs.release }}
+      DOCKER_CONFIG_FILE: ${{ inputs.docker-config-file }}
+      HELM_CHARTS_CONFIG_FILE: ${{ inputs.helm-charts-config-file }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if tag exists
+        id: check_tag
+        uses: netcracker/qubership-workflow-hub/actions/tag-action@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        with:
+          tag-name: '${{ env.RELEASE_VERSION }}'
+          ref: ${{ github.ref }}
+          create-tag: false
+          check-tag: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  load-docker-build-components:
+    env:
+      RELEASE_VERSION: ${{ inputs.release }}
+      DOCKER_CONFIG_FILE: ${{ inputs.docker-config-file }}
+      HELM_CHARTS_CONFIG_FILE: ${{ inputs.helm-charts-config-file }}
+    runs-on: ubuntu-latest
+    outputs:
+      components: ${{ steps.load-config.outputs.config }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        with:
+          persist-credentials: false
+
+      - name: Load Docker Configuration
+        id: load-config
+        uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        with:
+          file-path: ${{ env.DOCKER_CONFIG_FILE }}
+
+  docker-check-build:
+    env:
+      RELEASE_VERSION: ${{ inputs.release }}
+      DOCKER_CONFIG_FILE: ${{ inputs.docker-config-file }}
+      HELM_CHARTS_CONFIG_FILE: ${{ inputs.helm-charts-config-file }}
+    needs: [load-docker-build-components, check-tag]
+    name: ${{ matrix.component.name }} dry run
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: ${{ inputs.max-parallel }}
+      fail-fast: true
+      matrix:
+        component: ${{ fromJson(needs.load-docker-build-components.outputs.components) }}
+    steps:
+      - name: Docker build
+        uses: netcracker/qubership-workflow-hub/actions/docker-action@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        with:
+          ref: ${{ github.ref }}
+          download-artifact: false
+          dry-run: true
+          component: ${{ toJson(matrix.component) }}
+          platforms: ${{ matrix.component.platforms }}
+          tags: "${{ env.RELEASE_VERSION }}_dry_run"
+          cache-from: type=gha,scope=${{ matrix.component.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component.name }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  chart-release:
+    permissions:
+      contents: write
+      packages: write
+    env:
+      RELEASE_VERSION: ${{ inputs.release }}
+      DOCKER_CONFIG_FILE: ${{ inputs.docker-config-file }}
+      HELM_CHARTS_CONFIG_FILE: ${{ inputs.helm-charts-config-file }}
+    needs: [check-tag, load-docker-build-components, docker-check-build]
+    runs-on: ubuntu-latest
+    outputs:
+      images-versions: ${{ steps.update-versions.outputs.images-versions }}
+      charts-artifact: ${{ steps.update-versions.outputs.released-chart-atrifact }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: "Add github.vars into github.env"
+        env:
+          VARS_JSON: '${{ toJson(vars) }}'
+        run: |
+          echo "${VARS_JSON}" | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' >> $GITHUB_ENV
+
+      - name: "Chart release"
+        id: update-versions
+        uses: netcracker/qubership-workflow-hub/actions/charts-values-update-action@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        with:
+          release-version: ${{ env.RELEASE_VERSION }}
+          config-file: ${{ env.HELM_CHARTS_CONFIG_FILE }}
+          default-tag: ${{ env.RELEASE_VERSION }}
+          package-charts: true
+          publish-charts: true
+
+      - name: "Debug"
+        env:
+          IMAGES_VERSIONS: "${{ steps.update-versions.outputs.images-versions }}"
+        run: |
+          echo "Images versions: ${IMAGES_VERSIONS}"
+
+  docker-build:
+    name: ${{ matrix.component.name }}
+    permissions:
+      contents: write
+      packages: write
+    env:
+      RELEASE_VERSION: ${{ inputs.release }}
+      DOCKER_CONFIG_FILE: ${{ inputs.docker-config-file }}
+      HELM_CHARTS_CONFIG_FILE: ${{ inputs.helm-charts-config-file }}
+    needs: [chart-release, load-docker-build-components]
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: ${{ inputs.max-parallel }}
+      fail-fast: true
+      matrix:
+        component: ${{ fromJson(needs.load-docker-build-components.outputs.components) }}
+    steps:
+      - name: Docker build
+        uses: netcracker/qubership-workflow-hub/actions/docker-action@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        with:
+          ref: release-${{ env.RELEASE_VERSION }}
+          download-artifact: false
+          dry-run: false
+          component: ${{ toJson(matrix.component) }}
+          platforms: ${{ matrix.component.platforms }}
+          tags: "${{ env.IMAGE_VERSION }},latest"
+          cache-from: type=gha,scope=${{ matrix.component.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component.name }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          IMAGE_VERSION: "${{ fromJson(needs.chart-release.outputs.images-versions)[matrix.component.name] || env.RELEASE_VERSION }}"
+
+  github-release:
+    permissions:
+      contents: write
+      packages: write
+    env:
+      RELEASE_VERSION: ${{ inputs.release }}
+      DOCKER_CONFIG_FILE: ${{ inputs.docker-config-file }}
+      HELM_CHARTS_CONFIG_FILE: ${{ inputs.helm-charts-config-file }}
+    needs: [chart-release, docker-build]
+    continue-on-error: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        with:
+          fetch-depth: 0
+          ref: release-${{ env.RELEASE_VERSION }}
+          persist-credentials: true
+
+      - name: "Release-drafter"
+        uses: netcracker/release-drafter@130c08399304912ffe90e9604e4328f2fdcd7619  # v1.0.1
+        with:
+          config-name: release-drafter-config.yml
+          publish: true
+          name: ${{ env.RELEASE_VERSION }}
+          tag: ${{ env.RELEASE_VERSION }}
+          version: ${{ env.RELEASE_VERSION }}
+          commitish: release-${{ env.RELEASE_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Download released charts"
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          artifact-ids: ${{ needs.chart-release.outputs.charts-artifact }}
+      - name: "Upload Assets"
+        uses: netcracker/qubership-workflow-hub/actions/assets-action@b6bee6f61fdc8b367777c1173fc852a58878a6a7  # v2.5.0
+        with:
+          tag: ${{ env.RELEASE_VERSION }}
+          item-path: "./*.tgz"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

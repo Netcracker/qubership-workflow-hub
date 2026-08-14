@@ -1,0 +1,156 @@
+name: "[REUSABLE] [INFRA] Docker Build"
+
+on:
+  workflow_call:
+    inputs:
+      tags:
+        required: false
+        type: string
+        default: ""
+        description: "Tags"
+      dry-run:
+        required: true
+        type: string
+        default: "false"
+        description: "Dry run mode"
+      replace-symbol:
+        required: false
+        type: string
+        default: "_"
+        description: "Symbol to replace in tags"
+      config-file:
+        required: true
+        type: string
+        description: "Path to config file"
+      diff-build:
+        required: false
+        type: string
+        default: "true"
+        description: "Diff build mode"
+      max-parallel:
+        required: false
+        type: number
+        default: 4
+        description: "Maximum number of parallel jobs"
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: "Prepare Images and Metadata"
+    runs-on: ubuntu-latest
+    outputs:
+      components: "${{ steps.load-config.outputs.config }}"
+      tags: "${{ steps.meta.outputs.result }}"
+    env:
+      CONFIG_FILE: ${{ inputs.config-file }}
+      DRY_RUN: ${{ inputs.dry-run }}
+      DIFF_BUILD: ${{ inputs.diff-build }}
+      TAGS: ${{ inputs.tags }}
+      REPLACE_SYMBOL: ${{ inputs.replace-symbol }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Changed Files
+        if: env.DIFF_BUILD == 'true'
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+        with:
+          json: true
+          write_output_files: true # .github/outputs/all_changed_files.json
+
+      - name: Filter config for changed components
+        id: filter-config
+        if: env.DIFF_BUILD == 'true' && steps.changed-files.outputs.all_modified_files_count != '0'
+        run: |
+          set -euo pipefail
+
+          config_file="${{ env.CONFIG_FILE }}"
+          files_file=".github/outputs/all_changed_files.json"
+          out_file="${{ env.CONFIG_FILE }}"
+
+          if [ ! -f "$config_file" ]; then
+            echo "Config file not found: $config_file" >&2
+            exit 1
+          fi
+
+          if [ ! -f "$files_file" ]; then
+            echo "Changed files json not found: $files_file" >&2
+            exit 1
+          fi
+
+          # Compute filtered components (array)
+          filtered=$(jq -c --argjson files "$(cat "$files_file")" '
+          .components |
+          [ .[] | select(
+              . as $component |
+              any($files[];
+                  [ $component.changeset[] as $ch | startswith($ch) ] | any
+              )
+              )
+          ]
+          ' "$config_file")
+
+          # If nothing matched, return empty array and exit
+          if [ "$filtered" = "[]" ] || [ -z "$filtered" ]; then
+            # output original config with empty components array
+            jq '.components = []' "$config_file" > "$out_file"
+            echo "No matching components found for changed files. Output config with empty components array."
+            echo "⚠️ No matching components found for changed files." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Inject filtered components into the original config and write output
+          jq --argjson comps "$filtered" '.components = $comps' "$config_file" > "$out_file"
+
+      - name: Load Config
+        id: load-config
+        uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        with:
+          file-path: ${{ env.CONFIG_FILE }}
+
+      - name: Create tags for images
+        uses: netcracker/qubership-workflow-hub/actions/metadata-action@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        id: meta
+        with:
+          default-template: "{{ref-name}}"
+          extra-tags: ${{ env.TAGS || '' }}
+          replace-symbol: ${{ env.REPLACE_SYMBOL || '_'}}
+
+  build:
+    name: ${{ matrix.component.name }} Image Build
+    needs: [prepare]
+    runs-on: ubuntu-latest
+    if: needs.prepare.outputs.components != '[]' && needs.prepare.outputs.components != ''
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CONFIG_FILE: ${{ inputs.config-file }}
+      DRY_RUN: ${{ inputs.dry-run }}
+      DIFF_BUILD: ${{ inputs.diff-build }}
+      TAGS: ${{ inputs.tags }}
+      REPLACE_SYMBOL: ${{ inputs.replace-symbol }}
+    strategy:
+      max-parallel: ${{ inputs.max-parallel }}
+      fail-fast: false
+      matrix:
+        component: ${{ fromJson(needs.prepare.outputs.components) }}
+    steps:
+      - name: Docker
+        uses: netcracker/qubership-workflow-hub/actions/docker-action@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        with:
+          ref: ${{ github.ref }}
+          dry-run: ${{ env.DRY_RUN == 'true' }}
+          download-artifact: false
+          component: ${{ toJson(matrix.component) }}
+          platforms: ${{ matrix.component.platforms }}
+          tags: ${{ needs.prepare.outputs.tags }}
+          cache-from: type=gha,scope=${{ matrix.component.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component.name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
