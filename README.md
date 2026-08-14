@@ -7,6 +7,7 @@ A comprehensive collection of reusable GitHub Actions and Workflows, designed to
 Centralises common CI/CD tasks (tagging, version / metadata generation, artifact & package publishing, Helm chart release, cleanup, custom events) to avoid per‑repo scripts and drift.
 
 Key pieces:
+
 - Actions (single focused step) – `actions/<name>/`
 - Reusable workflows (multi‑job orchestration) – `reusable/*.md`
 - Standards & Change Policy (naming, version pinning, permissions, deprecation rules) – `standards-and-change-policy.md`
@@ -79,6 +80,7 @@ Full extended guide: see [Detailed Getting Started](docs/getting-started.md) for
        with:
          config-file: ".github/release-drafter.yml"
    ```
+
    > **Note:** Consult the individual workflow docs for specific input parameters and examples.
 
 Need to contribute? Read the fork workflow: [Fork Sequence Guide](docs/fork-sequence.md).
@@ -90,8 +92,9 @@ Need to contribute? Read the fork workflow: [Fork Sequence Guide](docs/fork-sequ
 Full, always up-to-date list (active + deprecated) with short descriptions moved to a dedicated page: [Actions & Workflows Catalog](docs/actions-workflows-catalog.md).
 
 Quick starts:
-* Need a specific capability? Open the catalog and search in-page.
-* Unsure if something is deprecated? The catalog groups deprecated items separately with replacements.
+
+- Need a specific capability? Open the catalog and search in-page.
+- Unsure if something is deprecated? The catalog groups deprecated items separately with replacements.
 
 ---
 
@@ -100,6 +103,7 @@ Quick starts:
 Stable interface & evolution rules (naming, inputs/outputs, version pinning, minimal permissions, security and deprecation) are documented in [docs/standards-and-change-policy.md](docs/standards-and-change-policy.md).
 
 ---
+
 ## 🤝 Contributing
 
 We welcome contributions from the community! To contribute:
@@ -107,7 +111,7 @@ We welcome contributions from the community! To contribute:
 1. Review and sign the [CLA](CLA/cla.md).
 2. Check the [CODEOWNERS](CODEOWNERS) file for areas of responsibility.
 3. Open an issue to discuss your changes.
-  - For bug / feature / task use the <u>[Issue Guidelines](docs/issue-guidelines.md)</u> (required fields, templates, labels).
+   - For bug / feature / task use the <u>[Issue Guidelines](docs/issue-guidelines.md)</u> (required fields, templates, labels).
 4. Submit a pull request with tests and documentation updates.
 
 > IMPORTANT: Before opening an issue or pull request you MUST read the <u>[Contribution & PR Conduct](docs/code-of-conduct-prs.md)</u> and the <u>[Issue Guidelines](docs/issue-guidelines.md)</u>. They define required issue / PR fields, labels, and formatting.
