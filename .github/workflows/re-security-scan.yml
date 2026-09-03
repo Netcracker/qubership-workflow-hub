@@ -182,7 +182,7 @@ jobs:
         if: ${{ inputs.target == 'docker' }}
         continue-on-error: ${{ inputs.continue-on-error }}
         id: grype-docker
-        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 #v7.4.0
+        uses: anchore/scan-action@8964e60c6fabdb85fdbbbfd9834d8f19c97a3086 #v7.4.1
         with:
           image: ${{ needs.init.outputs.IMAGE }}
           output-file: ${{ needs.init.outputs.GRYPE_FILENAME }}
@@ -196,7 +196,7 @@ jobs:
         if: ${{ inputs.target == 'source' }}
         continue-on-error: ${{ inputs.continue-on-error }}
         id: grype-source
-        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 #v7.4.0
+        uses: anchore/scan-action@8964e60c6fabdb85fdbbbfd9834d8f19c97a3086 #v7.4.1
         with:
           path: .
           output-file: ${{ needs.init.outputs.GRYPE_FILENAME }}
