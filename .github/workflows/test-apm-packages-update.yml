@@ -13,6 +13,11 @@ on:
         required: false
         default: ""
         type: string
+      apm-version:
+        description: Optional APM CLI version override; leave empty to use the action default
+        required: false
+        default: ""
+        type: string
       debug:
         description: Print APM and runner diagnostics
         required: false
@@ -45,6 +50,7 @@ jobs:
           debug: ${{ inputs.debug && 'true' || 'false' }}
           dry-run: ${{ inputs['dry-run'] && 'true' || 'false' }}
           target: ${{ inputs.target }}
+          apm-version: ${{ inputs.apm-version }}
           token: ${{ secrets.APM_UPDATE_TOKEN }}
 
       - name: Verify job summary

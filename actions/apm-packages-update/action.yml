@@ -18,6 +18,10 @@ inputs:
     description: Optional APM target override; accepts a single target or comma-separated list.
     required: false
     default: ""
+  apm-version:
+    description: Optional APM CLI version to install. Leave empty to use the microsoft/apm-action default.
+    required: false
+    default: ""
   auto-merge:
     description: Automatically enable auto-merge for the created pull request.
     required: false
@@ -103,10 +107,17 @@ runs:
         echo "target=$resolved_target" >> "$GITHUB_OUTPUT"
 
     - name: Setup APM
+      if: ${{ inputs.apm-version == '' }}
       uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
       with:
         setup-only: "true"
-        apm-version: "0.15.0"
+
+    - name: Setup APM version
+      if: ${{ inputs.apm-version != '' }}
+      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
+      with:
+        setup-only: "true"
+        apm-version: ${{ inputs.apm-version }}
 
     - name: Debug APM target resolution
       if: ${{ inputs.debug == 'true' }}
