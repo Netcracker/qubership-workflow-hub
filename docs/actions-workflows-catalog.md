@@ -67,6 +67,8 @@ Always check that document before modifying or depending on a deprecated compone
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | [broadcast-files](reusable/broadcast-files.md)   | Distribute specified files to multiple target repos                                        |
 | [github-release](reusable/github-release.md)     | Create or update a GitHub Release with assets                                              |
+| [infra-docker-build](reusable/infra-docker-build.md) | Build Docker images from a component configuration with optional diff-based filtering     |
+| [infra-helm-release](reusable/infra-helm-release.md) | Release Helm charts and Docker images with validation and GitHub Release assets            |
 | [maven-publish](reusable/maven-publish.md)       | Build & publish Maven artifacts (release flow)                                             |
 | [python-publish](reusable/python-publish.md)     | Build, test & publish Python package (Poetry)                                              |
 | [release-drafter](reusable/release-drafter.md)   | Generate or refresh draft release notes                                                    |
