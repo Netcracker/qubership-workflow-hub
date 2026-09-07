@@ -1,0 +1,16 @@
+name: Validate Renovate configuration
+description: Validate repository configuration and resolve shared presets using the caller's Renovate installation.
+outputs:
+  reason:
+    description: Validation failure reason
+    value: ${{ steps.validate.outputs.reason }}
+runs:
+  using: composite
+  steps:
+    - id: validate
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        LOG_FORMAT: json
+        LOG_LEVEL: warn
+      run: bash "$ACTION_PATH/run.sh"

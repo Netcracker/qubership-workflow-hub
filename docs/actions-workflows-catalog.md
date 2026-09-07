@@ -38,6 +38,9 @@ Always check that document before modifying or depending on a deprecated compone
 | [poetry-publisher](../actions/poetry-publisher/README.md)                       | Build, test, and publish a Poetry Python package to Test PyPI                          |
 | [pr-add-messages](../actions/pr-add-messages/README.md)                         | Append commit messages from a PR into the PR description                               |
 | [pr-assigner](../actions/pr-assigner/README.md)                                 | Auto-assign PR reviewers from config or CODEOWNERS with random shuffle                 |
+| [renovate-lookup](../actions/renovate-lookup/README.md)                         | Check Renovate dependency lookups and retry soft failures once                         |
+| [renovate-monitor](../actions/renovate-monitor/README.md)                       | Combine Renovate job results with the Dependency Dashboard and manage a health issue   |
+| [renovate-validate](../actions/renovate-validate/README.md)                     | Validate renovate.json and resolve inherited presets                                   |
 | [smart-download](../actions/smart-download/README.md)                           | Download workflow artifacts by name, IDs, or glob pattern                              |
 | [store-input-params](../actions/store-input-params/README.md)                   | Persist workflow_dispatch inputs as a JSON artifact for downstream jobs                |
 | [sync-files-action](../actions/sync-files-action/README.md)                     | Copy files per a JSON from/to mapping and open a pull request with the changes         |
