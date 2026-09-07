@@ -44,7 +44,6 @@ if [[ "$renovate_status" -eq 0 && "$lookup_failure_count" -ne 0 && "$rate_limit_
         retry_succeeded=true
     fi
 fi
-
 {
     echo "### Local Renovate lookup"
     echo
@@ -118,4 +117,3 @@ if [[ -n "$failure_reason" ]]; then
     echo "::error::Local Renovate dependency lookup failed"
     exit 1
 fi
-

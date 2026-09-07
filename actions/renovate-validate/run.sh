@@ -10,7 +10,6 @@ if [[ "$validation_status" -ne 0 ]]; then
     echo 'reason=renovate.json failed strict validation' >>"$GITHUB_OUTPUT"
     exit "$validation_status"
 fi
-
 set -o pipefail
 log_file="$(mktemp)"
 trap 'rm -f "$log_file"' EXIT
@@ -45,4 +44,3 @@ if [[ "$renovate_status" -ne 0 ]]; then
     echo "::error::Renovate preset resolution exited with code $renovate_status"
     exit "$renovate_status"
 fi
-

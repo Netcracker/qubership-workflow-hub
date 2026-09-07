@@ -14,4 +14,3 @@ runs:
         LOG_FORMAT: json
         LOG_LEVEL: warn
       run: bash "$ACTION_PATH/run.sh"
-

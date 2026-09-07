@@ -24,4 +24,3 @@ runs:
         VALIDATION_REASON: ${{ inputs.validation-reason }}
         LOOKUP_REASON: ${{ inputs.lookup-reason }}
       run: bash "$ACTION_PATH/run.sh"
-

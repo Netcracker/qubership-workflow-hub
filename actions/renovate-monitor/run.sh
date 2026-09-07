@@ -220,4 +220,3 @@ fi
 
 echo '::error::Renovate health check failed'
 exit 1
-
