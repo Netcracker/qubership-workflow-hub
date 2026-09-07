@@ -17,12 +17,11 @@ class ValidationTests(unittest.TestCase):
             (work / "renovate.json").write_text("{}")
             for name, body in {
                 "renovate-config-validator": (
-                    'test "$*" = "--strict --no-global renovate.json" || exit 97\n'
-                    f"exit {validator_status}\n"
+                    f'test "$*" = "--strict --no-global renovate.json" || exit 97\nexit {validator_status}\n'
                 ),
                 "renovate": (
                     'test "$*" = "--platform=local --dry-run=extract" || exit 97\n'
-                    'touch extraction-called\ncat records\n'
+                    "touch extraction-called\ncat records\n"
                     f"exit {extract_status}\n"
                 ),
             }.items():
@@ -35,7 +34,11 @@ class ValidationTests(unittest.TestCase):
             env = {"PATH": f"{work}:{os.defpath}", "GITHUB_OUTPUT": str(output)}
             result = subprocess.run(
                 ["bash", str(ROOT / "actions/renovate-validate/run.sh")],
-                cwd=work, env=env, text=True, capture_output=True, timeout=30,
+                cwd=work,
+                env=env,
+                text=True,
+                capture_output=True,
+                timeout=30,
             )
             return result, output.read_text(), (work / "extraction-called").exists()
 
@@ -54,7 +57,10 @@ class ValidationTests(unittest.TestCase):
     def test_preset_failures_are_not_hidden_by_successful_cli_exit(self):
         cases = [
             ({"msg": "Repository has invalid config"}, "could not resolve"),
-            ({"msg": "failed", "err": {"validationError": "Preset not found"}}, "could not resolve"),
+            (
+                {"msg": "failed", "err": {"validationError": "Preset not found"}},
+                "could not resolve",
+            ),
             ({"msg": "Rate limit exceeded"}, "rate limit"),
         ]
         for record, expected in cases:
@@ -68,4 +74,3 @@ class ValidationTests(unittest.TestCase):
         result, reason, _ = self.run_validation(extract_status=7)
         self.assertEqual(result.returncode, 7, result.stderr)
         self.assertIn("code 7", reason)
-

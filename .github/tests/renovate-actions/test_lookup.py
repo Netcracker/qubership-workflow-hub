@@ -18,7 +18,9 @@ class LookupTests(unittest.TestCase):
             work = Path(directory)
             (work / "attempts.json").write_text(json.dumps(attempts))
             executable = work / "renovate"
-            executable.write_text(f"#!{sys.executable}\n" + '''
+            executable.write_text(
+                f"#!{sys.executable}\n"
+                + """
 import json, os, sys
 from pathlib import Path
 if sys.argv[1:] != ["--platform=local", "--dry-run=lookup"]:
@@ -34,22 +36,31 @@ status, records = attempts[len(previous)]
 for record in records:
     print(json.dumps(record))
 sys.exit(status)
-''')
+"""
+            )
             executable.chmod(0o755)
             output, summary = work / "output", work / "summary"
             output.touch()
             summary.touch()
             env = {
                 "PATH": f"{work}:{os.defpath}",
-                "GITHUB_OUTPUT": str(output), "GITHUB_STEP_SUMMARY": str(summary),
+                "GITHUB_OUTPUT": str(output),
+                "GITHUB_STEP_SUMMARY": str(summary),
             }
             result = subprocess.run(
                 ["bash", str(ROOT / "actions/renovate-lookup/run.sh")],
-                cwd=work, env=env, text=True, capture_output=True, timeout=30,
+                cwd=work,
+                env=env,
+                text=True,
+                capture_output=True,
+                timeout=30,
             )
             calls = work / "calls"
             caches = calls.read_text().splitlines() if calls.exists() else []
-            self.assertTrue(all(not Path(cache).exists() for cache in caches), "Cache was not cleaned up")
+            self.assertTrue(
+                all(not Path(cache).exists() for cache in caches),
+                "Cache was not cleaned up",
+            )
             return result, output.read_text(), summary.read_text(), caches
 
     def test_retry_recovers_with_a_fresh_cache(self):
@@ -81,4 +92,3 @@ sys.exit(status)
                 else:
                     self.assertEqual(reason, "")
                 self.assertIn("Local Renovate lookup", summary)
-

@@ -18,22 +18,54 @@ TIMESTAMP_WARNINGS = [
 
 
 class MonitorTests(unittest.TestCase):
-    def run_monitor(self, body="", issues=True, existing=False, missing_dashboard=False,
-                    validation="success", lookup="success", reason="", fail_command=""):
-        dashboard = [] if missing_dashboard else [{
-            "author": {"login": "app/renovate"}, "body": body, "number": 1,
-            "title": "Dependency Dashboard", "url": "https://github.com/example/repo/issues/1",
-        }]
-        health = [{"body": "<!-- renovate-health-check -->", "number": 2,
-                   "title": "Renovate health check failed", "url": "https://github.com/example/repo/issues/2"}]
+    def run_monitor(
+        self,
+        body="",
+        issues=True,
+        existing=False,
+        missing_dashboard=False,
+        validation="success",
+        lookup="success",
+        reason="",
+        fail_command="",
+    ):
+        dashboard = (
+            []
+            if missing_dashboard
+            else [
+                {
+                    "author": {"login": "app/renovate"},
+                    "body": body,
+                    "number": 1,
+                    "title": "Dependency Dashboard",
+                    "url": "https://github.com/example/repo/issues/1",
+                }
+            ]
+        )
+        health = [
+            {
+                "body": "<!-- renovate-health-check -->",
+                "number": 2,
+                "title": "Renovate health check failed",
+                "url": "https://github.com/example/repo/issues/2",
+            }
+        ]
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)
-            (work / "fixture.json").write_text(json.dumps({
-                "issues": issues, "dashboard": dashboard, "health": health if existing else [],
-                "fail": fail_command,
-            }))
+            (work / "fixture.json").write_text(
+                json.dumps(
+                    {
+                        "issues": issues,
+                        "dashboard": dashboard,
+                        "health": health if existing else [],
+                        "fail": fail_command,
+                    }
+                )
+            )
             executable = work / "gh"
-            executable.write_text(f"#!{sys.executable}\n" + '''
+            executable.write_text(
+                f"#!{sys.executable}\n"
+                + """
 import json, sys
 from pathlib import Path
 args = sys.argv[1:]
@@ -57,19 +89,30 @@ elif args[:2] in (["issue", "create"], ["issue", "comment"], ["issue", "close"],
     pass
 else:
     sys.exit(97)
-''')
+"""
+            )
             executable.chmod(0o755)
             summary = work / "summary"
             summary.touch()
             env = {
-                "PATH": f"{work}:{os.defpath}", "GH_REPO": "example/repo", "GH_TOKEN": "test-only",
-                "GITHUB_REPOSITORY": "example/repo", "GITHUB_RUN_ID": "123",
-                "GITHUB_STEP_SUMMARY": str(summary), "VALIDATION_RESULT": validation,
-                "LOOKUP_RESULT": lookup, "VALIDATION_REASON": "", "LOOKUP_REASON": reason,
+                "PATH": f"{work}:{os.defpath}",
+                "GH_REPO": "example/repo",
+                "GH_TOKEN": "test-only",
+                "GITHUB_REPOSITORY": "example/repo",
+                "GITHUB_RUN_ID": "123",
+                "GITHUB_STEP_SUMMARY": str(summary),
+                "VALIDATION_RESULT": validation,
+                "LOOKUP_RESULT": lookup,
+                "VALIDATION_REASON": "",
+                "LOOKUP_REASON": reason,
             }
             result = subprocess.run(
                 ["bash", str(ROOT / "actions/renovate-monitor/run.sh")],
-                cwd=work, env=env, text=True, capture_output=True, timeout=30,
+                cwd=work,
+                env=env,
+                text=True,
+                capture_output=True,
+                timeout=30,
             )
             calls = work / "calls"
             entries = [json.loads(line) for line in calls.read_text().splitlines()] if calls.exists() else []
@@ -100,9 +143,14 @@ else:
         cases = [
             {"body": "## Errored\n - Failed update"},
             {"missing_dashboard": True},
-            {"validation": "failure"}, {"validation": "skipped"}, {"validation": "cancelled"},
+            {"validation": "failure"},
+            {"validation": "skipped"},
+            {"validation": "cancelled"},
             {"lookup": "failure", "reason": "Registry unavailable"},
-            {"body": f"## Repository Problems\n - {LOOKUP_WARNING}", "lookup": "failure"},
+            {
+                "body": f"## Repository Problems\n - {LOOKUP_WARNING}",
+                "lookup": "failure",
+            },
         ]
         for case in cases:
             with self.subTest(case=case):
@@ -123,17 +171,28 @@ else:
         for existing, validation, expected in cases:
             with self.subTest(existing=existing, validation=validation):
                 result, _, calls = self.run_monitor(existing=existing, validation=validation)
-                self.assertEqual(result.returncode, 0 if validation == "success" else 1, result.stderr)
-                mutations = [call for call in calls if call["args"][:2] not in
-                             (["api", "repos/example/repo"], ["issue", "list"])]
+                self.assertEqual(
+                    result.returncode,
+                    0 if validation == "success" else 1,
+                    result.stderr,
+                )
+                mutations = [
+                    call for call in calls if call["args"][:2] not in (["api", "repos/example/repo"], ["issue", "list"])
+                ]
                 self.assertEqual([call["args"][:2] for call in mutations], expected)
                 for call in mutations:
                     if "body" in call:
-                        self.assertIn("https://github.com/example/repo/actions/runs/123", call["body"])
+                        self.assertIn(
+                            "https://github.com/example/repo/actions/runs/123",
+                            call["body"],
+                        )
                 if not existing and validation == "failure":
                     self.assertIn("<!-- renovate-health-check -->", mutations[-1]["body"])
                 if existing and validation == "success":
-                    self.assertEqual(mutations[-1]["args"], ["issue", "close", "2", "--reason", "completed"])
+                    self.assertEqual(
+                        mutations[-1]["args"],
+                        ["issue", "close", "2", "--reason", "completed"],
+                    )
 
     def test_api_and_comment_failures_are_not_success(self):
         for command in ["api", "issue comment"]:
@@ -141,4 +200,3 @@ else:
                 result, _, calls = self.run_monitor(existing=True, fail_command=command)
                 self.assertEqual(result.returncode, 42, result.stderr)
                 self.assertNotIn(["issue", "close"], [call["args"][:2] for call in calls])
-

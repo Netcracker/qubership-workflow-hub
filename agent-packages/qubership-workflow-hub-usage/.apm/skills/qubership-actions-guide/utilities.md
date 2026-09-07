@@ -490,7 +490,7 @@ health check even after the shared validation action succeeds.
 The caller must keep its own cron, Renovate image, branch filters, and local policy tests.
 Set `RENOVATE_HEALTH_CHECK=false` to skip lookup and monitor while leaving validation active.
 
-Read the action READMEs before writing the caller:
+Read the action readmes before writing the caller:
 
 - [renovate-validate](../../../../../actions/renovate-validate/README.md)
 - [renovate-lookup](../../../../../actions/renovate-lookup/README.md)
