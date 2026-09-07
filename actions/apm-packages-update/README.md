@@ -8,7 +8,8 @@ Updates APM-managed packages in the current repository and creates a pull reques
 - Supports a safe `dry-run` mode for diagnostics and validation without creating a pull request
 - Supports an opt-in `debug` mode that prints runner context and APM target-resolution diagnostics
 - Installs [yq](https://github.com/mikefarah/yq) v4.53.3 for YAML manipulation
-- Runs `apm update --yes --target <target>` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM), using its default APM CLI version unless explicitly pinned
+- Selects the APM CLI version from `apm.lock.yaml` unless `apm-version` explicitly overrides it
+- Runs `apm update --yes --target <target>` non-interactively via [microsoft/apm-action](https://github.com/microsoft/APM), using the resolved APM CLI version
 - Opens a pull request on branch `chore/update-apm-packages` with the resulting changes
 - Uses a dynamic PR title and body that include the resolved target, base branch, and workflow run link
 - Supports commit sign-off, requesting user/team reviewers, and a configurable branch-deletion policy on the created pull request
@@ -23,7 +24,7 @@ Updates APM-managed packages in the current repository and creates a pull reques
 | `dry-run` | Run `apm update` in dry-run mode and skip pull request creation   | No       | `false`  |
 | `debug`  | Print runner and APM diagnostics before updating packages         | No       | `false`  |
 | `target` | Optional APM target override; accepts one target or a comma-separated list | No | `""` |
-| `apm-version` | Optional APM CLI version to install; leave empty to use the `microsoft/apm-action` default | No | `""` |
+| `apm-version` | Optional APM CLI version override | No | `""` |
 | `auto-merge` | Automatically enable auto-merge for the created pull request. Has no effect in `dry-run` mode or when no pull request was created | No | `false` |
 | `merge-method` | Merge method to use for auto-merge; one of `merge`, `squash`, or `rebase` (case-insensitive). Ignored unless `auto-merge` is `true` | No | `squash` |
 | `delete-branch` | Automatically delete the `chore/update-apm-packages` branch after the pull request is merged | No | `true` |
@@ -35,24 +36,25 @@ Updates APM-managed packages in the current repository and creates a pull reques
 ## How it works
 
 1. Installs `yq` v4.53.3.
-2. Reads `apm.yml`, migrates legacy `target:` to `targets:`, and resolves the target to use.
+2. Resolves the APM CLI version from `apm-version`, then `apm.lock.yaml`'s `apm_version`.
+  When neither provides a version, uses the `microsoft/apm-action` default. An existing
+  lockfile without `apm_version` fails before the action modifies files.
+3. Sets up APM via `microsoft/apm-action` (setup-only mode).
+4. Reads `apm.yml`, migrates legacy `target:` to `targets:`, and resolves the target to use.
   If `inputs.target` is set, it overrides the file; otherwise the action uses the targets configured in `apm.yml`.
   Multiple targets are passed to APM as a comma-separated list, matching the CLI contract for `--target`.
-3. Sets up APM via `microsoft/apm-action` (setup-only mode). By default the action uses the
-   version selected by `microsoft/apm-action`; set `apm-version` only when the repository
-   requires a specific compatible CLI version.
-4. Optionally prints runner diagnostics, `apm targets`, and dry-run update output when `debug: true`.
-5. Runs `apm update --yes --target <target>` using the resolved target.
-6. If `dry-run: true`, skips pull request creation after printing the update result.
-7. Otherwise creates or updates a PR on branch `chore/update-apm-packages` (base: `inputs.branch`).
+5. Optionally prints runner diagnostics, `apm targets`, and dry-run update output when `debug: true`.
+6. Runs `apm update --yes --target <target>` using the resolved target.
+7. If `dry-run: true`, skips pull request creation after printing the update result.
+8. Otherwise creates or updates a PR on branch `chore/update-apm-packages` (base: `inputs.branch`).
   The PR title includes the resolved target, and the body includes the executed command,
   base branch, workflow run link, and a short review checklist. Commit sign-off, requested
   reviewers/team reviewers, and post-merge branch deletion are controlled by the `sign-off`,
   `reviewers`, `team-reviewers`, and `delete-branch` inputs respectively.
-8. If `auto-merge: true` and a pull request was created (skipped in `dry-run` mode or when no
+9. If `auto-merge: true` and a pull request was created (skipped in `dry-run` mode or when no
   PR was opened), enables GitHub auto-merge on the PR using `merge-method`. The step fails if
   `merge-method` is not `merge`, `squash`, or `rebase`.
-9. Logs the PR URL to the job summary, or reports "no changes" if nothing was updated.
+10. Logs the PR URL to the job summary, or reports "no changes" if nothing was updated.
 
 ## Usage
 
@@ -94,9 +96,9 @@ jobs:
 - The caller workflow must check out the repository before invoking this action.
 - `apm.yml` must exist at the repository root. The action fails with exit code 1 if it is not found.
 - If `target` is omitted, the action uses the targets from `apm.yml`. Multiple configured targets are passed to APM as a comma-separated `--target` value.
-- If `apm-version` is omitted, `microsoft/apm-action` selects the APM CLI version. Set it to a
-  compatible version only when a repository must pin the CLI, for example while migrating a
-  lockfile format.
+- `apm-version` overrides the CLI version recorded in `apm.lock.yaml`. When the input is empty,
+  the action uses `apm.lock.yaml`'s `apm_version`; if no lockfile exists, it uses the
+  `microsoft/apm-action` default. A lockfile without `apm_version` fails before files change.
 - `debug: true` prints runner state, active harness markers, `apm targets`, and two dry-run plans: one without an explicit target and one with `--target`.
 - `dry-run: true` skips pull request creation entirely and is intended for diagnostics or validation workflows.
 - The PR branch is always `chore/update-apm-packages`. If a branch with that name already exists,
