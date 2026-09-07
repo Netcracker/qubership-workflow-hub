@@ -129,7 +129,7 @@ Use the org-level secret `APM_UPDATE_TOKEN`.
 | --- | --- | --- | --- |
 | `branch` | No | `main` | Target branch to update |
 | `target` | No | `claude` | APM target name in `apm.yml` |
-| `apm-version` | No | `""` | APM CLI version to install; leave empty to use the `microsoft/apm-action` default |
+| `apm-version` | No | `""` | Override the CLI version from `apm.lock.yaml`; empty uses lockfile `apm_version` or the `microsoft/apm-action` default |
 | `auto-merge` | No | `false` | Enable GitHub auto-merge on the created PR; has no effect in `dry-run` mode or when no PR is opened |
 | `merge-method` | No | `squash` | `merge`, `squash`, or `rebase`; used only when `auto-merge` is `true` |
 | `delete-branch` | No | `true` | Delete the `chore/update-apm-packages` branch after the PR is merged |
@@ -158,7 +158,7 @@ jobs:
       - name: Update APM packages
         uses: netcracker/qubership-workflow-hub/actions/apm-packages-update@<resolved-sha>  # <resolved-tag>
         with:
-          # Leave empty to use the microsoft/apm-action default.
+          # Leave empty to use apm.lock.yaml's apm_version.
           apm-version: ""
           token: ${{ secrets.APM_UPDATE_TOKEN }}  # PAT with `repo` scope (+ `read:org` for team-reviewers)
 ```

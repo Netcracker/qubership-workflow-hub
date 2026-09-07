@@ -19,7 +19,7 @@ inputs:
     required: false
     default: ""
   apm-version:
-    description: Optional APM CLI version to install. Leave empty to use the microsoft/apm-action default.
+    description: Optional APM CLI version to install. When empty, uses apm_version from apm.lock.yaml or the microsoft/apm-action default.
     required: false
     default: ""
   auto-merge:
@@ -59,6 +59,44 @@ runs:
         sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64
         sudo chmod +x /usr/local/bin/yq
         yq --version
+
+    - name: Resolve APM version
+      id: resolve-version
+      shell: bash
+      env:
+        INPUT_APM_VERSION: ${{ inputs.apm-version }}
+      run: |
+        set -eu
+        if [ -n "$INPUT_APM_VERSION" ]; then
+          apm_version="$INPUT_APM_VERSION"
+          source="input"
+        elif [ -f apm.lock.yaml ]; then
+          apm_version="$(yq -r '.apm_version // ""' apm.lock.yaml)"
+          if [ -z "$apm_version" ]; then
+            echo "apm.lock.yaml does not define apm_version"
+            exit 1
+          fi
+          source="lockfile"
+        else
+          apm_version=""
+          source="microsoft/apm-action default"
+        fi
+
+        echo "Resolved APM version from $source: ${apm_version:-default}"
+        echo "version=$apm_version" >> "$GITHUB_OUTPUT"
+
+    - name: Setup default APM version
+      if: ${{ steps.resolve-version.outputs.version == '' }}
+      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
+      with:
+        setup-only: "true"
+
+    - name: Setup resolved APM version
+      if: ${{ steps.resolve-version.outputs.version != '' }}
+      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
+      with:
+        setup-only: "true"
+        apm-version: ${{ steps.resolve-version.outputs.version }}
 
     - name: Resolve APM target
       id: resolve-target
@@ -105,19 +143,6 @@ runs:
 
         echo "Resolved APM target: $resolved_target"
         echo "target=$resolved_target" >> "$GITHUB_OUTPUT"
-
-    - name: Setup APM
-      if: ${{ inputs.apm-version == '' }}
-      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
-      with:
-        setup-only: "true"
-
-    - name: Setup APM version
-      if: ${{ inputs.apm-version != '' }}
-      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
-      with:
-        setup-only: "true"
-        apm-version: ${{ inputs.apm-version }}
 
     - name: Debug APM target resolution
       if: ${{ inputs.debug == 'true' }}
