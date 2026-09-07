@@ -7,7 +7,6 @@ on:
       - "actions/renovate-validate/**"
       - "actions/renovate-lookup/**"
       - "actions/renovate-monitor/**"
-      - ".github/tests/renovate-actions/**"
       - ".github/workflows/test-renovate-actions.yml"
 
 permissions:
@@ -27,5 +26,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run behavior tests
-        run: python3 -m unittest discover -s .github/tests/renovate-actions -v
+      - name: Test renovate-validate
+        working-directory: actions/renovate-validate
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Test renovate-lookup
+        working-directory: actions/renovate-lookup
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Test renovate-monitor
+        working-directory: actions/renovate-monitor
+        run: python3 -m unittest discover -s tests -v
