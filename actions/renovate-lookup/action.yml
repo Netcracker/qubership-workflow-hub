@@ -1,0 +1,17 @@
+name: Look up Renovate dependencies
+description: Check dependency lookups using the caller's Renovate installation.
+outputs:
+  reason:
+    description: Lookup failure reason
+    value: ${{ steps.lookup.outputs.reason }}
+runs:
+  using: composite
+  steps:
+    - id: lookup
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        LOG_FORMAT: json
+        LOG_LEVEL: debug
+      run: bash "$ACTION_PATH/run.sh"
+

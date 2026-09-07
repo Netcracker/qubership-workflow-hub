@@ -27,6 +27,7 @@ the relevant supporting document:
 | Utilities (wait-for-workflow, custom-event, store-input-params) | `utilities.md` |
 | Repository config file resolution without Docker (workflow policy, custom JSON configs) | `utilities.md` |
 | JSON Schema validation (validate a JSON file against a schema, fail the pipeline on violations) | `utilities.md` |
+| Renovate configuration validation, dependency lookup, and health issue lifecycle | `utilities.md` |
 
 Each guide contains: clarifying questions for the user, config file schemas,
 and pipeline patterns for that domain. Read it before picking actions or
@@ -112,6 +113,9 @@ Ask only what is missing after inferring from context:
 | `sync-files-action` | Copy files/directories per a JSON from/to mapping and open a PR with the changes |
 | `ghcr-discover-repo-packages` | Discover all GHCR packages for a repo — feeds security scan, cleanup, or any step needing the image list |
 | `custom-event` | Emit `repository_dispatch` event with JSON payload |
+| `renovate-validate` | Validate `renovate.json` and resolve inherited presets |
+| `renovate-lookup` | Check dependency lookups and retry soft failures once |
+| `renovate-monitor` | Combine complete job results with the Dependency Dashboard and manage a health issue |
 | `smart-download` | Download workflow artifacts by name, IDs, or glob pattern |
 | `store-input-params` | Persist `workflow_dispatch` inputs as artifact |
 | `wait-for-workflow` | Wait for a specific GitHub Actions workflow run to complete |

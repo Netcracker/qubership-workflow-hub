@@ -468,6 +468,36 @@ Download in a downstream job:
 
 ---
 
+## Renovate health actions
+
+Use `renovate-validate`, `renovate-lookup`, and `renovate-monitor` together in a
+repository-owned workflow. These actions do not provide checkout, a Renovate container,
+permissions, scheduling, or job orchestration.
+
+### When to use
+
+- A repository validates `renovate.json` on changes and on a schedule.
+- A scheduled or manual run must check dependency lookup behavior and the hosted Renovate
+  Dependency Dashboard.
+- Renovate failures should create or update one health issue and close it after recovery.
+
+### Pipeline pattern
+
+Keep validation and lookup in separate jobs. Pass each complete job result and its optional
+`reason` output to monitor. This allows repository-specific validation steps to fail the
+health check even after the shared validation action succeeds.
+
+The caller must keep its own cron, Renovate image, branch filters, and local policy tests.
+Set `RENOVATE_HEALTH_CHECK=false` to skip lookup and monitor while leaving validation active.
+
+Read the action READMEs before writing the caller:
+
+- [renovate-validate](../../../../../actions/renovate-validate/README.md)
+- [renovate-lookup](../../../../../actions/renovate-lookup/README.md)
+- [renovate-monitor](../../../../../actions/renovate-monitor/README.md)
+
+---
+
 ## verify-json
 
 Validates a JSON file against a JSON Schema file using the `jsonschema` Python library.

@@ -1,0 +1,27 @@
+name: Monitor Renovate health
+description: Inspect the Dependency Dashboard and report job failures using the caller's GitHub CLI.
+inputs:
+  validation-result:
+    description: Result of the entire validation job, including local tests
+    required: true
+  lookup-result:
+    description: Result of the entire lookup job
+    required: true
+  validation-reason:
+    description: Validation failure reason, if available
+    default: ''
+  lookup-reason:
+    description: Lookup failure reason, if available
+    default: ''
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        VALIDATION_RESULT: ${{ inputs.validation-result }}
+        LOOKUP_RESULT: ${{ inputs.lookup-result }}
+        VALIDATION_REASON: ${{ inputs.validation-reason }}
+        LOOKUP_REASON: ${{ inputs.lookup-reason }}
+      run: bash "$ACTION_PATH/run.sh"
+
