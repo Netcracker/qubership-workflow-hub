@@ -1,6 +1,6 @@
 # Utilities
 
-Covers: config-resolver, apm-packages-update, sync-files-action, wait-for-workflow,
+Covers: config-resolver, sync-files-action, wait-for-workflow,
 custom-event, store-input-params, verify-json.
 
 ## config-resolver (generic configuration files)
@@ -89,79 +89,6 @@ jobs:
 
 Check the PR author id in addition to `github.actor_id` — a human may rerun or synchronize
 a bot-authored pull request.
-
----
-
-## apm-packages-update
-
-Runs `apm update --yes` in the current repository and opens a pull request with the
-resulting changes. Designed to be placed in each consumer repository and triggered on a
-schedule or manually.
-
-### When to use
-
-- A repository uses APM-managed skill packages and needs periodic updates.
-- You want to automate APM package bumps without touching the repository manually.
-
-### Prerequisites
-
-- `apm.yml` must exist at the repository root.
-- The specified `target` must be configured in `apm.yml` (the action adds it automatically
-  if missing).
-- Enabling `auto-merge` requires the repository setting "Allow auto-merge" to be turned on;
-  the merge still waits on required checks and reviews.
-
-### Permissions
-
-```yaml
-permissions:
-  contents: read
-  pull-requests: write
-```
-
-The `token` input must have permission to push branches and open pull requests. Using
-`team-reviewers` additionally requires the token to read organization membership.
-Use the org-level secret `APM_UPDATE_TOKEN`.
-
-### Inputs
-
-| Input | Required | Default | Notes |
-| --- | --- | --- | --- |
-| `branch` | No | `main` | Target branch to update |
-| `target` | No | `claude` | APM target name in `apm.yml` |
-| `apm-version` | No | `""` | Override the CLI version from `apm.lock.yaml`; empty uses lockfile `apm_version` or the `microsoft/apm-action` default |
-| `auto-merge` | No | `false` | Enable GitHub auto-merge on the created PR; has no effect in `dry-run` mode or when no PR is opened |
-| `merge-method` | No | `squash` | `merge`, `squash`, or `rebase`; used only when `auto-merge` is `true` |
-| `delete-branch` | No | `true` | Delete the `chore/update-apm-packages` branch after the PR is merged |
-| `sign-off` | No | `false` | Sign off commits on the created PR |
-| `reviewers` | No | `""` | Comma-separated GitHub usernames to request review from |
-| `team-reviewers` | No | `""` | Comma-separated GitHub team slugs to request review from |
-| `token` | Yes | — | Use `secrets.APM_UPDATE_TOKEN` |
-
-### Usage pattern
-
-```yaml
-name: Update APM packages
-
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 6 * * 1"
-
-jobs:
-  update:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Update APM packages
-        uses: netcracker/qubership-workflow-hub/actions/apm-packages-update@<resolved-sha>  # <resolved-tag>
-        with:
-          # Leave empty to use apm.lock.yaml's apm_version.
-          apm-version: ""
-          token: ${{ secrets.APM_UPDATE_TOKEN }}  # PAT with `repo` scope (+ `read:org` for team-reviewers)
-```
 
 ---
 

@@ -17,7 +17,6 @@ Always check that document before modifying or depending on a deprecated compone
 
 | Action                                                                          | Description                                                                            |
 | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [apm-packages-update](../actions/apm-packages-update/README.md)                 | Update APM-managed packages with the default or a pinned compatible APM CLI and open a pull request |
 | [assets-action](../actions/assets-action/README.md)                             | Archive a folder and upload it to a GitHub Release as a release asset                  |
 | [branch-action](../actions/branch-action/README.md)                             | Create a new branch from a tag/branch with auto-named conventions and optional push    |
 | [cdxgen](../actions/cdxgen/README.md)                                           | Generate a CycloneDX SBOM and optional vulnerability report for the project            |
@@ -50,8 +49,12 @@ Always check that document before modifying or depending on a deprecated compone
 
 ### Deprecated Actions
 
+> **APM packages:** Use Renovate to update APM packages. Do not use
+> `apm-packages-update` in new workflows.
+
 | Action                      | Replacement / Note                                                  |
 | --------------------------- | ------------------------------------------------------------------- |
+| [apm-packages-update](../actions/apm-packages-update/README.md) | **Deprecated.** Do not use in new workflows. Use Renovate to update APM packages. |
 | [docker-config-resolver](../actions/docker-config-resolver/README.md) | Superseded by [config-resolver](../actions/config-resolver/README.md) — same docker output shape for valid configs, stricter validation (`components` is required) |
 | [commit-and-push]           | (DELETED) Use native Git steps                                      |
 | [pom-updater]               | (DELETED) Prefer metadata-action + build tooling                    |

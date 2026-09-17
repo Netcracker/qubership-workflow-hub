@@ -1,5 +1,9 @@
 # 🚀 Update APM packages
 
+## DEPRECATED
+
+This action is deprecated and must not be used in new workflows. Use Renovate to update APM packages.
+
 Updates APM-managed packages in the current repository and creates a pull request with the changes.
 
 ## Features
