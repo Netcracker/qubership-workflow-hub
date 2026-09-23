@@ -108,6 +108,13 @@ One spelling per concept; keep legacy alias only if needed.
 ## 5. Version Pinning
 MUST pin to major tag or SHA. Critical flows: prefer SHA. Bad: `uses: repo/action@main`.
 
+Exception: references to actions/workflows in this same repository use GitHub's
+native same-repository syntax instead — `uses: $/actions/<name>` or
+`uses: $/.github/workflows/<file>.yml` — with no `@ref` at all. It always
+resolves to the exact commit the calling workflow is running on, so it cannot
+be pinned and should not be. This applies only to same-repo references; calls
+into other repositories still require a SHA pin as above.
+
 ---
 ## 6. Outputs
 Use stable nouns only. Example:
