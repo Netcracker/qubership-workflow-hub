@@ -76,6 +76,8 @@ jobs:
           grep "\S" /tmp/linters/super-linter.env | grep -v "^#"
           grep "\S" /tmp/linters/super-linter.env | grep -v "^#" >> $GITHUB_ENV
         fi
+        # To prevent redefinition of markdown config file
+        echo "MARKDOWN_CONFIG_FILE=.markdown-lint.yml" >> $GITHUB_ENV
 
     - name: "Lint Code Base"
       uses: super-linter/super-linter/slim@4ce20838b8ab83717e78138c5b3a1407148e0918 # v8.7.0

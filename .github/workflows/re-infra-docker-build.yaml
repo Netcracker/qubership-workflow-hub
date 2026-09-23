@@ -110,12 +110,12 @@ jobs:
 
       - name: Load Config
         id: load-config
-        uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@4ce44398bac0a6f82e55aeb4a753aada3530de5b #v2.7.1
+        uses: $/actions/docker-config-resolver
         with:
           file-path: ${{ env.CONFIG_FILE }}
 
       - name: Create tags for images
-        uses: netcracker/qubership-workflow-hub/actions/metadata-action@4ce44398bac0a6f82e55aeb4a753aada3530de5b #v2.7.1
+        uses: $/actions/metadata-action
         id: meta
         with:
           default-template: "{{ref-name}}"
@@ -143,7 +143,7 @@ jobs:
         component: ${{ fromJson(needs.prepare.outputs.components) }}
     steps:
       - name: Docker
-        uses: netcracker/qubership-workflow-hub/actions/docker-action@4ce44398bac0a6f82e55aeb4a753aada3530de5b #v2.7.1
+        uses: $/actions/docker-action
         with:
           ref: ${{ github.ref }}
           dry-run: ${{ env.DRY_RUN == 'true' }}

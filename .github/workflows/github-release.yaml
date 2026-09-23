@@ -87,7 +87,7 @@ jobs:
 
       - name: Check if tag exists
         id: check_tag
-        uses: netcracker/qubership-workflow-hub/actions/tag-action@4ce44398bac0a6f82e55aeb4a753aada3530de5b # v2.7.1
+        uses: $/actions/tag-action
         with:
           tag-name: "v${{ steps.generate_version.outputs.version }}"
           ref: ${{ github.ref }}
@@ -96,58 +96,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  release-preparation:
+      - name: Create new tag
+        id: create_tag
+        uses: $/actions/tag-action
+        with:
+          tag-name: "v${{ steps.generate_version.outputs.version }}"
+          ref: ${{ github.ref }}
+          create-tag: true
+          force-create: false
+          check-tag: false
+
+  create-github-release:
     needs: [check-tag]
     permissions:
       contents: write
-    runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ needs.check-tag.outputs.version }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: true
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
-
-      - name: Set up authentication
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-          ACTOR: ${{ github.actor }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          git config --global user.name "$ACTOR"
-          git config --global user.email "$ACTOR@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/$REPOSITORY
-
-      - name: Create Release Branch
-        run: |
-          git checkout -b "release/v$VERSION"
-          git push origin "release/v$VERSION"
-
-      - name: Update references
-        run: |
-          # shellcheck disable=2038
-          find . -type f \( -name '*.yaml' -o -name '*.yml' -o -name '*.md' \) ! -name 'github-release.yml' \
-          | xargs sed -i "s|uses: netcracker/qubership-workflow-hub/\(.*\)@main|uses: netcracker/qubership-workflow-hub/\1@v${VERSION}|gi"
-
-      - name: Commit and push changes
-        env:
-          ACTOR: ${{ github.actor }}
-        run: |
-          git config --global user.name "$ACTOR"
-          git config --global user.email "$ACTOR@users.noreply.github.com"
-          git add .
-          git commit -m "Update references to the new version"
-          git push origin "release/v$VERSION"
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
-
-  create-github-release:
-    needs: [check-tag, release-preparation]
-    permissions:
-      contents: write
-    uses: netcracker/qubership-workflow-hub/.github/workflows/release-drafter.yml@27fd7674286e5f561a6fd8277f2f389ff96ddb9e # v2.6.0
+    uses: $/.github/workflows/release-drafter.yml
     with:
       version: ${{ needs.check-tag.outputs.version }}
       publish: false
