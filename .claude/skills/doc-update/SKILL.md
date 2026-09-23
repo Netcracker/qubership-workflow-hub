@@ -178,7 +178,7 @@ jobs:
 ```yaml
 jobs:
   call-workflow:
-    uses: netcracker/qubership-workflow-hub/<YML_PATH>@RELEASE_TAG
+    uses: $/<YML_PATH>
     with:
       required-input: value
     secrets:
