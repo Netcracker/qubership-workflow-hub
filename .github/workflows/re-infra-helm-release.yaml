@@ -205,7 +205,7 @@ jobs:
         with:
           artifact-ids: ${{ needs.chart-release.outputs.charts-artifact }}
       - name: "Upload Assets"
-        uses: netcracker/qubership-workflow-hub/actions/assets-action@4ce44398bac0a6f82e55aeb4a753aada3530de5b  # v2.7.1
+        uses: netcracker/qubership-workflow-hub/actions/assets-action@288a6a0d9a78e80dfdefccab1be6497a39deb746  # v2.8.0
         with:
           tag: ${{ env.RELEASE_VERSION }}
           item-path: "./*.tgz"
