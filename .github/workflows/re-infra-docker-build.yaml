@@ -115,7 +115,7 @@ jobs:
           file-path: ${{ env.CONFIG_FILE }}
 
       - name: Create tags for images
-        uses: netcracker/qubership-workflow-hub/actions/metadata-action@4ce44398bac0a6f82e55aeb4a753aada3530de5b #v2.7.1
+        uses: netcracker/qubership-workflow-hub/actions/metadata-action@288a6a0d9a78e80dfdefccab1be6497a39deb746 #v2.8.0
         id: meta
         with:
           default-template: "{{ref-name}}"
