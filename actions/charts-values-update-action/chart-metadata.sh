@@ -88,21 +88,22 @@ for tgz in "${tgz_files[@]}"; do
 
     components="[]"
 
+    # File contents go through --rawfile / stdin, never argv: a single argument is capped
+    # at 128KB (MAX_ARG_STRLEN) and large files fail with "Argument list too long".
+
     # values.schema.json
     schema_file="$chart_dir/values.schema.json"
     if [[ -f "$schema_file" ]]; then
-        schema_b64=$(base64 -w 0 "$schema_file")
-        schema_comp=$(jq -n --arg content "$schema_b64" '{
+        components=$(jq --rawfile content "$schema_file" '. + [{
             type: "data",
             "mime-type": "application/vnd.nc.helm.values.schema",
             name: "values.schema.json",
             data: [{
                 type: "configuration",
                 name: "values.schema.json",
-                contents: { attachment: { contentType: "application/json", encoding: "base64", content: $content } }
+                contents: { attachment: { contentType: "application/json", encoding: "base64", content: ($content | @base64) } }
             }]
-        }')
-        components=$(echo "$components" | jq --argjson c "$schema_comp" '. + [$c]')
+        }]' <<<"$components")
     fi
 
     # resource-profile-baselines
@@ -115,38 +116,34 @@ for tgz in "${tgz_files[@]}"; do
             ext="${ext,,}"
             content_type="application/yaml"
             [[ "$ext" == "json" ]] && content_type="application/json"
-            content_b64=$(base64 -w 0 "$file")
 
-            item=$(jq -n --arg fn "$filename" --arg ct "$content_type" --arg cb "$content_b64" '{
+            data_items=$(jq --arg fn "$filename" --arg ct "$content_type" --rawfile cb "$file" '. + [{
                 type: "configuration",
                 name: $fn,
-                contents: { attachment: { contentType: $ct, encoding: "base64", content: $cb } }
-            }')
-            data_items=$(echo "$data_items" | jq --argjson i "$item" '. + [$i]')
+                contents: { attachment: { contentType: $ct, encoding: "base64", content: ($cb | @base64) } }
+            }]' <<<"$data_items")
         done < <(find "$profiles_dir" -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) -print0)
 
         if [[ "$data_items" != "[]" ]]; then
-            profiles_comp=$(jq -n --argjson items "$data_items" '{
+            components=$(printf '%s\n%s\n' "$components" "$data_items" | jq -s '.[0] + [{
                 type: "data",
                 "mime-type": "application/vnd.nc.resource-profile-baseline",
                 name: "resource-profile-baselines",
-                data: $items
-            }')
-            components=$(echo "$components" | jq --argjson c "$profiles_comp" '. + [$c]')
+                data: .[1]
+            }]')
         fi
     fi
 
     # Generate final JSON
     json_file="$OUTPUT_DIR/${tgz%.tgz}.json"
 
-    jq -n \
+    jq \
         --arg name       "$CHART_NAME" \
         --arg version    "$CHART_VERSION" \
         --arg appVersion "$APP_VERSION" \
         --arg type       "$CHART_TYPE" \
         --arg mime       "$MIME_TYPE" \
         --arg ref        "$CHART_REFERENCE" \
-        --argjson comps  "$components" \
         '{
             name: $name,
             version: $version,
@@ -154,8 +151,8 @@ for tgz in "${tgz_files[@]}"; do
             type: $type,
             "mime-type": $mime,
             reference: $ref,
-            components: $comps
-        }' > "$json_file"
+            components: .
+        }' <<<"$components" > "$json_file"
 
     echo "  → Created: $json_file"
 done
