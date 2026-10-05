@@ -123,7 +123,7 @@ jobs:
 
       - name: "Chart release"
         id: update-versions
-        uses: netcracker/qubership-workflow-hub/actions/charts-values-update-action@27fd7674286e5f561a6fd8277f2f389ff96ddb9e #v2.6.0
+        uses: netcracker/qubership-workflow-hub/actions/charts-values-update-action@288a6a0d9a78e80dfdefccab1be6497a39deb746 #v2.8.0
         with:
           release-version: ${{ env.RELEASE_VERSION }}
           config-file: ${{ env.HELM_CHARTS_CONFIG_FILE }}
