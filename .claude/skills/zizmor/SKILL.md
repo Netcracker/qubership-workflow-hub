@@ -29,7 +29,7 @@ Pedantic rules disabled — skip: `anonymous-definition`, `self-hosted-runner`,
 | --- | --- | --- |
 | `template-injection` | **Any** `${{ }}` interpolation directly inside a `run:` block (or `actions/github-script` `script:`) whose value is not a static/matrix value — this includes `inputs.*` and `steps.*.outputs.*` in `action.yml` composite actions, not just `github.event.*` sources. Common attacker-controlled sources: `github.event.pull_request.title/body/head.ref/head.label`, `github.event.issue.title/body`, `github.event.comment.body`, `github.event.review.body`, `github.event.discussion.title/body`, `github.head_ref`, `github.event.workflow_run.head_branch/head_commit.message`, and **any `${{ inputs.* }}` used in a composite action's `run:` step** | Pass through a step-level `env:` var instead of direct interpolation, then reference as `"${VAR_NAME}"` (quoted) in the shell |
 | `excessive-permissions` | `permissions: write-all` anywhere; `contents: write` at workflow level (not job level); any `write` permission a job doesn't actually need; **a job with no `permissions:` block at all** (defaults to broad token permissions) | Move to job level; start from `permissions: {}` or `permissions: contents: read`; grant only what each job needs. Add an explicit `permissions:` block to every job, even if it's just `contents: read` |
-| `unpinned-uses` | Any `uses:` not pinned to a full 40-char SHA — branches (`@main`), mutable tags (`@v4`, `@v1.2.3`) are all flagged | Replace with SHA pin. Fetch: `gh api repos/<owner>/<repo>/git/ref/tags/<tag> --jq '.object.sha'`; if annotated tag: dereference with `gh api repos/<owner>/<repo>/git/tags/<sha> --jq '.object.sha'` |
+| `unpinned-uses` | Any `uses:` not pinned to a full 40-char SHA — branches (`@main`), mutable tags (`@v4`, `@v1.2.3`) are all flagged. **Exempt:** `uses: $/<path>` (same-repository syntax) — it has no `@ref` at all by design and always resolves to the commit the calling workflow is running on, so this is never a violation | Replace with SHA pin. Fetch: `gh api repos/<owner>/<repo>/git/ref/tags/<tag> --jq '.object.sha'`; if annotated tag: dereference with `gh api repos/<owner>/<repo>/git/tags/<sha> --jq '.object.sha'` |
 | `artipacked` | `actions/checkout` without `persist-credentials: false` — flagged unconditionally, not only when `upload-artifact` is present | Add `persist-credentials: false` to the checkout step |
 | `secrets-inherit` | `secrets: inherit` in a reusable workflow call | Replace with explicit named secrets only |
 | `dangerous-triggers` | `pull_request_target` or `workflow_run` AND any step checks out with PR head ref or runs shell using `github.event.pull_request.*` directly. **Ignore** if file matches config ignore list | Pin checkout `ref:` to `github.sha`; add `persist-credentials: false`; move untrusted input to env vars |
@@ -72,6 +72,11 @@ Known pins used in this repo (always verify with API before applying):
 | `actions/cache` | `668228422ae6a00e4ad889ee87cd7109ec5666a7` | v5.0.4 |
 
 For actions not in this table — always fetch the current SHA via API before applying.
+
+Same-repository `uses: $/<path>` references (actions/workflows defined in this
+repo, e.g. `$/actions/tag-action`, `$/.github/workflows/re-security-scan.yml`)
+are never pinned and are not a violation of `unpinned-uses` — see the Pinning
+exception in `qubership-workflow-conventions/SKILL.md`.
 
 ## When invoked via /workflow-audit
 

@@ -3,6 +3,8 @@ paths:
     ignore:
       - 'shellcheck reported issue in this script: SC2086:info.+'
       - 'shellcheck reported issue in this script: SC2002:style.+'
+      - 'specifying action "\$/[^"]*" in invalid format'
+      - 'reusable workflow call "\$/[^"]*"'
   workflows-templates/**/*.{yml,yaml}:
     ignore:
       - 'shellcheck reported issue in this script: SC2086:info.+'

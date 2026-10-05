@@ -106,6 +106,19 @@ Pin table or ask the user to provide the SHA. Do not write SHAs from memory.
 
 Forbidden: `@main`, short SHAs, bare tags (`@v6`, `@v1.2.3`). Always full SHA.
 
+**Exception — same-repository references:** GitHub's native `$/<path>` syntax
+(self-repository syntax, GA 2026-07-30, requires runner ≥ 2.336.0) replaces the
+`owner/repo/<path>@<sha>` form when the action or reusable workflow being called
+lives in **this same repository** — e.g. `uses: $/actions/tag-action` instead of
+`uses: netcracker/qubership-workflow-hub/actions/tag-action@<sha>  # vX.Y.Z`.
+It resolves automatically to the exact commit the calling workflow is already
+running, so no SHA/tag pin, comment, or checkout is needed or possible — do not
+add one. Works anywhere `./` (workspace-relative) works: workflow steps,
+composite action steps, nested composition, and reusable workflow calls. This
+exception applies **only** to same-repo references; every `uses:` pointing at
+another repository (Qubership or third-party) still requires a full SHA pin as
+above.
+
 ### Permissions
 
 - Set `permissions:` at the **job level**, not the workflow level.

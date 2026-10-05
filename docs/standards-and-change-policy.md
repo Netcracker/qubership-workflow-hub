@@ -2,7 +2,7 @@
 
  This document defines stable interface rules (naming, inputs/outputs), version pinning requirements, minimal permissions & security expectations, how to safely modify or deprecate existing actions/workflows, and essentials for issue reporting. For issue / PR formatting see `issue-guidelines.md` and `code-of-conduct-prs.md`.
 
-# Action & Workflow Conventions (Legacy Heading)
+## Action & Workflow Conventions (Legacy Heading)
 
 Description: Mandatory (MUST) and recommended (SHOULD) rules for creating, updating, reviewing and deprecating Actions & reusable workflows. Covers naming (inputs/outputs), version pinning, permissions, security expectations, deprecation lifecycle, readiness checklists, and where to find issue / PR process.
 
@@ -16,7 +16,9 @@ Legend: MUST = required, SHOULD = recommended, MAY = optional.
 Issue / PR process is NOT duplicated here—see `docs/issue-guidelines.md` and `docs/code-of-conduct-prs.md`.
 
 ---
+
 ## 1. Quick Rules
+
 | Area | MUST / SHOULD |
 |------|---------------|
 | Versions | MUST use `@v1` (major) or SHA. No `@main` in prod. |
@@ -30,7 +32,9 @@ Issue / PR process is NOT duplicated here—see `docs/issue-guidelines.md` and `
 | Issue types | MUST use only: bug / feature / task (see issue guidelines). |
 
 ---
+
 ## 2. Naming & Style Conventions
+
 | Entity | Convention | Examples / Notes |
 |--------|------------|------------------|
 | Action folder | kebab-case | `metadata-action`, `tag-action` |
@@ -44,12 +48,14 @@ Issue / PR process is NOT duplicated here—see `docs/issue-guidelines.md` and `
 | Deprecation notice | comment + README + map entry | `# DEPRECATED: use metadata-action` |
 
 Rules:
+
 1. Avoid abbreviations unless standard (`ref`, `sha`).
 2. Prefer explicit over clever: `version-strategy` not `mode`.
 3. Do not reuse one input for multiple unrelated concepts.
 4. Add new outputs instead of overloading existing ones.
 
 ## 3. Modification Rules (Changing Existing Actions / Workflows)
+
 When you change an existing action or reusable workflow you MUST follow these rules:
 
 | Change Type | Allowed? | Requirements |
@@ -68,6 +74,7 @@ When you change an existing action or reusable workflow you MUST follow these ru
 | Deprecate action/workflow | Yes | Add replacement, update map, announce in README if widely used |
 
 Process for breaking changes:
+
 1. Open issue (type: feature or task) with migration plan & rationale.
 2. Mark impacted inputs/outputs as deprecated (soft stage) but keep functional.
 3. Update deprecation map (old → replacement / removal date).
@@ -75,25 +82,30 @@ Process for breaking changes:
 5. Communicate in PR description + README if widely adopted.
 
 Permission changes checklist:
+
 - List existing vs requested permissions diff.
 - Justify every addition; remove any no longer required.
 - Prefer job-level over workflow-wide broad permissions.
 
 Version tag updates:
+
 - For non-breaking additions: retag the moving major (e.g. move `v1` to new commit) after tests & review.
 - For breaking: create new annotated tag `v2` and DO NOT move older majors.
 
 Deprecating inputs/outputs:
+
 1. Add comment in `action.yml` (if YAML) or README section.
 2. Keep functional; emit warning log once (not every loop) when used.
 3. Track in deprecation map until removal.
 
 Security notes:
+
 - Any new shell execution MUST quote variables.
 - Validate externally supplied inputs (length / pattern) before using in commands.
 - Use `set -euo pipefail` (bash) in added scripts.
 
 ## 4. Standard Inputs
+
 | Input | Meaning |
 |-------|---------|
 | `dry-run` | Simulate (no writes) |
@@ -102,15 +114,28 @@ Security notes:
 | `config-file` | External config path |
 | `version-strategy` | Version mode (`auto` / `calendar` / `file`) |
 | `force-create` | Overwrite existing tag/resource |
+
 One spelling per concept; keep legacy alias only if needed.
 
 ---
+
 ## 5. Version Pinning
+
 MUST pin to major tag or SHA. Critical flows: prefer SHA. Bad: `uses: repo/action@main`.
 
+Exception: references to actions/workflows in this same repository use GitHub's
+native same-repository syntax instead — `uses: $/actions/<name>` or
+`uses: $/.github/workflows/<file>.yml` — with no `@ref` at all. It always
+resolves to the exact commit the calling workflow is running on, so it cannot
+be pinned and should not be. This applies only to same-repo references; calls
+into other repositories still require a SHA pin as above.
+
 ---
+
 ## 6. Outputs
+
 Use stable nouns only. Example:
+
 ```yaml
 steps:
     - id: meta
@@ -119,18 +144,25 @@ steps:
 ```
 
 ---
+
 ## 7. Security
+
 Baseline:
+
 ```yaml
 permissions:
     contents: read
 ```
+
 Add only what you need (e.g. `contents: write`, `packages: write`). Prefer OIDC. No secret echoing.
 
 ---
+
 ## 8. Deprecation
+
 Stages: Active → Deprecated (announce + replacement) → Sunset (deadline) → Removed.
 Current map:
+
 | Old | Replacement |
 |-----|-------------|
 | docker-publish (workflow) | docker-action |
@@ -140,9 +172,11 @@ Current map:
 | pom-updater | metadata-action + build tooling |
 
 ## 9. Issue Reporting (Pointer)
+
 Full templates & acceptance bar: see `docs/issue-guidelines.md`.
 
 Essentials you MUST include for a bug (summary only—do not duplicate template here):
+
 1. Action/workflow name + exact version (tag or SHA)
 2. Minimal reproducible workflow snippet (only failing job/step)
 3. Expected vs actual (1–2 lines each)

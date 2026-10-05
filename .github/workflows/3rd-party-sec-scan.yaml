@@ -301,7 +301,7 @@ jobs:
       matrix:
         package: "${{ fromJson(needs.load-config.outputs.packages) }}"
     name: "${{ matrix.package.image }}"
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@27fd7674286e5f561a6fd8277f2f389ff96ddb9e # v2.6.0
+    uses: $/.github/workflows/re-security-scan.yml
     with:
       target: 'docker'
       image: ${{ matrix.package.image }}
