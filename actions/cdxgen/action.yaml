@@ -54,7 +54,7 @@ runs:
       shell: bash
 
     - name: "Upload SBOM file"
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 #v7.0.2
       with:
         name: "BOM file"
         path: ${{ github.workspace }}/**/${{ github.event.repository.name }}_sbom.json
@@ -109,7 +109,7 @@ runs:
 
     - name: "Upload Depscan report"
       if: ${{ inputs.generate_cdx_report == 'true' }}
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 #v7.0.2
       with:
         name: "DEPSCAN report"
         path: ${{ github.workspace }}/reports/*
