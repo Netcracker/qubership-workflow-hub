@@ -27,6 +27,19 @@ This **On-Demand Security Scan** GitHub Workflow performs security scans using G
 - `security-events: write` - To upload SARIF files.
 - `packages: read` - To access packages for Docker scans.
 
+## Code scanning categories
+
+Docker scans use a separate category for each image tag, for example `collector:latest`
+and `collector:main`. An image without an explicit tag uses `<image>:latest`.
+Digest references retain their previous category (for example `collector@sha256`),
+and source scans use `source`. Grype and Trivy are tracked as separate tools.
+
+Earlier versions used the same category for all tags of an image. After upgrading,
+successfully scan all required tags before retiring the old category. Uploading an
+empty SARIF for each tool into the old category closes its alert instances without
+deleting the analysis history. This workflow does not perform that migration automatically.
+Callers pinned to an older release or commit must update their workflow reference to use this change.
+
 ## Usage Example
 
 Below is an example of how to use this reusable workflow in a GitHub Actions workflow:
