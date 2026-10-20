@@ -162,6 +162,9 @@ jobs:
     if: ${{ inputs.grype-scan }}
     runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     needs: [init]
+    outputs:
+      SARIF_UPLOADED: ${{ steps.grype-docker.outcome == 'success' && steps.upload-sarif.outcome == 'success' }}
+      SARIF_ID: ${{ steps.upload-sarif.outputs.sarif-id }}
     steps:
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
@@ -287,6 +290,7 @@ jobs:
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Grype SARIF
+        id: upload-sarif
         if: inputs.upload-sarif-to-security
         uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
         with:
@@ -306,6 +310,9 @@ jobs:
     runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     if: ${{ inputs.trivy-scan }}
     needs: [init]
+    outputs:
+      SARIF_UPLOADED: ${{ steps.trivy-docker.outcome == 'success' && steps.upload-sarif.outcome == 'success' }}
+      SARIF_ID: ${{ steps.upload-sarif.outputs.sarif-id }}
     steps:
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
@@ -400,6 +407,7 @@ jobs:
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Trivy SARIF
+        id: upload-sarif
         if: inputs.upload-sarif-to-security
         uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
         with:
@@ -413,3 +421,70 @@ jobs:
           path: |
             ${{ needs.init.outputs.TRIVY_FILENAME }}
             *.csv
+
+  retire-legacy-category:
+    needs: [init, grype-scan, trivy-scan]
+    if: >-
+      ${{ !cancelled() && inputs.target == 'docker' && inputs.upload-sarif-to-security
+      && needs.init.result == 'success'
+      && needs.init.outputs.SCAN_CATEGORY != needs.init.outputs.IMAGE_SHORT_NAME
+      && (inputs.grype-scan || inputs.trivy-scan)
+      && (!inputs.grype-scan || (needs.grype-scan.result == 'success' && needs.grype-scan.outputs.SARIF_UPLOADED == 'true'))
+      && (!inputs.trivy-scan || (needs.trivy-scan.result == 'success' && needs.trivy-scan.outputs.SARIF_UPLOADED == 'true')) }}
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+    steps:
+      - name: Find the previous image-only category
+        id: legacy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LEGACY_CATEGORY: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
+          SCAN_CATEGORY: ${{ needs.init.outputs.SCAN_CATEGORY }}
+          GRYPE_SCAN: ${{ inputs.grype-scan }}
+          TRIVY_SCAN: ${{ inputs.trivy-scan }}
+          GRYPE_SARIF_ID: ${{ needs.grype-scan.outputs.SARIF_ID }}
+          TRIVY_SARIF_ID: ${{ needs.trivy-scan.outputs.SARIF_ID }}
+        run: |
+          set -euo pipefail
+          for TOOL in Grype Trivy; do
+            if [ "$TOOL" = Grype ]; then
+              if [ "$GRYPE_SCAN" != true ]; then continue; fi
+              SARIF_ID=$GRYPE_SARIF_ID
+            else
+              if [ "$TRIVY_SCAN" != true ]; then continue; fi
+              SARIF_ID=$TRIVY_SARIF_ID
+            fi
+            test -n "$SARIF_ID"
+            for ATTEMPT in $(seq 1 13); do
+              gh api --method GET --paginate --slurp "repos/$GITHUB_REPOSITORY/code-scanning/analyses" \
+                -f ref="$GITHUB_REF" -f tool_name="$TOOL" -f per_page=100 > analyses.json
+              if jq -e --arg id "$SARIF_ID" --arg category "$SCAN_CATEGORY" --arg sha "$GITHUB_SHA" \
+                'any(.[][]; .sarif_id == $id and .commit_sha == $sha and (.category | rtrimstr("/")) == $category and .error == "")' analyses.json >/dev/null; then
+                break
+              fi
+              if [ "$ATTEMPT" -eq 13 ]; then
+                echo "::error::${TOOL} analysis has not completed successfully; preserving legacy results"
+                exit 1
+              fi
+              sleep 10
+            done
+            COUNT=$(jq --arg category "$LEGACY_CATEGORY" \
+              '[.[][] | select((.category | rtrimstr("/")) == $category and .error == "")][0].results_count // 0' analyses.json)
+            if [ "$COUNT" -gt 0 ]; then
+              jq -n --arg tool "$TOOL" '{version: "2.1.0", runs: [{tool: {driver: {name: $tool}}, results: []}]}' > "legacy-${TOOL,,}.sarif"
+              echo "${TOOL,,}=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
+      - name: Retire previous Grype instances
+        if: steps.legacy.outputs.grype == 'true'
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
+        with:
+          sarif_file: legacy-grype.sarif
+          category: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
+          wait-for-processing: true
+      - name: Retire previous Trivy instances
+        if: steps.legacy.outputs.trivy == 'true'
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
+        with:
+          sarif_file: legacy-trivy.sarif
+          category: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
+          wait-for-processing: true

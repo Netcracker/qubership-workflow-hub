@@ -60,8 +60,14 @@ and `collector:main`. An image without a tag uses `latest`; source scans use `so
 and digest categories retain their previous behavior. Grype and Trivy remain separate tools.
 Do not merge reports from different tags or rewrite SARIF to compensate for the old category.
 Read `docs/reusable/re-security-scan.md` at the pinned revision for upgrade behavior.
-Existing legacy alert instances are not automatically retired; the scan workflow has no
-migration input or cleanup job.
+The same scan workflow automatically checks its previous image-only category after successful
+Docker scans and uploads. It confirms processing of the new analyses, then uploads empty reports
+only if the old category still has results. History is retained and new categories are untouched.
+Do not generate a separate migration workflow, migration input, or generic cleanup of empty or
+unrelated categories. Source scans and unchanged digest categories do not require migration.
+The cleanup job coordinates scanners within one invocation, not other tags in the caller's matrix;
+ensure required tags receive new analyses when rolling out the change. Already empty legacy
+categories are checked but receive no additional empty uploads.
 
 ## Kubernetes hardening scan (`k8s-hardening-scan`)
 

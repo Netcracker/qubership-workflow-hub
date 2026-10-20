@@ -39,10 +39,20 @@ and `collector:main`. An image without an explicit tag uses `<image>:latest`.
 Digest references retain their previous category (for example `collector@sha256`),
 and source scans use `source`. Grype and Trivy are tracked as separate tools.
 
-Earlier versions used the same category for all tags of an image. Existing alert instances
-in those legacy categories are not automatically retired when new tag categories are created.
-Cleanup requires separate coordination after all required tags have been scanned successfully;
-this workflow does not implement that migration. Analysis history is not deleted.
+Earlier versions used the image short name without a tag as the category. After this invocation's
+enabled Docker scanners and uploads succeed, the same workflow automatically looks up that exact
+old category on the current Git ref, separately for Grype and Trivy. It verifies that the new
+analyses have finished processing before uploading empty reports into the old category.
+Those uploads close legacy instances without deleting analysis history or changing the new categories.
+
+Absent or already empty legacy categories are skipped. Source scans, unchanged digest categories,
+disabled scanners, and disabled SARIF uploads do not trigger cleanup. API errors or unsuccessful
+new analyses prevent cleanup. This check runs after successful image scans; subsequent runs upload
+nothing for an already empty legacy category. No extra workflow or migration flag is required.
+
+Cleanup is scoped to one image invocation, not the caller's complete tag matrix. A successful tag
+can retire the shared legacy instances while another tag is pending or fails. Update all callers
+and ensure required tags receive new analyses when rolling out this category change.
 Callers pinned to an older release or commit must update their workflow reference to use this change.
 
 ## Usage Example
