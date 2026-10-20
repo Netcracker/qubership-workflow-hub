@@ -55,6 +55,10 @@ on:
         description: "runs-on runner"
         type: string
         required: false
+      migrate-legacy-categories:
+        description: "Retire the legacy image-only category after successful scans and SARIF uploads"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -162,6 +166,8 @@ jobs:
     if: ${{ inputs.grype-scan }}
     runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     needs: [init]
+    outputs:
+      SARIF_UPLOADED: ${{ steps.grype-docker.outcome == 'success' && steps.upload-sarif.outcome == 'success' }}
     steps:
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
@@ -287,6 +293,7 @@ jobs:
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Grype SARIF
+        id: upload-sarif
         if: inputs.upload-sarif-to-security
         uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
         with:
@@ -306,6 +313,8 @@ jobs:
     runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     if: ${{ inputs.trivy-scan }}
     needs: [init]
+    outputs:
+      SARIF_UPLOADED: ${{ steps.trivy-docker.outcome == 'success' && steps.upload-sarif.outcome == 'success' }}
     steps:
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
@@ -400,6 +409,7 @@ jobs:
           rm "${SARIF_FILE%.sarif}.ext.sarif"
 
       - name: Upload Trivy SARIF
+        id: upload-sarif
         if: inputs.upload-sarif-to-security
         uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
         with:
@@ -413,3 +423,51 @@ jobs:
           path: |
             ${{ needs.init.outputs.TRIVY_FILENAME }}
             *.csv
+
+  migrate-legacy-categories:
+    needs: [init, grype-scan, trivy-scan]
+    if: >-
+      ${{ !cancelled() && inputs.migrate-legacy-categories
+      && inputs.target == 'docker' && inputs.upload-sarif-to-security
+      && needs.init.result == 'success'
+      && needs.init.outputs.SCAN_CATEGORY != needs.init.outputs.IMAGE_SHORT_NAME
+      && (inputs.grype-scan || inputs.trivy-scan)
+      && (!inputs.grype-scan || (needs.grype-scan.result == 'success' && needs.grype-scan.outputs.SARIF_UPLOADED == 'true'))
+      && (!inputs.trivy-scan || (needs.trivy-scan.result == 'success' && needs.trivy-scan.outputs.SARIF_UPLOADED == 'true')) }}
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+    steps:
+      - name: Find latest legacy results on the current ref
+        id: legacy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CATEGORY: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
+          GRYPE_SCAN: ${{ inputs.grype-scan }}
+          TRIVY_SCAN: ${{ inputs.trivy-scan }}
+        run: |
+          set -euo pipefail
+          for TOOL in Grype Trivy; do
+            if [ "$TOOL" = Grype ] && [ "$GRYPE_SCAN" != true ]; then continue; fi
+            if [ "$TOOL" = Trivy ] && [ "$TRIVY_SCAN" != true ]; then continue; fi
+            gh api --method GET --paginate --slurp "repos/$GITHUB_REPOSITORY/code-scanning/analyses" \
+              -f ref="$GITHUB_REF" -f tool_name="$TOOL" -f per_page=100 > analyses.json
+            COUNT=$(jq --arg category "$CATEGORY" \
+              '[.[][] | select((.category | rtrimstr("/")) == $category)][0].results_count // 0' analyses.json)
+            if [ "$COUNT" -gt 0 ]; then
+              jq -n --arg tool "$TOOL" '{version: "2.1.0", runs: [{tool: {driver: {name: $tool}}, results: []}]}' > "legacy-${TOOL,,}.sarif"
+              echo "${TOOL,,}=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
+      - name: Retire legacy Grype instances
+        if: steps.legacy.outputs.grype == 'true'
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
+        with:
+          sarif_file: legacy-grype.sarif
+          category: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
+          wait-for-processing: true
+      - name: Retire legacy Trivy instances
+        if: steps.legacy.outputs.trivy == 'true'
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
+        with:
+          sarif_file: legacy-trivy.sarif
+          category: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
+          wait-for-processing: true

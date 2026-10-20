@@ -53,6 +53,30 @@ discovers all repo packages      scans each image
 `ghcr-discover-repo-packages` output `packages` can also feed
 `container-package-cleanup` or any other step that needs the image list.
 
+### SARIF categories and optional legacy migration
+
+Read `docs/reusable/re-security-scan.md` at the revision the caller will use.
+Tagged images use separate categories such as `collector:latest` and `collector:main`.
+Implicit tags use `latest`; source and digest categories retain their previous behavior.
+Grype and Trivy are separate tools. Do not merge tag reports or rewrite SARIF to compensate
+for the old image-only category.
+
+Scanning and migration are both implemented in `re-security-scan.yml`. For legacy cleanup,
+expose a `workflow_dispatch` boolean `migrate-legacy-categories` with `default: false`
+and pass it to that existing reusable scan job. Do not create a separate migration workflow.
+
+With the flag disabled, the migration job is skipped without API requests or empty uploads.
+With it enabled, cleanup requires successful scans and SARIF uploads for every enabled tool
+in this invocation. Source scans, unchanged digest categories, and disabled SARIF uploading
+are skipped. Empty legacy reports close old instances while retaining analysis history.
+Repeated enabled runs check the API but upload nothing for already empty categories.
+
+The migration job cannot wait for other tag invocations in a caller matrix. Enable the flag
+only after all required tag categories have valid analyses. Otherwise successful migration
+for one tag can close legacy instances before another tag has uploaded successfully.
+Update old callers that still write to legacy categories. Use a pinned revision containing
+the new flag; do not assume existing templates or older releases already expose it.
+
 ## Kubernetes hardening scan (`k8s-hardening-scan`)
 
 Scans **running workloads** in a Kubernetes cluster using Kubescape + Trivy.

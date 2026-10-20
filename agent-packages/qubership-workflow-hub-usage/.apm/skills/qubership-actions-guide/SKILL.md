@@ -13,7 +13,7 @@ the relevant supporting document:
 | Operation | Load |
 | --- | --- |
 | Docker build, push, image migration | `docker.md` |
-| Security scan (images, source/deps, k8s cluster) | `security.md` |
+| Security scan (images, source/deps, k8s cluster) or legacy SARIF category migration | `security.md` |
 | Email notifications | `notifications.md` |
 | Helm chart release, values update | `helm.md` |
 | Git tag, GitHub Release, release assets | `release.md` |
