@@ -8,24 +8,6 @@
       "matchManagers": ["github-actions"],
       "schedule": ["at any time"],
       "minimumReleaseAge": "0 days"
-    },
-    {
-      "description": "Update npm dependencies weekly",
-      "matchManagers": ["npm"],
-      "schedule": ["before 4am on monday"],
-      "minimumReleaseAge": "7 days"
-    },
-    {
-      "description": "Wait fourteen days for npm major updates",
-      "matchManagers": ["npm"],
-      "matchUpdateTypes": ["major"],
-      "minimumReleaseAge": "14 days"
-    },
-    {
-      "description": "Wait three days for npm patch updates",
-      "matchManagers": ["npm"],
-      "matchUpdateTypes": ["patch"],
-      "minimumReleaseAge": "3 days"
     }
   ]
 }
