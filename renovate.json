@@ -1,5 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>Netcracker/renovate-config:org-inherited-config"],
   "enabledManagers": ["github-actions", "npm"],
   "packageRules": [
     {
