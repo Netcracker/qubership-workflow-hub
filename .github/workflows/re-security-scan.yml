@@ -476,14 +476,14 @@ jobs:
           done
       - name: Retire previous Grype instances
         if: steps.legacy.outputs.grype == 'true'
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           sarif_file: legacy-grype.sarif
           category: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
           wait-for-processing: true
       - name: Retire previous Trivy instances
         if: steps.legacy.outputs.trivy == 'true'
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           sarif_file: legacy-trivy.sarif
           category: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
