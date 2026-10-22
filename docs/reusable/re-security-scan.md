@@ -8,7 +8,7 @@ This **On-Demand Security Scan** GitHub Workflow performs security scans using G
 - Supports Grype and Trivy scanners.
 - Filters results to high and critical severity by default.
 - Uploads SARIF files for integration with GitHub Security.
-- Separates Docker image tags into distinct categories and automatically retires matching legacy image-only instances.
+- Separates Docker image tags and platforms into distinct categories and automatically retires matching legacy image-only instances.
 - Configurable to continue on errors or fail builds.
 
 ## 📌 Inputs
@@ -39,12 +39,18 @@ and the GitHub CLI (`gh`).
 
 ## Code scanning categories
 
-Docker scans use a separate category for each image tag, for example `collector:latest`
-and `collector:main`. An image without an explicit tag uses `<image>:latest`.
-Digest references retain their previous category (for example `collector@sha256`),
-and source scans use `source`. Grype and Trivy are tracked as separate tools.
-The image name is the final path component: `ghcr.io/team/backend:main` uses `backend:main`.
-Images with the same final name and tag in different registries or namespaces still share a category.
+Docker scans use a separate category for each image tag and platform, for example
+`collector:main@linux/amd64` and `collector:main@linux/arm64`. An image without an
+explicit tag uses `latest`. Digest references append the platform to their previous
+category (for example `collector@sha256@linux/amd64`), and source scans use `source`.
+Grype and Trivy are tracked as separate tools. The image name is the final path component;
+registry and namespace are not part of the category.
+
+The workflow automatically reads the Docker server's OS and architecture in the init job
+and passes that same platform to both scanners. Both scan directly from the registry,
+avoiding a locally cached image of another architecture. No new caller input is required:
+use the existing `runner` input to select an arm64 runner, for example `ubuntu-24.04-arm`.
+Docker report filenames also include the platform to distinguish their artifacts.
 
 Earlier versions used the image short name without a tag as the category. After this invocation's
 enabled Docker scanners and uploads succeed, the same workflow automatically looks up that exact
@@ -54,21 +60,23 @@ before uploading empty reports into the old category. Failed old analyses are ig
 the latest successful legacy results.
 Those uploads close legacy instances without deleting analysis history or changing the new categories.
 
-Absent or already empty legacy categories are skipped. Source scans, unchanged digest categories,
+Absent or already empty legacy categories are skipped. Source scans,
 disabled scanners, and disabled SARIF uploads do not trigger cleanup. API errors or unsuccessful
 new analyses prevent cleanup. This check runs after successful image scans; subsequent runs upload
 nothing for an already empty legacy category. No extra workflow or migration flag is required.
 
-Cleanup is scoped to one image invocation, not the caller's complete tag matrix. A successful tag
-can retire the shared legacy instances while another tag is pending or fails. Update all callers
-and ensure required tags receive new analyses when rolling out this category change.
+Cleanup is scoped to one image invocation, not the caller's complete tag/platform matrix.
+A successful scan can retire the shared legacy instances while another scan is pending or fails.
+Update all callers and ensure required tags and platforms receive new analyses when rolling out
+this category change. Migration goes directly from the released image-only category to the final
+tag/platform category; no migration from the unreleased tag-only format is performed.
 Callers pinned to an older release or commit must update their workflow reference to use this change.
 
 ## Usage Example
 
-Below is an example of how to use this reusable workflow in a GitHub Actions workflow:
-the pinned commit contains the category fix and automatic legacy cleanup. Replace it with
-the full SHA of a release containing these changes when that release is available.
+Below is an example of how to use this reusable workflow in a GitHub Actions workflow.
+Replace `<full-commit-sha>` with a revision containing the tag/platform category fix and
+automatic legacy cleanup, or the full SHA of a release containing these changes when available.
 
 ```yaml
 name: Security Scan Workflow
@@ -96,7 +104,7 @@ permissions:
 
 jobs:
   security-scan:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@9eb97378c53b647ae03b004c29d9965a12805c81 # Unreleased category fix
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@<full-commit-sha>
     with:
       target: ${{ inputs.target }}
       image: ${{ inputs.image }}

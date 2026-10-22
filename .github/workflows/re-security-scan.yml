@@ -78,6 +78,7 @@ jobs:
       IMAGE: ${{ steps.normalize-image.outputs.IMAGE }}
       IMAGE_SHORT_NAME: ${{ steps.prepare-outputs.outputs.IMAGE_SHORT_NAME }}
       SCAN_CATEGORY: ${{ steps.prepare-outputs.outputs.SCAN_CATEGORY }}
+      SCAN_PLATFORM: ${{ steps.prepare-platform.outputs.SCAN_PLATFORM }}
     steps:
       - name: Scan plan
         run: |
@@ -104,6 +105,20 @@ jobs:
           echo "Normalized IMAGE: $IMAGE_LOWER"
           echo "IMAGE=$IMAGE_LOWER" >> "$GITHUB_OUTPUT"
 
+      - name: Select Docker image platform
+        if: ${{ inputs.target == 'docker' }}
+        id: prepare-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          PLATFORM=$(docker version --format '{{.Server.Os}}/{{.Server.Arch}}')
+          if [[ ! "$PLATFORM" =~ ^[a-z0-9]+/[a-z0-9_]+(/[a-z0-9_.-]+)?$ ]]; then
+            echo "::error::Expected Docker platform os/arch[/variant]"
+            exit 1
+          fi
+          echo "SCAN_PLATFORM=$PLATFORM" >> "$GITHUB_OUTPUT"
+          echo "Docker image platform: $PLATFORM"
+
       - name: Login to GHCR (for check)
         if: ${{ inputs.target == 'docker' }}
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f #v4.6.0
@@ -128,7 +143,9 @@ jobs:
         id: prepare-outputs
         env:
           RUNNER: "${{ inputs.runner }}"
+          SCAN_PLATFORM: ${{ steps.prepare-platform.outputs.SCAN_PLATFORM }}
         run: |
+          set -euo pipefail
           if [ "${TARGET}" = "docker" ]; then
             SHORT_NAME=${INCOMMING_IMAGE##*/}
             echo "IMAGE_SHORT_NAME=${SHORT_NAME%:*}" >> "$GITHUB_OUTPUT"
@@ -137,11 +154,12 @@ jobs:
               *:*) SCAN_CATEGORY=$SHORT_NAME ;;
               *) SCAN_CATEGORY=${SHORT_NAME}:latest ;;
             esac
-            echo "SCAN_CATEGORY=${SCAN_CATEGORY}" >> "$GITHUB_OUTPUT"
+            echo "SCAN_CATEGORY=${SCAN_CATEGORY}@${SCAN_PLATFORM}" >> "$GITHUB_OUTPUT"
 
             SAFE_NAME=${SHORT_NAME//:/_}
             SAFE_NAME=${SAFE_NAME//\//_}
             SAFE_NAME=${SAFE_NAME//-/_}
+            SAFE_NAME=${SAFE_NAME}_${SCAN_PLATFORM//\//_}
             if [ "${RUNNER}" != "" ]; then
               SAFE_NAME=${SAFE_NAME}_${RUNNER}
             fi
@@ -193,8 +211,10 @@ jobs:
         continue-on-error: ${{ inputs.continue-on-error }}
         id: grype-docker
         uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 #v7.4.2
+        env:
+          GRYPE_PLATFORM: ${{ needs.init.outputs.SCAN_PLATFORM }}
         with:
-          image: ${{ needs.init.outputs.IMAGE }}
+          image: registry:${{ needs.init.outputs.IMAGE }}
           output-file: ${{ needs.init.outputs.GRYPE_FILENAME }}
           fail-build: false
           severity-cutoff: critical
@@ -333,6 +353,9 @@ jobs:
         continue-on-error: ${{ inputs.continue-on-error }}
         id: trivy-docker
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 #v0.36.0
+        env:
+          TRIVY_PLATFORM: ${{ needs.init.outputs.SCAN_PLATFORM }}
+          TRIVY_IMAGE_SRC: remote
         with:
           image-ref: "${{ needs.init.outputs.IMAGE }}"
           severity: ${{ env.TRIVY_SEVERITY }}

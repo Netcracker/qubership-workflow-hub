@@ -55,9 +55,12 @@ discovers all repo packages      scans each image
 
 ### SARIF categories
 
-Docker image scans use a separate category for each tag, for example `collector:latest`
-and `collector:main`. An image without a tag uses `latest`; source scans use `source`,
-and digest categories retain their previous behavior. Grype and Trivy remain separate tools.
+Docker image scans use a separate category for each tag and platform, for example
+`collector:main@linux/amd64` and `collector:main@linux/arm64`. An image without a tag uses
+`latest`; source scans use `source`, and digest categories append the platform to their
+previous base category. Grype and Trivy remain separate tools. The platform is detected
+from the Docker server and passed to both scanners, which read the image from the registry.
+No platform input is required; select the architecture through the existing `runner` input.
 The image name is the final path component; registry and namespace are not part of the category.
 Images with an identical final name and tag still share that category across registries/namespaces.
 Do not merge reports from different tags or rewrite SARIF to compensate for the old category.
@@ -66,9 +69,10 @@ The same scan workflow automatically checks its previous image-only category aft
 Docker scans and uploads. It confirms processing of the new analyses, then uploads empty reports
 only if the old category still has results. History is retained and new categories are untouched.
 Do not generate a separate migration workflow, migration input, or generic cleanup of empty or
-unrelated categories. Source scans and unchanged digest categories do not require migration.
-The cleanup job coordinates scanners within one invocation, not other tags in the caller's matrix;
-ensure required tags receive new analyses when rolling out the change. Already empty legacy
+unrelated categories. Source scans do not require migration. The unreleased tag-only format
+does not require a separate migration.
+The cleanup job coordinates scanners within one invocation, not other tags/platforms in the caller's matrix;
+ensure required tags and platforms receive new analyses when rolling out the change. Already empty legacy
 categories are checked but receive no additional empty uploads.
 No custom token secret is required: the reusable uses the automatically provided `GITHUB_TOKEN`.
 For Docker scans on a custom `runner`, ensure Bash, Docker, `jq`, and `gh` are available. Pin a revision containing
