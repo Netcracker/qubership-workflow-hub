@@ -214,7 +214,7 @@ jobs:
         env:
           GRYPE_PLATFORM: ${{ needs.init.outputs.SCAN_PLATFORM }}
         with:
-          image: registry:${{ needs.init.outputs.IMAGE }}
+          image: ${{ needs.init.outputs.IMAGE }}
           output-file: ${{ needs.init.outputs.GRYPE_FILENAME }}
           fail-build: false
           severity-cutoff: critical

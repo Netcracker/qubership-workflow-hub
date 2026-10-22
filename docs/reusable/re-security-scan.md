@@ -47,8 +47,7 @@ Grype and Trivy are tracked as separate tools. The image name is the final path 
 registry and namespace are not part of the category.
 
 The workflow automatically reads the Docker server's OS and architecture in the init job
-and passes that same platform to both scanners. Both scan directly from the registry,
-avoiding a locally cached image of another architecture. No new caller input is required:
+and passes that same platform to both scanners. No new caller input is required:
 use the existing `runner` input to select an arm64 runner, for example `ubuntu-24.04-arm`.
 Docker report filenames also include the platform to distinguish their artifacts.
 

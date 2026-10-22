@@ -59,7 +59,7 @@ Docker image scans use a separate category for each tag and platform, for exampl
 `image:main@linux/amd64` and `image:main@linux/arm64`. An image without a tag uses
 `latest`; source scans use `source`, and digest categories append the platform to their
 previous base category. Grype and Trivy remain separate tools. The platform is detected
-from the Docker server and passed to both scanners, which read the image from the registry.
+from the Docker server and passed to both scanners.
 No platform input is required; select the architecture through the existing `runner` input.
 The image name is the final path component; registry and namespace are not part of the category.
 Images with an identical final name and tag still share that category across registries/namespaces.
