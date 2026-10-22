@@ -59,6 +59,10 @@ before uploading empty reports into the old category. Failed old analyses are ig
 the latest successful legacy results.
 Those uploads close legacy instances without deleting analysis history or changing the new categories.
 
+The new analysis is looked up by its SARIF ID (one request per attempt). The legacy category is
+searched newest first and the search stops at its first analysis, after 90 days, or after 5 pages
+of 100 analyses. A legacy category without uploads inside that window is not retired automatically.
+
 Absent or already empty legacy categories are skipped. Source scans,
 disabled scanners, and disabled SARIF uploads do not trigger cleanup. API errors or unsuccessful
 new analyses prevent cleanup. This check runs after successful image scans; subsequent runs upload
