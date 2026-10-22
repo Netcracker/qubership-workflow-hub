@@ -466,8 +466,11 @@ jobs:
           TRIVY_SCAN: ${{ inputs.trivy-scan }}
           GRYPE_SARIF_ID: ${{ needs.grype-scan.outputs.SARIF_ID }}
           TRIVY_SARIF_ID: ${{ needs.trivy-scan.outputs.SARIF_ID }}
+          LEGACY_LOOKUP_MAX_PAGES: "5"
+          LEGACY_LOOKBACK_DAYS: "90"
         run: |
           set -euo pipefail
+          CUTOFF=$(date -u -d "-${LEGACY_LOOKBACK_DAYS} days" +%Y-%m-%dT%H:%M:%SZ)
           for TOOL in Grype Trivy; do
             if [ "$TOOL" = Grype ]; then
               if [ "$GRYPE_SCAN" != true ]; then continue; fi
@@ -478,10 +481,10 @@ jobs:
             fi
             test -n "$SARIF_ID"
             for ATTEMPT in $(seq 1 13); do
-              gh api --method GET --paginate --slurp "repos/$GITHUB_REPOSITORY/code-scanning/analyses" \
-                -f ref="$GITHUB_REF" -f tool_name="$TOOL" -f per_page=100 > analyses.json
-              if jq -e --arg id "$SARIF_ID" --arg category "$SCAN_CATEGORY" --arg sha "$GITHUB_SHA" \
-                'any(.[][]; .sarif_id == $id and .commit_sha == $sha and (.category | rtrimstr("/")) == $category and .error == "")' analyses.json >/dev/null; then
+              gh api --method GET "repos/$GITHUB_REPOSITORY/code-scanning/analyses" \
+                -f sarif_id="$SARIF_ID" > analyses.json
+              if jq -e --arg category "$SCAN_CATEGORY" --arg sha "$GITHUB_SHA" \
+                'any(.[]; .commit_sha == $sha and (.category | rtrimstr("/")) == $category and .error == "")' analyses.json >/dev/null; then
                 break
               fi
               if [ "$ATTEMPT" -eq 13 ]; then
@@ -490,8 +493,16 @@ jobs:
               fi
               sleep 10
             done
-            COUNT=$(jq --arg category "$LEGACY_CATEGORY" \
-              '[.[][] | select((.category | rtrimstr("/")) == $category and .error == "")][0].results_count // 0' analyses.json)
+            # Newest first; stop at the first analysis of the legacy category or at the lookback limit.
+            COUNT=0
+            for PAGE in $(seq 1 "$LEGACY_LOOKUP_MAX_PAGES"); do
+              gh api --method GET "repos/$GITHUB_REPOSITORY/code-scanning/analyses" \
+                -f ref="$GITHUB_REF" -f tool_name="$TOOL" -f per_page=100 -f page="$PAGE" > analyses.json
+              FOUND=$(jq --arg category "$LEGACY_CATEGORY" \
+                '[.[] | select((.category | rtrimstr("/")) == $category and .error == "")][0].results_count // empty' analyses.json)
+              if [ -n "$FOUND" ]; then COUNT=$FOUND; break; fi
+              if jq -e --arg cutoff "$CUTOFF" 'length < 100 or (.[-1].created_at < $cutoff)' analyses.json >/dev/null; then break; fi
+            done
             if [ "$COUNT" -gt 0 ]; then
               jq -n --arg tool "$TOOL" '{version: "2.1.0", runs: [{tool: {driver: {name: $tool}}, results: []}]}' > "legacy-${TOOL,,}.sarif"
               echo "${TOOL,,}=true" >> "$GITHUB_OUTPUT"
