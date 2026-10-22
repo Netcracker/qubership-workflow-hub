@@ -5,7 +5,7 @@ on:
       - .github/workflows/re-security-scan.yml
       - .github/workflows/test-re-security-scan.yml
       - tests/re-security-scan/**
-  workflow_dispatch:
+  workflow_dispatch: {}
 permissions:
   contents: read
 jobs:
