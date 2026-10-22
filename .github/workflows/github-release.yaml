@@ -18,7 +18,7 @@ permissions:
 jobs:
   check-tag:
     permissions:
-      contents: read
+      contents: write
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.generate_version.outputs.version }}
@@ -105,6 +105,8 @@ jobs:
           create-tag: true
           force-create: false
           check-tag: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   create-github-release:
     needs: [check-tag]
