@@ -56,7 +56,7 @@ discovers all repo packages      scans each image
 ### SARIF categories
 
 Docker image scans use a separate category for each tag and platform, for example
-`collector:main@linux/amd64` and `collector:main@linux/arm64`. An image without a tag uses
+`image:main@linux/amd64` and `image:main@linux/arm64`. An image without a tag uses
 `latest`; source scans use `source`, and digest categories append the platform to their
 previous base category. Grype and Trivy remain separate tools. The platform is detected
 from the Docker server and passed to both scanners, which read the image from the registry.

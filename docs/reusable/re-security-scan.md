@@ -40,9 +40,9 @@ and the GitHub CLI (`gh`).
 ## Code scanning categories
 
 Docker scans use a separate category for each image tag and platform, for example
-`collector:main@linux/amd64` and `collector:main@linux/arm64`. An image without an
+`image:main@linux/amd64` and `image:main@linux/arm64`. An image without an
 explicit tag uses `latest`. Digest references append the platform to their previous
-category (for example `collector@sha256@linux/amd64`), and source scans use `source`.
+category (for example `image@sha256@linux/amd64`), and source scans use `source`.
 Grype and Trivy are tracked as separate tools. The image name is the final path component;
 registry and namespace are not part of the category.
 

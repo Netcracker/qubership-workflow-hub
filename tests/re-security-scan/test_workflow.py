@@ -50,8 +50,8 @@ class PreparationTests(unittest.TestCase):
                                           step('init', 'prepare-platform')['run'], MOCK_ARCH=arch)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(outputs['SCAN_PLATFORM'], f'linux/{arch}')
-                prepared = self.prepare('ghcr.io/team/collector:main', outputs['SCAN_PLATFORM'])
-                self.assertEqual(prepared['SCAN_CATEGORY'], f'collector:main@linux/{arch}')
+                prepared = self.prepare('ghcr.io/team/image:main', outputs['SCAN_PLATFORM'])
+                self.assertEqual(prepared['SCAN_CATEGORY'], f'image:main@linux/{arch}')
 
     def test_failed_docker_lookup_does_not_emit_platform(self):
         result, outputs = execute('docker() { return 1; }\n' + step('init', 'prepare-platform')['run'])
@@ -67,20 +67,20 @@ class PreparationTests(unittest.TestCase):
         categories, filenames = set(), set()
         for tag in ('latest', 'main'):
             for arch in ('amd64', 'arm64'):
-                prepared = self.prepare(f'ghcr.io/team/collector:{tag}', f'linux/{arch}')
+                prepared = self.prepare(f'ghcr.io/team/image:{tag}', f'linux/{arch}')
                 categories.add(prepared['SCAN_CATEGORY'])
                 for scanner in ('GRYPE', 'TRIVY'):
                     name = prepared[f'{scanner}_FILENAME']
                     self.assertNotIn('/', name)
                     filenames.add(name)
-                self.assertEqual(prepared['IMAGE_SHORT_NAME'], 'collector')
+                self.assertEqual(prepared['IMAGE_SHORT_NAME'], 'image')
         self.assertEqual(len(categories), 4)
         self.assertEqual(len(filenames), 8)
 
     def test_default_tag_registry_port_and_digest(self):
-        cases = [('localhost:5000/team/collector', 'collector:latest', 'collector'),
-                 ('localhost:5000/team/collector:main', 'collector:main', 'collector'),
-                 ('ghcr.io/team/collector@sha256:abcdef', 'collector@sha256', 'collector@sha256')]
+        cases = [('localhost:5000/team/image', 'image:latest', 'image'),
+                 ('localhost:5000/team/image:main', 'image:main', 'image'),
+                 ('ghcr.io/team/image@sha256:abcdef', 'image@sha256', 'image@sha256')]
         for image, base, legacy in cases:
             with self.subTest(image=image):
                 prepared = self.prepare(image)
@@ -88,8 +88,8 @@ class PreparationTests(unittest.TestCase):
                 self.assertEqual(prepared['IMAGE_SHORT_NAME'], legacy)
 
     def test_runner_label_does_not_define_category(self):
-        default = self.prepare('collector:main')
-        custom = self.prepare('collector:main', runner='ubuntu-24.04')
+        default = self.prepare('image:main')
+        custom = self.prepare('image:main', runner='ubuntu-24.04')
         self.assertEqual(default['SCAN_CATEGORY'], custom['SCAN_CATEGORY'])
         self.assertNotEqual(default['GRYPE_FILENAME'], custom['GRYPE_FILENAME'])
 
@@ -104,15 +104,15 @@ class LegacyRetirementTests(unittest.TestCase):
     def retire(self, *, new_error='', legacy_count=2, api_failure=False, enabled=True):
         analyses = [[
             {'sarif_id': 'new-id', 'commit_sha': 'commit',
-             'category': 'collector:main@linux/arm64/', 'error': new_error, 'results_count': 3},
+             'category': 'image:main@linux/arm64/', 'error': new_error, 'results_count': 3},
             {'sarif_id': 'old-id', 'commit_sha': 'old-commit',
-             'category': 'collector/', 'error': '', 'results_count': legacy_count},
+             'category': 'image/', 'error': '', 'results_count': legacy_count},
         ]]
         response = shlex.quote(json.dumps(analyses))
         mock = ('gh() { return 1; }\n' if api_failure else
                 f'gh() {{ printf "%s" {response}; }}\n')
         return execute(mock + 'sleep() { :; }\n' + step('retire-legacy-category', 'legacy')['run'],
-                       LEGACY_CATEGORY='collector', SCAN_CATEGORY='collector:main@linux/arm64',
+                       LEGACY_CATEGORY='image', SCAN_CATEGORY='image:main@linux/arm64',
                        GRYPE_SCAN=str(enabled).lower(), TRIVY_SCAN='false',
                        GRYPE_SARIF_ID='new-id', TRIVY_SARIF_ID='',
                        GITHUB_REPOSITORY='owner/repo', GITHUB_REF='refs/heads/main', GITHUB_SHA='commit')
