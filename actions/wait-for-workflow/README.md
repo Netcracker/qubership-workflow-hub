@@ -82,7 +82,9 @@ jobs:
   1) If `workflow` is a numeric value — treated as workflow run ID.
   2) If `workflow` ends with `.yml` or `.yaml` — treated as workflow filename.
 - Workflow run detection:
-  - When `pr-number` is provided — looks for workflow runs triggered by that PR.
+  - When `pr-number` is provided — looks for `pull_request` runs linked to that PR or whose
+    `head_sha` matches the PR head commit. The head SHA match is what finds runs for PRs from
+    forks, because GitHub returns an empty `pull_requests` list for them.
   - Otherwise uses `sha` to match workflow runs for specific commit.
 - Timeouts:
   - `max-wait` controls how long to wait for the workflow to start.
@@ -98,6 +100,9 @@ permissions:
   contents: read   # to access repository information
   actions: read    # required to query workflow runs
 ```
+
+When `pr-number` is set, the action also reads the pull request to get its head SHA.
+For private repositories add `pull-requests: read`.
 
 ## Outputs
 
