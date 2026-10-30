@@ -4,6 +4,7 @@ on:
   workflow_dispatch: {}
   pull_request:
     paths:
+      - "actions/docker-action/action.yml"
       - "actions/docker-action/dockerfile_platform_check.py"
       - "actions/docker-action/tests/**"
       - ".github/workflows/test-docker-action-platform-check.yml"
@@ -28,3 +29,81 @@ jobs:
       - name: Test dockerfile_platform_check.py
         working-directory: actions/docker-action
         run: python3 -m unittest discover -s tests -v
+
+  action-step:
+    name: Test the platform-check step of docker-action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The Dockerfiles are written here rather than committed, so that repository
+      # linters do not report the defect the first one carries on purpose.
+      - name: Write a Dockerfile with ARCH001 and a control without findings
+        run: |
+          mkdir -p platform-check-fixture platform-check-control
+          cat > platform-check-fixture/Dockerfile <<'EOF'
+          FROM --platform=$BUILDPLATFORM alpine:3.22
+          EOF
+          cat > platform-check-control/Dockerfile <<'EOF'
+          FROM alpine:3.22
+          EOF
+
+      - name: Run docker-action with platform-check error on ARCH001
+        id: check-error
+        continue-on-error: true
+        uses: $/actions/docker-action
+        with:
+          checkout: "false"
+          dry-run: "true"
+          platforms: linux/amd64,linux/arm64
+          platform-check: error
+          component: '[{"name": "platform-check-fixture", "dockerfile": "./platform-check-fixture/Dockerfile", "build_context": "./platform-check-fixture"}]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run docker-action with platform-check error on the control
+        id: check-error-control
+        continue-on-error: true
+        uses: $/actions/docker-action
+        with:
+          checkout: "false"
+          dry-run: "true"
+          platforms: linux/amd64,linux/arm64
+          platform-check: error
+          component: '[{"name": "platform-check-control", "dockerfile": "./platform-check-control/Dockerfile", "build_context": "./platform-check-control"}]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run docker-action with platform-check warn on ARCH001
+        id: check-warn
+        continue-on-error: true
+        uses: $/actions/docker-action
+        with:
+          checkout: "false"
+          dry-run: "true"
+          platforms: linux/amd64,linux/arm64
+          component: '[{"name": "platform-check-fixture", "dockerfile": "./platform-check-fixture/Dockerfile", "build_context": "./platform-check-fixture"}]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify that platform-check error fails only on the finding
+        env:
+          ERROR_OUTCOME: ${{ steps.check-error.outcome }}
+          CONTROL_OUTCOME: ${{ steps.check-error-control.outcome }}
+          WARN_OUTCOME: ${{ steps.check-warn.outcome }}
+          WARN_ERRORS: ${{ steps.check-warn.outputs.platform-check-errors }}
+        run: |
+          echo "error on ARCH001: $ERROR_OUTCOME (want failure)"
+          echo "error on the control: $CONTROL_OUTCOME (want success)"
+          echo "warn on ARCH001: $WARN_OUTCOME with platform-check-errors=$WARN_ERRORS (want success with 1)"
+          if [ "$ERROR_OUTCOME" != "failure" ] || [ "$CONTROL_OUTCOME" != "success" ] \
+            || [ "$WARN_OUTCOME" != "success" ] || [ "$WARN_ERRORS" != "1" ]; then
+            echo "::error::docker-action platform-check did not behave as expected; see the outcomes above."
+            exit 1
+          fi

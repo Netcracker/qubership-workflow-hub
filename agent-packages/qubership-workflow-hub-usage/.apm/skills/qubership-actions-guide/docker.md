@@ -140,6 +140,7 @@ tags: ${{ steps.metadata-release.outputs.result || steps.metadata-push.outputs.r
 - `ref` — set only in release workflows: `refs/tags/v${{ inputs.release }}`; omit for CI builds
 - `checkout` — default `"true"`; set `"false"` only if repo already checked out in the same job
 - `download-artifact` / `download-artifact-name` / `download-artifact-path` — for separate build job
+- `platform-check` — default `"warn"`; set `"error"` once the Dockerfiles pass the check, so a multi-platform build fails on a stage that puts the wrong architecture into the image
 
 ---
 
