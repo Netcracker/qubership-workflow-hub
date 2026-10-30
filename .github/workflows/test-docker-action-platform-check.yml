@@ -1,0 +1,30 @@
+name: TEST docker-action platform check
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "actions/docker-action/dockerfile_platform_check.py"
+      - "actions/docker-action/tests/**"
+      - ".github/workflows/test-docker-action-platform-check.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test Dockerfile platform check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test dockerfile_platform_check.py
+        working-directory: actions/docker-action
+        run: python3 -m unittest discover -s tests -v
