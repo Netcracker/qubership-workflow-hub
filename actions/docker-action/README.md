@@ -286,7 +286,9 @@ with:
 When `platforms` lists more than one platform, the action checks the Dockerfile for stages that
 put the wrong architecture into the image, before it builds. With the default `platform-check: warn`
 each finding becomes a warning annotation on its Dockerfile line and the build continues; a notice
-prints the command that fixes the Dockerfile. A single-platform build is not checked.
+prints the command that fixes the Dockerfile. The job summary of the run gets a table of the
+findings, the diff that `--fix` applies, and the same command. A single-platform build is not
+checked.
 
 | Rule | Finds | Effect on the image | Severity |
 | ---- | ----- | ------------------- | -------- |

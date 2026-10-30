@@ -37,6 +37,7 @@ is given, and 0 otherwise.
 """
 
 import argparse
+import difflib
 import os
 import re
 import sys
@@ -333,6 +334,38 @@ def apply(lines, edits):
     return lines
 
 
+def summary(shown, lines, findings, edits):
+    """Return a Markdown section with the findings and the diff that --fix applies."""
+    out = [
+        "### Multi-platform Dockerfile check: `%s`" % shown,
+        "",
+        "| Rule | Line | Severity | Finding |",
+        "| --- | --- | --- | --- |",
+    ]
+    for finding in findings:
+        out.append(
+            "| %s | %d | %s | %s |"
+            % (
+                finding.rule,
+                finding.line,
+                finding.severity,
+                finding.message.replace("|", "\\|"),
+            )
+        )
+    out.append("")
+    # An inserted edit can hold several lines, so compare the text line by line.
+    before = [line + "\n" for line in "".join(lines).splitlines()]
+    after = [line + "\n" for line in "".join(apply(lines, edits)).splitlines()]
+    diff = list(difflib.unified_diff(before, after, shown, shown + " (fixed)"))
+    if diff:
+        out += ["The diff that `--fix` applies:", "", "````diff"]
+        out += [line.rstrip("\n") for line in diff]
+        out += ["````", ""]
+    if not all(finding.fixable for finding in findings):
+        out += ["`--fix` leaves some findings unchanged; fix them by hand.", ""]
+    return "\n".join(out) + "\n"
+
+
 def dockerfiles(paths):
     for path in paths:
         if os.path.isdir(path):
@@ -367,6 +400,11 @@ def main(argv=None):
         help="report every finding as a warning and exit with status 0",
     )
     parser.add_argument(
+        "--summary",
+        metavar="PATH",
+        help="append a Markdown summary of the findings and the fix diff to PATH",
+    )
+    parser.add_argument(
         "paths", nargs="+", help="Dockerfiles, or directories to search for them"
     )
     args = parser.parse_args(argv)
@@ -376,6 +414,9 @@ def main(argv=None):
             lines = fh.readlines()
         findings, edits = check(lines)
         shown = os.path.relpath(path)
+        if args.summary and findings:
+            with open(args.summary, "a", encoding="utf-8") as fh:
+                fh.write(summary(shown, lines, findings, edits))
         if args.fix and edits:
             fixed = apply(lines, edits)
             with open(path, "w", encoding="utf-8", newline="") as fh:

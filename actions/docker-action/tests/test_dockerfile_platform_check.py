@@ -34,6 +34,21 @@ class DockerfilePlatformCheckTests(unittest.TestCase):
             self.assertEqual(result.stderr, "")
             return result.returncode, result.stdout, path.read_bytes().decode()
 
+    def run_summary(self, dockerfile):
+        """Run the script with --summary and return the Markdown it wrote, or None."""
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "Dockerfile").write_text(dockerfile)
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "--summary", "summary.md", "Dockerfile"],
+                cwd=directory,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.stderr, "")
+            summary = Path(directory, "summary.md")
+            return summary.read_text() if summary.exists() else None
+
     def run_check(self, dockerfile, *flags):
         """Return (status, findings) where findings are (line, severity, rule) tuples."""
         status, stdout, _ = self.run_script(dockerfile, *flags)
@@ -285,6 +300,63 @@ class DockerfilePlatformCheckTests(unittest.TestCase):
         )
         self.assertRegex(
             stdout, r"^::error file=Dockerfile,line=1,title=ARCH001::The final stage "
+        )
+
+    def test_summary_lists_the_findings_and_the_diff_that_fix_applies(self):
+        summary = self.run_summary(
+            "FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder\n"
+            "RUN go build -o /app .\n"
+            "FROM alpine:3.22\n"
+            "COPY --from=builder /app /app\n"
+        )
+        self.assertIn(
+            "| ARCH002 | 2 | error | This stage runs on $BUILDPLATFORM", summary
+        )
+        self.assertIn(
+            "````diff\n"
+            "--- Dockerfile\n"
+            "+++ Dockerfile (fixed)\n"
+            "@@ -1,4 +1,6 @@\n"
+            " FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder\n"
+            "-RUN go build -o /app .\n"
+            "+ARG TARGETARCH\n"
+            "+ARG TARGETOS\n"
+            "+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /app .\n"
+            " FROM alpine:3.22\n"
+            " COPY --from=builder /app /app\n"
+            "````\n",
+            summary,
+        )
+        self.assertNotIn("fix them by hand", summary)
+
+    def test_summary_names_findings_that_fix_leaves_unchanged(self):
+        summary = self.run_summary(
+            "FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder\n"
+            "RUN go build -o /app .\n"
+            "RUN go run ./gen\n"
+            "FROM alpine:3.22\n"
+            "COPY --from=builder /app /app\n"
+        )
+        self.assertIn("| ARCH002 | 2 | error |", summary)
+        self.assertNotIn("````diff", summary)
+        self.assertIn(
+            "`--fix` leaves some findings unchanged; fix them by hand.", summary
+        )
+
+    def test_summary_is_not_written_for_a_dockerfile_without_findings(self):
+        """The control is the same Dockerfile without the ARG lines, which gets a summary.
+
+        test_summary_lists_the_findings_and_the_diff_that_fix_applies checks that one.
+        """
+        self.assertIsNone(
+            self.run_summary(
+                "FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder\n"
+                "ARG TARGETOS\n"
+                "ARG TARGETARCH\n"
+                "RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /app .\n"
+                "FROM alpine:3.22\n"
+                "COPY --from=builder /app /app\n"
+            )
         )
 
     def test_fix_keeps_crlf_line_endings(self):

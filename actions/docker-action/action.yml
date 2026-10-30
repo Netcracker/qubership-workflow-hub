@@ -451,7 +451,8 @@ runs:
 
         # The step shell runs with -e, so a non-zero status must not end the step here.
         status=0
-        output=$(python3 "$CHECK_SCRIPT" --format=github "$DOCKERFILE") || status=$?
+        summary_file=${GITHUB_STEP_SUMMARY:-/dev/null}
+        output=$(python3 "$CHECK_SCRIPT" --format=github --summary "$summary_file" "$DOCKERFILE") || status=$?
         errors=$(grep -c '^::error ' <<< "$output" || true)
         warnings=$(grep -c '^::warning ' <<< "$output" || true)
         echo "errors=$errors" >> "$GITHUB_OUTPUT"
@@ -466,6 +467,20 @@ runs:
           echo "::notice title=docker-action platform-check::$DOCKERFILE has $errors problem(s) that put the wrong architecture into the images for $FINAL_PLATFORMS. To fix them, run from the repository root: $fix, review the diff, and commit it. To fail the build on such problems, set platform-check: error; to skip the check, set platform-check: off."
         elif [ "$warnings" -gt 0 ]; then
           echo "::notice title=docker-action platform-check::$DOCKERFILE has $warnings finding(s) that do not change the architecture of the images, such as a Go stage that builds under QEMU emulation. To fix them, run from the repository root: $fix, review the diff, and commit it."
+        fi
+        if [ $((errors + warnings)) -gt 0 ]; then
+          {
+            if [ "$errors" -gt 0 ] && [ "$PLATFORM_CHECK" = "warn" ]; then
+              echo "The build continues because \`platform-check\` is \`warn\`; set it to \`error\` to fail the build on such problems."
+              echo
+            fi
+            echo "To apply the fix, run from the repository root, then review the diff and commit it:"
+            echo
+            echo '```bash'
+            echo "$fix"
+            echo '```'
+            echo
+          } >> "$summary_file"
         fi
 
         if [ "$status" -ne 0 ] && [ "$errors" -eq 0 ]; then
