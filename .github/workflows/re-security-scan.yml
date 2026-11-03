@@ -121,7 +121,7 @@ jobs:
 
       - name: Login to GHCR (for check)
         if: ${{ inputs.target == 'docker' }}
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f #v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -186,7 +186,7 @@ jobs:
     steps:
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f #v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -312,7 +312,7 @@ jobs:
       - name: Upload Grype SARIF
         id: upload-sarif
         if: inputs.upload-sarif-to-security
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370  # v4.39.1
         with:
           sarif_file: |
             ${{ needs.init.outputs.GRYPE_FILENAME }}
@@ -336,7 +336,7 @@ jobs:
     steps:
       - name: Login to GHCR (docker target)
         if: ${{ inputs.target == 'docker' }}
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f #v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -432,7 +432,7 @@ jobs:
       - name: Upload Trivy SARIF
         id: upload-sarif
         if: inputs.upload-sarif-to-security
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370  # v4.39.1
         with:
           sarif_file: ${{ needs.init.outputs.TRIVY_FILENAME }}
           category: ${{ needs.init.outputs.SCAN_CATEGORY || 'source' }}
@@ -510,14 +510,14 @@ jobs:
           done
       - name: Retire previous Grype instances
         if: steps.legacy.outputs.grype == 'true'
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: legacy-grype.sarif
           category: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}
           wait-for-processing: true
       - name: Retire previous Trivy instances
         if: steps.legacy.outputs.trivy == 'true'
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: legacy-trivy.sarif
           category: ${{ needs.init.outputs.IMAGE_SHORT_NAME }}

@@ -49,7 +49,7 @@ jobs:
 
       - name: Run verify-json
         id: verify
-        uses: ./actions/verify-json
+        uses: $/actions/verify-json
         with:
           json-file: /tmp/fixtures/valid.json
           schema-file: /tmp/fixtures/schema.json
@@ -104,7 +104,7 @@ jobs:
       - name: Run verify-json (must fail on schema violation)
         id: verify
         continue-on-error: true
-        uses: ./actions/verify-json
+        uses: $/actions/verify-json
         with:
           json-file: /tmp/fixtures/invalid.json
           schema-file: /tmp/fixtures/schema.json

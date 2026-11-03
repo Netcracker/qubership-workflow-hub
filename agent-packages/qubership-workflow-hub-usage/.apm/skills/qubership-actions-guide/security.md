@@ -92,6 +92,7 @@ Does not scan images — scans live deployments for hardening compliance.
 | Do you have a hardening config file? If yes — what is its path? | If yes — read it. If no — ask if any built-in rules should be suppressed, and confirm `.qubership/hardening-config.yaml` as the default path (passed via `config-file` input). |
 
 Default — do not ask: Trivy scan for Helm chart misconfigurations is `false` (Kubescape only) unless user requests it.
+The action installs a pinned Trivy CLI version internally; no separate Trivy installation step or version input is needed.
 
 ### `.qubership/hardening-config.yaml` schema
 
