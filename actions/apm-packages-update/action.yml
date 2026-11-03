@@ -87,13 +87,13 @@ runs:
 
     - name: Setup default APM version
       if: ${{ steps.resolve-version.outputs.version == '' }}
-      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
+      uses: microsoft/apm-action@d723bb64ed70c135bbaf87d126b721dd2dae0439  # v1.10.0
       with:
         setup-only: "true"
 
     - name: Setup resolved APM version
       if: ${{ steps.resolve-version.outputs.version != '' }}
-      uses: microsoft/apm-action@e5650fb81c4b5965090a17bd1ed1956071e95d17  # v1.9.1
+      uses: microsoft/apm-action@d723bb64ed70c135bbaf87d126b721dd2dae0439  # v1.10.0
       with:
         setup-only: "true"
         apm-version: ${{ steps.resolve-version.outputs.version }}
