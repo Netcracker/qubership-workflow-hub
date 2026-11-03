@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 #v7.1.0
         with:
-          node-version: '24'
+          node-version: '26'
 
       - name: Install dependencies
         working-directory: actions/assets-action
@@ -71,7 +71,7 @@ jobs:
             --prerelease || true
 
       - name: Run Assets Action
-        uses: ./actions/assets-action
+        uses: $/actions/assets-action
         with:
           tag: test-assets-action-${{ github.run_id }}
           item-path: /tmp/test-assets

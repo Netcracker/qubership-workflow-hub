@@ -18,7 +18,7 @@ jobs:
 
       - name: Run Metadata Action
         id: metadata
-        uses: ./actions/metadata-action
+        uses: $/actions/metadata-action
         with:
           show-report: "true"
 
@@ -103,7 +103,7 @@ jobs:
 
       - name: Run Metadata Action
         id: metadata
-        uses: ./actions/metadata-action
+        uses: $/actions/metadata-action
         with:
           ref: "refs/heads/feature/test-branch"
           default-template: "custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}"
@@ -187,7 +187,7 @@ jobs:
 
       - name: Run Metadata Action with GitHub Context
         id: metadata
-        uses: ./actions/metadata-action
+        uses: $/actions/metadata-action
         with:
           default-template: "build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}"
           default-tag: "context-tag"
@@ -238,7 +238,7 @@ jobs:
 
       - name: Run Metadata Action with inline length modifier
         id: metadata
-        uses: ./actions/metadata-action
+        uses: $/actions/metadata-action
         with:
           ref: "refs/heads/feature/my-long-branch-name"
           default-template: "{{ref-name:7}}-{{short-sha:4}}"
@@ -270,7 +270,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 #v7.1.0
         with:
-          node-version: '24'
+          node-version: '26'
 
       - name: Install dependencies
         working-directory: actions/metadata-action
