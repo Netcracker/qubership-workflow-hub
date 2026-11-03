@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@octokit/types": "18.0.0",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "@vercel/ncc": "0.45.0",
     "ts-jest": "29.4.15",
     "typescript": "5.9.3"
