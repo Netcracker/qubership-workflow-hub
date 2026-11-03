@@ -50,7 +50,7 @@ jobs:
           persist-credentials: false
 
       - name: Run PR Assigner
-        uses: ./actions/pr-assigner
+        uses: $/actions/pr-assigner
         with:
           configuration-path: .github/pr-assigner-config.yml
           shuffle: "1"

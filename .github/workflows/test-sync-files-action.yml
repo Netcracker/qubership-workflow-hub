@@ -39,7 +39,7 @@ jobs:
 
       - name: Run sync-files-action
         id: sync
-        uses: ./actions/sync-files-action
+        uses: $/actions/sync-files-action
         with:
           files: |
             [

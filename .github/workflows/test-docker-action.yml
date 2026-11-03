@@ -18,7 +18,7 @@ jobs:
 
       - name: Run Docker Action without Component Name
         id: docker-default-name
-        uses: ./actions/docker-action
+        uses: $/actions/docker-action
         with:
           dry-run: "true"
           registry: "ghcr.io"
@@ -76,7 +76,7 @@ jobs:
 
       - name: Run Docker Action with Auto Tags
         id: docker-auto
-        uses: ./actions/docker-action
+        uses: $/actions/docker-action
         with:
           dry-run: "true"
           registry: "ghcr.io"
@@ -165,7 +165,7 @@ jobs:
 
       - name: Run Docker Action with Custom Tags
         id: docker-custom
-        uses: ./actions/docker-action
+        uses: $/actions/docker-action
         with:
           dry-run: "true"
           registry: "ghcr.io"
@@ -247,7 +247,7 @@ jobs:
 
       - name: Run Docker Action with Build Args from Input
         id: docker-buildargs-input
-        uses: ./actions/docker-action
+        uses: $/actions/docker-action
         with:
           dry-run: "true"
           registry: "ghcr.io"
@@ -297,7 +297,7 @@ jobs:
 
       - name: Run Docker Action with Multiple Platforms
         id: docker-multiplatform
-        uses: ./actions/docker-action
+        uses: $/actions/docker-action
         with:
           dry-run: "true"
           registry: "ghcr.io"
@@ -354,7 +354,7 @@ jobs:
 
       - name: Run Docker Action with Deprecated Component Keys
         id: docker-aliases
-        uses: ./actions/docker-action
+        uses: $/actions/docker-action
         with:
           dry-run: "true"
           registry: "ghcr.io"

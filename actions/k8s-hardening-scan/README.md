@@ -210,6 +210,7 @@ jobs:
   configured before calling this action).
 - Kubescape is installed at a pinned commit SHA — update the install step if a newer version
   is required.
+- Trivy is installed at the pinned version `0.76.1` — update the `version` input if upgrading it.
 - `fail-on-mandatory-checks: 'true'` causes the job to fail only when `failed_mandatory_checks.json`
   is present in the workspace, which is written when at least one mandatory check fails.
 - The Trivy scan checks out the repository into `temp/repocode`; ensure this path does not
