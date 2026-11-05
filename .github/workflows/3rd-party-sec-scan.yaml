@@ -45,7 +45,7 @@ env:
   ORG_PREFIX: 'ghcr.io/netcracker'
 jobs:
   init:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -69,7 +69,7 @@ jobs:
 
   process-repos:
     needs: init
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: "${{ matrix.repo }}"
     strategy:
       fail-fast: false
@@ -226,7 +226,7 @@ jobs:
 
   combine-results:
     needs: process-repos
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     if: always()
     steps:
       - name: Download all artifacts
