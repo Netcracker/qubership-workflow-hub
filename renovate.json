@@ -1,13 +1,30 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>Netcracker/renovate-config:org-inherited-config"],
-  "enabledManagers": ["github-actions", "npm"],
+  "extends": [
+    "github>Netcracker/renovate-config:org-inherited-config",
+    "github>Netcracker/renovate-config:automerge"
+  ],
+  "enabledManagers": [
+    "github-actions",
+    "npm"
+  ],
   "packageRules": [
     {
       "description": "Allow GitHub Actions updates on every available run",
-      "matchManagers": ["github-actions"],
-      "schedule": ["at any time"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "schedule": [
+        "at any time"
+      ],
       "minimumReleaseAge": "0 days"
+    },
+    {
+      "description": "Keep npm updates for manual review: actions ship a committed dist/ bundle that Renovate does not rebuild",
+      "matchManagers": [
+        "npm"
+      ],
+      "automerge": false
     }
   ]
 }
