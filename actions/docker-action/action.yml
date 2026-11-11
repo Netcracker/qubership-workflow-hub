@@ -93,6 +93,10 @@ inputs:
   cache-to:
     description: "Cache destinations for the build."
     required: false
+  platform-check:
+    description: "How to report Dockerfile stages that put the wrong architecture into a multi-platform image: `warn` annotates them, `error` also fails the build, `off` skips the check. The check runs only when more than one platform is built."
+    required: false
+    default: "warn"
 
 outputs:
   image-name:
@@ -128,6 +132,9 @@ outputs:
   final-platforms:
     description: "The final platforms for which the Docker image was built."
     value: "${{ steps.prepare-final-params.outputs.platforms }}"
+  platform-check-errors:
+    description: "Number of error-level findings of the multi-platform Dockerfile check; empty when the check did not run."
+    value: "${{ steps.platform-check.outputs.errors }}"
 
 runs:
   using: "composite"
@@ -409,6 +416,81 @@ runs:
         } >> "$GITHUB_OUTPUT"
 
         echo "platforms=$FINAL_PLATFORMS" >> "$GITHUB_OUTPUT"
+
+    - name: Check Dockerfile for multi-platform builds
+      id: platform-check
+      if: ${{ inputs.platform-check != 'off' }}
+      shell: bash
+      env:
+        PLATFORM_CHECK: ${{ inputs.platform-check }}
+        DOCKERFILE: ${{ steps.extract_component.outputs.file }}
+        CHECK_SCRIPT: ${{ github.action_path }}/dockerfile_platform_check.py
+        ACTION_REF: ${{ github.action_ref }}
+      run: |
+        set -uo pipefail
+
+        case "$PLATFORM_CHECK" in
+          warn | error) ;;
+          *)
+            echo "::error title=docker-action::platform-check is '$PLATFORM_CHECK', expected one of warn, error, off."
+            exit 1
+            ;;
+        esac
+        if [[ "$FINAL_PLATFORMS" != *,* ]]; then
+          echo "platform-check: $FINAL_PLATFORMS is a single platform, nothing to check."
+          exit 0
+        fi
+        if ! command -v python3 >/dev/null; then
+          echo "::warning title=docker-action::platform-check skipped: python3 is not on the runner's PATH. Install Python 3 on the runner, or set platform-check: off."
+          exit 0
+        fi
+        if [ ! -f "$DOCKERFILE" ]; then
+          echo "::warning title=docker-action::platform-check skipped: $DOCKERFILE does not exist in $PWD."
+          exit 0
+        fi
+
+        # The step shell runs with -e, so a non-zero status must not end the step here.
+        status=0
+        summary_file=${GITHUB_STEP_SUMMARY:-/dev/null}
+        output=$(python3 "$CHECK_SCRIPT" --format=github --summary "$summary_file" "$DOCKERFILE") || status=$?
+        errors=$(grep -c '^::error ' <<< "$output" || true)
+        warnings=$(grep -c '^::warning ' <<< "$output" || true)
+        echo "errors=$errors" >> "$GITHUB_OUTPUT"
+        if [ "$PLATFORM_CHECK" = "warn" ]; then
+          # shellcheck disable=SC2001 # the replacement is anchored at the start of each line
+          output=$(sed 's/^::error /::warning /' <<< "$output")
+        fi
+        echo "$output"
+
+        fix="curl -fsSL https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/${ACTION_REF:-main}/actions/docker-action/dockerfile_platform_check.py | python3 - --fix $DOCKERFILE"
+        if [ "$errors" -gt 0 ]; then
+          echo "::notice title=docker-action platform-check::$DOCKERFILE has $errors problem(s) that put the wrong architecture into the images for $FINAL_PLATFORMS. To fix them, run from the repository root: $fix, review the diff, and commit it. To fail the build on such problems, set platform-check: error; to skip the check, set platform-check: off."
+        elif [ "$warnings" -gt 0 ]; then
+          echo "::notice title=docker-action platform-check::$DOCKERFILE has $warnings finding(s) that do not change the architecture of the images, such as a Go stage that builds under QEMU emulation. To fix them, run from the repository root: $fix, review the diff, and commit it."
+        fi
+        if [ $((errors + warnings)) -gt 0 ]; then
+          {
+            if [ "$errors" -gt 0 ] && [ "$PLATFORM_CHECK" = "warn" ]; then
+              echo "The build continues because \`platform-check\` is \`warn\`; set it to \`error\` to fail the build on such problems."
+              echo
+            fi
+            echo "To apply the fix, run from the repository root, then review the diff and commit it:"
+            echo
+            echo '```bash'
+            echo "$fix"
+            echo '```'
+            echo
+          } >> "$summary_file"
+        fi
+
+        if [ "$status" -ne 0 ] && [ "$errors" -eq 0 ]; then
+          echo "::warning title=docker-action::platform-check skipped: the check script exited with status $status without reporting a finding."
+          exit 0
+        fi
+        if [ "$errors" -gt 0 ] && [ "$PLATFORM_CHECK" = "error" ]; then
+          exit 1
+        fi
+        exit 0
 
     - name: Build and Push Docker Image
       uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
