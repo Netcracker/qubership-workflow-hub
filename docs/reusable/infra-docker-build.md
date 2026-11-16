@@ -23,6 +23,7 @@ parallel with `docker-action`.
 | `config-file` | Path to the JSON Docker components configuration file. The file must contain a `components` array. | Yes | - |
 | `diff-build` | When `"true"`, only components whose `changeset` path matches a changed file are built. | No | `"true"` |
 | `max-parallel` | Maximum number of component build jobs that may run in parallel. | No | `4` |
+| `platform-check` | Passed to `docker-action`: `warn` annotates Dockerfile stages that put the wrong architecture into a multi-platform image, `error` also fails the build, `off` skips the check. See [Multi-Platform Dockerfile Check](../../actions/docker-action/README.md#multi-platform-dockerfile-check). | No | `"warn"` |
 
 ## 📌 Secrets
 

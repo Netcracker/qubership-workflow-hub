@@ -22,6 +22,8 @@ and produces a signed metadata JSON artifact after a successful push.
 - Produces a metadata JSON file (image name, digest, version) and uploads it as a workflow
   artifact after a successful push.
 - `dry-run: true` builds the image locally without pushing and skips metadata upload.
+- Checks the Dockerfile of a multi-platform build for stages that put the wrong architecture into
+  the image, and prints the command that fixes them (`platform-check`).
 
 ---
 
@@ -45,6 +47,7 @@ and produces a signed metadata JSON artifact after a successful push.
 | `download-artifact-path`           | Destination path for downloaded artifacts. Defaults to `$GITHUB_WORKSPACE`.                                | No       | `""`                                                                        |
 | `download-artifact-pattern`        | Glob pattern for artifacts to download. Ignored if `download-artifact-name` is set.                        | No       | `""`                                                                        |
 | `dry-run`                          | Build without pushing. Skips registry login validation, push, and metadata upload.                         | No       | `"false"`                                                                   |
+| `platform-check`                   | How to report Dockerfile stages that put the wrong architecture into a multi-platform image: `warn` annotates them, `error` also fails the build, `off` skips the check. See [Multi-Platform Dockerfile Check](#multi-platform-dockerfile-check). | No       | `"warn"`                                                                    |
 | `platforms`                        | Target platforms for the build (comma-separated, e.g. `linux/amd64,linux/arm64`).                          | No       | `"linux/amd64"`                                                             |
 | `ref`                              | Git ref (branch, tag, or SHA) to checkout. Ignored when `checkout` is `false`.                             | No       | `""`                                                                        |
 | `registry`                         | Target registry: `ghcr.io`, `docker.io`, or `ghcr.io,docker.io` for both.                                  | No       | `"ghcr.io"`                                                                 |
@@ -71,6 +74,7 @@ and produces a signed metadata JSON artifact after a successful push.
 | `final-labels`         | OCI labels applied to the image (from `docker/metadata-action`).                      |
 | `final-build-args`     | Final build arguments passed to `docker buildx build` (newline-delimited).            |
 | `final-platforms`      | Platforms passed to the build.                                                        |
+| `platform-check-errors` | Number of error-level findings of the [Multi-Platform Dockerfile Check](#multi-platform-dockerfile-check), counted in `warn` mode too. Empty when the check did not run. |
 
 ---
 
@@ -91,6 +95,9 @@ is empty the action delegates tag generation to `docker/metadata-action`, which 
 the branch name, semver ref, and PR number. When `tags` is provided (comma-separated), each value
 is prefixed with every configured registry URL and **converted to lowercase** — Docker image
 references must be lowercase and the action enforces this automatically.
+
+When `platforms` lists more than one platform, the action checks the Dockerfile before the build
+(see [Multi-Platform Dockerfile Check](#multi-platform-dockerfile-check)).
 
 Build arguments are merged: `component.arguments` takes full precedence over the `build-args`
 input — if `component.arguments` is non-empty, `build-args` is ignored entirely.
@@ -274,6 +281,47 @@ with:
   setup-buildx: false
 ```
 
+### Multi-Platform Dockerfile Check
+
+When `platforms` lists more than one platform, the action checks the Dockerfile for stages that
+put the wrong architecture into the image, before it builds. With the default `platform-check: warn`
+each finding becomes a warning annotation on its Dockerfile line and the build continues; a notice
+prints the command that fixes the Dockerfile. The job summary of the run gets a table of the
+findings, the diff that `--fix` applies, and the same command. A single-platform build is not
+checked.
+
+| Rule | Finds | Effect on the image | Severity |
+| ---- | ----- | ------------------- | -------- |
+| `ARCH001` | The final stage uses `--platform=$BUILDPLATFORM` | Every image contains the runner's binaries | error |
+| `ARCH002` | A stage on `$BUILDPLATFORM` runs `go build` without `GOARCH` | Every image gets a Go binary for the runner's architecture | error |
+| `ARCH003` | `GOARCH` is hard-coded in `go build`, `ENV`, or `ARG`, such as `GOARCH=amd64` | Every image gets that architecture | error |
+| `ARCH004` | The stage reads `$TARGETARCH` or `$TARGETOS` without `ARG TARGETARCH` or `ARG TARGETOS` after `FROM` | The variable is empty. On `$BUILDPLATFORM`, Go then builds for the runner's architecture; under emulation, Go still builds for the target | error on `$BUILDPLATFORM`, otherwise warning |
+| `ARCH005` | A Go builder stage with CGO disabled has no `--platform=$BUILDPLATFORM` | The image is correct, but the stage runs under QEMU and builds several times slower | warning |
+
+To fix the Dockerfile, run the script with `--fix` from the repository root, review the diff, and
+commit it. Replace `vX.Y.Z` with the release your workflow pins:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/netcracker/qubership-workflow-hub/vX.Y.Z/actions/docker-action/dockerfile_platform_check.py \
+  | python3 - --fix path/to/Dockerfile
+```
+
+`--fix` does not apply the `ARCH002` fix to a stage that also runs `go install`, `go run`,
+`go generate`, `go test`, or a command that may run a binary the stage built, because those need
+binaries for the runner. Fix such a stage by hand.
+
+Set `platform-check: error` to fail the build on an error-level finding, or `off` to skip the check:
+
+```yaml
+with:
+  platforms: linux/amd64,linux/arm64
+  platform-check: error
+```
+
+The check reads only the Dockerfile. A `GOARCH` set in a script or a `Makefile` that the Dockerfile
+runs is not visible to it. The check needs `python3` on the runner; without it, or when the check
+script fails, the action prints a warning and skips the check.
+
 ### Artifact Download
 
 Download a build artifact before the Docker build:
@@ -366,5 +414,8 @@ jobs:
   the runner. Single-platform (`linux/amd64`) builds do not need QEMU.
 - **`image-name` output is empty:** this output is only set after a successful push (`dry-run:
   false`). In dry-run mode the metadata step is skipped entirely.
+- **`ARCH001`–`ARCH005` annotations on the Dockerfile:** the image built for some platform contains
+  binaries of another architecture, or a Go stage runs under emulation. See
+  [Multi-Platform Dockerfile Check](#multi-platform-dockerfile-check) for the fix command.
 - **Component build args ignored:** if `component.arguments` is non-empty it overrides `build-args`
   completely — check your component descriptor.

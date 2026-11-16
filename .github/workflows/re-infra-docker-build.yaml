@@ -32,6 +32,11 @@ on:
         type: number
         default: 4
         description: "Maximum number of parallel jobs"
+      platform-check:
+        required: false
+        type: string
+        default: "warn"
+        description: "Passed to docker-action: warn, error, or off for the multi-platform Dockerfile check"
 
 permissions:
   contents: read
@@ -153,5 +158,6 @@ jobs:
           tags: ${{ needs.prepare.outputs.tags }}
           cache-from: type=gha,scope=${{ matrix.component.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.component.name }}
+          platform-check: ${{ inputs.platform-check }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
