@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import yaml from "js-yaml";
+import { load as loadYaml } from "js-yaml";
 import * as core from "@actions/core";
 import path from "node:path";
 import log from "@qubership/action-logger";
@@ -57,7 +57,7 @@ class ConfigLoader {
 
     let config;
     try {
-      config = yaml.load(fileContent);
+      config = loadYaml(fileContent);
       if (debug) {
         log.dim("🔍 Loaded configuration YAML:", JSON.stringify(config, null, 2));
         log.dim("🔑 Object Keys:", Object.keys(config));
