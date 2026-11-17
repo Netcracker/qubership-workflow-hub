@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 #v7.1.0
@@ -43,11 +43,6 @@ jobs:
         working-directory: actions/metadata-action
         run: npm ci
 
-      - name: Run unit tests
-        id: tests
-        working-directory: actions/metadata-action
-        run: npm test
-
       - name: Build dist
         id: build
         working-directory: actions/metadata-action
@@ -56,15 +51,25 @@ jobs:
           npm run build
           test -s dist/index.js
 
-      - name: Run rebuilt bundle for default-template
-        id: run-default-template
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+      - name: Compare checked-in and rebuilt dist
+        id: verify-dist
         run: |
-          env \
-            'INPUT_SHOW-REPORT=true' \
-            'INPUT_SHORT-SHA=7' \
-            'INPUT_MERGE-TAGS=true' \
-            node actions/metadata-action/dist/index.js
+          if ! git diff --quiet -- actions/metadata-action/dist/; then
+            echo "::error::Rebuild and commit metadata-action/dist in the PR branch before running action tests."
+            exit 1
+          fi
+
+      - name: Run unit tests
+        id: tests
+        working-directory: actions/metadata-action
+        run: npm test
+
+      - name: Run Metadata Action
+        id: run-default-template
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
+        uses: $/actions/metadata-action
+        with:
+          show-report: "true"
 
       - name: Verify Outputs
         id: default-template
@@ -139,19 +144,17 @@ jobs:
 
           echo "✅ Default template test passed!"
 
-      - name: Run rebuilt bundle for custom-template
+      - name: Run Metadata Action
         id: run-custom-template
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: |
-          env \
-            'INPUT_REF=refs/heads/feature/test-branch' \
-            'INPUT_DEFAULT-TEMPLATE=custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}' \
-            'INPUT_DEFAULT-TAG=custom-tag' \
-            'INPUT_SHORT-SHA=10' \
-            'INPUT_REPLACE-SYMBOL=_' \
-            'INPUT_SHOW-REPORT=true' \
-            'INPUT_MERGE-TAGS=true' \
-            node actions/metadata-action/dist/index.js
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
+        uses: $/actions/metadata-action
+        with:
+          ref: "refs/heads/feature/test-branch"
+          default-template: "custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}"
+          default-tag: "custom-tag"
+          short-sha: "10"
+          replace-symbol: "_"
+          show-report: "true"
 
       - name: Verify Outputs
         id: custom-template
@@ -220,17 +223,14 @@ jobs:
 
           echo "✅ Custom template test passed!"
 
-      - name: Run rebuilt bundle for github-context
+      - name: Run Metadata Action with GitHub Context
         id: run-github-context
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: |
-          env \
-            'INPUT_DEFAULT-TEMPLATE=build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}' \
-            'INPUT_DEFAULT-TAG=context-tag' \
-            'INPUT_SHOW-REPORT=true' \
-            'INPUT_SHORT-SHA=7' \
-            'INPUT_MERGE-TAGS=true' \
-            node actions/metadata-action/dist/index.js
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
+        uses: $/actions/metadata-action
+        with:
+          default-template: "build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}"
+          default-tag: "context-tag"
+          show-report: "true"
 
       - name: Verify GitHub Context Outputs
         id: github-context
@@ -269,17 +269,14 @@ jobs:
 
           echo "✅ GitHub context test passed!"
 
-      - name: Run rebuilt bundle for inline-length-modifier
+      - name: Run Metadata Action with inline length modifier
         id: run-inline-length-modifier
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: |
-          env \
-            'INPUT_REF=refs/heads/feature/my-long-branch-name' \
-            'INPUT_DEFAULT-TEMPLATE={{ref-name:7}}-{{short-sha:4}}' \
-            'INPUT_SHOW-REPORT=true' \
-            'INPUT_SHORT-SHA=7' \
-            'INPUT_MERGE-TAGS=true' \
-            node actions/metadata-action/dist/index.js
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
+        uses: $/actions/metadata-action
+        with:
+          ref: "refs/heads/feature/my-long-branch-name"
+          default-template: "{{ref-name:7}}-{{short-sha:4}}"
+          show-report: "true"
 
       - name: Verify inline length modifier
         id: inline-length-modifier
@@ -297,11 +294,6 @@ jobs:
           fi
 
           echo "✅ Inline length modifier test passed!"
-
-      - name: Compare checked-in and rebuilt dist
-        id: verify-dist
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: git diff --exit-code -- actions/metadata-action/dist/
 
   report:
     name: Metadata Action Report
