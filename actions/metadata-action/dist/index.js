@@ -34082,26 +34082,61 @@ var CHOMPING_KEEP = CHOMPING_MODE.KEEP;
 // src/loader.js
 var import_node_path = __toESM(require("node:path"), 1);
 var import_ajv = __toESM(require_ajv(), 1);
+
+// config.schema.json
+var config_schema_default = {
+  $schema: "http://json-schema.org/draft-07/schema#",
+  title: "Metadata configuration file schema",
+  type: "object",
+  properties: {
+    "branches-template": {
+      type: "array",
+      minItems: 1,
+      items: {
+        type: "object",
+        minProperties: 1,
+        maxProperties: 1,
+        patternProperties: {
+          "^[-a-zA-Z0-9_*/]+$": {
+            type: "string"
+          }
+        },
+        additionalProperties: false
+      }
+    },
+    "distribution-tag": {
+      type: "array",
+      minItems: 1,
+      items: {
+        type: "object",
+        minProperties: 1,
+        maxProperties: 1,
+        patternProperties: {
+          "^[-a-zA-Z0-9_*/]+$": {
+            type: "string"
+          }
+        },
+        additionalProperties: false
+      }
+    },
+    "default-tag": {
+      type: "string"
+    },
+    "default-template": {
+      type: "string"
+    }
+  },
+  additionalProperties: false
+};
+
+// src/loader.js
 var cachedValidator = null;
 function getValidator() {
   if (cachedValidator) {
     return cachedValidator;
   }
-  const schemaPath = import_node_path.default.resolve(__dirname, "..", "config.schema.json");
-  if (!import_node_fs.default.existsSync(schemaPath)) {
-    setFailed(`\u2757\uFE0F Schema file not found: ${schemaPath}`);
-    return null;
-  }
-  const schemaContent = import_node_fs.default.readFileSync(schemaPath, "utf8");
-  let schema;
-  try {
-    schema = JSON.parse(schemaContent);
-  } catch (error2) {
-    setFailed(`\u2757\uFE0F Error parsing JSON schema: ${error2.message}`);
-    return null;
-  }
   const ajv = new import_ajv.default();
-  cachedValidator = ajv.compile(schema);
+  cachedValidator = ajv.compile(config_schema_default);
   return cachedValidator;
 }
 var ConfigLoader = class {
@@ -34132,9 +34167,6 @@ var ConfigLoader = class {
       return null;
     }
     const validate = getValidator();
-    if (!validate) {
-      return null;
-    }
     const valid = validate(config);
     if (!valid) {
       const errors = new import_ajv.default().errorsText(validate.errors);

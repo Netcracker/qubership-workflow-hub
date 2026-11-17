@@ -4,6 +4,7 @@ import * as core from "@actions/core";
 import path from "node:path";
 import log from "@qubership/action-logger";
 import Ajv from "ajv";
+import schema from "../config.schema.json" with { type: "json" };
 
 // Cache schema and validator for performance
 let cachedValidator = null;
@@ -11,22 +12,6 @@ let cachedValidator = null;
 function getValidator() {
   if (cachedValidator) {
     return cachedValidator;
-  }
-
-  const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
-  if (!fs.existsSync(schemaPath)) {
-    core.setFailed(`❗️ Schema file not found: ${schemaPath}`);
-    return null;
-  }
-
-  const schemaContent = fs.readFileSync(schemaPath, 'utf8');
-
-  let schema;
-  try {
-    schema = JSON.parse(schemaContent);
-  } catch (error) {
-    core.setFailed(`❗️ Error parsing JSON schema: ${error.message}`);
-    return null;
   }
 
   const ajv = new Ajv();
@@ -68,10 +53,6 @@ class ConfigLoader {
     }
 
     const validate = getValidator();
-    if (!validate) {
-      return null;
-    }
-
     const valid = validate(config);
     if (!valid) {
       const errors = new Ajv().errorsText(validate.errors);
