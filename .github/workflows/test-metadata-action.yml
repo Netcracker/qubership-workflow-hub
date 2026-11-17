@@ -16,42 +16,69 @@ permissions:
   contents: read
 
 jobs:
-  test-default-template:
-    needs: unit-tests
-    name: Test Default Template
+  unit-tests:
+    name: Build and Test Metadata Action
+    outputs:
+      tests: ${{ steps.tests.outcome }}
+      build: ${{ steps.build.outcome }}
+      default-template: ${{ steps.run-default-template.outcome == 'failure' && 'failure' || steps.default-template.outcome }}
+      custom-template: ${{ steps.run-custom-template.outcome == 'failure' && 'failure' || steps.custom-template.outcome }}
+      github-context: ${{ steps.run-github-context.outcome == 'failure' && 'failure' || steps.github-context.outcome }}
+      inline-length: ${{ steps.run-inline-length-modifier.outcome == 'failure' && 'failure' || steps.inline-length-modifier.outcome }}
+      dist: ${{ steps.verify-dist.outcome }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Remove checked-in dist
-        run: rm -rf actions/metadata-action/dist
-
-      - name: Download rebuilt dist
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 #v7.1.0
         with:
-          name: metadata-action-dist-${{ github.run_id }}
-          path: actions/metadata-action/dist
+          node-version: '26'
 
-      - name: Run Metadata Action
-        id: metadata
-        uses: $/actions/metadata-action
-        with:
-          show-report: "true"
+      - name: Install dependencies
+        working-directory: actions/metadata-action
+        run: npm ci
+
+      - name: Run unit tests
+        id: tests
+        working-directory: actions/metadata-action
+        run: npm test
+
+      - name: Build dist
+        id: build
+        working-directory: actions/metadata-action
+        run: |
+          rm -f dist/index.js
+          npm run build
+          test -s dist/index.js
+
+      - name: Run rebuilt bundle for default-template
+        id: run-default-template
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          env \
+            'INPUT_SHOW-REPORT=true' \
+            'INPUT_SHORT-SHA=7' \
+            'INPUT_MERGE-TAGS=true' \
+            node actions/metadata-action/dist/index.js
 
       - name: Verify Outputs
+        id: default-template
+        if: ${{ !cancelled() && steps.run-default-template.outcome == 'success' }}
         shell: bash
         env:
-          RESULT: ${{ steps.metadata.outputs.result }}
-          REF: ${{ steps.metadata.outputs.ref }}
-          REF_NAME: ${{ steps.metadata.outputs.ref-name }}
-          DATE: ${{ steps.metadata.outputs.date }}
-          TIME: ${{ steps.metadata.outputs.time }}
-          TIMESTAMP: ${{ steps.metadata.outputs.timestamp }}
-          DIST_TAG: ${{ steps.metadata.outputs.dist-tag }}
-          SHORT_SHA: ${{ steps.metadata.outputs.short-sha }}
+          RESULT: ${{ steps.run-default-template.outputs.result }}
+          REF: ${{ steps.run-default-template.outputs.ref }}
+          REF_NAME: ${{ steps.run-default-template.outputs.ref-name }}
+          DATE: ${{ steps.run-default-template.outputs.date }}
+          TIME: ${{ steps.run-default-template.outputs.time }}
+          TIMESTAMP: ${{ steps.run-default-template.outputs.timestamp }}
+          DIST_TAG: ${{ steps.run-default-template.outputs.dist-tag }}
+          SHORT_SHA: ${{ steps.run-default-template.outputs.short-sha }}
           RUN_NUMBER: ${{ github.run_number }}
         run: |
           echo "=== Outputs ==="
@@ -112,49 +139,35 @@ jobs:
 
           echo "✅ Default template test passed!"
 
-  test-custom-template:
-    needs: unit-tests
-    name: Test Custom Template
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Remove checked-in dist
-        run: rm -rf actions/metadata-action/dist
-
-      - name: Download rebuilt dist
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: metadata-action-dist-${{ github.run_id }}
-          path: actions/metadata-action/dist
-
-      - name: Run Metadata Action
-        id: metadata
-        uses: $/actions/metadata-action
-        with:
-          ref: "refs/heads/feature/test-branch"
-          default-template: "custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}"
-          default-tag: "custom-tag"
-          short-sha: "10"
-          replace-symbol: "_"
-          show-report: "true"
+      - name: Run rebuilt bundle for custom-template
+        id: run-custom-template
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          env \
+            'INPUT_REF=refs/heads/feature/test-branch' \
+            'INPUT_DEFAULT-TEMPLATE=custom-{{ref-name}}-{{date}}-{{time}}-{{short-sha}}' \
+            'INPUT_DEFAULT-TAG=custom-tag' \
+            'INPUT_SHORT-SHA=10' \
+            'INPUT_REPLACE-SYMBOL=_' \
+            'INPUT_SHOW-REPORT=true' \
+            'INPUT_MERGE-TAGS=true' \
+            node actions/metadata-action/dist/index.js
 
       - name: Verify Outputs
+        id: custom-template
+        if: ${{ !cancelled() && steps.run-custom-template.outcome == 'success' }}
         shell: bash
         env:
-          RESULT: ${{ steps.metadata.outputs.result }}
-          REF: ${{ steps.metadata.outputs.ref }}
-          REF_NAME: ${{ steps.metadata.outputs.ref-name }}
-          DATE: ${{ steps.metadata.outputs.date }}
-          TIME: ${{ steps.metadata.outputs.time }}
-          DIST_TAG: ${{ steps.metadata.outputs.dist-tag }}
-          SHORT_SHA: ${{ steps.metadata.outputs.short-sha }}
-          MAJOR: ${{ steps.metadata.outputs.major }}
-          MINOR: ${{ steps.metadata.outputs.minor }}
-          PATCH: ${{ steps.metadata.outputs.patch }}
+          RESULT: ${{ steps.run-custom-template.outputs.result }}
+          REF: ${{ steps.run-custom-template.outputs.ref }}
+          REF_NAME: ${{ steps.run-custom-template.outputs.ref-name }}
+          DATE: ${{ steps.run-custom-template.outputs.date }}
+          TIME: ${{ steps.run-custom-template.outputs.time }}
+          DIST_TAG: ${{ steps.run-custom-template.outputs.dist-tag }}
+          SHORT_SHA: ${{ steps.run-custom-template.outputs.short-sha }}
+          MAJOR: ${{ steps.run-custom-template.outputs.major }}
+          MINOR: ${{ steps.run-custom-template.outputs.minor }}
+          PATCH: ${{ steps.run-custom-template.outputs.patch }}
         run: |
           echo "=== Input Transformation ==="
           INPUT_REF="refs/heads/feature/test-branch"
@@ -207,39 +220,26 @@ jobs:
 
           echo "✅ Custom template test passed!"
 
-  test-github-context:
-    needs: unit-tests
-    name: Test GitHub Context Variables
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Remove checked-in dist
-        run: rm -rf actions/metadata-action/dist
-
-      - name: Download rebuilt dist
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: metadata-action-dist-${{ github.run_id }}
-          path: actions/metadata-action/dist
-
-      - name: Run Metadata Action with GitHub Context
-        id: metadata
-        uses: $/actions/metadata-action
-        with:
-          default-template: "build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}"
-          default-tag: "context-tag"
-          show-report: "true"
+      - name: Run rebuilt bundle for github-context
+        id: run-github-context
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          env \
+            'INPUT_DEFAULT-TEMPLATE=build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}' \
+            'INPUT_DEFAULT-TAG=context-tag' \
+            'INPUT_SHOW-REPORT=true' \
+            'INPUT_SHORT-SHA=7' \
+            'INPUT_MERGE-TAGS=true' \
+            node actions/metadata-action/dist/index.js
 
       - name: Verify GitHub Context Outputs
+        id: github-context
+        if: ${{ !cancelled() && steps.run-github-context.outcome == 'success' }}
         shell: bash
         env:
-          RESULT: ${{ steps.metadata.outputs.result }}
+          RESULT: ${{ steps.run-github-context.outputs.result }}
           GITHUB_SHA: ${{ github.sha }}
-          SHORT_SHA: ${{ steps.metadata.outputs.short-sha }}
+          SHORT_SHA: ${{ steps.run-github-context.outputs.short-sha }}
         run: |
 
           echo "result: $RESULT"
@@ -269,37 +269,24 @@ jobs:
 
           echo "✅ GitHub context test passed!"
 
-  test-inline-length-modifier:
-    needs: unit-tests
-    name: Test Inline Length Modifier
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Remove checked-in dist
-        run: rm -rf actions/metadata-action/dist
-
-      - name: Download rebuilt dist
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: metadata-action-dist-${{ github.run_id }}
-          path: actions/metadata-action/dist
-
-      - name: Run Metadata Action with inline length modifier
-        id: metadata
-        uses: $/actions/metadata-action
-        with:
-          ref: "refs/heads/feature/my-long-branch-name"
-          default-template: "{{ref-name:7}}-{{short-sha:4}}"
-          show-report: "true"
+      - name: Run rebuilt bundle for inline-length-modifier
+        id: run-inline-length-modifier
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          env \
+            'INPUT_REF=refs/heads/feature/my-long-branch-name' \
+            'INPUT_DEFAULT-TEMPLATE={{ref-name:7}}-{{short-sha:4}}' \
+            'INPUT_SHOW-REPORT=true' \
+            'INPUT_SHORT-SHA=7' \
+            'INPUT_MERGE-TAGS=true' \
+            node actions/metadata-action/dist/index.js
 
       - name: Verify inline length modifier
+        id: inline-length-modifier
+        if: ${{ !cancelled() && steps.run-inline-length-modifier.outcome == 'success' }}
         shell: bash
         env:
-          RESULT: ${{ steps.metadata.outputs.result }}
+          RESULT: ${{ steps.run-inline-length-modifier.outputs.result }}
         run: |
           echo "result: $RESULT"
 
@@ -311,75 +298,15 @@ jobs:
 
           echo "✅ Inline length modifier test passed!"
 
-  unit-tests:
-    name: Unit Tests and Build
-    outputs:
-      tests: ${{ steps.tests.outcome }}
-      build: ${{ steps.build.outcome }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 #v7.1.0
-        with:
-          node-version: '26'
-
-      - name: Install dependencies
-        working-directory: actions/metadata-action
-        run: npm ci
-
-      - name: Run unit tests
-        id: tests
-        working-directory: actions/metadata-action
-        run: npm test
-
-      - name: Build dist
-        id: build
-        working-directory: actions/metadata-action
-        run: |
-          rm -f dist/index.js
-          npm run build
-          test -s dist/index.js
-
-      - name: Upload rebuilt dist
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: metadata-action-dist-${{ github.run_id }}
-          path: actions/metadata-action/dist/
-          if-no-files-found: error
-          overwrite: true
-
-  verify-dist:
-    name: Verify Checked-in Dist
-    needs: unit-tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: metadata-action-dist-${{ github.run_id }}
-          path: ${{ runner.temp }}/metadata-action-dist
-
       - name: Compare checked-in and rebuilt dist
-        run: diff -qr actions/metadata-action/dist "$RUNNER_TEMP/metadata-action-dist"
+        id: verify-dist
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: git diff --exit-code -- actions/metadata-action/dist/
 
   report:
     name: Metadata Action Report
     if: ${{ always() && !cancelled() }}
-    needs:
-      - unit-tests
-      - test-default-template
-      - test-custom-template
-      - test-github-context
-      - test-inline-length-modifier
-      - verify-dist
+    needs: unit-tests
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -389,11 +316,11 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           TESTS: ${{ needs.unit-tests.outputs.tests }}
           BUILD: ${{ needs.unit-tests.outputs.build }}
-          DEFAULT_TEMPLATE: ${{ needs.test-default-template.result }}
-          CUSTOM_TEMPLATE: ${{ needs.test-custom-template.result }}
-          GITHUB_CONTEXT: ${{ needs.test-github-context.result }}
-          INLINE_LENGTH: ${{ needs.test-inline-length-modifier.result }}
-          DIST: ${{ needs.verify-dist.result }}
+          DEFAULT_TEMPLATE: ${{ needs.unit-tests.outputs.default-template }}
+          CUSTOM_TEMPLATE: ${{ needs.unit-tests.outputs.custom-template }}
+          GITHUB_CONTEXT: ${{ needs.unit-tests.outputs.github-context }}
+          INLINE_LENGTH: ${{ needs.unit-tests.outputs.inline-length }}
+          DIST: ${{ needs.unit-tests.outputs.dist }}
         run: |
           {
             echo '<!-- metadata-action-test-report -->'
@@ -405,11 +332,11 @@ jobs:
             echo '| --- | --- |'
             echo "| JavaScript tests | ${TESTS:-skipped} |"
             echo "| Bundle build | ${BUILD:-skipped} |"
-            echo "| Default template | $DEFAULT_TEMPLATE |"
-            echo "| Custom template | $CUSTOM_TEMPLATE |"
-            echo "| GitHub context | $GITHUB_CONTEXT |"
-            echo "| Inline length modifier | $INLINE_LENGTH |"
-            echo "| Checked-in dist verification | $DIST |"
+            echo "| Default template | ${DEFAULT_TEMPLATE:-skipped} |"
+            echo "| Custom template | ${CUSTOM_TEMPLATE:-skipped} |"
+            echo "| GitHub context | ${GITHUB_CONTEXT:-skipped} |"
+            echo "| Inline length modifier | ${INLINE_LENGTH:-skipped} |"
+            echo "| Checked-in dist verification | ${DIST:-skipped} |"
           } > "$RUNNER_TEMP/metadata-action-report.md"
           cat "$RUNNER_TEMP/metadata-action-report.md" >> "$GITHUB_STEP_SUMMARY"
 
