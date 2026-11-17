@@ -2,39 +2,91 @@ name: TEST metadata-action
 
 on:
   workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'actions/metadata-action/**'
+      - 'packages/action-logger/**'
+      - '.github/workflows/test-metadata-action.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  test-default-template:
-    name: Test Default Template
+  unit-tests:
+    name: Build and Test Metadata Action
+    outputs:
+      tests: ${{ steps.tests.outcome }}
+      build: ${{ steps.build.outcome }}
+      default-template: ${{ steps.run-default-template.outcome == 'failure' && 'failure' || steps.default-template.outcome }}
+      custom-template: ${{ steps.run-custom-template.outcome == 'failure' && 'failure' || steps.custom-template.outcome }}
+      github-context: ${{ steps.run-github-context.outcome == 'failure' && 'failure' || steps.github-context.outcome }}
+      inline-length: ${{ steps.run-inline-length-modifier.outcome == 'failure' && 'failure' || steps.inline-length-modifier.outcome }}
+      dist: ${{ steps.verify-dist.outcome }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 #v7.1.0
+        with:
+          node-version: '26'
+
+      - name: Install dependencies
+        working-directory: actions/metadata-action
+        run: npm ci
+
+      - name: Build dist
+        id: build
+        working-directory: actions/metadata-action
+        run: |
+          rm -f dist/index.js
+          npm run build
+          test -s dist/index.js
+
+      - name: Compare checked-in and rebuilt dist
+        id: verify-dist
+        run: |
+          if ! git diff --quiet -- actions/metadata-action/dist/; then
+            echo "::error::Rebuild and commit metadata-action/dist in the PR branch before running action tests."
+            exit 1
+          fi
+
+      - name: Run unit tests
+        id: tests
+        working-directory: actions/metadata-action
+        run: npm test
 
       - name: Run Metadata Action
-        id: metadata
+        id: run-default-template
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
         uses: $/actions/metadata-action
         with:
           show-report: "true"
 
       - name: Verify Outputs
+        id: default-template
+        if: ${{ !cancelled() && steps.run-default-template.outcome == 'success' }}
         shell: bash
+        env:
+          RESULT: ${{ steps.run-default-template.outputs.result }}
+          REF: ${{ steps.run-default-template.outputs.ref }}
+          REF_NAME: ${{ steps.run-default-template.outputs.ref-name }}
+          DATE: ${{ steps.run-default-template.outputs.date }}
+          TIME: ${{ steps.run-default-template.outputs.time }}
+          TIMESTAMP: ${{ steps.run-default-template.outputs.timestamp }}
+          DIST_TAG: ${{ steps.run-default-template.outputs.dist-tag }}
+          SHORT_SHA: ${{ steps.run-default-template.outputs.short-sha }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
           echo "=== Outputs ==="
-          RESULT="${{ steps.metadata.outputs.result }}"
-          REF="${{ steps.metadata.outputs.ref }}"
-          REF_NAME="${{ steps.metadata.outputs.ref-name }}"
-          DATE="${{ steps.metadata.outputs.date }}"
-          TIME="${{ steps.metadata.outputs.time }}"
-          TIMESTAMP="${{ steps.metadata.outputs.timestamp }}"
-          DIST_TAG="${{ steps.metadata.outputs.dist-tag }}"
-          SHORT_SHA="${{ steps.metadata.outputs.short-sha }}"
-          RUN_NUMBER="${{ github.run_number }}"
 
           echo "result: $RESULT"
           echo "ref: $REF"
@@ -92,17 +144,9 @@ jobs:
 
           echo "✅ Default template test passed!"
 
-  test-custom-template:
-    name: Test Custom Template
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
       - name: Run Metadata Action
-        id: metadata
+        id: run-custom-template
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
         uses: $/actions/metadata-action
         with:
           ref: "refs/heads/feature/test-branch"
@@ -113,7 +157,20 @@ jobs:
           show-report: "true"
 
       - name: Verify Outputs
+        id: custom-template
+        if: ${{ !cancelled() && steps.run-custom-template.outcome == 'success' }}
         shell: bash
+        env:
+          RESULT: ${{ steps.run-custom-template.outputs.result }}
+          REF: ${{ steps.run-custom-template.outputs.ref }}
+          REF_NAME: ${{ steps.run-custom-template.outputs.ref-name }}
+          DATE: ${{ steps.run-custom-template.outputs.date }}
+          TIME: ${{ steps.run-custom-template.outputs.time }}
+          DIST_TAG: ${{ steps.run-custom-template.outputs.dist-tag }}
+          SHORT_SHA: ${{ steps.run-custom-template.outputs.short-sha }}
+          MAJOR: ${{ steps.run-custom-template.outputs.major }}
+          MINOR: ${{ steps.run-custom-template.outputs.minor }}
+          PATCH: ${{ steps.run-custom-template.outputs.patch }}
         run: |
           echo "=== Input Transformation ==="
           INPUT_REF="refs/heads/feature/test-branch"
@@ -124,16 +181,6 @@ jobs:
 
           echo ""
           echo "=== Outputs ==="
-          RESULT="${{ steps.metadata.outputs.result }}"
-          REF="${{ steps.metadata.outputs.ref }}"
-          REF_NAME="${{ steps.metadata.outputs.ref-name }}"
-          DATE="${{ steps.metadata.outputs.date }}"
-          TIME="${{ steps.metadata.outputs.time }}"
-          DIST_TAG="${{ steps.metadata.outputs.dist-tag }}"
-          SHORT_SHA="${{ steps.metadata.outputs.short-sha }}"
-          MAJOR="${{ steps.metadata.outputs.major }}"
-          MINOR="${{ steps.metadata.outputs.minor }}"
-          PATCH="${{ steps.metadata.outputs.patch }}"
 
           echo "result: $RESULT"
           echo "ref: $REF"
@@ -176,17 +223,9 @@ jobs:
 
           echo "✅ Custom template test passed!"
 
-  test-github-context:
-    name: Test GitHub Context Variables
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
       - name: Run Metadata Action with GitHub Context
-        id: metadata
+        id: run-github-context
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
         uses: $/actions/metadata-action
         with:
           default-template: "build-{{github.workflow}}-{{github.sha}}-run{{github.run_number}}"
@@ -194,11 +233,14 @@ jobs:
           show-report: "true"
 
       - name: Verify GitHub Context Outputs
+        id: github-context
+        if: ${{ !cancelled() && steps.run-github-context.outcome == 'success' }}
         shell: bash
+        env:
+          RESULT: ${{ steps.run-github-context.outputs.result }}
+          GITHUB_SHA: ${{ github.sha }}
+          SHORT_SHA: ${{ steps.run-github-context.outputs.short-sha }}
         run: |
-          RESULT="${{ steps.metadata.outputs.result }}"
-          GITHUB_SHA="${{ github.sha }}"
-          SHORT_SHA="${{ steps.metadata.outputs.short-sha }}"
 
           echo "result: $RESULT"
           echo "github.sha: $GITHUB_SHA"
@@ -227,17 +269,9 @@ jobs:
 
           echo "✅ GitHub context test passed!"
 
-  test-inline-length-modifier:
-    name: Test Inline Length Modifier
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
       - name: Run Metadata Action with inline length modifier
-        id: metadata
+        id: run-inline-length-modifier
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
         uses: $/actions/metadata-action
         with:
           ref: "refs/heads/feature/my-long-branch-name"
@@ -245,9 +279,12 @@ jobs:
           show-report: "true"
 
       - name: Verify inline length modifier
+        id: inline-length-modifier
+        if: ${{ !cancelled() && steps.run-inline-length-modifier.outcome == 'success' }}
         shell: bash
+        env:
+          RESULT: ${{ steps.run-inline-length-modifier.outputs.result }}
         run: |
-          RESULT="${{ steps.metadata.outputs.result }}"
           echo "result: $RESULT"
 
           # ref-name:7 → 7 chars, short-sha:4 → 4 chars, separator "-" → total 12
@@ -258,31 +295,75 @@ jobs:
 
           echo "✅ Inline length modifier test passed!"
 
-  unit-tests:
-    name: Unit Tests
+  report:
+    name: Metadata Action Report
+    if: ${{ always() && !cancelled() }}
+    needs: unit-tests
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+      - name: Write test summary
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTS: ${{ needs.unit-tests.outputs.tests }}
+          BUILD: ${{ needs.unit-tests.outputs.build }}
+          DEFAULT_TEMPLATE: ${{ needs.unit-tests.outputs.default-template }}
+          CUSTOM_TEMPLATE: ${{ needs.unit-tests.outputs.custom-template }}
+          GITHUB_CONTEXT: ${{ needs.unit-tests.outputs.github-context }}
+          INLINE_LENGTH: ${{ needs.unit-tests.outputs.inline-length }}
+          DIST: ${{ needs.unit-tests.outputs.dist }}
+        run: |
+          {
+            echo '<!-- metadata-action-test-report -->'
+            echo '### Metadata action test report'
+            echo
+            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '| Check | Result |'
+            echo '| --- | --- |'
+            echo "| JavaScript tests | ${TESTS:-skipped} |"
+            echo "| Bundle build | ${BUILD:-skipped} |"
+            echo "| Default template | ${DEFAULT_TEMPLATE:-skipped} |"
+            echo "| Custom template | ${CUSTOM_TEMPLATE:-skipped} |"
+            echo "| GitHub context | ${GITHUB_CONTEXT:-skipped} |"
+            echo "| Inline length modifier | ${INLINE_LENGTH:-skipped} |"
+            echo "| Checked-in dist verification | ${DIST:-skipped} |"
+          } > "$RUNNER_TEMP/metadata-action-report.md"
+          cat "$RUNNER_TEMP/metadata-action-report.md" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 #v7.1.0
-        with:
-          node-version: '26'
+      - name: Update Renovate PR comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          target="repos/$GITHUB_REPOSITORY"
+          if [[ "$(gh api "$target/pulls/$PR_NUMBER" --jq .head.sha)" != "$HEAD_SHA" ]]; then
+            exit 0
+          fi
 
-      - name: Install dependencies
-        working-directory: actions/metadata-action
-        run: npm install
+          comment_id="$(gh api --paginate "$target/issues/$PR_NUMBER/comments" --jq '
+            .[] | select(.user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- metadata-action-test-report -->"))) | .id
+          ' | tail -n 1)"
+          report="$RUNNER_TEMP/metadata-action-report.md"
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "$target/issues/comments/$comment_id" -F body=@"$report" --silent
+          else
+            gh api --method POST "$target/issues/$PR_NUMBER/comments" -F body=@"$report" --silent
+          fi
 
-      - name: Run unit tests
-        working-directory: actions/metadata-action
-        run: npm test
-
-      - name: Build dist
-        working-directory: actions/metadata-action
-        run: npm run build
-
-      - name: Verify dist exists
-        run: test -f actions/metadata-action/dist/index.js && echo "✅ dist/index.js exists"
+      - name: Require successful validation
+        env:
+          JOB_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $JOB_RESULTS; do
+            if [[ "$result" != success ]]; then
+              exit 1
+            fi
+          done
