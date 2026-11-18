@@ -1,5 +1,5 @@
 // tests/wrapper.test.js
-import { jest } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 // Mock @actions/github
 const mockGetOctokit = jest.fn();
