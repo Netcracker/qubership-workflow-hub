@@ -30,17 +30,17 @@ describe("RefNormalizer", () => {
         expect(result.isBranch).toBe(true);
         expect(result.type).toBe("branch");
 
-        // Check that there are no '/' characters
-        expect(result.normalizedName.includes("/")).toBe(false);
     });
 
-    test("should replace slashes with custom symbol '_'", () => {
-        const ref = "refs/heads/feature/awesome";
-        const result = normalizer.extract(ref, "_");
+    test.each([
+        { symbol: "_", expected: "feature_awesome_path" },
+        { symbol: ".", expected: "feature.awesome.path" },
+        { symbol: "__", expected: "feature__awesome__path" },
+    ])("should replace every slash with $symbol", ({ symbol, expected }) => {
+        const result = normalizer.extract("refs/heads/feature/awesome/path", symbol);
 
-        expect(result.normalizedName).toBe("feature_awesome");
-        expect(result.normalizedName).not.toContain("/");
-        expect(result.normalizedName).toContain("_");
+        expect(result.rawName).toBe("feature/awesome/path");
+        expect(result.normalizedName).toBe(expected);
     });
 
     test("should replace slashes in tags too", () => {
@@ -61,16 +61,6 @@ describe("RefNormalizer", () => {
         expect(result.type).toBe("unknown");
         expect(result.isTag).toBe(false);
         expect(result.isBranch).toBe(false);
-    });
-
-    test("should normalize deeply nested branch names", () => {
-        const ref = "refs/heads/feature/super/deep/nested/path";
-        const result = normalizer.extract(ref, "_");
-
-        // Check that all '/' are replaced with '_'
-        expect(result.normalizedName).toBe("feature_super_deep_nested_path");
-        expect(result.normalizedName.split("_").length).toBe(5);
-        expect(result.normalizedName).not.toContain("/");
     });
 
     test("should do nothing if ref is missing", () => {
