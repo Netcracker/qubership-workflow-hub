@@ -543,6 +543,165 @@ describe('ContainerStrategy', () => {
     });
   });
 
+  describe('execute - layers of retained images (issue #1071)', () => {
+    const pkgInfo = {
+      id: 1, name: 'test-image', package_type: 'container',
+      repository: { full_name: 'owner/repo' },
+      created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
+    };
+    const ver = (id, name, tags, created = '2025-01-01T00:00:00Z') => ({
+      id, name, metadata: { container: { tags } }, created_at: created, updated_at: created
+    });
+    const run = (versions, extra = {}) => strategy.execute({
+      packagesWithVersions: [{ package: pkgInfo, versions }],
+      excludedPatterns: [], includedPatterns: [],
+      thresholdDate: new Date('2025-01-10T00:00:00Z'),
+      wrapper: mockWrapper, owner: 'test-owner', debug: false, ...extra
+    });
+    const deletedIds = (result) => (result[0]?.versions ?? []).map(v => v.id);
+
+    it('keeps an old untagged version referenced by a fresh tagged image', async () => {
+      mockWrapper.getManifestDigests.mockImplementation((_o, _i, tag) =>
+        Promise.resolve(tag === 'fresh' ? ['sha256:shared'] : []));
+
+      const result = await run([
+        ver(101, 'sha256:shared', []),
+        ver(102, 'sha256:fresh-index', ['fresh'], '2025-01-20T00:00:00Z')
+      ]);
+
+      expect(result).toEqual([]);
+    });
+
+    it('keeps layers of images retained because they do not match includedPatterns', async () => {
+      mockWrapper.getManifestDigests.mockImplementation((_o, _i, tag) =>
+        Promise.resolve(tag === 'v1.0.0' ? ['sha256:kept-layer'] : tag === 'dependabot-1' ? ['sha256:gone-layer'] : []));
+
+      const result = await run([
+        ver(101, 'sha256:kept-layer', []),
+        ver(102, 'sha256:kept-index', ['v1.0.0']),
+        ver(103, 'sha256:gone-layer', []),
+        ver(104, 'sha256:gone-index', ['dependabot-1'])
+      ], { includedPatterns: ['dependabot-*'] });
+
+      expect(deletedIds(result).sort()).toEqual([103, 104]);
+    });
+
+    it('keeps layers of excluded images', async () => {
+      mockWrapper.getManifestDigests.mockImplementation((_o, _i, tag) =>
+        Promise.resolve(tag === 'release-1.0' ? ['sha256:rel-layer'] : []));
+
+      const result = await run([
+        ver(101, 'sha256:rel-layer', []),
+        ver(102, 'sha256:rel-index', ['release-1.0'])
+      ], { excludedPatterns: ['release-*'] });
+
+      expect(result).toEqual([]);
+    });
+
+    it('keeps a platform manifest shared by a deleted and a retained image', async () => {
+      mockWrapper.getManifestDigests.mockImplementation((_o, _i, tag) => {
+        if (tag === 'old') return Promise.resolve(['sha256:shared', 'sha256:only-old']);
+        if (tag === 'latest') return Promise.resolve(['sha256:shared']);
+        return Promise.resolve([]);
+      });
+
+      const result = await run([
+        ver(101, 'sha256:old-index', ['old']),
+        ver(102, 'sha256:shared', []),
+        ver(103, 'sha256:only-old', []),
+        ver(104, 'sha256:latest-index', ['latest'])
+      ]);
+
+      expect(deletedIds(result).sort()).toEqual([101, 103]);
+    });
+
+    it('still deletes an old image together with its own layers', async () => {
+      mockWrapper.getManifestDigests.mockImplementation((_o, _i, tag) =>
+        Promise.resolve(tag === 'old' ? ['sha256:layer'] : []));
+
+      const result = await run([
+        ver(101, 'sha256:old-index', ['old']),
+        ver(102, 'sha256:layer', []),
+        ver(103, 'sha256:fresh-index', ['fresh'], '2025-01-20T00:00:00Z')
+      ]);
+
+      expect(deletedIds(result)).toEqual([101, 102]);
+    });
+
+    it('does not delete any untagged version when a retained manifest cannot be inspected', async () => {
+      mockWrapper.getManifestDigests.mockImplementation((_o, _i, tag) =>
+        tag === 'latest' ? Promise.reject(new Error('boom')) : Promise.resolve(['sha256:old-layer']));
+      const incompleteCleanup = [];
+
+      const result = await run([
+        ver(101, 'sha256:latest-index', ['latest']),
+        ver(102, 'sha256:required-layer', []),
+        ver(103, 'sha256:old-index', ['old']),
+        ver(104, 'sha256:old-layer', []),
+        ver(105, 'sha256:dangling', [])
+      ], { incompleteCleanup });
+
+      // only the tagged candidate is deleted; arch layers and dangling versions are kept
+      expect(deletedIds(result)).toEqual([103]);
+      expect(incompleteCleanup).toEqual([
+        { package: 'test-image', failedTags: [{ tag: 'latest', reason: 'boom' }] }
+      ]);
+      expect(log.warn).toHaveBeenCalled();
+    });
+
+    it('also stops untagged deletion when a fresh retained image cannot be inspected', async () => {
+      mockWrapper.getManifestDigests.mockImplementation((_o, _i, tag) =>
+        tag === 'fresh' ? Promise.reject(new Error('denied')) : Promise.resolve([]));
+      const incompleteCleanup = [];
+
+      const result = await run([
+        ver(101, 'sha256:fresh-index', ['fresh'], '2025-01-20T00:00:00Z'),
+        ver(102, 'sha256:maybe-shared', [])
+      ], { incompleteCleanup });
+
+      expect(result).toEqual([]);
+      expect(incompleteCleanup).toHaveLength(1);
+    });
+
+    it('does not block untagged deletion when only a to-be-deleted tag fails to inspect', async () => {
+      mockWrapper.getManifestDigests.mockRejectedValue(new Error('Manifest not found'));
+      const incompleteCleanup = [];
+
+      const result = await run([
+        ver(101, 'sha256:old-index', ['old']),
+        ver(102, 'sha256:dangling', [])
+      ], { incompleteCleanup });
+
+      expect(deletedIds(result).sort()).toEqual([101, 102]);
+      expect(incompleteCleanup).toEqual([]);
+    });
+
+    it.each([[new Date(NaN)], [undefined], ['2025-01-10']])('refuses an invalid threshold date: %p', async (thresholdDate) => {
+      await expect(run([ver(101, 'sha256:fresh', ['fresh'], '2025-01-20T00:00:00Z')], { thresholdDate }))
+        .rejects.toThrow(/Invalid threshold date/);
+      expect(mockWrapper.getManifestDigests).not.toHaveBeenCalled();
+    });
+
+    it('limits concurrent manifest inspections', async () => {
+      let active = 0;
+      let maxActive = 0;
+      mockWrapper.getManifestDigests.mockImplementation(async () => {
+        active++;
+        maxActive = Math.max(maxActive, active);
+        await new Promise(r => setTimeout(r, 2));
+        active--;
+        return [];
+      });
+
+      const versions = Array.from({ length: 40 }, (_, i) =>
+        ver(i + 1, `sha256:fresh-${i}`, [`fresh-${i}`], '2025-01-20T00:00:00Z'));
+      await run(versions);
+
+      expect(mockWrapper.getManifestDigests).toHaveBeenCalledTimes(40);
+      expect(maxActive).toBeLessThanOrEqual(8);
+    });
+  });
+
   describe('isValidMetadata', () => {
     it('should return true for valid metadata', () => {
       expect(strategy.isValidMetadata({ metadata: { container: { tags: ['v1.0.0'] } } })).toBe(true);

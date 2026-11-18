@@ -22,7 +22,7 @@ jest.unstable_mockModule('node:util', () => ({
 
 // Mock logger
 jest.unstable_mockModule('@qubership/action-logger', () => ({
-  default: { setDebug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+  default: { setDebug: jest.fn(), info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() }
 }));
 
 const { default: OctokitWrapper } = await import('../src/utils/wrapper.js');

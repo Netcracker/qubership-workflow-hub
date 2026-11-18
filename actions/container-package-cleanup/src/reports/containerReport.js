@@ -11,10 +11,24 @@ class ContainerReport {
             excludedTags
         } = context;
 
-        const { deleteStatus } = context;
+        const { deleteStatus = [], incompleteCleanup = [] } = context;
+
+        const writeIncompleteCleanup = () => {
+            if (incompleteCleanup.length === 0) return;
+            core.summary.addRaw(`\n\n### ⚠️ Incomplete cleanup\n\n`);
+            core.summary.addRaw(`The manifest of a retained image could not be inspected, so untagged versions of these packages were **not** deleted to avoid breaking retained images:\n\n`);
+            incompleteCleanup.forEach(({ package: name, failedTags }) => {
+                const tags = failedTags.map(f => `<code>${f.tag}</code>`).join(", ");
+                core.summary.addRaw(`- <strong>${name}</strong>: ${tags}\n`);
+            });
+        };
 
         if (!filteredPackagesWithVersionsForDelete || filteredPackagesWithVersionsForDelete.length === 0) {
             core.info("❗️No packages or versions to delete.");
+            if (incompleteCleanup.length > 0) {
+                writeIncompleteCleanup();
+                await core.summary.write();
+            }
             return;
         }
 
@@ -68,6 +82,7 @@ class ContainerReport {
             finalMessage = "❗️Cleanup operation completed with errors. See details above.";
         }
         core.summary.addRaw(`\n\n${finalMessage}`);
+        writeIncompleteCleanup();
 
         await core.summary.write();
     }
