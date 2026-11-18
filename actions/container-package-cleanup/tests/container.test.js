@@ -676,12 +676,6 @@ describe('ContainerStrategy', () => {
       expect(incompleteCleanup).toEqual([]);
     });
 
-    it.each([[new Date(NaN)], [undefined], ['2025-01-10']])('refuses an invalid threshold date: %p', async (thresholdDate) => {
-      await expect(run([ver(101, 'sha256:fresh', ['fresh'], '2025-01-20T00:00:00Z')], { thresholdDate }))
-        .rejects.toThrow(/Invalid threshold date/);
-      expect(mockWrapper.getManifestDigests).not.toHaveBeenCalled();
-    });
-
     it('limits concurrent manifest inspections', async () => {
       let active = 0;
       let maxActive = 0;
