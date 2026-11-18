@@ -34,72 +34,81 @@ export default async function getCommitters(): Promise<ICommittersDetails[]> {
   try {
     const committers: ICommittersDetails[] = []
     let filteredCommitters: ICommittersDetails[] = []
-    const response = await octokit.graphql<IGraphQlResponse>(
-      `
-        query($owner:String! $name:String! $number:Int! $cursor:String!){
-            repository(owner: $owner, name: $name) {
-            pullRequest(number: $number) {
-                commits(first: 100, after: $cursor) {
-                    totalCount
-                    edges {
-                        node {
-                            commit {
-                                author {
-                                    email
-                                    name
-                                    user {
-                                        id
-                                        databaseId
-                                        login
-                                    }
-                                }
-                                committer {
-                                    name
-                                    user {
-                                        id
-                                        databaseId
-                                        login
-                                    }
-                                }
-                            }
-                        }
-                        cursor
-                    }
-                    pageInfo {
-                        endCursor
-                        hasNextPage
-                    }
-                }
-            }
+    let cursor = ''
+    while (true) {
+      const response = await octokit.graphql<IGraphQlResponse>(
+        `
+          query($owner:String! $name:String! $number:Int! $cursor:String!){
+              repository(owner: $owner, name: $name) {
+              pullRequest(number: $number) {
+                  commits(first: 100, after: $cursor) {
+                      totalCount
+                      edges {
+                          node {
+                              commit {
+                                  author {
+                                      email
+                                      name
+                                      user {
+                                          id
+                                          databaseId
+                                          login
+                                      }
+                                  }
+                                  committer {
+                                      name
+                                      user {
+                                          id
+                                          databaseId
+                                          login
+                                      }
+                                  }
+                              }
+                          }
+                          cursor
+                      }
+                      pageInfo {
+                          endCursor
+                          hasNextPage
+                      }
+                  }
+              }
+          }
+      }`.replace(/ /g, ''),
+        {
+          owner: context.repo.owner,
+          name: context.repo.repo,
+          number: context.issue.number,
+          cursor
         }
-    }`.replace(/ /g, ''),
-      {
-        owner: context.repo.owner,
-        name: context.repo.repo,
-        number: context.issue.number,
-        cursor: ''
+      )
+      response.repository.pullRequest.commits.edges.forEach(
+        (edge: IGraphQlEdge) => {
+          const committer = extractUserFromCommit(edge.node.commit)
+          const user = {
+            name: committer.login || committer.name,
+            id: committer.databaseId || '',
+            pullRequestNo: context.issue.number
+          }
+          if (
+            committers.length === 0 ||
+            committers
+              .map(c => {
+                return c.name
+              })
+              .indexOf(user.name) < 0
+          ) {
+            committers.push(user)
+          }
+        }
+      )
+      const page = response.repository.pullRequest.commits.pageInfo
+      if (!page.hasNextPage) break
+      if (!page.endCursor || page.endCursor === cursor) {
+        throw new Error('Commit pagination did not advance')
       }
-    )
-    response.repository.pullRequest.commits.edges.forEach(
-      (edge: IGraphQlEdge) => {
-        const committer = extractUserFromCommit(edge.node.commit)
-        const user = {
-          name: committer.login || committer.name,
-          id: committer.databaseId || '',
-          pullRequestNo: context.issue.number
-        }
-        if (
-          committers.length === 0 ||
-          committers
-            .map(c => {
-              return c.name
-            })
-            .indexOf(user.name) < 0
-        ) {
-          committers.push(user)
-        }
-      }
-    )
+      cursor = page.endCursor
+    }
     filteredCommitters = committers.filter(committer => {
       return committer.id !== 41898282
     })

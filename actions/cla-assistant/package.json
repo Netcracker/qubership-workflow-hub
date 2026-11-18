@@ -5,8 +5,8 @@
   "main": "lib/main.js",
   "type": "module",
   "scripts": {
-    "test": "jest",
-    "build": "tsc && ncc build"
+    "test": "tsc && node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "build": "tsc && ncc build lib/main.js && node scripts/normalize-bundle.mjs"
   },
   "repository": {
     "type": "git",
@@ -25,13 +25,20 @@
     "@octokit/types": "18.0.0",
     "@types/node": "26.6.6",
     "@vercel/ncc": "0.45.0",
-    "ts-jest": "29.4.15",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "jest": "30.5.2"
   },
   "author": "ibakshay",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/cla-assistant/github-action/issues"
   },
-  "homepage": "https://github.com/cla-assistant/github-action#readme"
+  "homepage": "https://github.com/cla-assistant/github-action#readme",
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "transform": {}
+  }
 }

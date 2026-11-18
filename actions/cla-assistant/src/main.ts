@@ -14,9 +14,10 @@ export async function run() {
      */
     if (
       context.payload.action === 'closed' &&
+      context.payload.pull_request?.merged === true &&
       input.lockPullRequestAfterMerge() === 'true'
     ) {
-      return lockPullRequest()
+      return await lockPullRequest()
     } else {
       await setupClaCheck()
     }
@@ -25,4 +26,4 @@ export async function run() {
   }
 }
 
-run()
+export default run()

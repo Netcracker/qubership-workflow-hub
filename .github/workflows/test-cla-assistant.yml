@@ -1,0 +1,224 @@
+name: TEST cla-assistant
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'actions/cla-assistant/**'
+      - 'packages/action-logger/**'
+      - '.github/workflows/test-cla-assistant.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests and Bundle Verification
+    outputs:
+      tests: ${{ steps.tests.outcome }}
+      build: ${{ steps.build.outcome }}
+      dist: ${{ steps.verify-dist.outcome }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+
+      - name: Install dependencies
+        working-directory: actions/cla-assistant
+        run: npm ci
+
+      - name: Run unit tests
+        id: tests
+        working-directory: actions/cla-assistant
+        run: npm test
+
+      - name: Build dist
+        id: build
+        working-directory: actions/cla-assistant
+        run: |
+          rm -f dist/index.js
+          npm run build
+          test -s dist/index.js
+
+      - name: Compare checked-in and rebuilt dist
+        id: verify-dist
+        run: |
+          if ! git diff --quiet -- actions/cla-assistant/dist/; then
+            echo "::error::Rebuild and commit cla-assistant/dist in the PR branch before running action tests."
+            exit 1
+          fi
+
+  test-cla:
+    name: CLA behavior (${{ matrix.scenario }})
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: signed
+            expected: success
+            allowlist: ""
+          - scenario: remote-storage
+            expected: success
+            allowlist: ""
+            remote-repository: signature-store
+            remote-organization: signature-owner
+          - scenario: unsigned
+            expected: failure
+            allowlist: ""
+          - scenario: new-signature
+            expected: success
+            allowlist: ""
+          - scenario: allowlisted
+            expected: success
+            allowlist: alice
+          - scenario: missing-storage
+            expected: failure
+            allowlist: ""
+          - scenario: storage-error
+            expected: failure
+            allowlist: ""
+    env:
+      CLA_TEST_SCENARIO: ${{ matrix.scenario }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+
+      - name: Start local GitHub API fixture
+        working-directory: actions/cla-assistant
+        run: |
+          export CLA_TEST_DIR="$RUNNER_TEMP/cla-fixture"
+          echo "CLA_TEST_DIR=$CLA_TEST_DIR" >> "$GITHUB_ENV"
+          mkdir "$CLA_TEST_DIR"
+          node tests/fixtures/server.mjs > "$CLA_TEST_DIR/server.log" 2>&1 &
+          echo "$!" > "$CLA_TEST_DIR/server.pid"
+          for _ in {1..50}; do
+            if [[ -s "$CLA_TEST_DIR/api-url" ]]; then
+              exit 0
+            fi
+            sleep 0.1
+          done
+          cat "$CLA_TEST_DIR/server.log"
+          exit 1
+
+      - name: Run CLA Assistant through its manifest
+        id: cla
+        continue-on-error: true
+        uses: $/actions/cla-assistant
+        env:
+          NODE_OPTIONS: --import=${{ github.workspace }}/actions/cla-assistant/tests/fixtures/preload.mjs
+          GITHUB_TOKEN: cla-fixture-token
+          PERSONAL_ACCESS_TOKEN: cla-fixture-pat
+        with:
+          path-to-signatures: signatures/cla.json
+          branch: main
+          remote-repository-name: ${{ matrix.remote-repository || '' }}
+          remote-organization-name: ${{ matrix.remote-organization || '' }}
+          path-to-document: https://example.com/cla
+          use-dco-flag: "false"
+          allowlist: ${{ matrix.allowlist }}
+
+      - name: Verify outcome and API operations
+        working-directory: actions/cla-assistant
+        env:
+          ACTUAL_OUTCOME: ${{ steps.cla.outcome }}
+          EXPECTED_OUTCOME: ${{ matrix.expected }}
+        run: |
+          test "$ACTUAL_OUTCOME" = "$EXPECTED_OUTCOME"
+          node tests/fixtures/verify.mjs
+
+      - name: Stop fixture and remove temporary files
+        if: ${{ always() }}
+        run: |
+          fixture="$RUNNER_TEMP/cla-fixture"
+          if [[ -f "$fixture/server.pid" ]]; then
+            pid=$(cat "$fixture/server.pid")
+            if kill -0 "$pid" 2>/dev/null; then
+              kill "$pid"
+            fi
+          fi
+          rm -rf "$fixture"
+
+  report:
+    name: CLA Assistant Report
+    if: ${{ always() && !cancelled() }}
+    needs: [unit-tests, test-cla]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Write test summary
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTS: ${{ needs.unit-tests.outputs.tests }}
+          BUILD: ${{ needs.unit-tests.outputs.build }}
+          DISPATCH: ${{ needs.test-cla.result }}
+          DIST: ${{ needs.unit-tests.outputs.dist }}
+        run: |
+          {
+            echo '<!-- cla-assistant-test-report -->'
+            echo '### CLA assistant test report'
+            echo
+            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '| Check | Result |'
+            echo '| --- | --- |'
+            echo "| JavaScript tests | ${TESTS:-skipped} |"
+            echo "| Bundle build | ${BUILD:-skipped} |"
+            echo "| CLA manifest and API scenarios | ${DISPATCH:-skipped} |"
+            echo "| Checked-in dist verification | ${DIST:-skipped} |"
+          } > "$RUNNER_TEMP/cla-assistant-report.md"
+          cat "$RUNNER_TEMP/cla-assistant-report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update Renovate PR comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          target="repos/$GITHUB_REPOSITORY"
+          if [[ "$(gh api "$target/pulls/$PR_NUMBER" --jq .head.sha)" != "$HEAD_SHA" ]]; then
+            exit 0
+          fi
+
+          comment_id="$(gh api --paginate "$target/issues/$PR_NUMBER/comments" --jq '
+            .[] | select(.user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- cla-assistant-test-report -->"))) | .id
+          ' | tail -n 1)"
+          report="$RUNNER_TEMP/cla-assistant-report.md"
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "$target/issues/comments/$comment_id" -F body=@"$report" --silent
+          else
+            gh api --method POST "$target/issues/$PR_NUMBER/comments" -F body=@"$report" --silent
+          fi
+
+      - name: Require successful validation
+        env:
+          JOB_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $JOB_RESULTS; do
+            if [[ "$result" != success ]]; then
+              exit 1
+            fi
+          done
