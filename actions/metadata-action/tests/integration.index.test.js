@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 
 jest.unstable_mockModule("@actions/core", () => ({
     getInput: jest.fn(),
@@ -160,17 +160,8 @@ describe("index.js (main action)", () => {
         expect(log.warn).toHaveBeenCalledWith(
             expect.stringContaining("fallback to 7")
         );
-    });
-
-    test("should handle missing config gracefully", async () => {
-        mockConfigLoader.load.mockReturnValue(null);
-
-        await run();
-
-        // Even without configuration, default templates should be applied
-        expect(log.notice).toHaveBeenCalledWith(
-            expect.stringContaining("using default")
-        );
+        expect(core.setOutput).toHaveBeenCalledWith("short-sha", "8c3c6b6");
+        expect(core.setFailed).not.toHaveBeenCalled();
     });
 
     test("should extract semver parts from prerelease tag", async () => {

@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
 
 jest.unstable_mockModule("@actions/core", () => ({
     getInput: jest.fn(),
@@ -59,6 +59,8 @@ describe("index.js template rendering", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-01-02T03:04:05Z"));
 
     github.context.eventName = "push";
     github.context.ref = "refs/heads/main";
@@ -105,6 +107,10 @@ describe("index.js template rendering", () => {
 
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   test("should render default template with dynamic values", async () => {
     await run();
 
@@ -113,9 +119,8 @@ describe("index.js template rendering", () => {
     const resultCall = calls.find(([key]) => key === "result");
     const rendered = resultCall ? resultCall[1] : null;
 
-    expect(rendered).toContain("main");
-    expect(rendered).toContain("8c3c6b6"); // short-sha (7 chars)
-    expect(rendered).toMatch(/\d{8}\d{6}/); // timestamp YYYYMMDDhhmmss
+    expect(rendered).toBe("main-8c3c6b6-20260102030405");
+    expect(core.setFailed).not.toHaveBeenCalled();
   });
 
   test("should merge extra tags if merge-tags=true", async () => {
@@ -137,22 +142,21 @@ describe("index.js template rendering", () => {
     const resultCall = core.setOutput.mock.calls.find(([key]) => key === "result");
     const rendered = resultCall ? resultCall[1] : null;
 
-    expect(rendered).toContain("beta");
-    expect(rendered).toContain("rc");
-    expect(rendered).toContain(","); // merged output
-    expect(rendered).not.toMatch(/,\s*,/);
+    expect(rendered).toBe("main-8c3c6b6-20260102030405, beta, rc");
+    expect(core.setFailed).not.toHaveBeenCalled();
   });
 
-  test("should fallback to default-template if not found in config", async () => {
-    mockConfigLoader.fileExists = false;
+  test("should use built-in defaults when configuration is absent", async () => {
+    mockConfigLoader.load.mockReturnValue(null);
 
     await run();
 
     const resultCall = core.setOutput.mock.calls.find(([key]) => key === "result");
     const rendered = resultCall ? resultCall[1] : null;
 
-    expect(rendered).toContain("main"); // fallback works
-    expect(core.warning).not.toHaveBeenCalledWith(expect.stringMatching(/fallback to/));
+    expect(rendered).toBe("main-20260102030405-101");
+    expect(core.setOutput).toHaveBeenCalledWith("dist-tag", "latest");
+    expect(core.setFailed).not.toHaveBeenCalled();
   });
 
   test("should render aliases and length modifiers", async () => {
@@ -169,19 +173,6 @@ describe("index.js template rendering", () => {
     expect(rendered).toBe("main-8c3c-latest");
   });
 
-  test("should render length modifiers in template", async () => {
-    mockConfigLoader.load.mockReturnValue({
-      "default-template": "{{short-sha:4}}",
-      "default-tag": "latest"
-    });
-
-    await run();
-
-    const resultCall = core.setOutput.mock.calls.find(([key]) => key === "result");
-    const rendered = resultCall ? resultCall[1] : null;
-
-    expect(rendered).toBe("8c3c");
-  });
 
   test("should warn and fallback when branches-template is not an array", async () => {
     mockConfigLoader.load.mockReturnValue({
@@ -198,43 +189,16 @@ describe("index.js template rendering", () => {
     );
   });
 
-  test("should truncate each tag individually when template contains multiple comma-separated tags", async () => {
-    // Simulate a long branch name that causes per-tag truncation
-    mockRefNormalizer.extract.mockReturnValue({
-      rawName: "refs/heads/fix-increase-integration-tests-memory",
-      normalizedName: "fix-increase-integration-tests-memory",
-      isTag: false,
-      isBranch: true,
-      type: "branch"
+  test("should truncate a long tag and preserve subsequent tags", async () => {
+    mockConfigLoader.load.mockReturnValue({
+      "default-template": "a".repeat(140) + ", {{short-sha}}",
+      "default-tag": "latest"
     });
-    core.getInput.mockImplementation((name) => {
-      const map = {
-        ref: "refs/heads/fix-increase-integration-tests-memory",
-        "short-sha": "11",
-        "dry-run": "false",
-        "show-report": "false",
-        "debug": "false",
-        "extra-tags": "",
-        "merge-tags": "false",
-        "default-template": "{{ref-name}}-{{timestamp}}, {{ref-name}}-{{short-sha}}, {{ref-name}}, {{short-sha}}"
-      };
-      return map[name] ?? "";
-    });
-    mockConfigLoader.load.mockReturnValue(null);
 
     await run();
 
-    const resultCall = core.setOutput.mock.calls.find(([key]) => key === "result");
-    const rendered = resultCall ? resultCall[1] : null;
-    const tags = rendered.split(",").map((t) => t.trim());
-
-    // Every individual tag must be within the 128-char limit
-    for (const tag of tags) {
-      expect(tag.length).toBeLessThanOrEqual(128);
-    }
-    // The short-sha tag must be present and correct (11 chars)
-    const shortShaTag = tags.find((t) => /^[0-9a-f]{11}$/.test(t));
-    expect(shortShaTag).toBeDefined();
+    expect(core.setOutput).toHaveBeenCalledWith("result", "a".repeat(128) + ", 8c3c6b6");
+    expect(core.setFailed).not.toHaveBeenCalled();
   });
 
   test("should skip invalid template entries", async () => {
