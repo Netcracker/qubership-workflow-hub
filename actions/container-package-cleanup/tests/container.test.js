@@ -1,4 +1,5 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { setTimeout } from 'node:timers';
 
 jest.unstable_mockModule('@actions/core', () => ({
   setFailed: jest.fn(),
