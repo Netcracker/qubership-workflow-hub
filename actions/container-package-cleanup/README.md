@@ -189,6 +189,14 @@ The action filters tags/versions in the following order of priority:
 
 ---
 
+## Input Validation
+
+`threshold-days` must be a non-negative integer (`0`, `7`, `30`, ...). For `package-type: maven`,
+`threshold-versions` must be a non-negative integer as well. Empty, negative, fractional and partially
+numeric values (for example `-1`, `1.5`, `7abc`) fail the action **before** any package is listed or deleted.
+
+---
+
 ## Wildcard Matching
 
 Supported patterns for tags/versions:
