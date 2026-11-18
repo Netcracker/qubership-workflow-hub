@@ -88,7 +88,10 @@ jobs:
         run: |
           [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]
           gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr-before.json"
-          jq '{pull_request: .}' "$RUNNER_TEMP/pr-before.json" > "$RUNNER_TEMP/pr-assigner-event.json"
+          cp "$GITHUB_EVENT_PATH" "$RUNNER_TEMP/original-event.json"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            jq '{pull_request: .}' "$RUNNER_TEMP/pr-before.json" > "$GITHUB_EVENT_PATH"
+          fi
           candidate=$(jq -r '.assignees[0].login // empty' "$RUNNER_TEMP/pr-before.json")
           if [[ -z "$candidate" ]]; then
             candidate=$(gh api "repos/$GITHUB_REPOSITORY/assignees?per_page=1" --jq '.[0].login')
@@ -104,8 +107,6 @@ jobs:
         with:
           configuration-path: ${{ runner.temp }}/pr-assigner-config.json
           self-assign: "false"
-        env:
-          GITHUB_EVENT_PATH: ${{ runner.temp }}/pr-assigner-event.json
 
       - name: Verify assigned users
         env:
@@ -125,6 +126,13 @@ jobs:
           if grep -Fxq "$CANDIDATE" "$RUNNER_TEMP/remaining-assignees.txt"; then
             echo "::error::Temporary assignment remains"
             exit 1
+          fi
+
+      - name: Restore manual event fixture
+        if: ${{ always() }}
+        run: |
+          if [[ -f "$RUNNER_TEMP/original-event.json" ]]; then
+            cp "$RUNNER_TEMP/original-event.json" "$GITHUB_EVENT_PATH"
           fi
 
   report:

@@ -123,10 +123,17 @@ jobs:
       - name: Remove test release and tag
         if: ${{ always() && steps.create-release.outcome != 'skipped' }}
         run: |
-          gh release delete "$TEST_TAG" --yes --cleanup-tag
-          tags=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TEST_TAG" --jq '.[].ref')
-          if [[ "$tags" == *"refs/tags/$TEST_TAG"* ]]; then
-            echo "::error::Test tag still exists: $TEST_TAG"
+          if gh release view "$TEST_TAG" > /dev/null 2>&1; then
+            gh release delete "$TEST_TAG" --yes
+          fi
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TEST_TAG" --jq '.[].ref')
+          if grep -Fxq "refs/tags/$TEST_TAG" <<< "$refs"; then
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$TEST_TAG"
+          fi
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TEST_TAG" --jq '.[].ref')
+          releases=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name')
+          if grep -Fxq "refs/tags/$TEST_TAG" <<< "$refs" || grep -Fxq "$TEST_TAG" <<< "$releases"; then
+            echo "::error::Test release or tag still exists: $TEST_TAG"
             exit 1
           fi
 
