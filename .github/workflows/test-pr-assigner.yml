@@ -1,12 +1,7 @@
 name: TEST pr-assigner
 
 on:
-  workflow_dispatch:
-    inputs:
-      pr-number:
-        description: "Existing PR number for the assignment integration check"
-        required: false
-        type: string
+  workflow_dispatch: {}
   pull_request:
     paths:
       - 'actions/pr-assigner/**'
@@ -68,16 +63,15 @@ jobs:
     name: Assign and verify PR users
     needs: unit-tests
     if: >-
-      (github.event_name == 'pull_request' &&
-       github.event.pull_request.head.repo.full_name == github.repository) ||
-      (github.event_name == 'workflow_dispatch' && inputs.pr-number != '')
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
     env:
       GH_TOKEN: ${{ github.token }}
-      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr-number }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -88,10 +82,6 @@ jobs:
         run: |
           [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]
           gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr-before.json"
-          cp "$GITHUB_EVENT_PATH" "$RUNNER_TEMP/original-event.json"
-          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
-            jq '{pull_request: .}' "$RUNNER_TEMP/pr-before.json" > "$GITHUB_EVENT_PATH"
-          fi
           candidate=$(jq -r '.assignees[0].login // empty' "$RUNNER_TEMP/pr-before.json")
           if [[ -z "$candidate" ]]; then
             candidate=$(gh api "repos/$GITHUB_REPOSITORY/assignees?per_page=1" --jq '.[0].login')
@@ -126,13 +116,6 @@ jobs:
           if grep -Fxq "$CANDIDATE" "$RUNNER_TEMP/remaining-assignees.txt"; then
             echo "::error::Temporary assignment remains"
             exit 1
-          fi
-
-      - name: Restore manual event fixture
-        if: ${{ always() }}
-        run: |
-          if [[ -f "$RUNNER_TEMP/original-event.json" ]]; then
-            cp "$RUNNER_TEMP/original-event.json" "$GITHUB_EVENT_PATH"
           fi
 
   report:
