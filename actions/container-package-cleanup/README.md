@@ -189,6 +189,28 @@ The action filters tags/versions in the following order of priority:
 
 ---
 
+## Safety Behavior
+
+### Layers of retained container images
+
+A multi-platform image consists of a tagged version plus untagged versions (platform and attestation
+manifests) that it references. Every tagged version that is not selected for deletion is *retained*:
+fresh versions, `latest`, versions matching `excluded-tags`, and versions not matching `included-tags`.
+The untagged versions referenced by retained images are never deleted, even if they are older than `threshold-days`
+or are also referenced by an image that is being deleted.
+
+### Manifest inspection failure
+
+If the manifest of a retained image cannot be inspected (for example a registry or authentication error),
+the action cannot know which untagged versions that image needs. In this case it does **not** delete any
+untagged version of that package in the current run. Tagged versions selected for deletion are still deleted.
+The affected packages and tags are listed in the warning log and in the job summary under *Incomplete cleanup*;
+the skipped untagged versions are picked up by a later run once inspection works again.
+
+To limit load, up to 8 `docker manifest inspect` calls run in parallel.
+
+---
+
 ## Wildcard Matching
 
 Supported patterns for tags/versions:
