@@ -25281,6 +25281,9 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
   async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug: debug2 = false, incompleteCleanup = [] }) {
     action_logger_default.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : "unknown"} packages.`);
     action_logger_default.setDebug(debug2);
+    if (!(thresholdDate instanceof Date) || Number.isNaN(thresholdDate.getTime())) {
+      throw new Error(`Invalid threshold date: ${thresholdDate}`);
+    }
     const limit = createLimiter(MANIFEST_CONCURRENCY);
     const excluded = excludedPatterns.map((p) => p.toLowerCase());
     const included = includedPatterns.map((p) => p.toLowerCase());
@@ -25544,6 +25547,19 @@ function isSkippableError(error2) {
   return /more than 5000 downloads|404|not found/i.test(msg);
 }
 
+// src/utils/inputs.js
+function parseNonNegativeInt(name, raw) {
+  const value = String(raw ?? "").trim();
+  if (!/^\d+$/.test(value)) {
+    throw new Error(`Invalid '${name}' input: "${value}". Expected a non-negative integer.`);
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error(`Invalid '${name}' input: "${value}" is too large.`);
+  }
+  return parsed;
+}
+
 // src/index.js
 async function run() {
   const isDebug = getInput("debug").toLowerCase() === "true";
@@ -25554,7 +25570,15 @@ async function run() {
   action_logger_default.info(`Dry run? -> ${dryRun}`);
   action_logger_default.setDebug(isDebug);
   action_logger_default.setDryRun(dryRun);
-  const thresholdDays = parseInt(getInput("threshold-days"), 10);
+  let thresholdDays;
+  let thresholdVersions;
+  try {
+    thresholdDays = parseNonNegativeInt("threshold-days", getInput("threshold-days"));
+    thresholdVersions = package_type === "maven" ? parseNonNegativeInt("threshold-versions", getInput("threshold-versions")) : parseInt(getInput("threshold-versions"), 10);
+  } catch (error2) {
+    setFailed(error2.message);
+    return;
+  }
   const batchSize = parseInt(getInput("batch-size"), 10) || 15;
   const maxErrors = parseInt(getInput("max-errors"), 10) || 5;
   let excludedTags = [];
@@ -25568,7 +25592,6 @@ async function run() {
   if (package_type === "maven") includedTags = ["*SNAPSHOT*", ...includedTags];
   const now = /* @__PURE__ */ new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1e3);
-  const thresholdVersions = parseInt(getInput("threshold-versions"), 10);
   action_logger_default.info(`Threshold Days: ${thresholdDays}`);
   action_logger_default.info(`Threshold Date: ${thresholdDate}`);
   excludedTags.length && action_logger_default.info(`Excluded Tags: ${excludedTags}`);

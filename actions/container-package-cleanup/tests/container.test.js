@@ -544,6 +544,29 @@ describe('ContainerStrategy', () => {
     });
   });
 
+  describe('execute - invalid threshold date', () => {
+    it.each([[new Date(NaN)], [undefined], ['2025-01-10']])('refuses an invalid threshold date: %p', async (thresholdDate) => {
+      const packagesWithVersions = [{
+        package: {
+          id: 1, name: 'test-image', package_type: 'container',
+          repository: { full_name: 'owner/repo' },
+          created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
+        },
+        versions: [{
+          id: 101, name: 'sha256:fresh',
+          metadata: { container: { tags: ['fresh'] } },
+          created_at: '2025-01-20T00:00:00Z', updated_at: '2025-01-20T00:00:00Z'
+        }]
+      }];
+
+      await expect(strategy.execute({
+        packagesWithVersions, excludedPatterns: [], includedPatterns: [],
+        thresholdDate, wrapper: mockWrapper, owner: 'test-owner', debug: false
+      })).rejects.toThrow(/Invalid threshold date/);
+      expect(mockWrapper.getManifestDigests).not.toHaveBeenCalled();
+    });
+  });
+
   describe('execute - layers of retained images (issue #1071)', () => {
     const pkgInfo = {
       id: 1, name: 'test-image', package_type: 'container',
