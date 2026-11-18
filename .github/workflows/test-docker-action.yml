@@ -339,3 +339,86 @@ jobs:
           docker run --rm "$IMAGE_REF" > "$RUNNER_TEMP/cached-image.txt"
           printf 'Test Docker Image\nARG1=\nARG2=\nINPUT_ARG1=\nINPUT_ARG2=\n' > "$RUNNER_TEMP/expected-cached-image.txt"
           diff -u "$RUNNER_TEMP/expected-cached-image.txt" "$RUNNER_TEMP/cached-image.txt"
+
+  report:
+    name: Docker Action Report
+    if: ${{ always() && !cancelled() }}
+    needs:
+      - test-with-default-action
+      - test-auto-tags
+      - test-custom-tags
+      - test-build-args
+      - test-platforms
+      - test-component-aliases
+      - test-local-cache
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Write test summary
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTED_SHA: ${{ github.sha }}
+          DEFAULTS: ${{ needs.test-with-default-action.result }}
+          AUTO_TAGS: ${{ needs.test-auto-tags.result }}
+          CUSTOM_TAGS: ${{ needs.test-custom-tags.result }}
+          BUILD_ARGS: ${{ needs.test-build-args.result }}
+          PLATFORMS: ${{ needs.test-platforms.result }}
+          ALIASES: ${{ needs.test-component-aliases.result }}
+          CACHE: ${{ needs.test-local-cache.result }}
+        run: |
+          {
+            echo '<!-- docker-action-test-report -->'
+            echo '### Docker action test report'
+            echo
+            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo "Tested commit: $TESTED_SHA"
+            echo
+            echo '| Check | Result |'
+            echo '| --- | --- |'
+            echo "| Default component and image name | ${DEFAULTS:-skipped} |"
+            echo "| Automatic tags | ${AUTO_TAGS:-skipped} |"
+            echo "| Custom tags and image name override | ${CUSTOM_TAGS:-skipped} |"
+            echo "| Local container build args (input and component priority) | ${BUILD_ARGS:-skipped} |"
+            echo "| Built OCI image platforms | ${PLATFORMS:-skipped} |"
+            echo "| Component aliases | ${ALIASES:-skipped} |"
+            echo "| Local cache export, import and container execution | ${CACHE:-skipped} |"
+          } > "$RUNNER_TEMP/docker-action-report.md"
+          cat "$RUNNER_TEMP/docker-action-report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update Renovate PR comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          target="repos/$GITHUB_REPOSITORY"
+          if [[ "$(gh api "$target/pulls/$PR_NUMBER" --jq .head.sha)" != "$HEAD_SHA" ]]; then
+            exit 0
+          fi
+
+          comment_id="$(gh api --paginate "$target/issues/$PR_NUMBER/comments" --jq '
+            .[] | select(.user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- docker-action-test-report -->"))) | .id
+          ' | tail -n 1)"
+          report="$RUNNER_TEMP/docker-action-report.md"
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "$target/issues/comments/$comment_id" -F body=@"$report" --silent
+          else
+            gh api --method POST "$target/issues/$PR_NUMBER/comments" -F body=@"$report" --silent
+          fi
+
+      - name: Require successful validation
+        env:
+          JOB_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $JOB_RESULTS; do
+            if [[ "$result" != success ]]; then
+              exit 1
+            fi
+          done
