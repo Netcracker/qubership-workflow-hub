@@ -4,6 +4,7 @@
 // Flying like an eagle to my destiny
 
 import * as core from "@actions/core";
+import process from "node:process";
 import OctokitWrapper from "./utils/wrapper.js";
 import ContainerReport from "./reports/containerReport.js";
 import MavenReport from "./reports/mavenReport.js";

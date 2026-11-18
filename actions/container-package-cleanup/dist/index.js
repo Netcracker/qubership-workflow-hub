@@ -20389,6 +20389,9 @@ function endGroup() {
   issue("endgroup");
 }
 
+// src/index.js
+var import_node_process = __toESM(require("node:process"), 1);
+
 // node_modules/@actions/github/lib/context.js
 var import_fs2 = require("fs");
 var import_os3 = require("os");
@@ -25545,8 +25548,8 @@ async function run() {
   action_logger_default.info(`Threshold Date: ${thresholdDate}`);
   excludedTags.length && action_logger_default.info(`Excluded Tags: ${excludedTags}`);
   includedTags.length && action_logger_default.info(`Included Tags: ${includedTags}`);
-  const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
-  const wrapper = new wrapper_default(process.env.PACKAGE_TOKEN, isDebug);
+  const [owner, repo] = import_node_process.default.env.GITHUB_REPOSITORY.split("/");
+  const wrapper = new wrapper_default(import_node_process.default.env.PACKAGE_TOKEN, isDebug);
   const isOrganization = await wrapper.isOrganization(owner);
   action_logger_default.info(`Is Organization? -> ${isOrganization}`);
   action_logger_default.info(`Run for type: ${package_type}, owner: ${owner}, repo: ${repo}`);
