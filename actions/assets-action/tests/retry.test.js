@@ -45,8 +45,11 @@ describe("retryAsync", () => {
 
   test("applies factor to delay on each retry", async () => {
     const delays = [];
-    const originalSetTimeout = global.setTimeout;
-    global.setTimeout = (fn, ms) => { delays.push(ms); return originalSetTimeout(fn, 0); };
+    const originalSetTimeout = globalThis.setTimeout;
+    jest.spyOn(globalThis, "setTimeout").mockImplementation((fn, ms) => {
+      delays.push(ms);
+      return originalSetTimeout(fn, 0);
+    });
 
     const fn = jest.fn()
       .mockRejectedValueOnce(new Error("fail"))
@@ -56,7 +59,6 @@ describe("retryAsync", () => {
     // constDelay starts at 100, then *=2 before each sleep: 200, 400
     await retryAsync(fn, { retries: 3, delay: 100, factor: 2 });
 
-    global.setTimeout = originalSetTimeout;
     expect(delays[0]).toBe(200);
     expect(delays[1]).toBe(400);
   });
