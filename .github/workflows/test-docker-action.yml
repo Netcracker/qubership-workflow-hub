@@ -8,6 +8,10 @@ on:
       - '.github/workflows/test-docker-action.yml'
       - '.qubership/Dockerfile.test'
 
+env:
+  DOCKER_BUILD_SUMMARY: "false"
+  DOCKER_BUILD_RECORD_UPLOAD: "false"
+
 permissions:
   contents: read
 
@@ -367,23 +371,52 @@ jobs:
           ALIASES: ${{ needs.test-component-aliases.result }}
           CACHE: ${{ needs.test-local-cache.result }}
         run: |
+          status_label() {
+            case "$1" in
+              success) printf '✅ Passed' ;;
+              failure) printf '❌ Failed' ;;
+              skipped) printf '⏭️ Skipped' ;;
+              cancelled) printf '⛔ Cancelled' ;;
+              *) printf '❔ Unknown' ;;
+            esac
+          }
+
+          overall=success
+          for result in "$DEFAULTS" "$AUTO_TAGS" "$CUSTOM_TAGS" "$BUILD_ARGS" "$PLATFORMS" "$ALIASES" "$CACHE"; do
+            if [[ "$result" == failure ]]; then
+              overall=failure
+              break
+            fi
+            if [[ "$result" != success ]]; then
+              overall=skipped
+            fi
+          done
+
           {
             echo '<!-- docker-action-test-report -->'
-            echo '### Docker action test report'
-            echo
-            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
-            echo
-            echo "Tested commit: $TESTED_SHA"
+            printf '## Docker action · %s\n\n' "$(status_label "$overall")"
+            echo '**Build mode** · dry-run'
             echo
             echo '| Check | Result |'
             echo '| --- | --- |'
-            echo "| Default component and image name | ${DEFAULTS:-skipped} |"
-            echo "| Automatic tags | ${AUTO_TAGS:-skipped} |"
-            echo "| Custom tags and image name override | ${CUSTOM_TAGS:-skipped} |"
-            echo "| Local container build args (input and component priority) | ${BUILD_ARGS:-skipped} |"
-            echo "| Built OCI image platforms | ${PLATFORMS:-skipped} |"
-            echo "| Component aliases | ${ALIASES:-skipped} |"
-            echo "| Local cache export, import and container execution | ${CACHE:-skipped} |"
+            printf '| Default component and image name | %s |\n' "$(status_label "$DEFAULTS")"
+            printf '| Automatic tags | %s |\n' "$(status_label "$AUTO_TAGS")"
+            printf '| Custom tags and image name override | %s |\n' "$(status_label "$CUSTOM_TAGS")"
+            printf '| Build args inside containers — input and component priority | %s |\n' "$(status_label "$BUILD_ARGS")"
+            printf '| OCI platforms — amd64, arm64, arm/v7 | %s |\n' "$(status_label "$PLATFORMS")"
+            printf '| Component aliases | %s |\n' "$(status_label "$ALIASES")"
+            printf '| Local cache export, import and container execution | %s |\n' "$(status_label "$CACHE")"
+            echo
+            echo "[View workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '<details>'
+            echo '<summary>Tested revision</summary>'
+            echo
+            echo "PR revision: $HEAD_SHA"
+            echo
+            echo "Tested commit: $TESTED_SHA"
+            echo
+            echo '</details>'
           } > "$RUNNER_TEMP/docker-action-report.md"
           cat "$RUNNER_TEMP/docker-action-report.md" >> "$GITHUB_STEP_SUMMARY"
 
