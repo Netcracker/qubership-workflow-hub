@@ -285,7 +285,7 @@ runs:
       uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
     - name: Log in to GitHub Container Registry
-      if: ${{ contains(env.REGISTRY, 'ghcr.io') && inputs.dry-run != 'true' }}
+      if: ${{ contains(env.REGISTRY, 'ghcr.io') && (inputs.dry-run != 'true' || env.GITHUB_TOKEN != '') }}
       uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
       with:
         registry: ghcr.io
@@ -293,7 +293,7 @@ runs:
         password: ${{ env.GITHUB_TOKEN }}
 
     - name: Login to Docker Hub
-      if: ${{ contains(env.REGISTRY, 'docker.io') && inputs.dry-run != 'true' }}
+      if: ${{ contains(env.REGISTRY, 'docker.io') && (inputs.dry-run != 'true' || inputs.docker-io-token != '') }}
       uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
       with:
         username: ${{ inputs.docker-io-login }}
