@@ -1,4 +1,6 @@
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import process from 'node:process';
+import { setImmediate } from 'node:timers';
 
 let inputs = {};
 
