@@ -1,14 +1,32 @@
 name: TEST pr-assigner
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: "Existing PR number for the assignment integration check"
+        required: false
+        type: string
+  pull_request:
+    paths:
+      - 'actions/pr-assigner/**'
+      - 'packages/action-logger/**'
+      - '.github/workflows/test-pr-assigner.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   unit-tests:
-    name: Unit Tests
+    name: Unit Tests and Bundle Verification
+    outputs:
+      tests: ${{ steps.tests.outcome }}
+      build: ${{ steps.build.outcome }}
+      dist: ${{ steps.verify-dist.outcome }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,37 +41,155 @@ jobs:
 
       - name: Install dependencies
         working-directory: actions/pr-assigner
-        run: npm install
+        run: npm ci
 
       - name: Run unit tests
+        id: tests
         working-directory: actions/pr-assigner
         run: npm test
 
       - name: Build dist
+        id: build
         working-directory: actions/pr-assigner
-        run: npm run build
+        run: |
+          rm -f dist/index.js
+          npm run build
+          test -s dist/index.js
 
-      - name: Verify dist exists
-        run: test -f actions/pr-assigner/dist/index.js && echo "✅ dist/index.js exists"
+      - name: Compare checked-in and rebuilt dist
+        id: verify-dist
+        run: |
+          if ! git diff --quiet -- actions/pr-assigner/dist/; then
+            echo "::error::Rebuild and commit pr-assigner/dist in the PR branch before running action tests."
+            exit 1
+          fi
 
   test-assign:
-    name: Test PR Assign
+    name: Assign and verify PR users
+    needs: unit-tests
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'workflow_dispatch' && inputs.pr-number != '')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-    if: github.event_name == 'pull_request'
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr-number }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      - name: Prepare PR context and assignment fixture
+        id: prepare
+        run: |
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr-before.json"
+          jq '{pull_request: .}' "$RUNNER_TEMP/pr-before.json" > "$RUNNER_TEMP/pr-assigner-event.json"
+          candidate=$(jq -r '.assignees[0].login // empty' "$RUNNER_TEMP/pr-before.json")
+          if [[ -z "$candidate" ]]; then
+            candidate=$(gh api "repos/$GITHUB_REPOSITORY/assignees?per_page=1" --jq '.[0].login')
+            echo "restore=true" >> "$GITHUB_OUTPUT"
+          fi
+          test -n "$candidate"
+          echo "candidate=$candidate" >> "$GITHUB_OUTPUT"
+          jq -n --arg user "$candidate" '{assignees: [$user], count: 1}' > "$RUNNER_TEMP/pr-assigner-config.json"
+
       - name: Run PR Assigner
+        id: assign
         uses: $/actions/pr-assigner
         with:
-          configuration-path: .github/pr-assigner-config.yml
-          shuffle: "1"
-          self-assign: "true"
+          configuration-path: ${{ runner.temp }}/pr-assigner-config.json
+          self-assign: "false"
+        env:
+          GITHUB_EVENT_PATH: ${{ runner.temp }}/pr-assigner-event.json
+
+      - name: Verify assigned users
+        env:
+          CANDIDATE: ${{ steps.prepare.outputs.candidate }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr-after.json"
+          jq -e --arg user "$CANDIDATE" 'any(.assignees[]; .login == $user)' "$RUNNER_TEMP/pr-after.json"
+          jq -e --slurpfile before "$RUNNER_TEMP/pr-before.json"             '([$before[0].assignees[].login] - [.assignees[].login]) | length == 0'             "$RUNNER_TEMP/pr-after.json"
+
+      - name: Restore temporary assignment
+        if: ${{ always() && steps.assign.outcome != 'skipped' && steps.prepare.outputs.restore == 'true' }}
+        env:
+          CANDIDATE: ${{ steps.prepare.outputs.candidate }}
+        run: |
+          gh pr edit "$PR_NUMBER" --remove-assignee "$CANDIDATE"
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"             --jq '.assignees[].login' > "$RUNNER_TEMP/remaining-assignees.txt"
+          if grep -Fxq "$CANDIDATE" "$RUNNER_TEMP/remaining-assignees.txt"; then
+            echo "::error::Temporary assignment remains"
+            exit 1
+          fi
+
+  report:
+    name: pr-assigner Report
+    if: ${{ always() && !cancelled() }}
+    needs: [unit-tests, test-assign]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Write test summary
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTS: ${{ needs.unit-tests.outputs.tests }}
+          BUILD: ${{ needs.unit-tests.outputs.build }}
+          DISPATCH: ${{ needs.test-assign.result }}
+          DIST: ${{ needs.unit-tests.outputs.dist }}
+        run: |
+          {
+            echo '<!-- pr-assigner-test-report -->'
+            echo '### pr-assigner test report'
+            echo
+            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '| Check | Result |'
+            echo '| --- | --- |'
+            echo "| JavaScript tests | ${TESTS:-skipped} |"
+            echo "| Bundle build | ${BUILD:-skipped} |"
+            echo "| Assignment and cleanup | ${DISPATCH:-skipped} |"
+            echo "| Checked-in dist verification | ${DIST:-skipped} |"
+          } > "$RUNNER_TEMP/pr-assigner-report.md"
+          cat "$RUNNER_TEMP/pr-assigner-report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update Renovate PR comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          target="repos/$GITHUB_REPOSITORY"
+          if [[ "$(gh api "$target/pulls/$PR_NUMBER" --jq .head.sha)" != "$HEAD_SHA" ]]; then
+            exit 0
+          fi
+
+          comment_id="$(gh api --paginate "$target/issues/$PR_NUMBER/comments" --jq '
+            .[] | select(.user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- pr-assigner-test-report -->"))) | .id
+          ' | tail -n 1)"
+          report="$RUNNER_TEMP/pr-assigner-report.md"
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "$target/issues/comments/$comment_id" -F body=@"$report" --silent
+          else
+            gh api --method POST "$target/issues/$PR_NUMBER/comments" -F body=@"$report" --silent
+          fi
+
+      - name: Require successful validation
+        env:
+          JOB_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $JOB_RESULTS; do
+            if [[ "$result" == failure || "$result" == cancelled ]]; then
+              exit 1
+            fi
+          done

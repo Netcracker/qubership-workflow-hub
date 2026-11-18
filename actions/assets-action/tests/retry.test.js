@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
 
 jest.unstable_mockModule("@qubership/action-logger", () => ({
   default: { warn: jest.fn(), info: jest.fn(), error: jest.fn() },
@@ -9,6 +9,10 @@ const { retryAsync } = await import("../src/retry.js");
 describe("retryAsync", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test("returns result on first successful call", async () => {
