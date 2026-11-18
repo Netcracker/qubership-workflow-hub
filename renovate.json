@@ -26,6 +26,13 @@
         "npm"
       ],
       "automerge": false
+    },
+    {
+      "description": "Require manual review for all major dependency updates",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
     }
   ]
 }
