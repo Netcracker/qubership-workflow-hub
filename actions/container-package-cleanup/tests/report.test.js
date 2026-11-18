@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { jest, describe, test, expect, beforeEach } from '@jest/globals';
 
 const mockCore = {
   info: jest.fn(),
@@ -193,5 +193,62 @@ describe("ContainerReport", () => {
 
     expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("❗️Cleanup operation completed with errors"));
     expect(mockCore.summary.write).toHaveBeenCalled();
+  });
+
+  describe("incomplete cleanup", () => {
+    const incompleteCleanup = [
+      { package: "test-image", failedTags: [{ tag: "latest", reason: "boom" }, { tag: "v1", reason: "denied" }] }
+    ];
+    const baseContext = {
+      dryRun: false,
+      thresholdDays: 30,
+      thresholdDate: new Date('2025-01-01'),
+      includedTags: [],
+      excludedTags: [],
+      deleteStatus: []
+    };
+    const summaryText = () => mockCore.summary.addRaw.mock.calls.map(c => c[0]).join('');
+
+    test("lists affected packages and tags after the deletion table", async () => {
+      await report.writeSummary({
+        ...baseContext,
+        filteredPackagesWithVersionsForDelete: [
+          { package: { name: "test-package", id: "123" }, versions: [{ id: "v1", name: "sha256:abc", metadata: { container: { tags: ["old"] } } }] }
+        ],
+        incompleteCleanup
+      });
+
+      const text = summaryText();
+      expect(text).toContain("Incomplete cleanup");
+      expect(text).toContain("<strong>test-image</strong>");
+      expect(text).toContain("<code>latest</code>, <code>v1</code>");
+      expect(mockCore.summary.write).toHaveBeenCalled();
+    });
+
+    test("is still written when the protective block left nothing to delete", async () => {
+      await report.writeSummary({
+        ...baseContext,
+        filteredPackagesWithVersionsForDelete: [],
+        incompleteCleanup
+      });
+
+      expect(mockCore.info).toHaveBeenCalledWith("❗️No packages or versions to delete.");
+      expect(summaryText()).toContain("Incomplete cleanup");
+      expect(summaryText()).toContain("<code>latest</code>");
+      expect(mockCore.summary.addTable).not.toHaveBeenCalled();
+      expect(mockCore.summary.write).toHaveBeenCalledTimes(1);
+    });
+
+    test("is not written when no cleanup was skipped", async () => {
+      await report.writeSummary({
+        ...baseContext,
+        filteredPackagesWithVersionsForDelete: [
+          { package: { name: "test-package", id: "123" }, versions: [{ id: "v1", name: "sha256:abc", metadata: { container: { tags: ["old"] } } }] }
+        ],
+        incompleteCleanup: []
+      });
+
+      expect(summaryText()).not.toContain("Incomplete cleanup");
+    });
   });
 });
