@@ -2,13 +2,26 @@ name: TEST assets-action
 
 on:
   workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'actions/assets-action/**'
+      - 'packages/action-logger/**'
+      - '.github/workflows/test-assets-action.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
   unit-tests:
-    name: Unit Tests
+    name: Unit Tests and Bundle Verification
+    outputs:
+      tests: ${{ steps.tests.outcome }}
+      build: ${{ steps.build.outcome }}
+      dist: ${{ steps.verify-dist.outcome }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,76 +36,170 @@ jobs:
 
       - name: Install dependencies
         working-directory: actions/assets-action
-        run: npm install
+        run: npm ci
 
       - name: Run unit tests
+        id: tests
         working-directory: actions/assets-action
         run: npm test
 
       - name: Build dist
+        id: build
         working-directory: actions/assets-action
-        run: npm run build
+        run: |
+          rm -f dist/index.js
+          npm run build
+          test -s dist/index.js
 
-      - name: Verify dist exists
-        run: test -f actions/assets-action/dist/index.js && echo "✅ dist/index.js exists"
+      - name: Compare checked-in and rebuilt dist
+        id: verify-dist
+        run: |
+          if ! git diff --quiet -- actions/assets-action/dist/; then
+            echo "::error::Rebuild and commit assets-action/dist in the PR branch before running action tests."
+            exit 1
+          fi
 
   test-upload:
-    name: Test Upload Assets
+    name: Upload and verify archive (${{ matrix.archive-type }})
+    needs: unit-tests
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        archive-type: [zip, tar, tar.gz]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+      TEST_TAG: test-assets-action-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.archive-type }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Create test files
         run: |
-          mkdir -p /tmp/test-assets
-          echo "test content 1" > /tmp/test-assets/file1.txt
-          echo "test content 2" > /tmp/test-assets/file2.txt
-          echo "✅ Test assets created"
+          mkdir -p "$RUNNER_TEMP/test-assets/nested"
+          printf 'test content 1\n' > "$RUNNER_TEMP/test-assets/file1.txt"
+          printf 'test content 2\n' > "$RUNNER_TEMP/test-assets/nested/file2.txt"
+          printf 'single file\n' > "$RUNNER_TEMP/single.txt"
 
-      - name: Create test release tag
-        run: |
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git tag test-assets-action-${{ github.run_id }} || true
-          git push origin test-assets-action-${{ github.run_id }} || true
-
-      - name: Create GitHub release
+      - name: Create isolated draft release
+        id: create-release
         env:
-          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ github.sha }}
         run: |
-          gh release create test-assets-action-${{ github.run_id }} \
-            --title "Test release for assets-action" \
-            --notes "Automated test release" \
-            --prerelease || true
+          gh release create "$TEST_TAG" --target "$TARGET_SHA" --draft --prerelease             --title "Test release for assets-action" --notes "Automated test release"
 
       - name: Run Assets Action
         uses: $/actions/assets-action
         with:
-          tag: test-assets-action-${{ github.run_id }}
-          item-path: /tmp/test-assets
-          archive-type: zip
+          tag: ${{ env.TEST_TAG }}
+          item-path: ${{ runner.temp }}/test-assets,${{ runner.temp }}/single.txt
+          archive-type: ${{ matrix.archive-type }}
 
-      - name: Verify upload
+      - name: Verify uploaded file and archive contents
         env:
-          GH_TOKEN: ${{ github.token }}
+          ARCHIVE_TYPE: ${{ matrix.archive-type }}
         run: |
-          ASSETS=$(gh release view test-assets-action-${{ github.run_id }} --json assets --jq '.assets | length')
-          echo "Uploaded assets count: $ASSETS"
-          if [ "$ASSETS" -eq 0 ]; then
-            echo "❌ ERROR: no assets uploaded"
+          expected=$(printf 'single.txt\ntest-assets.%s\n' "$ARCHIVE_TYPE" | sort)
+          actual=$(gh release view "$TEST_TAG" --json assets --jq '.assets[].name' | sort)
+          test "$actual" = "$expected"
+          mkdir "$RUNNER_TEMP/downloaded" "$RUNNER_TEMP/extracted"
+          gh release download "$TEST_TAG" --dir "$RUNNER_TEMP/downloaded"
+          diff -u "$RUNNER_TEMP/single.txt" "$RUNNER_TEMP/downloaded/single.txt"
+          archive="$RUNNER_TEMP/downloaded/test-assets.$ARCHIVE_TYPE"
+          if [[ "$ARCHIVE_TYPE" == zip ]]; then
+            unzip -q "$archive" -d "$RUNNER_TEMP/extracted"
+          else
+            tar -xf "$archive" -C "$RUNNER_TEMP/extracted"
+          fi
+          diff -r "$RUNNER_TEMP/test-assets" "$RUNNER_TEMP/extracted"
+
+      - name: Remove test release and tag
+        if: ${{ always() && steps.create-release.outcome != 'skipped' }}
+        run: |
+          if gh release view "$TEST_TAG" > /dev/null 2>&1; then
+            gh release delete "$TEST_TAG" --yes
+          fi
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TEST_TAG" --jq '.[].ref')
+          if grep -Fxq "refs/tags/$TEST_TAG" <<< "$refs"; then
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$TEST_TAG"
+          fi
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TEST_TAG" --jq '.[].ref')
+          releases=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name')
+          if grep -Fxq "refs/tags/$TEST_TAG" <<< "$refs" || grep -Fxq "$TEST_TAG" <<< "$releases"; then
+            echo "::error::Test release or tag still exists: $TEST_TAG"
             exit 1
           fi
-          echo "✅ Assets uploaded successfully"
 
-      - name: Cleanup release
-        if: always()
+  report:
+    name: assets-action Report
+    if: ${{ always() && !cancelled() }}
+    needs: [unit-tests, test-upload]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Write test summary
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTS: ${{ needs.unit-tests.outputs.tests }}
+          BUILD: ${{ needs.unit-tests.outputs.build }}
+          DISPATCH: ${{ needs.test-upload.result }}
+          DIST: ${{ needs.unit-tests.outputs.dist }}
+        run: |
+          {
+            echo '<!-- assets-action-test-report -->'
+            echo '### assets-action test report'
+            echo
+            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '| Check | Result |'
+            echo '| --- | --- |'
+            echo "| JavaScript tests | ${TESTS:-skipped} |"
+            echo "| Bundle build | ${BUILD:-skipped} |"
+            echo "| Archive upload, contents and cleanup | ${DISPATCH:-skipped} |"
+            echo "| Checked-in dist verification | ${DIST:-skipped} |"
+          } > "$RUNNER_TEMP/assets-action-report.md"
+          cat "$RUNNER_TEMP/assets-action-report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update Renovate PR comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          gh release delete test-assets-action-${{ github.run_id }} --yes || true
-          git push origin --delete test-assets-action-${{ github.run_id }} || true
+          target="repos/$GITHUB_REPOSITORY"
+          if [[ "$(gh api "$target/pulls/$PR_NUMBER" --jq .head.sha)" != "$HEAD_SHA" ]]; then
+            exit 0
+          fi
+
+          comment_id="$(gh api --paginate "$target/issues/$PR_NUMBER/comments" --jq '
+            .[] | select(.user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- assets-action-test-report -->"))) | .id
+          ' | tail -n 1)"
+          report="$RUNNER_TEMP/assets-action-report.md"
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "$target/issues/comments/$comment_id" -F body=@"$report" --silent
+          else
+            gh api --method POST "$target/issues/$PR_NUMBER/comments" -F body=@"$report" --silent
+          fi
+
+      - name: Require successful validation
+        env:
+          JOB_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $JOB_RESULTS; do
+            if [[ "$result" != success ]]; then
+              exit 1
+            fi
+          done

@@ -1,3 +1,4 @@
+import process from "node:process";
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import fs from "node:fs";
@@ -64,6 +65,7 @@ async function run() {
 
     if (fs.existsSync(configurationPath)) {
         const config = new ConfigLoader().load(configurationPath);
+        if (!config) return;
         assignees = config.assignees ?? assignees;
         count = config.count ?? count;
         selfAssign = config.selfAssign ?? selfAssign;
@@ -122,4 +124,4 @@ async function run() {
     }
 }
 
-run();
+export default run();

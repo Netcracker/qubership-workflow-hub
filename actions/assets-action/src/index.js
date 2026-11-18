@@ -1,3 +1,4 @@
+import process from "node:process";
 // actions/assets-action/src/index.js
 import * as core from "@actions/core";
 import * as github from "@actions/github";
@@ -163,10 +164,14 @@ async function run() {
       core.info(`Report Entry: ${JSON.stringify(element)}`);
     });
 
+    if (reportEntries.some(entry => entry.success !== "Success")) {
+      core.setFailed("One or more release assets could not be prepared or uploaded.");
+      return;
+    }
     core.info("✅ Action completed successfully!");
   } catch (err) {
     core.setFailed(`❌ Error: ${err.message}`);
   }
 }
 
-run();
+export default run();

@@ -1,5 +1,6 @@
 import fs from "node:fs";
-import yaml from "js-yaml";
+import { load as loadYaml } from "js-yaml";
+import schema from "../config.schema.json" with { type: "json" };
 import path from "node:path";
 import log from '@qubership/action-logger';
 
@@ -8,7 +9,7 @@ import Ajv from "ajv";
 class ConfigLoader {
   load(filePath) {
     const configPath = path.resolve(filePath);
-    console.log(`💡 Try to reading configuration ${configPath}`)
+    log.info(`💡 Reading configuration ${configPath}`);
 
     if (!fs.existsSync(configPath)) {
       log.error(`❗️ Configuration file not found: ${configPath}`);
@@ -19,27 +20,10 @@ class ConfigLoader {
 
     let config;
     try {
-      config = yaml.load(fileContent);
+      config = loadYaml(fileContent);
     }
     catch (error) {
       log.fail(`❗️ Error parsing YAML file: ${error.message}`);
-      return;
-    }
-
-    const schemaPath = path.resolve(__dirname, '..', 'config.schema.json');
-    if (!fs.existsSync(schemaPath)) {
-      log.fail(`❗️ JSON schema file not found: ${schemaPath}`);
-      return;
-    }
-
-    const schemaContent = fs.readFileSync(schemaPath, 'utf8');
-
-    let schema;
-    try {
-      schema = JSON.parse(schemaContent);
-    }
-    catch (error) {
-      log.fail(`❗️ Error parsing JSON schema: ${error.message}`);
       return;
     }
 

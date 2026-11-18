@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
 
 jest.unstable_mockModule("@qubership/action-logger", () => ({
   default: { warn: jest.fn(), info: jest.fn(), error: jest.fn() },
@@ -9,6 +9,10 @@ const { retryAsync } = await import("../src/retry.js");
 describe("retryAsync", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test("returns result on first successful call", async () => {
@@ -41,8 +45,11 @@ describe("retryAsync", () => {
 
   test("applies factor to delay on each retry", async () => {
     const delays = [];
-    const originalSetTimeout = global.setTimeout;
-    global.setTimeout = (fn, ms) => { delays.push(ms); return originalSetTimeout(fn, 0); };
+    const originalSetTimeout = globalThis.setTimeout;
+    jest.spyOn(globalThis, "setTimeout").mockImplementation((fn, ms) => {
+      delays.push(ms);
+      return originalSetTimeout(fn, 0);
+    });
 
     const fn = jest.fn()
       .mockRejectedValueOnce(new Error("fail"))
@@ -52,7 +59,6 @@ describe("retryAsync", () => {
     // constDelay starts at 100, then *=2 before each sleep: 200, 400
     await retryAsync(fn, { retries: 3, delay: 100, factor: 2 });
 
-    global.setTimeout = originalSetTimeout;
     expect(delays[0]).toBe(200);
     expect(delays[1]).toBe(400);
   });
