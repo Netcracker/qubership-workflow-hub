@@ -148,23 +148,54 @@ jobs:
       - name: Write test summary
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTED_SHA: ${{ github.sha }}
           TESTS: ${{ needs.unit-tests.outputs.tests }}
           BUILD: ${{ needs.unit-tests.outputs.build }}
           DISPATCH: ${{ needs.test-upload.result }}
           DIST: ${{ needs.unit-tests.outputs.dist }}
         run: |
+          status_label() {
+            case "$1" in
+              success) printf '✅ Passed' ;;
+              failure) printf '❌ Failed' ;;
+              skipped) printf '⏭️ Skipped' ;;
+              cancelled) printf '⛔ Cancelled' ;;
+              *) printf '❔ Unknown' ;;
+            esac
+          }
+
+          overall=success
+          for result in "${TESTS:-skipped}" "${BUILD:-skipped}" "${DISPATCH:-skipped}" "${DIST:-skipped}"; do
+            if [[ "$result" == failure ]]; then
+              overall=failure
+              break
+            fi
+            if [[ "$result" != success ]]; then
+              overall=skipped
+            fi
+          done
+
           {
             echo '<!-- assets-action-test-report -->'
-            echo '### assets-action test report'
+            printf '## Release assets · %s\n\n' "$(status_label "$overall")"
             echo
-            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
-            echo
-            echo '| Check | Result |'
+            echo '| Test | Result |'
             echo '| --- | --- |'
-            echo "| JavaScript tests | ${TESTS:-skipped} |"
-            echo "| Bundle build | ${BUILD:-skipped} |"
-            echo "| Archive upload, contents and cleanup | ${DISPATCH:-skipped} |"
-            echo "| Checked-in dist verification | ${DIST:-skipped} |"
+            printf '| Unit tests | %s |\n' "$(status_label "${TESTS:-skipped}")"
+            printf '| Bundle build | %s |\n' "$(status_label "${BUILD:-skipped}")"
+            printf '| Archive upload, contents and cleanup | %s |\n' "$(status_label "${DISPATCH:-skipped}")"
+            printf '| Bundle matches committed dist | %s |\n' "$(status_label "${DIST:-skipped}")"
+            echo
+            echo "[View workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '<details>'
+            echo '<summary>Tested revision</summary>'
+            echo
+            echo "PR revision: $HEAD_SHA"
+            echo
+            echo "Tested commit: $TESTED_SHA"
+            echo
+            echo '</details>'
           } > "$RUNNER_TEMP/assets-action-report.md"
           cat "$RUNNER_TEMP/assets-action-report.md" >> "$GITHUB_STEP_SUMMARY"
 

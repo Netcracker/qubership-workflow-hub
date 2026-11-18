@@ -397,7 +397,7 @@ jobs:
             printf '## Docker action · %s\n\n' "$(status_label "$overall")"
             echo '**Build mode** · dry-run'
             echo
-            echo '| Check | Result |'
+            echo '| Test | Result |'
             echo '| --- | --- |'
             printf '| Default component and image name | %s |\n' "$(status_label "$DEFAULTS")"
             printf '| Automatic tags | %s |\n' "$(status_label "$AUTO_TAGS")"
