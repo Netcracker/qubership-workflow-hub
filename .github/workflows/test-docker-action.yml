@@ -2,14 +2,23 @@ name: TEST docker-action
 
 on:
   workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'actions/docker-action/**'
+      - '.github/workflows/test-docker-action.yml'
+      - '.qubership/Dockerfile.test'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   test-with-default-action:
     name: Test with Defaults (component fields omitted)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -23,20 +32,22 @@ jobs:
           dry-run: "true"
           registry: "ghcr.io"
           component: '[{"dockerfile": "./.qubership/Dockerfile.test", "build_context": "."}]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Default Component Name
         shell: bash
+        env:
+          ACTION_COMPONENT_NAME: ${{ steps.docker-default-name.outputs.component-name }}
+          ACTION_FINAL_TAGS: ${{ steps.docker-default-name.outputs.final-tags }}
+          ACTION_IMAGE_NAME: ${{ steps.docker-default-name.outputs.image-name }}
         run: |
           echo "=== Outputs ==="
-          echo "Component Name: ${{ steps.docker-default-name.outputs.component-name }}"
-          echo "Final Tags: ${{ steps.docker-default-name.outputs.final-tags }}"
-          echo "Image Name: ${{ steps.docker-default-name.outputs.image-name }}"
+          echo "Component Name: $ACTION_COMPONENT_NAME"
+          echo "Final Tags: $ACTION_FINAL_TAGS"
+          echo "Image Name: $ACTION_IMAGE_NAME"
 
           # Verify component name defaults to "default" (from JSON parsing)
           EXPECTED_NAME="default"
-          ACTUAL_NAME="${{ steps.docker-default-name.outputs.component-name }}"
+          ACTUAL_NAME="$ACTION_COMPONENT_NAME"
           if [ "$ACTUAL_NAME" != "$EXPECTED_NAME" ]; then
             echo "❌ ERROR: Component name should default to 'default'"
             echo "Expected: $EXPECTED_NAME"
@@ -47,7 +58,7 @@ jobs:
           # When component name is "default", the image should use repository name instead
           # Extract repo name from GITHUB_REPOSITORY (owner/repo -> repo)
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
-          TAGS="${{ steps.docker-default-name.outputs.final-tags }}"
+          TAGS="$ACTION_FINAL_TAGS"
 
           if [[ ! "$TAGS" == *"$REPO_NAME"* ]]; then
             echo "❌ ERROR: Tags should contain repository name '$REPO_NAME' when component is 'default'"
@@ -65,9 +76,6 @@ jobs:
   test-auto-tags:
     name: Test with Auto-Generated Tags
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -82,28 +90,32 @@ jobs:
           registry: "ghcr.io"
           platforms: "linux/amd64"
           component: '[{"name": "test-auto", "dockerfile": "./.qubership/Dockerfile.test", "build_context": "."}]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Auto Tags Output
         shell: bash
+        env:
+          ACTION_IMAGE_NAME: ${{ steps.docker-auto.outputs.image-name }}
+          ACTION_FINAL_TAGS: ${{ steps.docker-auto.outputs.final-tags }}
+          ACTION_FINAL_LABELS: ${{ steps.docker-auto.outputs.final-labels }}
+          ACTION_FINAL_PLATFORMS: ${{ steps.docker-auto.outputs.final-platforms }}
+          ACTION_COMPONENT_NAME: ${{ steps.docker-auto.outputs.component-name }}
         run: |
           echo "=== Outputs ==="
-          echo "Image Name: ${{ steps.docker-auto.outputs.image-name }}"
-          echo "Final Tags: ${{ steps.docker-auto.outputs.final-tags }}"
-          echo "Final Labels: ${{ steps.docker-auto.outputs.final-labels }}"
-          echo "Final Platforms: ${{ steps.docker-auto.outputs.final-platforms }}"
-          echo "Component Name: ${{ steps.docker-auto.outputs.component-name }}"
+          echo "Image Name: $ACTION_IMAGE_NAME"
+          echo "Final Tags: $ACTION_FINAL_TAGS"
+          echo "Final Labels: $ACTION_FINAL_LABELS"
+          echo "Final Platforms: $ACTION_FINAL_PLATFORMS"
+          echo "Component Name: $ACTION_COMPONENT_NAME"
 
           # Verify tags are not empty
-          if [ -z "${{ steps.docker-auto.outputs.final-tags }}" ]; then
+          if [ -z "$ACTION_FINAL_TAGS" ]; then
             echo "❌ ERROR: final-tags is empty"
             exit 1
           fi
 
           # Verify platforms match expected
           EXPECTED_PLATFORMS="linux/amd64"
-          ACTUAL_PLATFORMS="${{ steps.docker-auto.outputs.final-platforms }}"
+          ACTUAL_PLATFORMS="$ACTION_FINAL_PLATFORMS"
           if [ "$ACTUAL_PLATFORMS" != "$EXPECTED_PLATFORMS" ]; then
             echo "❌ ERROR: Platforms mismatch"
             echo "Expected: $EXPECTED_PLATFORMS"
@@ -113,7 +125,7 @@ jobs:
 
           # Verify component name
           EXPECTED_COMPONENT="test-auto"
-          ACTUAL_COMPONENT="${{ steps.docker-auto.outputs.component-name }}"
+          ACTUAL_COMPONENT="$ACTION_COMPONENT_NAME"
           if [ "$ACTUAL_COMPONENT" != "$EXPECTED_COMPONENT" ]; then
             echo "❌ ERROR: Component name mismatch"
             echo "Expected: $EXPECTED_COMPONENT"
@@ -122,7 +134,7 @@ jobs:
           fi
 
           # Verify tags contain repository name
-          TAGS="${{ steps.docker-auto.outputs.final-tags }}"
+          TAGS="$ACTION_FINAL_TAGS"
           # Basic format checks for auto tags
           if [[ "$TAGS" == *" "* ]]; then
             echo "❌ ERROR: Tags contain spaces"
@@ -154,9 +166,6 @@ jobs:
   test-custom-tags:
     name: Test with Custom Tags
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -172,17 +181,18 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "v1.0.0,latest,custom-tag"
           component: '[{"name": "test-custom", "dockerfile": "./.qubership/Dockerfile.test", "build_context": "."}]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Custom Tags Output
         shell: bash
+        env:
+          ACTION_FINAL_TAGS: ${{ steps.docker-custom.outputs.final-tags }}
+          ACTION_FINAL_PLATFORMS: ${{ steps.docker-custom.outputs.final-platforms }}
         run: |
           echo "=== Outputs ==="
-          echo "Final Tags: ${{ steps.docker-custom.outputs.final-tags }}"
-          echo "Final Platforms: ${{ steps.docker-custom.outputs.final-platforms }}"
+          echo "Final Tags: $ACTION_FINAL_TAGS"
+          echo "Final Platforms: $ACTION_FINAL_PLATFORMS"
 
-          TAGS="${{ steps.docker-custom.outputs.final-tags }}"
+          TAGS="$ACTION_FINAL_TAGS"
           # Basic format checks for custom tags
           if [[ "$TAGS" == *" "* ]]; then
             echo "❌ ERROR: Tags contain spaces"
@@ -211,7 +221,7 @@ jobs:
 
           # Verify platforms match expected
           EXPECTED_PLATFORMS="linux/amd64,linux/arm64"
-          ACTUAL_PLATFORMS="${{ steps.docker-custom.outputs.final-platforms }}"
+          ACTUAL_PLATFORMS="$ACTION_FINAL_PLATFORMS"
           if [ "$ACTUAL_PLATFORMS" != "$EXPECTED_PLATFORMS" ]; then
             echo "❌ ERROR: Platforms mismatch"
             echo "Expected: $EXPECTED_PLATFORMS"
@@ -234,61 +244,66 @@ jobs:
           echo "✅ All custom tags tests passed!"
 
   test-build-args:
-    name: Test with Build Args
+    name: Local image build args (${{ matrix.scenario }})
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: input
+            build-args: INPUT_ARG1=input_value1,INPUT_ARG2=input_value2
+            component: '[{"name":"test-buildargs-input","dockerfile":"./.qubership/Dockerfile.test","build_context":"."}]'
+            expected-arg1: ""
+            expected-arg2: ""
+            expected-input-arg1: input_value1
+            expected-input-arg2: input_value2
+          - scenario: component-priority
+            build-args: ARG1=ignored_value,INPUT_ARG1=ignored_input
+            component: '[{"name":"test-buildargs-component","dockerfile":"./.qubership/Dockerfile.test","build_context":".","arguments":{"ARG1":"component_value1","ARG2":"component_value2"}}]'
+            expected-arg1: component_value1
+            expected-arg2: component_value2
+            expected-input-arg1: ""
+            expected-input-arg2: ""
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Run Docker Action with Build Args from Input
-        id: docker-buildargs-input
+      - name: Build local image through Docker Action
+        id: docker-buildargs
         uses: $/actions/docker-action
         with:
+          checkout: "false"
           dry-run: "true"
-          registry: "ghcr.io"
-          build-args: INPUT_ARG1=input_value1,INPUT_ARG2=input_value2
-          component: '[{"name": "test-buildargs-input", "dockerfile": "./.qubership/Dockerfile.test", "build_context": "."}]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          load: "true"
+          setup-qemu: "false"
+          registry: ghcr.io
+          platforms: linux/amd64
+          tags: ci-build-args
+          build-args: ${{ matrix.build-args }}
+          component: ${{ matrix.component }}
 
-      - name: Verify Build Args from Input
+      - name: Verify build args inside the container
         shell: bash
+        env:
+          IMAGE_REF: ${{ steps.docker-buildargs.outputs.final-tags }}
+          EXPECTED_ARG1: ${{ matrix.expected-arg1 }}
+          EXPECTED_ARG2: ${{ matrix.expected-arg2 }}
+          EXPECTED_INPUT_ARG1: ${{ matrix.expected-input-arg1 }}
+          EXPECTED_INPUT_ARG2: ${{ matrix.expected-input-arg2 }}
         run: |
-          echo "=== Outputs ==="
-          echo "Final Build Args: ${{ steps.docker-buildargs-input.outputs.final-build-args }}"
-
-          FINAL_ARGS="${{ steps.docker-buildargs-input.outputs.final-build-args }}"
-
-          # Verify build args are not empty
-          if [ -z "$FINAL_ARGS" ]; then
-            echo "❌ ERROR: final-build-args is empty"
-            exit 1
-          fi
-
-          # Verify build args contain expected input values
-          if [[ ! "$FINAL_ARGS" == *"INPUT_ARG1=input_value1"* ]]; then
-            echo "❌ ERROR: Build args don't contain 'INPUT_ARG1=input_value1'"
-            exit 1
-          fi
-
-          if [[ ! "$FINAL_ARGS" == *"INPUT_ARG2=input_value2"* ]]; then
-            echo "❌ ERROR: Build args don't contain 'INPUT_ARG2=input_value2'"
-            exit 1
-          fi
-
-          echo "✅ Build args from inputs verified!"
+          docker image inspect "$IMAGE_REF" > /dev/null
+          docker run --rm "$IMAGE_REF" > "$RUNNER_TEMP/actual-build-args.txt"
+          printf 'Test Docker Image\nARG1=%s\nARG2=%s\nINPUT_ARG1=%s\nINPUT_ARG2=%s\n' \
+            "$EXPECTED_ARG1" "$EXPECTED_ARG2" \
+            "$EXPECTED_INPUT_ARG1" "$EXPECTED_INPUT_ARG2" \
+            > "$RUNNER_TEMP/expected-build-args.txt"
+          diff -u "$RUNNER_TEMP/expected-build-args.txt" "$RUNNER_TEMP/actual-build-args.txt"
 
   test-platforms:
     name: Test Multi-Platform Build
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -303,14 +318,14 @@ jobs:
           registry: "ghcr.io"
           platforms: "linux/amd64,linux/arm64,linux/arm/v7"
           component: '[{"name": "test-multiplatform", "dockerfile": "./.qubership/Dockerfile.test", "build_context": "."}]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Platforms Output
         shell: bash
+        env:
+          ACTION_FINAL_PLATFORMS: ${{ steps.docker-multiplatform.outputs.final-platforms }}
         run: |
           echo "=== Outputs ==="
-          PLATFORMS="${{ steps.docker-multiplatform.outputs.final-platforms }}"
+          PLATFORMS="$ACTION_FINAL_PLATFORMS"
           echo "Final Platforms: $PLATFORMS"
 
           # Verify platforms match exactly
@@ -343,9 +358,6 @@ jobs:
   test-component-aliases:
     name: Test Component Aliases (file/context)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -359,28 +371,30 @@ jobs:
           dry-run: "true"
           registry: "ghcr.io"
           component: '[{"name": "test-aliases", "file": "./.qubership/Dockerfile.test", "context": "."}]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Component Aliases Output
         shell: bash
+        env:
+          ACTION_COMPONENT_NAME: ${{ steps.docker-aliases.outputs.component-name }}
+          ACTION_COMPONENT_FILE: ${{ steps.docker-aliases.outputs.component-file }}
+          ACTION_COMPONENT_CONTEXT: ${{ steps.docker-aliases.outputs.component-context }}
         run: |
           echo "=== Outputs ==="
-          echo "Component Name: ${{ steps.docker-aliases.outputs.component-name }}"
-          echo "Component File: ${{ steps.docker-aliases.outputs.component-file }}"
-          echo "Component Context: ${{ steps.docker-aliases.outputs.component-context }}"
+          echo "Component Name: $ACTION_COMPONENT_NAME"
+          echo "Component File: $ACTION_COMPONENT_FILE"
+          echo "Component Context: $ACTION_COMPONENT_CONTEXT"
 
-          if [ "${{ steps.docker-aliases.outputs.component-name }}" != "test-aliases" ]; then
+          if [ "$ACTION_COMPONENT_NAME" != "test-aliases" ]; then
             echo "❌ ERROR: Component name mismatch for aliases"
             exit 1
           fi
 
-          if [ "${{ steps.docker-aliases.outputs.component-file }}" != "./.qubership/Dockerfile.test" ]; then
+          if [ "$ACTION_COMPONENT_FILE" != "./.qubership/Dockerfile.test" ]; then
             echo "❌ ERROR: Component file mismatch for aliases"
             exit 1
           fi
 
-          if [ "${{ steps.docker-aliases.outputs.component-context }}" != "." ]; then
+          if [ "$ACTION_COMPONENT_CONTEXT" != "." ]; then
             echo "❌ ERROR: Component context mismatch for aliases"
             exit 1
           fi
