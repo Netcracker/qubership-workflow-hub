@@ -259,6 +259,28 @@ Skipped example v:456 - not found
 
 ---
 
+## Tests
+
+The [test workflow](../../.github/workflows/test-container-package-cleanup.yml) runs unit tests,
+rebuilds and verifies the committed bundle, then invokes this action through `action.yml` on Node.js 24.
+Integration scenarios cover retained and shared platform manifests, manifest failures, single-platform
+images, dry-run, empty results, Maven retention, zero thresholds and invalid inputs.
+
+The integration fixtures use a local HTTP server and replace Docker subprocess calls. Only a fixture
+token is used; network connections outside the local API fixture are blocked. No images, releases or
+real package versions are created or deleted. Temporary files and the server are removed after each run.
+These tests verify the action and its API request handling; they do not verify live GHCR availability
+or the behavior of an installed Docker client.
+
+Run the same bundle scenarios locally after installing dependencies and building:
+
+```bash
+npm ci
+npm test
+npm run build
+npm run test:action
+```
+
 ## Feedback
 
 If you have suggestions or find a bug, please create an issue or pull request in this repository.

@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "test:action": "node tests/fixtures/run-local.mjs",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose",
     "build": "esbuild src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.js --preserve-symlinks"
   },

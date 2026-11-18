@@ -1,0 +1,247 @@
+name: TEST container-package-cleanup
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'actions/container-package-cleanup/**'
+      - 'packages/action-logger/**'
+      - '.github/workflows/test-container-package-cleanup.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests and Bundle Verification
+    timeout-minutes: 10
+    outputs:
+      tests: ${{ steps.tests.outcome }}
+      build: ${{ steps.build.outcome }}
+      dist: ${{ steps.verify-dist.outcome }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: actions/container-package-cleanup
+        run: npm ci
+
+      - name: Run unit tests
+        id: tests
+        working-directory: actions/container-package-cleanup
+        run: npm test
+
+      - name: Build dist
+        id: build
+        working-directory: actions/container-package-cleanup
+        run: |
+          rm -f dist/index.js
+          npm run build
+          test -s dist/index.js
+
+      - name: Compare checked-in and rebuilt dist
+        id: verify-dist
+        run: |
+          if ! git diff --quiet -- actions/container-package-cleanup/dist/; then
+            echo "::error::Rebuild and commit container-package-cleanup/dist in the PR branch before running action tests."
+            exit 1
+          fi
+
+  test-cleanup:
+    name: Cleanup behavior (${{ matrix.scenario }})
+    timeout-minutes: 5
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: retained-images
+          - scenario: dry-run
+          - scenario: manifest-failure
+          - scenario: deleted-manifest-failure
+          - scenario: single-arch
+          - scenario: empty
+          - scenario: maven
+            package-type: maven
+          - scenario: maven-zero
+            package-type: maven
+            days: '0'
+            versions: '0'
+          - scenario: invalid-days
+            days: 7abc
+          - scenario: invalid-versions
+            package-type: maven
+            versions: '1.5'
+    env:
+      CLEANUP_TEST_SCENARIO: ${{ matrix.scenario }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Start local API fixture
+        working-directory: actions/container-package-cleanup
+        run: |
+          export CLEANUP_TEST_DIR="$RUNNER_TEMP/cleanup-fixture"
+          echo "CLEANUP_TEST_DIR=$CLEANUP_TEST_DIR" >> "$GITHUB_ENV"
+          mkdir "$CLEANUP_TEST_DIR"
+          node tests/fixtures/server.mjs > "$CLEANUP_TEST_DIR/server.log" 2>&1 &
+          echo "$!" > "$CLEANUP_TEST_DIR/server.pid"
+          for _ in {1..50}; do
+            if [[ -s "$CLEANUP_TEST_DIR/api-url" ]]; then
+              exit 0
+            fi
+            sleep 0.1
+          done
+          cat "$CLEANUP_TEST_DIR/server.log"
+          exit 1
+
+      - name: Run cleanup through its manifest
+        id: cleanup
+        continue-on-error: true
+        uses: $/actions/container-package-cleanup
+        env:
+          NODE_OPTIONS: --import=${{ github.workspace }}/actions/container-package-cleanup/tests/fixtures/preload.mjs
+          PACKAGE_TOKEN: cleanup-fixture-token
+        with:
+          package-type: ${{ matrix.package-type || 'container' }}
+          threshold-days: ${{ matrix.days || '7' }}
+          threshold-versions: ${{ matrix.versions || '1' }}
+          included-tags: dev-*
+          excluded-tags: release-*
+          dry-run: ${{ matrix.scenario == 'dry-run' }}
+          debug: 'false'
+
+      - name: Verify outcome, deletion requests and report
+        working-directory: actions/container-package-cleanup
+        env:
+          ACTUAL_OUTCOME: ${{ steps.cleanup.outcome }}
+        run: node tests/fixtures/verify.mjs
+
+      - name: Stop fixture and remove temporary files
+        if: ${{ always() }}
+        run: |
+          export CLEANUP_TEST_DIR="$RUNNER_TEMP/cleanup-fixture"
+          if [[ -f "$CLEANUP_TEST_DIR/server.pid" ]]; then
+            pid=$(cat "$CLEANUP_TEST_DIR/server.pid")
+            if kill -0 "$pid" 2>/dev/null; then
+              kill "$pid"
+            fi
+          fi
+          rm -rf "$CLEANUP_TEST_DIR"
+
+  report:
+    name: Container Package Cleanup Report
+    if: ${{ always() && !cancelled() }}
+    needs: [unit-tests, test-cleanup]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Write test summary
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTED_SHA: ${{ github.sha }}
+          TESTS: ${{ needs.unit-tests.outputs.tests }}
+          BUILD: ${{ needs.unit-tests.outputs.build }}
+          DISPATCH: ${{ needs.test-cleanup.result }}
+          DIST: ${{ needs.unit-tests.outputs.dist }}
+        run: |
+          status_label() {
+            case "$1" in
+              success) printf '✅ Passed' ;;
+              failure) printf '❌ Failed' ;;
+              skipped) printf '⏭️ Skipped' ;;
+              cancelled) printf '⛔ Cancelled' ;;
+              *) printf '❔ Unknown' ;;
+            esac
+          }
+
+          overall=success
+          for result in "${TESTS:-skipped}" "${BUILD:-skipped}" "${DISPATCH:-skipped}" "${DIST:-skipped}"; do
+            if [[ "$result" == failure ]]; then
+              overall=failure
+              break
+            fi
+            if [[ "$result" != success ]]; then
+              overall=skipped
+            fi
+          done
+
+          {
+            echo '<!-- container-package-cleanup-test-report -->'
+            printf '## Container package cleanup · %s\n\n' "$(status_label "$overall")"
+            echo
+            echo '| Test | Result |'
+            echo '| --- | --- |'
+            printf '| Unit tests | %s |\n' "$(status_label "${TESTS:-skipped}")"
+            printf '| Bundle build | %s |\n' "$(status_label "${BUILD:-skipped}")"
+            printf '| Action manifest, API and Docker scenarios | %s |\n' "$(status_label "${DISPATCH:-skipped}")"
+            printf '| Bundle matches committed dist | %s |\n' "$(status_label "${DIST:-skipped}")"
+            echo
+            echo "[View workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '<details>'
+            echo '<summary>Tested revision</summary>'
+            echo
+            echo "PR revision: $HEAD_SHA"
+            echo
+            echo "Tested commit: $TESTED_SHA"
+            echo
+            echo '</details>'
+          } > "$RUNNER_TEMP/container-package-cleanup-report.md"
+          cat "$RUNNER_TEMP/container-package-cleanup-report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update Renovate PR comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          target="repos/$GITHUB_REPOSITORY"
+          if [[ "$(gh api "$target/pulls/$PR_NUMBER" --jq .head.sha)" != "$HEAD_SHA" ]]; then
+            exit 0
+          fi
+
+          comment_id="$(gh api --paginate "$target/issues/$PR_NUMBER/comments" --jq '
+            .[] | select(.user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- container-package-cleanup-test-report -->"))) | .id
+          ' | tail -n 1)"
+          report="$RUNNER_TEMP/container-package-cleanup-report.md"
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "$target/issues/comments/$comment_id" -F body=@"$report" --silent
+          else
+            gh api --method POST "$target/issues/$PR_NUMBER/comments" -F body=@"$report" --silent
+          fi
+
+      - name: Require successful validation
+        env:
+          JOB_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $JOB_RESULTS; do
+            if [[ "$result" != success ]]; then
+              exit 1
+            fi
+          done
