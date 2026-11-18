@@ -306,6 +306,7 @@ jobs:
       - name: Write test summary
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTED_SHA: ${{ github.sha }}
           TESTS: ${{ needs.unit-tests.outputs.tests }}
           BUILD: ${{ needs.unit-tests.outputs.build }}
           DEFAULT_TEMPLATE: ${{ needs.unit-tests.outputs.default-template }}
@@ -314,21 +315,51 @@ jobs:
           INLINE_LENGTH: ${{ needs.unit-tests.outputs.inline-length }}
           DIST: ${{ needs.unit-tests.outputs.dist }}
         run: |
+          status_label() {
+            case "$1" in
+              success) printf '✅ Passed' ;;
+              failure) printf '❌ Failed' ;;
+              skipped) printf '⏭️ Skipped' ;;
+              cancelled) printf '⛔ Cancelled' ;;
+              *) printf '❔ Unknown' ;;
+            esac
+          }
+
+          overall=success
+          for result in "${TESTS:-skipped}" "${BUILD:-skipped}" "${DEFAULT_TEMPLATE:-skipped}" "${CUSTOM_TEMPLATE:-skipped}" "${GITHUB_CONTEXT:-skipped}" "${INLINE_LENGTH:-skipped}" "${DIST:-skipped}"; do
+            if [[ "$result" == failure ]]; then
+              overall=failure
+              break
+            fi
+            if [[ "$result" != success ]]; then
+              overall=skipped
+            fi
+          done
+
           {
             echo '<!-- metadata-action-test-report -->'
-            echo '### Metadata action test report'
+            printf '## Metadata action · %s\n\n' "$(status_label "$overall")"
             echo
-            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
-            echo
-            echo '| Check | Result |'
+            echo '| Test | Result |'
             echo '| --- | --- |'
-            echo "| JavaScript tests | ${TESTS:-skipped} |"
-            echo "| Bundle build | ${BUILD:-skipped} |"
-            echo "| Default template | ${DEFAULT_TEMPLATE:-skipped} |"
-            echo "| Custom template | ${CUSTOM_TEMPLATE:-skipped} |"
-            echo "| GitHub context | ${GITHUB_CONTEXT:-skipped} |"
-            echo "| Inline length modifier | ${INLINE_LENGTH:-skipped} |"
-            echo "| Checked-in dist verification | ${DIST:-skipped} |"
+            printf '| Unit tests | %s |\n' "$(status_label "${TESTS:-skipped}")"
+            printf '| Bundle build | %s |\n' "$(status_label "${BUILD:-skipped}")"
+            printf '| Default template | %s |\n' "$(status_label "${DEFAULT_TEMPLATE:-skipped}")"
+            printf '| Custom template | %s |\n' "$(status_label "${CUSTOM_TEMPLATE:-skipped}")"
+            printf '| GitHub context | %s |\n' "$(status_label "${GITHUB_CONTEXT:-skipped}")"
+            printf '| Inline length modifier | %s |\n' "$(status_label "${INLINE_LENGTH:-skipped}")"
+            printf '| Bundle matches committed dist | %s |\n' "$(status_label "${DIST:-skipped}")"
+            echo
+            echo "[View workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '<details>'
+            echo '<summary>Tested revision</summary>'
+            echo
+            echo "PR revision: $HEAD_SHA"
+            echo
+            echo "Tested commit: $TESTED_SHA"
+            echo
+            echo '</details>'
           } > "$RUNNER_TEMP/metadata-action-report.md"
           cat "$RUNNER_TEMP/metadata-action-report.md" >> "$GITHUB_STEP_SUMMARY"
 
