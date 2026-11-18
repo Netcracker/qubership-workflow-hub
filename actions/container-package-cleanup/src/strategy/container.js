@@ -56,6 +56,10 @@ class ContainerStrategy extends AbstractPackageStrategy {
         log.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : 'unknown'} packages.`);
         log.setDebug(debug);
 
+        if (!(thresholdDate instanceof Date) || Number.isNaN(thresholdDate.getTime())) {
+            throw new Error(`Invalid threshold date: ${thresholdDate}`);
+        }
+
         const excluded = excludedPatterns.map(p => p.toLowerCase());
         const included = includedPatterns.map(p => p.toLowerCase());
         const packages = await this.parse(packagesWithVersions);

@@ -9,6 +9,7 @@ import ContainerReport from "./reports/containerReport.js";
 import MavenReport from "./reports/mavenReport.js";
 import { getStrategy } from "./strategy/strategyRegistry.js";
 import { deletePackageVersion } from './utils/deleteAction.js';
+import { parseNonNegativeInt } from './utils/inputs.js';
 import log from "@qubership/action-logger";
 
 async function run() {
@@ -25,7 +26,19 @@ async function run() {
   log.setDebug(isDebug);
   log.setDryRun(dryRun);
 
-  const thresholdDays = parseInt(core.getInput('threshold-days'), 10);
+  // Retention settings decide what gets deleted: validate them strictly before doing anything else.
+  let thresholdDays;
+  let thresholdVersions;
+  try {
+    thresholdDays = parseNonNegativeInt('threshold-days', core.getInput('threshold-days'));
+    // threshold-versions is only used by the Maven strategy
+    thresholdVersions = package_type === "maven"
+      ? parseNonNegativeInt('threshold-versions', core.getInput('threshold-versions'))
+      : parseInt(core.getInput('threshold-versions'), 10);
+  } catch (error) {
+    core.setFailed(error.message);
+    return;
+  }
 
   const batchSize = parseInt(core.getInput('batch-size'), 10) || 15;
   const maxErrors = parseInt(core.getInput('max-errors'), 10) || 5;
@@ -45,7 +58,6 @@ async function run() {
 
   const now = new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1000);
-  const thresholdVersions = parseInt(core.getInput('threshold-versions'), 10);
 
   log.info(`Threshold Days: ${thresholdDays}`);
   log.info(`Threshold Date: ${thresholdDate}`);
