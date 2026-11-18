@@ -21,6 +21,10 @@ inputs:
     description: "Load a single-platform build into the local Docker image store."
     required: false
     default: "false"
+  outputs:
+    description: "Buildx output destinations, for example a local OCI archive."
+    required: false
+    default: ""
   download-artifact:
     description: "Flag to download the artifact."
     required: false
@@ -326,8 +330,6 @@ runs:
         PLATFORMS_INPUT: ${{ inputs.platforms }}
         GHCR_URL: ${{ env.GHCR_URL }}
         DOCKER_URL: ${{ env.DOCKER_URL }}
-        CACHE_FROM: ${{ inputs.cache-from }}
-        CACHE_TO: ${{ inputs.cache-to }}
       run: |
         set -euo pipefail
 
@@ -420,6 +422,7 @@ runs:
       id: dockerbuild
       with:
         load: ${{ inputs.load == 'true' }}
+        outputs: ${{ inputs.outputs }}
         provenance: false
         sbom: ${{ inputs.sbom == 'true' && 'true' || 'false' }}
         context: ${{ steps.extract_component.outputs.ctx }}
@@ -429,8 +432,8 @@ runs:
         labels: ${{ env.FINAL_LABELS }}
         platforms: ${{ env.FINAL_PLATFORMS }}
         build-args: ${{ env.FINAL_BUILD_ARGS }}
-        cache-from: ${{ env.CACHE_FROM }}
-        cache-to: ${{ env.CACHE_TO }}
+        cache-from: ${{ inputs.cache-from }}
+        cache-to: ${{ inputs.cache-to }}
 
     - name: Output result
       if: ${{ ! (inputs.dry-run == 'true') }}

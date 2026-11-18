@@ -46,6 +46,7 @@ and produces a signed metadata JSON artifact after a successful push.
 | `download-artifact-pattern`        | Glob pattern for artifacts to download. Ignored if `download-artifact-name` is set.                        | No       | `""`                                                                        |
 | `dry-run`                          | Build without pushing. Skips registry login validation, push, and metadata upload.                         | No       | `"false"`                                                                   |
 | `load` | Load a single-platform build into the local Docker image store for running or inspecting the image. | No | `"false"` |
+| `outputs` | Buildx output destinations, such as `type=oci,dest=/tmp/image.tar`. | No | `""` |
 | `platforms`                        | Target platforms for the build (comma-separated, e.g. `linux/amd64,linux/arm64`).                          | No       | `"linux/amd64"`                                                             |
 | `ref`                              | Git ref (branch, tag, or SHA) to checkout. Ignored when `checkout` is `false`.                             | No       | `""`                                                                        |
 | `registry`                         | Target registry: `ghcr.io`, `docker.io`, or `ghcr.io,docker.io` for both.                                  | No       | `"ghcr.io"`                                                                 |

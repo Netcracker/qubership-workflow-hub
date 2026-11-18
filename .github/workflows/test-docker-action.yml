@@ -91,77 +91,21 @@ jobs:
           platforms: "linux/amd64"
           component: '[{"name": "test-auto", "dockerfile": "./.qubership/Dockerfile.test", "build_context": "."}]'
 
-      - name: Verify Auto Tags Output
-        shell: bash
+      - name: Verify exact auto tags and resolved parameters
         env:
-          ACTION_IMAGE_NAME: ${{ steps.docker-auto.outputs.image-name }}
-          ACTION_FINAL_TAGS: ${{ steps.docker-auto.outputs.final-tags }}
-          ACTION_FINAL_LABELS: ${{ steps.docker-auto.outputs.final-labels }}
-          ACTION_FINAL_PLATFORMS: ${{ steps.docker-auto.outputs.final-platforms }}
-          ACTION_COMPONENT_NAME: ${{ steps.docker-auto.outputs.component-name }}
+          TAGS: ${{ steps.docker-auto.outputs.final-tags }}
+          PLATFORMS: ${{ steps.docker-auto.outputs.final-platforms }}
+          COMPONENT: ${{ steps.docker-auto.outputs.component-name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          echo "=== Outputs ==="
-          echo "Image Name: $ACTION_IMAGE_NAME"
-          echo "Final Tags: $ACTION_FINAL_TAGS"
-          echo "Final Labels: $ACTION_FINAL_LABELS"
-          echo "Final Platforms: $ACTION_FINAL_PLATFORMS"
-          echo "Component Name: $ACTION_COMPONENT_NAME"
-
-          # Verify tags are not empty
-          if [ -z "$ACTION_FINAL_TAGS" ]; then
-            echo "❌ ERROR: final-tags is empty"
-            exit 1
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            tag="pr-$PR_NUMBER"
+          else
+            tag=$(printf '%s' "$GITHUB_REF_NAME" | sed 's/[^a-zA-Z0-9_.-]/-/g' | tr '[:upper:]' '[:lower:]')
           fi
-
-          # Verify platforms match expected
-          EXPECTED_PLATFORMS="linux/amd64"
-          ACTUAL_PLATFORMS="$ACTION_FINAL_PLATFORMS"
-          if [ "$ACTUAL_PLATFORMS" != "$EXPECTED_PLATFORMS" ]; then
-            echo "❌ ERROR: Platforms mismatch"
-            echo "Expected: $EXPECTED_PLATFORMS"
-            echo "Actual: $ACTUAL_PLATFORMS"
-            exit 1
-          fi
-
-          # Verify component name
-          EXPECTED_COMPONENT="test-auto"
-          ACTUAL_COMPONENT="$ACTION_COMPONENT_NAME"
-          if [ "$ACTUAL_COMPONENT" != "$EXPECTED_COMPONENT" ]; then
-            echo "❌ ERROR: Component name mismatch"
-            echo "Expected: $EXPECTED_COMPONENT"
-            echo "Actual: $ACTUAL_COMPONENT"
-            exit 1
-          fi
-
-          # Verify tags contain repository name
-          TAGS="$ACTION_FINAL_TAGS"
-          # Basic format checks for auto tags
-          if [[ "$TAGS" == *" "* ]]; then
-            echo "❌ ERROR: Tags contain spaces"
-            exit 1
-          fi
-
-          if [[ "$TAGS" != *":"* ]]; then
-            echo "❌ ERROR: Tags missing image tag separator ':'"
-            exit 1
-          fi
-
-          if [[ "$TAGS" != "$(echo "$TAGS" | tr '[:upper:]' '[:lower:]')" ]]; then
-            echo "❌ ERROR: Tags are not lowercase"
-            exit 1
-          fi
-
-          if [[ ! "$TAGS" == *"ghcr.io"* ]]; then
-            echo "❌ ERROR: Tags don't contain ghcr.io registry"
-            exit 1
-          fi
-
-          if [[ ! "$TAGS" == *"test-auto"* ]]; then
-            echo "❌ ERROR: Tags don't contain component name 'test-auto'"
-            exit 1
-          fi
-
-          echo "✅ All auto-tags tests passed!"
+          test "$TAGS" = "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/test-auto:$tag"
+          test "$PLATFORMS" = linux/amd64
+          test "$COMPONENT" = test-auto
 
   test-custom-tags:
     name: Test with Custom Tags
@@ -179,69 +123,19 @@ jobs:
           dry-run: "true"
           registry: "ghcr.io"
           platforms: "linux/amd64,linux/arm64"
+          custom-image-name: test-override
           tags: "v1.0.0,latest,custom-tag"
           component: '[{"name": "test-custom", "dockerfile": "./.qubership/Dockerfile.test", "build_context": "."}]'
 
-      - name: Verify Custom Tags Output
-        shell: bash
+      - name: Verify exact custom tags and platforms
         env:
-          ACTION_FINAL_TAGS: ${{ steps.docker-custom.outputs.final-tags }}
-          ACTION_FINAL_PLATFORMS: ${{ steps.docker-custom.outputs.final-platforms }}
+          TAGS: ${{ steps.docker-custom.outputs.final-tags }}
+          PLATFORMS: ${{ steps.docker-custom.outputs.final-platforms }}
         run: |
-          echo "=== Outputs ==="
-          echo "Final Tags: $ACTION_FINAL_TAGS"
-          echo "Final Platforms: $ACTION_FINAL_PLATFORMS"
-
-          TAGS="$ACTION_FINAL_TAGS"
-          # Basic format checks for custom tags
-          if [[ "$TAGS" == *" "* ]]; then
-            echo "❌ ERROR: Tags contain spaces"
-            exit 1
-          fi
-
-          if [[ "$TAGS" != *":"* ]]; then
-            echo "❌ ERROR: Tags missing image tag separator ':'"
-            exit 1
-          fi
-          # Verify all custom tags are present
-          if [[ ! "$TAGS" == *"v1.0.0"* ]]; then
-            echo "❌ ERROR: Custom tag v1.0.0 not found in final tags"
-            exit 1
-          fi
-
-          if [[ ! "$TAGS" == *"latest"* ]]; then
-            echo "❌ ERROR: Custom tag latest not found in final tags"
-            exit 1
-          fi
-
-          if [[ ! "$TAGS" == *"custom-tag"* ]]; then
-            echo "❌ ERROR: Custom tag custom-tag not found in final tags"
-            exit 1
-          fi
-
-          # Verify platforms match expected
-          EXPECTED_PLATFORMS="linux/amd64,linux/arm64"
-          ACTUAL_PLATFORMS="$ACTION_FINAL_PLATFORMS"
-          if [ "$ACTUAL_PLATFORMS" != "$EXPECTED_PLATFORMS" ]; then
-            echo "❌ ERROR: Platforms mismatch"
-            echo "Expected: $EXPECTED_PLATFORMS"
-            echo "Actual: $ACTUAL_PLATFORMS"
-            exit 1
-          fi
-
-          # Verify tags contain registry
-          if [[ ! "$TAGS" == *"ghcr.io"* ]]; then
-            echo "❌ ERROR: Tags don't contain ghcr.io registry"
-            exit 1
-          fi
-
-          # Verify component name in tags
-          if [[ ! "$TAGS" == *"test-custom"* ]]; then
-            echo "❌ ERROR: Tags don't contain component name 'test-custom'"
-            exit 1
-          fi
-
-          echo "✅ All custom tags tests passed!"
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/test-override"
+          expected="$image:v1.0.0,$image:latest,$image:custom-tag"
+          test "$TAGS" = "$expected"
+          test "$PLATFORMS" = "linux/amd64,linux/arm64"
 
   test-build-args:
     name: Local image build args (${{ matrix.scenario }})
@@ -315,45 +209,46 @@ jobs:
         uses: $/actions/docker-action
         with:
           dry-run: "true"
+          outputs: type=oci,dest=${{ runner.temp }}/docker-platforms.tar
           registry: "ghcr.io"
           platforms: "linux/amd64,linux/arm64,linux/arm/v7"
           component: '[{"name": "test-multiplatform", "dockerfile": "./.qubership/Dockerfile.test", "build_context": "."}]'
 
-      - name: Verify Platforms Output
-        shell: bash
+      - name: Verify platforms in the built OCI archive
         env:
-          ACTION_FINAL_PLATFORMS: ${{ steps.docker-multiplatform.outputs.final-platforms }}
+          FINAL_PLATFORMS: ${{ steps.docker-multiplatform.outputs.final-platforms }}
         run: |
-          echo "=== Outputs ==="
-          PLATFORMS="$ACTION_FINAL_PLATFORMS"
-          echo "Final Platforms: $PLATFORMS"
+          test "$FINAL_PLATFORMS" = "linux/amd64,linux/arm64,linux/arm/v7"
+          mkdir "$RUNNER_TEMP/docker-platforms"
+          tar -xf "$RUNNER_TEMP/docker-platforms.tar" -C "$RUNNER_TEMP/docker-platforms"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
 
-          # Verify platforms match exactly
-          EXPECTED_PLATFORMS="linux/amd64,linux/arm64,linux/arm/v7"
-          if [ "$PLATFORMS" != "$EXPECTED_PLATFORMS" ]; then
-            echo "❌ ERROR: Platforms mismatch"
-            echo "Expected: $EXPECTED_PLATFORMS"
-            echo "Actual: $PLATFORMS"
-            exit 1
-          fi
+          root = Path(os.environ["RUNNER_TEMP"]) / "docker-platforms"
+          platforms = set()
 
-          # Verify each platform individually
-          if [[ ! "$PLATFORMS" == *"linux/amd64"* ]]; then
-            echo "❌ ERROR: linux/amd64 not found in platforms"
-            exit 1
-          fi
+          def inspect_index(index):
+              for descriptor in index.get("manifests", []):
+                  platform = descriptor.get("platform", {})
+                  architecture = platform.get("architecture")
+                  if platform.get("os") == "linux" and architecture in {"amd64", "arm64", "arm"}:
+                      name = "linux/" + architecture
+                      if architecture == "arm":
+                          name += "/" + platform.get("variant", "")
+                      platforms.add(name)
+                  else:
+                      algorithm, digest = descriptor["digest"].split(":", 1)
+                      child = json.loads((root / "blobs" / algorithm / digest).read_text())
+                      inspect_index(child)
 
-          if [[ ! "$PLATFORMS" == *"linux/arm64"* ]]; then
-            echo "❌ ERROR: linux/arm64 not found in platforms"
-            exit 1
-          fi
-
-          if [[ ! "$PLATFORMS" == *"linux/arm/v7"* ]]; then
-            echo "❌ ERROR: linux/arm/v7 not found in platforms"
-            exit 1
-          fi
-
-          echo "✅ All platforms tests passed!"
+          inspect_index(json.loads((root / "index.json").read_text()))
+          expected = {"linux/amd64", "linux/arm64", "linux/arm/v7"}
+          if platforms != expected:
+              raise SystemExit(f"Expected {expected}, got {platforms}")
+          print("Verified OCI platforms", sorted(platforms))
+          PY
 
   test-component-aliases:
     name: Test Component Aliases (file/context)
@@ -400,3 +295,47 @@ jobs:
           fi
 
           echo "✅ All component alias tests passed!"
+
+  test-local-cache:
+    name: Local build cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Export build cache
+        uses: $/actions/docker-action
+        with:
+          checkout: "false"
+          dry-run: "true"
+          setup-qemu: "false"
+          tags: cache-test
+          component: '[{"name":"test-cache","dockerfile":"./.qubership/Dockerfile.test","build_context":"."}]'
+          cache-to: type=local,dest=${{ runner.temp }}/docker-cache,mode=max
+
+      - name: Verify exported cache
+        run: |
+          test -s "$RUNNER_TEMP/docker-cache/index.json"
+          jq -e '.schemaVersion == 2 and (.manifests | length > 0)' "$RUNNER_TEMP/docker-cache/index.json"
+
+      - name: Rebuild using exported cache
+        id: cached
+        uses: $/actions/docker-action
+        with:
+          checkout: "false"
+          dry-run: "true"
+          setup-qemu: "false"
+          setup-buildx: "false"
+          load: "true"
+          tags: cache-test
+          component: '[{"name":"test-cache","dockerfile":"./.qubership/Dockerfile.test","build_context":"."}]'
+          cache-from: type=local,src=${{ runner.temp }}/docker-cache
+
+      - name: Run image built with cache
+        env:
+          IMAGE_REF: ${{ steps.cached.outputs.final-tags }}
+        run: |
+          docker run --rm "$IMAGE_REF" > "$RUNNER_TEMP/cached-image.txt"
+          printf 'Test Docker Image\nARG1=\nARG2=\nINPUT_ARG1=\nINPUT_ARG2=\n' > "$RUNNER_TEMP/expected-cached-image.txt"
+          diff -u "$RUNNER_TEMP/expected-cached-image.txt" "$RUNNER_TEMP/cached-image.txt"
