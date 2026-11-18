@@ -6,7 +6,7 @@ function parseClientPayload(input) {
   try {
     return JSON.parse(input);
   } catch (error) {
-    log.fail(`❗ Failed to parse client_payload: ${error.message}`);
+    throw new Error(`Failed to parse client_payload: ${error.message}`);
   }
 }
 
@@ -41,4 +41,4 @@ async function run() {
   }
 }
 
-run();
+export default run();

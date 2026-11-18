@@ -2,13 +2,26 @@ name: TEST custom-event
 
 on:
   workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'actions/custom-event/**'
+      - 'packages/action-logger/**'
+      - '.github/workflows/test-custom-event.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   unit-tests:
-    name: Unit Tests
+    name: Unit Tests and Bundle Verification
+    outputs:
+      tests: ${{ steps.tests.outcome }}
+      build: ${{ steps.build.outcome }}
+      dist: ${{ steps.verify-dist.outcome }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,21 +36,35 @@ jobs:
 
       - name: Install dependencies
         working-directory: actions/custom-event
-        run: npm install
+        run: npm ci
 
       - name: Run unit tests
+        id: tests
         working-directory: actions/custom-event
         run: npm test
 
       - name: Build dist
+        id: build
         working-directory: actions/custom-event
-        run: npm run build
+        run: |
+          rm -f dist/index.js
+          npm run build
+          test -s dist/index.js
 
-      - name: Verify dist exists
-        run: test -f actions/custom-event/dist/index.js && echo "✅ dist/index.js exists"
+      - name: Compare checked-in and rebuilt dist
+        id: verify-dist
+        run: |
+          if ! git diff --quiet -- actions/custom-event/dist/; then
+            echo "::error::Rebuild and commit custom-event/dist in the PR branch before running action tests."
+            exit 1
+          fi
 
   test-dispatch:
     name: Test Dispatch Event
+    needs: unit-tests
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -56,11 +83,79 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Verify output
+        env:
+          STATUS: ${{ steps.dispatch.outputs.status }}
         run: |
-          STATUS="${{ steps.dispatch.outputs.status }}"
           echo "Dispatch status: $STATUS"
           if [ "$STATUS" != "204" ]; then
             echo "❌ ERROR: expected status 204, got: $STATUS"
             exit 1
           fi
           echo "✅ Custom event dispatched successfully"
+
+  report:
+    name: Custom Event Action Report
+    if: ${{ always() && !cancelled() }}
+    needs: [unit-tests, test-dispatch]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Write test summary
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTS: ${{ needs.unit-tests.outputs.tests }}
+          BUILD: ${{ needs.unit-tests.outputs.build }}
+          DISPATCH: ${{ needs.test-dispatch.result }}
+          DIST: ${{ needs.unit-tests.outputs.dist }}
+        run: |
+          {
+            echo '<!-- custom-event-test-report -->'
+            echo '### Custom event action test report'
+            echo
+            echo "PR revision: $HEAD_SHA · [Workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo
+            echo '| Check | Result |'
+            echo '| --- | --- |'
+            echo "| JavaScript tests | ${TESTS:-skipped} |"
+            echo "| Bundle build | ${BUILD:-skipped} |"
+            echo "| Action dispatch and status verification | ${DISPATCH:-skipped} |"
+            echo "| Checked-in dist verification | ${DIST:-skipped} |"
+          } > "$RUNNER_TEMP/custom-event-report.md"
+          cat "$RUNNER_TEMP/custom-event-report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update Renovate PR comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          target="repos/$GITHUB_REPOSITORY"
+          if [[ "$(gh api "$target/pulls/$PR_NUMBER" --jq .head.sha)" != "$HEAD_SHA" ]]; then
+            exit 0
+          fi
+
+          comment_id="$(gh api --paginate "$target/issues/$PR_NUMBER/comments" --jq '
+            .[] | select(.user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- custom-event-test-report -->"))) | .id
+          ' | tail -n 1)"
+          report="$RUNNER_TEMP/custom-event-report.md"
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "$target/issues/comments/$comment_id" -F body=@"$report" --silent
+          else
+            gh api --method POST "$target/issues/$PR_NUMBER/comments" -F body=@"$report" --silent
+          fi
+
+      - name: Require successful validation
+        env:
+          JOB_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $JOB_RESULTS; do
+            if [[ "$result" != success ]]; then
+              exit 1
+            fi
+          done
