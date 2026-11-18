@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 #v7.1.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26'
 
@@ -109,7 +109,7 @@ jobs:
           mkdir "$CLA_TEST_DIR"
           node tests/fixtures/server.mjs > "$CLA_TEST_DIR/server.log" 2>&1 &
           echo "$!" > "$CLA_TEST_DIR/server.pid"
-          for attempt in {1..50}; do
+          for _ in {1..50}; do
             if [[ -s "$CLA_TEST_DIR/api-url" ]]; then
               exit 0
             fi
