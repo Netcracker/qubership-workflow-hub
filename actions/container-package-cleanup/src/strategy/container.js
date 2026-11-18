@@ -5,6 +5,33 @@ import log from "@qubership/action-logger";
 
 const MODULE = 'container.js';
 
+// Max parallel `docker manifest inspect` calls, so protecting every retained image
+// does not spawn hundreds of docker processes or hit registry rate limits.
+const MANIFEST_CONCURRENCY = 8;
+
+function createLimiter(max) {
+    let active = 0;
+    const queue = [];
+    const next = () => {
+        if (active >= max || queue.length === 0) return;
+        active++;
+        const { fn, resolve, reject } = queue.shift();
+        Promise.resolve().then(fn).then(resolve, reject).finally(() => {
+            active--;
+            next();
+        });
+    };
+    return (fn) => new Promise((resolve, reject) => {
+        queue.push({ fn, resolve, reject });
+        next();
+    });
+}
+
+function collectDigests(target, ds) {
+    if (Array.isArray(ds)) ds.forEach(d => { target.add(d) });
+    else if (ds) target.add(ds);
+}
+
 class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
         super();
@@ -50,15 +77,20 @@ class ContainerStrategy extends AbstractPackageStrategy {
       * @param {Object} params.wrapper
       * @param {string} params.owner
       * @param {boolean} [params.debug=false]
+      * @param {Array<{ package: string, failedTags: Array<{ tag: string, reason: string }> }>} [params.incompleteCleanup]
+      *   Collector: packages where untagged versions were deliberately not deleted because
+      *   the manifest of a retained image could not be inspected.
       * @returns {Promise<Array<{ package: Object, versions: Array }>>}
       */
-    async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug = false }) {
+    async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug = false, incompleteCleanup = [] }) {
         log.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : 'unknown'} packages.`);
         log.setDebug(debug);
 
         if (!(thresholdDate instanceof Date) || Number.isNaN(thresholdDate.getTime())) {
             throw new Error(`Invalid threshold date: ${thresholdDate}`);
         }
+
+        const limit = createLimiter(MANIFEST_CONCURRENCY);
 
         const excluded = excludedPatterns.map(p => p.toLowerCase());
         const included = includedPatterns.map(p => p.toLowerCase());
@@ -84,25 +116,6 @@ class ContainerStrategy extends AbstractPackageStrategy {
             }
 
             const imageLC = pkg.name.toLowerCase();
-            // Gathering digests of protected tags
-            const protectedDigests = new Set();
-            const protectedDigestPromises = Array.from(protectedTags).map(async (tag) => {
-                try {
-                    const ds = await wrapper.getManifestDigests(ownerLC, imageLC, tag);
-                    return { success: true, digests: ds };
-                } catch (e) {
-                    log.warn(`Failed to fetch manifest for ${pkg.name}:${tag} — ${e.message}`);
-                    return { success: false };
-                }
-            });
-            const protectedResults = await Promise.all(protectedDigestPromises);
-            for (const result of protectedResults) {
-                if (result.success) {
-                    const ds = result.digests;
-                    if (Array.isArray(ds)) ds.forEach(d => { protectedDigests.add(d) });
-                    else if (ds) protectedDigests.add(ds);
-                }
-            }
 
             // 1) Basic filtering by date and excludedPatterns for tagged/orphan
             const withoutExclude = pkg.versions.filter(v => {
@@ -146,12 +159,43 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 log.debug(` [${pkg.name}] taggedToDelete: none`, MODULE);
             }
 
+            // 2.1) Retained images: every tagged version that is NOT going to be deleted
+            // (fresh, latest, excluded, or not matched by includePatterns).
+            // Their referenced manifests (platform/attestation versions) must never be deleted.
+            const toDeleteNames = new Set(taggedToDelete.map(v => v.name));
+            const retainedTags = new Set();
+            for (const v of pkg.versions) {
+                if (v.metadata.container.tags.length > 0 && !toDeleteNames.has(v.name)) {
+                    v.metadata.container.tags.forEach(tag => { retainedTags.add(tag) });
+                }
+            }
+
+            const protectedDigests = new Set();
+            const failedRetainedTags = [];
+            await Promise.all(Array.from(retainedTags).map(async (tag) => {
+                try {
+                    const ds = await limit(() => wrapper.getManifestDigests(ownerLC, imageLC, tag));
+                    collectDigests(protectedDigests, ds);
+                } catch (e) {
+                    log.warn(`Failed to fetch manifest for ${pkg.name}:${tag} — ${e.message}`);
+                    failedRetainedTags.push({ tag, reason: e.message });
+                }
+            }));
+
+            // If the manifest of a retained image is unknown, we cannot tell which untagged
+            // versions it references: do not delete any untagged version of this package.
+            const untaggedDeletionSafe = failedRetainedTags.length === 0;
+            if (!untaggedDeletionSafe) {
+                log.warn(`[${pkg.name}] Could not inspect ${failedRetainedTags.length} retained tag(s): ${failedRetainedTags.map(f => f.tag).join(', ')}. Untagged versions of this package will NOT be deleted.`);
+                incompleteCleanup.push({ package: pkg.name, failedTags: failedRetainedTags });
+            }
+
             // 3) Gathering manifest digests for each tagged
             const digestMap = new Map();
             const digestPromises = taggedToDelete.map(async (v) => {
                 const tagPromises = v.metadata.container.tags.map(async (tag) => {
                     try {
-                        const ds = await wrapper.getManifestDigests(ownerLC, pkg.name, tag);
+                        const ds = await limit(() => wrapper.getManifestDigests(ownerLC, imageLC, tag));
                         return { success: true, digests: ds };
                     } catch (e) {
                         log.warn(`Failed to fetch manifest ${pkg.name}:${tag} — ${e.message}`);
@@ -161,11 +205,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 const results = await Promise.all(tagPromises);
                 const digs = new Set();
                 for (const result of results) {
-                    if (result.success) {
-                        const ds = result.digests;
-                        if (Array.isArray(ds)) ds.forEach(d => { digs.add(d) });
-                        else if (ds) digs.add(ds);
-                    }
+                    if (result.success) collectDigests(digs, result.digests);
                 }
                 return { versionName: v.name, digests: digs };
             });
@@ -175,7 +215,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             }
 
             // 4) Arch layers: from withoutExclude, but not used by protected versions
-            const archLayers = withoutExclude.filter(v =>
+            const archLayers = !untaggedDeletionSafe ? [] : withoutExclude.filter(v =>
                 v.metadata.container.tags.length === 0 &&
                 Array.from(digestMap.values()).some(digs => digs.has(v.name)) &&
                 !protectedDigests.has(v.name)
@@ -202,7 +242,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             }
 
             // 6) Dangling: only by date, without tags, not in ordered and not in protectedDigests
-            const danglingLayers = pkg.versions.filter(v =>
+            const danglingLayers = !untaggedDeletionSafe ? [] : pkg.versions.filter(v =>
                 new Date(v.createdAt) <= thresholdDate &&
                 v.metadata.container.tags.length === 0 &&
                 !Array.from(digestMap.values()).some(digs => digs.has(v.name)) &&

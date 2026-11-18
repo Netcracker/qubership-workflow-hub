@@ -110,7 +110,11 @@ async function run() {
 
   // core.info(JSON.stringify(packagesWithVersions, null, 2));
 
+  // Filled by the strategy when it has to skip part of the cleanup to stay safe
+  const incompleteCleanup = [];
+
   const strategyContext = {
+    incompleteCleanup,
     packagesWithVersions: packagesWithVersions,
     excludedPatterns: excludedTags,
     includedPatterns: includedTags,
@@ -141,7 +145,8 @@ async function run() {
     thresholdDate,
     dryRun,
     includedTags,
-    excludedTags
+    excludedTags,
+    incompleteCleanup
   };
 
   // dryRun && await showReport(reportContext, package_type);

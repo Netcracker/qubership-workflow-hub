@@ -24920,9 +24920,29 @@ var ContainerReport = class {
       includedTags,
       excludedTags
     } = context3;
-    const { deleteStatus } = context3;
+    const { deleteStatus = [], incompleteCleanup = [] } = context3;
+    const writeIncompleteCleanup = () => {
+      if (incompleteCleanup.length === 0) return;
+      summary.addRaw(`
+
+### \u26A0\uFE0F Incomplete cleanup
+
+`);
+      summary.addRaw(`The manifest of a retained image could not be inspected, so untagged versions of these packages were **not** deleted to avoid breaking retained images:
+
+`);
+      incompleteCleanup.forEach(({ package: name, failedTags }) => {
+        const tags = failedTags.map((f) => `<code>${f.tag}</code>`).join(", ");
+        summary.addRaw(`- <strong>${name}</strong>: ${tags}
+`);
+      });
+    };
     if (!filteredPackagesWithVersionsForDelete || filteredPackagesWithVersionsForDelete.length === 0) {
       info("\u2757\uFE0FNo packages or versions to delete.");
+      if (incompleteCleanup.length > 0) {
+        writeIncompleteCleanup();
+        await summary.write();
+      }
       return;
     }
     const dryRunText = dryRun ? "(Dry Run)" : "";
@@ -24980,6 +25000,7 @@ var ContainerReport = class {
     summary.addRaw(`
 
 ${finalMessage}`);
+    writeIncompleteCleanup();
     await summary.write();
   }
 };
@@ -25187,6 +25208,30 @@ var maven_default = MavenStrategy;
 
 // src/strategy/container.js
 var MODULE4 = "container.js";
+var MANIFEST_CONCURRENCY = 8;
+function createLimiter(max) {
+  let active = 0;
+  const queue = [];
+  const next = () => {
+    if (active >= max || queue.length === 0) return;
+    active++;
+    const { fn, resolve, reject } = queue.shift();
+    Promise.resolve().then(fn).then(resolve, reject).finally(() => {
+      active--;
+      next();
+    });
+  };
+  return (fn) => new Promise((resolve, reject) => {
+    queue.push({ fn, resolve, reject });
+    next();
+  });
+}
+function collectDigests(target, ds) {
+  if (Array.isArray(ds)) ds.forEach((d) => {
+    target.add(d);
+  });
+  else if (ds) target.add(ds);
+}
 var ContainerStrategy = class extends abstractPackageStrategy_default {
   constructor() {
     super();
@@ -25228,14 +25273,18 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
     * @param {Object} params.wrapper
     * @param {string} params.owner
     * @param {boolean} [params.debug=false]
+    * @param {Array<{ package: string, failedTags: Array<{ tag: string, reason: string }> }>} [params.incompleteCleanup]
+    *   Collector: packages where untagged versions were deliberately not deleted because
+    *   the manifest of a retained image could not be inspected.
     * @returns {Promise<Array<{ package: Object, versions: Array }>>}
     */
-  async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug: debug2 = false }) {
+  async execute({ packagesWithVersions, excludedPatterns = [], includedPatterns = [], thresholdDate, wrapper, owner, debug: debug2 = false, incompleteCleanup = [] }) {
     action_logger_default.info(`Executing ContainerStrategy on ${Array.isArray(packagesWithVersions) ? packagesWithVersions.length : "unknown"} packages.`);
     action_logger_default.setDebug(debug2);
     if (!(thresholdDate instanceof Date) || Number.isNaN(thresholdDate.getTime())) {
       throw new Error(`Invalid threshold date: ${thresholdDate}`);
     }
+    const limit = createLimiter(MANIFEST_CONCURRENCY);
     const excluded = excludedPatterns.map((p) => p.toLowerCase());
     const included = includedPatterns.map((p) => p.toLowerCase());
     const packages = await this.parse(packagesWithVersions);
@@ -25255,26 +25304,6 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         action_logger_default.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(", ")}`, MODULE4);
       }
       const imageLC = pkg.name.toLowerCase();
-      const protectedDigests = /* @__PURE__ */ new Set();
-      const protectedDigestPromises = Array.from(protectedTags).map(async (tag) => {
-        try {
-          const ds = await wrapper.getManifestDigests(ownerLC, imageLC, tag);
-          return { success: true, digests: ds };
-        } catch (e) {
-          action_logger_default.warn(`Failed to fetch manifest for ${pkg.name}:${tag} \u2014 ${e.message}`);
-          return { success: false };
-        }
-      });
-      const protectedResults = await Promise.all(protectedDigestPromises);
-      for (const result2 of protectedResults) {
-        if (result2.success) {
-          const ds = result2.digests;
-          if (Array.isArray(ds)) ds.forEach((d) => {
-            protectedDigests.add(d);
-          });
-          else if (ds) protectedDigests.add(ds);
-        }
-      }
       const withoutExclude = pkg.versions.filter((v) => {
         if (new Date(v.createdAt) > thresholdDate) return false;
         const tags = v.metadata.container.tags.map((t) => t.toLowerCase());
@@ -25303,11 +25332,36 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       } else {
         action_logger_default.debug(` [${pkg.name}] taggedToDelete: none`, MODULE4);
       }
+      const toDeleteNames = new Set(taggedToDelete.map((v) => v.name));
+      const retainedTags = /* @__PURE__ */ new Set();
+      for (const v of pkg.versions) {
+        if (v.metadata.container.tags.length > 0 && !toDeleteNames.has(v.name)) {
+          v.metadata.container.tags.forEach((tag) => {
+            retainedTags.add(tag);
+          });
+        }
+      }
+      const protectedDigests = /* @__PURE__ */ new Set();
+      const failedRetainedTags = [];
+      await Promise.all(Array.from(retainedTags).map(async (tag) => {
+        try {
+          const ds = await limit(() => wrapper.getManifestDigests(ownerLC, imageLC, tag));
+          collectDigests(protectedDigests, ds);
+        } catch (e) {
+          action_logger_default.warn(`Failed to fetch manifest for ${pkg.name}:${tag} \u2014 ${e.message}`);
+          failedRetainedTags.push({ tag, reason: e.message });
+        }
+      }));
+      const untaggedDeletionSafe = failedRetainedTags.length === 0;
+      if (!untaggedDeletionSafe) {
+        action_logger_default.warn(`[${pkg.name}] Could not inspect ${failedRetainedTags.length} retained tag(s): ${failedRetainedTags.map((f) => f.tag).join(", ")}. Untagged versions of this package will NOT be deleted.`);
+        incompleteCleanup.push({ package: pkg.name, failedTags: failedRetainedTags });
+      }
       const digestMap = /* @__PURE__ */ new Map();
       const digestPromises = taggedToDelete.map(async (v) => {
         const tagPromises = v.metadata.container.tags.map(async (tag) => {
           try {
-            const ds = await wrapper.getManifestDigests(ownerLC, pkg.name, tag);
+            const ds = await limit(() => wrapper.getManifestDigests(ownerLC, imageLC, tag));
             return { success: true, digests: ds };
           } catch (e) {
             action_logger_default.warn(`Failed to fetch manifest ${pkg.name}:${tag} \u2014 ${e.message}`);
@@ -25317,13 +25371,7 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         const results = await Promise.all(tagPromises);
         const digs = /* @__PURE__ */ new Set();
         for (const result2 of results) {
-          if (result2.success) {
-            const ds = result2.digests;
-            if (Array.isArray(ds)) ds.forEach((d) => {
-              digs.add(d);
-            });
-            else if (ds) digs.add(ds);
-          }
+          if (result2.success) collectDigests(digs, result2.digests);
         }
         return { versionName: v.name, digests: digs };
       });
@@ -25331,7 +25379,7 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       for (const result2 of digestResults) {
         digestMap.set(result2.versionName, result2.digests);
       }
-      const archLayers = withoutExclude.filter(
+      const archLayers = !untaggedDeletionSafe ? [] : withoutExclude.filter(
         (v) => v.metadata.container.tags.length === 0 && Array.from(digestMap.values()).some((digs) => digs.has(v.name)) && !protectedDigests.has(v.name)
       );
       if (archLayers.length > 0) {
@@ -25352,7 +25400,7 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
           }
         }
       }
-      const danglingLayers = pkg.versions.filter(
+      const danglingLayers = !untaggedDeletionSafe ? [] : pkg.versions.filter(
         (v) => new Date(v.createdAt) <= thresholdDate && v.metadata.container.tags.length === 0 && !Array.from(digestMap.values()).some((digs) => digs.has(v.name)) && !protectedDigests.has(v.name) && !ordered.some((o) => o.name === v.name)
       );
       if (debug2) {
@@ -25577,7 +25625,9 @@ async function run() {
   action_logger_default.endGroup();
   action_logger_default.notice(`Total packages to process: ${filteredPackages.length}, total versions found: ${totalPackagesVersions}`);
   action_logger_default.endGroup();
+  const incompleteCleanup = [];
   const strategyContext = {
+    incompleteCleanup,
     packagesWithVersions,
     excludedPatterns: excludedTags,
     includedPatterns: includedTags,
@@ -25601,7 +25651,8 @@ async function run() {
     thresholdDate,
     dryRun,
     includedTags,
-    excludedTags
+    excludedTags,
+    incompleteCleanup
   };
   let deleteStatus = [];
   try {
