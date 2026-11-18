@@ -19925,6 +19925,7 @@ __export(index_exports, {
   default: () => index_default
 });
 module.exports = __toCommonJS(index_exports);
+var import_node_process = __toESM(require("node:process"), 1);
 
 // node_modules/@actions/core/lib/command.js
 var os = __toESM(require("os"), 1);
@@ -24725,7 +24726,7 @@ async function run() {
     const clientPayload = parseClientPayload(clientPayloadInput);
     action_logger_default.info(`Event name: ${eventType}`);
     action_logger_default.info(`Client Payload: ${JSON.stringify(clientPayload)}`);
-    const token = getInput("github-token", { required: true }) || process.env.GITHUB_TOKEN;
+    const token = getInput("github-token", { required: true }) || import_node_process.default.env.GITHUB_TOKEN;
     if (!token) action_logger_default.fail("\u2757 GitHub token is required");
     const octokit = getOctokit(token);
     const { owner: defaultOwner, repo: defaultRepo } = context2.repo;

@@ -1,3 +1,4 @@
+import process from "node:process";
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import log from "@qubership/action-logger";
