@@ -130,6 +130,7 @@ describe('entry point: error handling and repository filter', () => {
     repository: repository ? { name: repository, full_name: `owner/${repository}` } : undefined
   });
   const inputs = { 'package-type': 'container', 'threshold-days': '7', debug: 'false' };
+  const NOTHING_TO_DELETE = '❗️No packages or versions to delete.';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -153,6 +154,8 @@ describe('entry point: error handling and repository filter', () => {
     expect(wrapperInstance.listVersionsForPackage).not.toHaveBeenCalled();
     expect(wrapperInstance.deletePackageVersion).not.toHaveBeenCalled();
     expect(mockCore.setFailed).not.toHaveBeenCalled();
+    // the run stops before the strategy and the report: the report logs this message when it is reached
+    expect(mockCore.info).not.toHaveBeenCalledWith(NOTHING_TO_DELETE);
   });
 
   it('still processes packages of the current repository', async () => {
@@ -163,6 +166,8 @@ describe('entry point: error handling and repository filter', () => {
     expect(wrapperInstance.listVersionsForPackage).toHaveBeenCalledTimes(1);
     expect(wrapperInstance.listVersionsForPackage).toHaveBeenCalledWith('owner', 'container', 'my-image', true);
     expect(mockCore.setFailed).not.toHaveBeenCalled();
+    // positive control: the run reaches the strategy and the report
+    expect(mockCore.info).toHaveBeenCalledWith(NOTHING_TO_DELETE);
   });
 
   it('reports an unexpected error through setFailed with its message', async () => {
