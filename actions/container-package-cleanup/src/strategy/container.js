@@ -1,4 +1,3 @@
-import * as core from '@actions/core';
 import AbstractPackageStrategy from "./abstractPackageStrategy.js";
 import WildcardMatcher from "../utils/wildcardMatcher.js";
 import log from "@qubership/action-logger";
@@ -64,7 +63,8 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }))
             }));
         } catch (err) {
-            core.setFailed(`Action failed: ${err.message}`);
+            // Do not swallow the error: the caller must not continue with undefined data
+            throw new Error(`Failed to parse packages: ${err.message}`, { cause: err });
         }
     }
 
