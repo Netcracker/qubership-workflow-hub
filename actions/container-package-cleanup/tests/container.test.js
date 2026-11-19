@@ -130,6 +130,35 @@ describe('ContainerStrategy', () => {
 
       expect(result[0].versions[0].metadata.container.tags).toEqual([]);
     });
+
+    it('should reject with the original reason instead of returning undefined', async () => {
+      const broken = [{
+        package: { id: 1, name: 'broken', package_type: 'container', repository: undefined },
+        versions: []
+      }];
+
+      await expect(strategy.parse(broken)).rejects.toThrow(/Failed to parse packages: .*full_name/);
+    });
+
+    it('should reject invalid JSON input with a clear message', async () => {
+      await expect(strategy.parse('not json')).rejects.toThrow(/Failed to parse packages/);
+    });
+
+    it('should keep the original error as cause', async () => {
+      const error = await strategy.parse('not json').catch(e => e);
+
+      expect(error.cause).toBeInstanceOf(SyntaxError);
+    });
+
+    it('execute should reject on unparsable data and never inspect manifests', async () => {
+      const broken = [{ package: { id: 1, name: 'broken', package_type: 'container' }, versions: [] }];
+
+      await expect(strategy.execute({
+        packagesWithVersions: broken, excludedPatterns: [], includedPatterns: [],
+        thresholdDate: new Date('2025-01-10T00:00:00Z'), wrapper: mockWrapper, owner: 'test-owner'
+      })).rejects.toThrow(/Failed to parse packages/);
+      expect(mockWrapper.getManifestDigests).not.toHaveBeenCalled();
+    });
   });
 
   describe('execute - protected tags logic', () => {

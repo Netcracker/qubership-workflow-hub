@@ -122,3 +122,67 @@ describe('entry point: retention input validation', () => {
     expect(wrapperInstance.listPackages).toHaveBeenCalled();
   });
 });
+
+describe('entry point: error handling and repository filter', () => {
+  const savedEnv = { ...process.env };
+  const pkg = (name, repository) => ({
+    id: 1, name, package_type: 'container',
+    repository: repository ? { name: repository, full_name: `owner/${repository}` } : undefined
+  });
+  const inputs = { 'package-type': 'container', 'threshold-days': '7', debug: 'false' };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.GITHUB_REPOSITORY = 'owner/repo';
+    process.env.PACKAGE_TOKEN = 'token';
+    wrapperInstance.isOrganization.mockResolvedValue(true);
+    wrapperInstance.listPackages.mockResolvedValue([]);
+    wrapperInstance.listVersionsForPackage.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    process.env = { ...savedEnv };
+  });
+
+  it('exits before listing versions when no package belongs to the current repository', async () => {
+    wrapperInstance.listPackages.mockResolvedValue([pkg('other-image', 'other-repo'), pkg('no-repo-image')]);
+
+    await runEntryPoint(inputs);
+
+    expect(wrapperInstance.listPackages).toHaveBeenCalled();
+    expect(wrapperInstance.listVersionsForPackage).not.toHaveBeenCalled();
+    expect(wrapperInstance.deletePackageVersion).not.toHaveBeenCalled();
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+  });
+
+  it('still processes packages of the current repository', async () => {
+    wrapperInstance.listPackages.mockResolvedValue([pkg('other-image', 'other-repo'), pkg('my-image', 'repo')]);
+
+    await runEntryPoint(inputs);
+
+    expect(wrapperInstance.listVersionsForPackage).toHaveBeenCalledTimes(1);
+    expect(wrapperInstance.listVersionsForPackage).toHaveBeenCalledWith('owner', 'container', 'my-image', true);
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+  });
+
+  it('reports an unexpected error through setFailed with its message', async () => {
+    wrapperInstance.isOrganization.mockRejectedValue(new Error('api is down'));
+
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).toHaveBeenCalledWith('api is down');
+    expect(wrapperInstance.deletePackageVersion).not.toHaveBeenCalled();
+  });
+
+  it('reports a package that cannot be parsed with the original reason and deletes nothing', async () => {
+    // a malformed version entry returned by the API makes parsing fail
+    wrapperInstance.listPackages.mockResolvedValue([pkg('my-image', 'repo')]);
+    wrapperInstance.listVersionsForPackage.mockResolvedValue([null]);
+
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).toHaveBeenCalledTimes(1);
+    expect(mockCore.setFailed.mock.calls[0][0]).toMatch(/Failed to parse packages: .*null/);
+    expect(wrapperInstance.deletePackageVersion).not.toHaveBeenCalled();
+  });
+});
