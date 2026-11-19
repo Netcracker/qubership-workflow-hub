@@ -215,6 +215,14 @@ the skipped untagged versions are picked up by a later run once inspection works
 
 To limit load, up to 8 `docker manifest inspect` calls run in parallel.
 
+### Package listing failures
+
+For an organization the action lists public, internal and private packages separately. If none of them can be listed
+(for example a token without `read:packages`, a rate limit or an API outage), the action **fails** with the reasons
+instead of finishing as an empty run. If only some visibilities fail, the action continues with the packages it found
+and lists the failed visibilities in the warning log and in the job summary under *Incomplete package listing*,
+because the cleanup may be incomplete.
+
 ---
 
 ## Wildcard Matching
