@@ -24682,6 +24682,7 @@ var OctokitWrapper = class {
     this.octokit = getOctokit(authToken);
     this.authToken = authToken;
     this.dockerLoggedIn = false;
+    this.listingFailures = [];
     action_logger_default.setDebug(debug2);
   }
   /**
@@ -24745,42 +24746,32 @@ var OctokitWrapper = class {
    * Lists packages for an organization.
    * @param {string} org - The organization name.
    * @param {string} package_type - The type of the package (e.g., container).
-   * @returns {Promise<Array>} - A list of packages.
+   * @returns {Promise<Array>} - A list of packages. Visibilities that failed to load are kept in `listingFailures`.
+   * @throws {Error} if no visibility could be listed
    */
   async listPackagesForOrganization(org, package_type) {
     try {
-      const [publicPkgs, internalPkgs, privatePkgs] = await Promise.allSettled([
-        this.octokit.paginate(
-          this.octokit.rest.packages.listPackagesForOrganization,
-          { org, package_type, visibility: "public", per_page: 100 }
-        ),
-        this.octokit.paginate(
-          this.octokit.rest.packages.listPackagesForOrganization,
-          { org, package_type, visibility: "internal", per_page: 100 }
-        ),
-        this.octokit.paginate(
-          this.octokit.rest.packages.listPackagesForOrganization,
-          { org, package_type, visibility: "private", per_page: 100 }
-        )
-      ]);
+      this.listingFailures = [];
+      const visibilities = ["public", "internal", "private"];
+      const settled = await Promise.allSettled(visibilities.map((visibility) => this.octokit.paginate(
+        this.octokit.rest.packages.listPackagesForOrganization,
+        { org, package_type, visibility, per_page: 100 }
+      )));
       const results = [];
-      if (publicPkgs.status === "fulfilled") {
-        action_logger_default.info(`Found ${publicPkgs.value.length} public packages`);
-        results.push(...publicPkgs.value);
-      } else {
-        action_logger_default.warn(`Failed to fetch public packages: ${publicPkgs.reason?.message}`);
-      }
-      if (internalPkgs.status === "fulfilled") {
-        action_logger_default.info(`Found ${internalPkgs.value.length} internal packages`);
-        results.push(...internalPkgs.value);
-      } else {
-        action_logger_default.warn(`Failed to fetch internal packages: ${internalPkgs.reason?.message}`);
-      }
-      if (privatePkgs.status === "fulfilled") {
-        action_logger_default.info(`Found ${privatePkgs.value.length} private packages`);
-        results.push(...privatePkgs.value);
-      } else {
-        action_logger_default.warn(`Failed to fetch private packages: ${privatePkgs.reason?.message}`);
+      settled.forEach((outcome, index) => {
+        const visibility = visibilities[index];
+        if (outcome.status === "fulfilled") {
+          action_logger_default.info(`Found ${outcome.value.length} ${visibility} packages`);
+          results.push(...outcome.value);
+        } else {
+          const reason = outcome.reason?.message ?? String(outcome.reason);
+          action_logger_default.warn(`Failed to fetch ${visibility} packages: ${reason}`);
+          this.listingFailures.push({ visibility, reason });
+        }
+      });
+      if (this.listingFailures.length === visibilities.length) {
+        const details = this.listingFailures.map((f) => `${f.visibility}: ${f.reason}`).join("; ");
+        throw new Error(`Failed to list ${package_type} packages for organization ${org} (${details})`);
       }
       return results;
     } catch (error2) {
@@ -25560,6 +25551,24 @@ function parseNonNegativeInt(name, raw) {
   return parsed;
 }
 
+// src/reports/listingFailures.js
+async function writeListingFailuresSummary(listingFailures = []) {
+  if (!Array.isArray(listingFailures) || listingFailures.length === 0) return;
+  summary.addRaw(`
+
+### \u26A0\uFE0F Incomplete package listing
+
+`);
+  summary.addRaw(`Some packages could not be listed, so this cleanup may be incomplete. Check the token permissions and the package visibility:
+
+`);
+  listingFailures.forEach(({ visibility, reason }) => {
+    summary.addRaw(`- <strong>${visibility}</strong>: ${reason}
+`);
+  });
+  await summary.write();
+}
+
 // src/index.js
 async function run() {
   const isDebug = getInput("debug").toLowerCase() === "true";
@@ -25603,6 +25612,7 @@ async function run() {
   action_logger_default.info(`Run for type: ${package_type}, owner: ${owner}, repo: ${repo}`);
   action_logger_default.info;
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
+  const listingFailures = wrapper.listingFailures ?? [];
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   action_logger_default.startDebugGroup("Filtered Packages");
   action_logger_default.debugJSON("\u{1F4A1} Filtered packages:", filteredPackages);
@@ -25611,6 +25621,7 @@ async function run() {
   action_logger_default.endGroup();
   if (filteredPackages.length === 0) {
     action_logger_default.warn(`No packages found for repository '${repo}' (packages found for owner '${owner}': ${packages.length}).`);
+    await writeListingFailuresSummary(listingFailures);
     return;
   }
   let totalPackagesVersions = 0;
@@ -25666,6 +25677,7 @@ async function run() {
     setFailed(error2.message || String(error2));
   }
   await showReport({ ...reportContext, deleteStatus }, package_type);
+  await writeListingFailuresSummary(listingFailures);
   deleteStatus.some((r) => r.success === false) ? setFailed("\u2757\uFE0F Action completed with errors. Please check the logs and the report above.") : action_logger_default.success("\u2705 Action completed.");
 }
 async function showReport(context3, type = "container") {
