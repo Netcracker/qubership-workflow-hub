@@ -83,6 +83,63 @@ describe('OctokitWrapper', () => {
     });
   });
 
+  describe('listPackagesForOrganization', () => {
+    const pkg = (id) => ({ id, name: `pkg-${id}` });
+    const respond = (byVisibility) => {
+      mockOctokit.paginate.mockImplementation(async (_fn, opts) => {
+        const value = byVisibility[opts.visibility];
+        if (value instanceof Error) throw value;
+        return value;
+      });
+    };
+
+    it('requests every visibility and returns all packages without failures', async () => {
+      respond({ public: [pkg(1)], internal: [pkg(2)], private: [pkg(3), pkg(4)] });
+
+      const result = await wrapper.listPackagesForOrganization('org', 'container');
+
+      expect(result.map(p => p.id)).toEqual([1, 2, 3, 4]);
+      expect(wrapper.listingFailures).toEqual([]);
+      expect(mockOctokit.paginate.mock.calls.map(c => c[1].visibility)).toEqual(['public', 'internal', 'private']);
+      expect(mockOctokit.paginate.mock.calls.every(c => c[1].org === 'org' && c[1].package_type === 'container' && c[1].per_page === 100)).toBe(true);
+    });
+
+    it('keeps the packages that were found and records a partial failure', async () => {
+      respond({ public: [pkg(1)], internal: [], private: new Error('Resource not accessible') });
+
+      const result = await wrapper.listPackagesForOrganization('org', 'container');
+
+      expect(result.map(p => p.id)).toEqual([1]);
+      expect(wrapper.listingFailures).toEqual([{ visibility: 'private', reason: 'Resource not accessible' }]);
+    });
+
+    it('treats an organization without packages as an empty result, not as a failure', async () => {
+      respond({ public: [], internal: [], private: [] });
+
+      await expect(wrapper.listPackagesForOrganization('org', 'container')).resolves.toEqual([]);
+      expect(wrapper.listingFailures).toEqual([]);
+    });
+
+    it('fails when no visibility could be listed and explains every reason', async () => {
+      respond({ public: new Error('rate limit'), internal: new Error('forbidden'), private: new Error('forbidden') });
+
+      await expect(wrapper.listPackagesForOrganization('my-org', 'maven'))
+        .rejects.toThrow(/Failed to list maven packages for organization my-org \(public: rate limit; internal: forbidden; private: forbidden\)/);
+      expect(wrapper.listingFailures).toHaveLength(3);
+    });
+
+    it('does not keep failures of a previous listing', async () => {
+      respond({ public: [pkg(1)], internal: [], private: new Error('forbidden') });
+      await wrapper.listPackagesForOrganization('org', 'container');
+      expect(wrapper.listingFailures).toHaveLength(1);
+
+      respond({ public: [pkg(1)], internal: [], private: [] });
+      await wrapper.listPackagesForOrganization('org', 'container');
+
+      expect(wrapper.listingFailures).toEqual([]);
+    });
+  });
+
   describe('listVersionsForPackage', () => {
     it('calls getPackageVersionsForOrganization when type=true', async () => {
       wrapper.getPackageVersionsForOrganization = jest.fn().mockResolvedValue(['ver1']);

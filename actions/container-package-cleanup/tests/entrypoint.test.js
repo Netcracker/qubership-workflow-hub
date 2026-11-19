@@ -191,3 +191,78 @@ describe('entry point: error handling and repository filter', () => {
     expect(wrapperInstance.deletePackageVersion).not.toHaveBeenCalled();
   });
 });
+
+describe('entry point: package listing failures', () => {
+  const savedEnv = { ...process.env };
+  const inputs = { 'package-type': 'container', 'threshold-days': '7', debug: 'false' };
+  const summaryText = () => mockCore.summary.addRaw.mock.calls.map(c => c[0]).join('');
+  const ownPackage = { id: 1, name: 'my-image', package_type: 'container', repository: { name: 'repo', full_name: 'owner/repo' } };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.GITHUB_REPOSITORY = 'owner/repo';
+    process.env.PACKAGE_TOKEN = 'token';
+    wrapperInstance.isOrganization.mockResolvedValue(true);
+    wrapperInstance.listPackages.mockResolvedValue([]);
+    wrapperInstance.listVersionsForPackage.mockResolvedValue([]);
+    wrapperInstance.listingFailures = [];
+  });
+
+  afterEach(() => {
+    process.env = { ...savedEnv };
+    delete wrapperInstance.listingFailures;
+  });
+
+  it('fails the action when the package listing fails, instead of finishing as an empty run', async () => {
+    wrapperInstance.listPackages.mockRejectedValue(new Error('Failed to list container packages for organization owner (public: forbidden)'));
+
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).toHaveBeenCalledTimes(1);
+    expect(mockCore.setFailed.mock.calls[0][0]).toMatch(/Failed to list container packages/);
+    expect(wrapperInstance.listVersionsForPackage).not.toHaveBeenCalled();
+    expect(wrapperInstance.deletePackageVersion).not.toHaveBeenCalled();
+  });
+
+  it('reports a partial listing failure in the summary when the run ends early', async () => {
+    wrapperInstance.listingFailures = [{ visibility: 'private', reason: 'Resource not accessible' }];
+    wrapperInstance.listPackages.mockResolvedValue([]);
+
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(summaryText()).toContain('Incomplete package listing');
+    expect(summaryText()).toContain('<strong>private</strong>: Resource not accessible');
+    expect(mockCore.summary.write).toHaveBeenCalled();
+  });
+
+  it('reports a partial listing failure after a normal run too', async () => {
+    wrapperInstance.listingFailures = [{ visibility: 'internal', reason: 'Not Found' }];
+    wrapperInstance.listPackages.mockResolvedValue([ownPackage]);
+
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(wrapperInstance.listVersionsForPackage).toHaveBeenCalledTimes(1);
+    expect(summaryText()).toContain('<strong>internal</strong>: Not Found');
+  });
+
+  it('writes no listing section when every visibility was listed', async () => {
+    wrapperInstance.listPackages.mockResolvedValue([ownPackage]);
+
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(summaryText()).not.toContain('Incomplete package listing');
+  });
+
+  it('keeps working with a wrapper that does not report listing failures (user owner)', async () => {
+    delete wrapperInstance.listingFailures;
+    wrapperInstance.listPackages.mockResolvedValue([ownPackage]);
+
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(summaryText()).not.toContain('Incomplete package listing');
+  });
+});
