@@ -11,6 +11,7 @@ import MavenReport from "./reports/mavenReport.js";
 import { getStrategy } from "./strategy/strategyRegistry.js";
 import { deletePackageVersion } from './utils/deleteAction.js';
 import { parseNonNegativeInt } from './utils/inputs.js';
+import { writeListingFailuresSummary } from './reports/listingFailures.js';
 import log from "@qubership/action-logger";
 
 async function run() {
@@ -78,6 +79,8 @@ async function run() {
   log.info
 
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
+  // visibilities that could not be listed (the listing continued with the rest)
+  const listingFailures = wrapper.listingFailures ?? [];
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   log.startDebugGroup('Filtered Packages')
@@ -89,6 +92,7 @@ async function run() {
 
   if (filteredPackages.length === 0) {
     log.warn(`No packages found for repository '${repo}' (packages found for owner '${owner}': ${packages.length}).`);
+    await writeListingFailuresSummary(listingFailures);
     return;
   }
 
@@ -162,6 +166,7 @@ async function run() {
   }
 
   await showReport({ ...reportContext, deleteStatus }, package_type);
+  await writeListingFailuresSummary(listingFailures);
 
   deleteStatus.some(r => r.success === false) ?
     core.setFailed("❗️ Action completed with errors. Please check the logs and the report above.") :

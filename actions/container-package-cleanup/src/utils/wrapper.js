@@ -17,6 +17,8 @@ class OctokitWrapper {
     this.octokit = github.getOctokit(authToken);
     this.authToken = authToken;
     this.dockerLoggedIn = false;
+    // visibilities that could not be listed by the last organization listing
+    this.listingFailures = [];
     log.setDebug(debug);
   }
 
@@ -85,36 +87,34 @@ class OctokitWrapper {
    * Lists packages for an organization.
    * @param {string} org - The organization name.
    * @param {string} package_type - The type of the package (e.g., container).
-   * @returns {Promise<Array>} - A list of packages.
+   * @returns {Promise<Array>} - A list of packages. Visibilities that failed to load are kept in `listingFailures`.
+   * @throws {Error} if no visibility could be listed
    */
   async listPackagesForOrganization(org, package_type) {
     try {
-      const [publicPkgs, internalPkgs, privatePkgs] = await Promise.allSettled([
+      this.listingFailures = [];
+      const visibilities = ['public', 'internal', 'private'];
+      const settled = await Promise.allSettled(visibilities.map(visibility =>
         this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
-          { org, package_type, visibility: 'public', per_page: 100 }),
-        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
-          { org, package_type, visibility: 'internal', per_page: 100 }),
-        this.octokit.paginate(this.octokit.rest.packages.listPackagesForOrganization,
-          { org, package_type, visibility: 'private', per_page: 100 }),
-      ]);
+          { org, package_type, visibility, per_page: 100 })));
+
       const results = [];
-      if (publicPkgs.status === 'fulfilled') {
-        log.info(`Found ${publicPkgs.value.length} public packages`);
-        results.push(...publicPkgs.value);
-      } else {
-        log.warn(`Failed to fetch public packages: ${publicPkgs.reason?.message}`);
-      }
-      if (internalPkgs.status === 'fulfilled') {
-        log.info(`Found ${internalPkgs.value.length} internal packages`);
-        results.push(...internalPkgs.value);
-      } else {
-        log.warn(`Failed to fetch internal packages: ${internalPkgs.reason?.message}`);
-      }
-      if (privatePkgs.status === 'fulfilled') {
-        log.info(`Found ${privatePkgs.value.length} private packages`);
-        results.push(...privatePkgs.value);
-      } else {
-        log.warn(`Failed to fetch private packages: ${privatePkgs.reason?.message}`);
+      settled.forEach((outcome, index) => {
+        const visibility = visibilities[index];
+        if (outcome.status === 'fulfilled') {
+          log.info(`Found ${outcome.value.length} ${visibility} packages`);
+          results.push(...outcome.value);
+        } else {
+          const reason = outcome.reason?.message ?? String(outcome.reason);
+          log.warn(`Failed to fetch ${visibility} packages: ${reason}`);
+          this.listingFailures.push({ visibility, reason });
+        }
+      });
+
+      // Missing API data must never look like "no packages": fail when nothing could be listed.
+      if (this.listingFailures.length === visibilities.length) {
+        const details = this.listingFailures.map(f => `${f.visibility}: ${f.reason}`).join('; ');
+        throw new Error(`Failed to list ${package_type} packages for organization ${org} (${details})`);
       }
       return results;
     } catch (error) {
