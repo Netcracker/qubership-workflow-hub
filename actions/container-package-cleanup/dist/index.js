@@ -25261,7 +25261,7 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         }))
       }));
     } catch (err) {
-      setFailed(`Action failed: ${err.message}`);
+      throw new Error(`Failed to parse packages: ${err.message}`, { cause: err });
     }
   }
   /**
@@ -25609,8 +25609,8 @@ async function run() {
   action_logger_default.endGroup();
   action_logger_default.notice(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
   action_logger_default.endGroup();
-  if (packages.length === 0) {
-    action_logger_default.warn("No packages found.");
+  if (filteredPackages.length === 0) {
+    action_logger_default.warn(`No packages found for repository '${repo}' (packages found for owner '${owner}': ${packages.length}).`);
     return;
   }
   let totalPackagesVersions = 0;
@@ -25672,7 +25672,9 @@ async function showReport(context3, type = "container") {
   const report = type === "container" ? new containerReport_default() : new mavenReport_default();
   await report.writeSummary(context3);
 }
-run();
+run().catch((error2) => {
+  setFailed(error2?.message || String(error2));
+});
 /*! Bundled license information:
 
 undici/lib/web/fetch/body.js:
