@@ -87,8 +87,8 @@ async function run() {
   log.notice(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
   log.endGroup();
 
-  if (packages.length === 0) {
-    log.warn("No packages found.");
+  if (filteredPackages.length === 0) {
+    log.warn(`No packages found for repository '${repo}' (packages found for owner '${owner}': ${packages.length}).`);
     return;
   }
 
@@ -174,4 +174,6 @@ async function showReport(context, type = 'container') {
 
 }
 
-run();
+run().catch((error) => {
+  core.setFailed(error?.message || String(error));
+});
