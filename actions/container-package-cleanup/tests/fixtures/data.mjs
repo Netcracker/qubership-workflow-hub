@@ -1,6 +1,6 @@
 export const scenarios = [
   'retained-images', 'dry-run', 'manifest-failure', 'deleted-manifest-failure',
-  'single-arch', 'empty', 'maven', 'maven-zero', 'invalid-days', 'invalid-versions'
+  'single-arch', 'empty', 'maven', 'maven-zero', 'maven-excluded-all', 'maven-migrated', 'invalid-days', 'invalid-versions'
 ];
 
 export function fixture(scenario) {

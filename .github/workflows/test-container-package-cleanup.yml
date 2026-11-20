@@ -81,6 +81,15 @@ jobs:
             package-type: maven
             days: '0'
             versions: '0'
+          # configuration of the Maven cleanup workflows before and after removing *.* from the exclusions
+          - scenario: maven-excluded-all
+            package-type: maven
+            included-patterns: '*SNAPSHOT*'
+            excluded-patterns: 'latest,release*,*.*'
+          - scenario: maven-migrated
+            package-type: maven
+            included-patterns: '*SNAPSHOT'
+            excluded-patterns: 'latest,release*'
           - scenario: invalid-days
             days: 7abc
           - scenario: invalid-versions
@@ -128,6 +137,8 @@ jobs:
           # tag filters belong to the container scenarios; for Maven the default SNAPSHOT inclusion applies
           included-tags: ${{ matrix.package-type != 'maven' && 'dev-*' || '' }}
           excluded-tags: ${{ matrix.package-type != 'maven' && 'release-*' || '' }}
+          included-patterns: ${{ matrix.included-patterns || '' }}
+          excluded-patterns: ${{ matrix.excluded-patterns || '' }}
           dry-run: ${{ matrix.scenario == 'dry-run' }}
           debug: 'false'
 
