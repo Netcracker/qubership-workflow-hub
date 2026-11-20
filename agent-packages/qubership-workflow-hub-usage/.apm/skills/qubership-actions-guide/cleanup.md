@@ -107,9 +107,10 @@ No org template — build from scratch.
 
 ### Pattern logic
 
-- `included-patterns` **not set**: action automatically targets `*SNAPSHOT*` only — safe default for most repos.
-- `included-patterns` **set**: only versions matching the pattern are candidates.
-- `excluded-patterns`: versions matching these are never deleted.
+- No include filter (`included-patterns` and `included-tags` empty): action automatically targets `*SNAPSHOT*` only — safe default for most repos.
+- Include filter **set**: only versions matching it are candidates; `*SNAPSHOT*` is not added automatically, so keep it in the list unless other versions should be deleted.
+- `excluded-patterns` / `excluded-tags`: versions matching these are never deleted and always win over inclusions.
+- Do not put `*.*` in Maven exclusions: it also matches `1.0.0-SNAPSHOT`, so nothing would be deleted. Release versions are already kept because they do not match the `*SNAPSHOT*` inclusion.
 - `threshold-versions`: keep this many newest versions per package (default: `1`).
 
 ### Common Maven use cases
@@ -166,10 +167,10 @@ on:
 | `package-type` | `container` | `container` or `maven` |
 | `threshold-days` | `7` | Delete versions older than this many days |
 | `threshold-versions` | `1` | *(Maven only)* Keep this many newest versions per package |
-| `included-tags` | `""` | *(Container)* Only delete versions matching these tags. Wildcard `*`/`?` supported |
-| `excluded-tags` | `""` | *(Container)* Never delete versions matching these tags |
-| `included-patterns` | `""` | *(Maven)* Candidates for deletion. When empty: `*SNAPSHOT*` applied automatically |
-| `excluded-patterns` | `""` | *(Maven)* Never delete versions matching these patterns |
+| `included-tags` | `""` | Only delete versions matching these tags/versions. Merged with `included-patterns`. Wildcard `*`/`?` supported |
+| `excluded-tags` | `""` | Never delete versions matching these. Merged with `excluded-patterns`; exclusions always win |
+| `included-patterns` | `""` | Merged with `included-tags`. For Maven, when no include filter is given: `*SNAPSHOT*` applied automatically |
+| `excluded-patterns` | `""` | Merged with `excluded-tags`. Never delete versions matching these patterns |
 | `dry-run` | `false` | Print what would be deleted without actually deleting |
 | `debug` | `true` | Extra debug logs — set `false` in production to reduce noise |
 | `batch-size` | `15` | Parallel deletion threads per package |

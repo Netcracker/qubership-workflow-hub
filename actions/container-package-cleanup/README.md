@@ -11,10 +11,10 @@ It supports both Docker/container images and Maven JAR files.
 | -------------------- | -------------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | `threshold-days`     | Keep versions newer than this many days.                                                     | No       | `7`                                       |
 | `threshold-versions` | Keep this many newest versions (Maven only).                                                 | No       | `1`                                       |
-| `included-tags`      | Comma-separated tags/versions eligible for deletion (`*` wildcards supported).               | No       | `""` (all; Maven: `*SNAPSHOT*`)           |
-| `excluded-tags`      | Comma-separated tags/versions never deleted (`*` wildcards supported).                       | No       | `""`                                      |
-| `included-patterns`  | Comma-separated patterns to include (`*` wildcards supported).                               | No       | `""`                                      |
-| `excluded-patterns`  | Comma-separated patterns to exclude (`*` wildcards supported).                               | No       | `""`                                      |
+| `included-tags`      | Comma-separated tags/versions eligible for deletion (`*` wildcards supported). Merged with `included-patterns`. | No       | `""` (all; Maven: `*SNAPSHOT*`)           |
+| `excluded-tags`      | Comma-separated tags/versions never deleted (`*` wildcards supported). Merged with `excluded-patterns`. | No       | `""`                                      |
+| `included-patterns`  | Comma-separated patterns to include (`*` wildcards supported). Merged with `included-tags`. | No       | `""`                                      |
+| `excluded-patterns`  | Comma-separated patterns to exclude (`*` wildcards supported). Merged with `excluded-tags`; exclusions always win over inclusions. | No       | `""`                                      |
 | `package-type`       | Package kind to clean: `container` or `maven`.                                               | No       | `container`                               |
 | `dry-run`            | If `true`, only prints what would be deleted.                                                | No       | `false`                                   |
 | `debug`              | If `true`, prints extra debug logs.                                                          | No       | `false`                                   |
@@ -150,7 +150,7 @@ jobs:
 ## Usage for Container Images
 
 - Set `package-type: container` (default).
-- Filtering by `included-tags` and `excluded-tags` works on image tags.
+- Filtering by `included-tags` / `included-patterns` and `excluded-tags` / `excluded-patterns` works on image tags (the two inputs of each pair are merged).
 - Wildcards (`*`) are supported for flexible tag matching.
 - All container image versions older than `threshold-days` and matching the tag filters will be deleted (unless `dry-run` is enabled).
 
@@ -159,9 +159,11 @@ jobs:
 ## Usage for Maven Packages
 
 - Set `package-type: maven`.
-- Filtering by `included-patterns` and `excluded-patterns` works on Maven version names.
-- **If you do not specify `included-patterns`, the action will automatically add `*SNAPSHOT*` to the list of included patterns for Maven packages.**
-  This means that by default, only SNAPSHOT versions will be deleted for Maven, unless you specify other include patterns.
+- Filtering by `included-patterns` / `included-tags` and `excluded-patterns` / `excluded-tags` works on Maven version names (the two inputs of each pair are merged).
+- **If you do not specify any include filter, the action uses `*SNAPSHOT*`.**
+  This means that by default, only SNAPSHOT versions will be deleted for Maven.
+- **If you specify include filters, only those are used and `*SNAPSHOT*` is not added.**
+  A broad include such as `*` also selects release versions, so keep `*SNAPSHOT*` in the include list unless you really want to delete other versions.
 - Wildcards (`*`and `?`) are supported for flexible version matching.
 - All Maven versions older than `threshold-days` and matching the filters will be deleted (unless `dry-run` is enabled).
 
@@ -173,13 +175,14 @@ The action filters tags/versions in the following order of priority:
 
 1. **Excluded Tags/Patterns**:
    - Versions matching `excluded-tags` or `excluded-patterns` are **always skipped**, even if they also match `included-tags` or `included-patterns`.
+   - Items of a list are separated by commas; whitespace around an item is trimmed and empty items are skipped.
 
 2. **Included Tags/Patterns**:
    - If `included-tags` or `included-patterns` is specified, only versions matching these are considered for deletion.
 
 3. **Default Behavior**:
    - If neither `included-tags` nor `included-patterns` is specified, all versions are considered for deletion, except those explicitly excluded by `excluded-tags` or `excluded-patterns`.
-   - **For Maven:** If neither `included-tags` or `included-patterns` is specified, only `*SNAPSHOT*` versions are considered for deletion by default.
+   - **For Maven:** If neither `included-tags` nor `included-patterns` is specified, only `*SNAPSHOT*` versions are considered for deletion by default.
 
 ### Filtering Process
 
@@ -196,6 +199,21 @@ The action filters tags/versions in the following order of priority:
 `threshold-days` must be a non-negative integer (`0`, `7`, `30`, ...). For `package-type: maven`,
 `threshold-versions` must be a non-negative integer as well. Empty, negative, fractional and partially
 numeric values (for example `-1`, `1.5`, `7abc`) fail the action **before** any package is listed or deleted.
+
+### Excluded patterns that protect every candidate
+
+For Maven packages, if every version that matches the include filters and is older than `threshold-days` is protected by an
+exclusion, nothing is deleted for that package. The action then writes a warning and lists the package and the responsible
+patterns in the job summary under *Versions protected by excluded patterns*. A typical cause is a pattern such as `*.*`,
+which also matches SNAPSHOT versions like `1.0.0-SNAPSHOT`.
+
+### Migration note: exclusions are applied for Maven
+
+Before this change the Maven path ignored `included-patterns`, `excluded-patterns`, `included-tags` and `excluded-tags`
+and always used `*SNAPSHOT*`. These inputs are now applied. A workflow that passes `excluded-patterns: latest,release*,*.*`
+relied on the old behavior: `*.*` also matches SNAPSHOT versions, so after updating the pinned version of the action nothing
+would be deleted any more. Remove `*.*` from the exclusions **before** updating the version. The inclusion `*SNAPSHOT*`
+alone keeps release versions such as `1.2.3`, because they do not match it.
 
 ### Layers of retained container images
 

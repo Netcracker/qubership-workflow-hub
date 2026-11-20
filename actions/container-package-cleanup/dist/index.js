@@ -25154,7 +25154,7 @@ var MavenStrategy = class extends abstractPackageStrategy_default {
     super();
     this.name = "Maven Strategy";
   }
-  async execute({ packagesWithVersions, excludedPatterns, includedPatterns, thresholdDate, thresholdVersions, debug: debug2 = false }) {
+  async execute({ packagesWithVersions, excludedPatterns, includedPatterns, thresholdDate, thresholdVersions, debug: debug2 = false, blockedByExclusion = [] }) {
     action_logger_default.setDebug(debug2);
     const wildcardMatcher = new wildcardMatcher_default();
     const filteredPackagesWithVersionsForDelete = packagesWithVersions.map(({ package: pkg, versions }) => {
@@ -25172,6 +25172,12 @@ var MavenStrategy = class extends abstractPackageStrategy_default {
       });
       if (versionForDelete.length === 0) {
         debug2 && info(`No versions found for package: ${pkg.name} that match the criteria.`);
+        const eligible = versions.filter((version) => new Date(version.created_at) <= thresholdDate && includedPatterns.some((pattern) => wildcardMatcher.match(version.name, pattern)));
+        if (eligible.length > 0) {
+          const patterns = excludedPatterns.filter((pattern) => eligible.some((version) => wildcardMatcher.match(version.name, pattern)));
+          action_logger_default.warn(`[${pkg.name}] All ${eligible.length} version(s) matching the include patterns and older than the threshold are protected by excluded patterns: ${patterns.join(", ")}. Check excluded-patterns.`);
+          blockedByExclusion.push({ package: pkg.name, versions: eligible.length, patterns });
+        }
         return null;
       }
       if (versionForDelete.length <= thresholdVersions) {
@@ -25550,6 +25556,38 @@ function parseNonNegativeInt(name, raw) {
   }
   return parsed;
 }
+function parseList(raw) {
+  return String(raw ?? "").split(",").map((item) => item.trim()).filter((item) => item.length > 0);
+}
+
+// src/utils/filters.js
+var MAVEN_DEFAULT_INCLUDE = "*SNAPSHOT*";
+var unique = (list) => [...new Set(list)];
+function resolveFilters(packageType, { includedTags = [], includedPatterns = [], excludedTags = [], excludedPatterns = [] } = {}) {
+  const excluded = unique([...excludedTags, ...excludedPatterns]);
+  let included = unique([...includedTags, ...includedPatterns]);
+  if (packageType === "maven" && included.length === 0) included = [MAVEN_DEFAULT_INCLUDE];
+  return { included, excluded };
+}
+
+// src/reports/blockedByExclusion.js
+async function writeBlockedByExclusionSummary(blockedByExclusion = []) {
+  if (!Array.isArray(blockedByExclusion) || blockedByExclusion.length === 0) return;
+  summary.addRaw(`
+
+### \u26A0\uFE0F Versions protected by excluded patterns
+
+`);
+  summary.addRaw(`Every version that matches the include patterns and is older than the threshold is protected by the excluded patterns, so nothing was deleted for these packages. Check \`excluded-patterns\` (a pattern such as \`*.*\` also matches SNAPSHOT versions):
+
+`);
+  blockedByExclusion.forEach(({ package: name, versions, patterns }) => {
+    const matched = patterns.map((p) => `<code>${p}</code>`).join(", ");
+    summary.addRaw(`- <strong>${name}</strong>: ${versions} version(s), excluded by ${matched}
+`);
+  });
+  await summary.write();
+}
 
 // src/reports/listingFailures.js
 async function writeListingFailuresSummary(listingFailures = []) {
@@ -25590,15 +25628,12 @@ async function run() {
   }
   const batchSize = parseInt(getInput("batch-size"), 10) || 15;
   const maxErrors = parseInt(getInput("max-errors"), 10) || 5;
-  let excludedTags = [];
-  let includedTags = [];
-  if (package_type === "container") {
-    const rawIncludedTags = getInput("included-tags");
-    includedTags = rawIncludedTags ? rawIncludedTags.split(",") : [];
-    const rawExcludedTags = getInput("excluded-tags");
-    excludedTags = rawExcludedTags ? rawExcludedTags.split(",") : [];
-  }
-  if (package_type === "maven") includedTags = ["*SNAPSHOT*", ...includedTags];
+  const { included: includedTags, excluded: excludedTags } = resolveFilters(package_type, {
+    includedTags: parseList(getInput("included-tags")),
+    includedPatterns: parseList(getInput("included-patterns")),
+    excludedTags: parseList(getInput("excluded-tags")),
+    excludedPatterns: parseList(getInput("excluded-patterns"))
+  });
   const now = /* @__PURE__ */ new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1e3);
   action_logger_default.info(`Threshold Days: ${thresholdDays}`);
@@ -25637,8 +25672,10 @@ async function run() {
   action_logger_default.notice(`Total packages to process: ${filteredPackages.length}, total versions found: ${totalPackagesVersions}`);
   action_logger_default.endGroup();
   const incompleteCleanup = [];
+  const blockedByExclusion = [];
   const strategyContext = {
     incompleteCleanup,
+    blockedByExclusion,
     packagesWithVersions,
     excludedPatterns: excludedTags,
     includedPatterns: includedTags,
@@ -25678,6 +25715,7 @@ async function run() {
   }
   await showReport({ ...reportContext, deleteStatus }, package_type);
   await writeListingFailuresSummary(listingFailures);
+  await writeBlockedByExclusionSummary(blockedByExclusion);
   deleteStatus.some((r) => r.success === false) ? setFailed("\u2757\uFE0F Action completed with errors. Please check the logs and the report above.") : action_logger_default.success("\u2705 Action completed.");
 }
 async function showReport(context3, type = "container") {

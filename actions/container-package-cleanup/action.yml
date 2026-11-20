@@ -8,10 +8,10 @@ inputs:
     description: "The number of latest SNAPSHOT versions to keep."
     default: "1"
   included-tags:
-    description: "A comma-separated list of tags to include for deletion."
+    description: "A comma-separated list of tags to include for deletion. Merged with included-patterns."
     default: ""
   excluded-tags:
-    description: "A comma-separated list of tags to exclude from deletion."
+    description: "A comma-separated list of tags to exclude from deletion. Merged with excluded-patterns."
     default: ""
   debug:
     description: "Enable debug mode."
@@ -23,10 +23,10 @@ inputs:
     description: "Type of cleanup to perform (e.g., 'docker', 'container')."
     default: "container"
   included-patterns:
-    description: "A comma-separated list of patterns to include for deletion."
+    description: "A comma-separated list of patterns to include for deletion. Merged with included-tags; for Maven *SNAPSHOT* is used when no include filter is given."
     default: ""
   excluded-patterns:
-    description: "A comma-separated list of patterns to exclude from deletion."
+    description: "A comma-separated list of patterns to exclude from deletion. Merged with excluded-tags; exclusions always win over inclusions."
     default: ""
   batch-size:
     description: "Number of items to delete in each batch."
