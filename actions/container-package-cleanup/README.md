@@ -59,7 +59,7 @@ on:
       excluded-tags:
         description: "Tags to exclude from deletion"
         required: false
-        default: ""
+        default: "release*,semver"
       debug:
         description: "Enable debug mode"
         required: false
@@ -78,17 +78,20 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Docker Cleanup Action
-        uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@main
+        uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@v2.8.3
         with:
           threshold-days: ${{ github.event.inputs.threshold-days || 7 }}
           included-tags: ${{ github.event.inputs.included-tags || '' }}
-          excluded-tags: ${{ github.event.inputs.excluded-tags || '' }}
+          excluded-tags: ${{ github.event.inputs.excluded-tags || 'release*,semver' }}
           debug: ${{ github.event.inputs.debug || 'false' }}
           dry-run: ${{ github.event.inputs.dry-run || 'false' }}
           package-type: container
         env:
           PACKAGE_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
 ```
+
+Tags and patterns can be mixed: `included-tags` and `included-patterns` are merged, as are `excluded-tags` and `excluded-patterns`.
+The layers of the images that are kept are protected automatically.
 
 ### Example for Maven JAR Files
 
@@ -113,7 +116,7 @@ on:
       excluded-patterns:
         description: "Patterns to exclude from deletion"
         required: false
-        default: "release*"
+        default: "latest,release*"
       debug:
         description: "Enable debug mode"
         required: false
@@ -132,18 +135,21 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Maven Cleanup Action
-        uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@main
+        uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@v2.8.3
         with:
           threshold-days: ${{ github.event.inputs.threshold-days || 14 }}
           threshold-versions: ${{ github.event.inputs.threshold-versions || 1 }}
           included-patterns: ${{ github.event.inputs.included-patterns || '*SNAPSHOT*' }}
-          excluded-patterns: ${{ github.event.inputs.excluded-patterns || 'release*' }}
+          excluded-patterns: ${{ github.event.inputs.excluded-patterns || 'latest,release*' }}
           debug: ${{ github.event.inputs.debug || 'false' }}
           dry-run: ${{ github.event.inputs.dry-run || 'false' }}
           package-type: maven
         env:
           PACKAGE_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
 ```
+
+Do not add `*.*` to the Maven exclusions: it also matches SNAPSHOT versions such as `1.0.0-SNAPSHOT`, and nothing would be deleted.
+See [Examples](#examples) and the migration note below.
 
 ---
 

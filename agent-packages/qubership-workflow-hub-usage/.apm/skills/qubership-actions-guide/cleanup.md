@@ -63,6 +63,8 @@ release*,semver,main,latest,*.*,*.*.*
 
 Do not drop the `*.*` / `*.*.*` patterns without a specific reason.
 
+These patterns are for **container tags**. Do not copy them to Maven exclusions (see the Maven section): there `*.*` also matches `1.0.0-SNAPSHOT`.
+
 ### Pipeline shape (container)
 
 When adapting the template, the canonical `workflow_dispatch` inputs block is:
@@ -113,6 +115,40 @@ No org template — build from scratch.
 - Do not put `*.*` in Maven exclusions: it also matches `1.0.0-SNAPSHOT`, so nothing would be deleted. Release versions are already kept because they do not match the `*SNAPSHOT*` inclusion.
 - `threshold-versions`: keep this many newest versions per package (default: `1`).
 
+### `excluded-patterns` recommended value (Maven)
+
+```text
+latest,release*
+```
+
+- `latest` — floating version name, always kept
+- `release*` — any version starting with "release"
+- Do not add `*.*`: it matches every dotted version, including `1.0.0-SNAPSHOT`, so exclusions would protect all SNAPSHOT versions and nothing would be deleted. The action then writes a warning and the job summary section *Versions protected by excluded patterns*.
+
+Release versions such as `1.2.3` need no exclusion: they do not match the `*SNAPSHOT*` inclusion.
+
+### Migrating an existing Maven workflow
+
+If an existing workflow passes `*.*` in `excluded-patterns`, remove it **before** updating the pinned version of the action. Older versions ignore the pattern inputs, newer versions apply them.
+
+Before:
+
+```yaml
+with:
+  package-type: maven
+  included-patterns: '*SNAPSHOT*'
+  excluded-patterns: 'latest,release*,*.*'
+```
+
+After:
+
+```yaml
+with:
+  package-type: maven
+  included-patterns: '*SNAPSHOT*'
+  excluded-patterns: 'latest,release*'
+```
+
 ### Common Maven use cases
 
 | Goal | Configuration |
@@ -145,7 +181,7 @@ on:
       excluded-patterns:
         description: "Patterns to exclude from deletion"
         required: false
-        default: ""
+        default: "latest,release*"  # do not add *.* — it also matches SNAPSHOT versions
       dry-run:
         description: "Enable dry-run mode"
         required: false
