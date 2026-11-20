@@ -125,8 +125,9 @@ jobs:
           package-type: ${{ matrix.package-type || 'container' }}
           threshold-days: ${{ matrix.days || '7' }}
           threshold-versions: ${{ matrix.versions || '1' }}
-          included-tags: dev-*
-          excluded-tags: release-*
+          # tag filters belong to the container scenarios; for Maven the default SNAPSHOT inclusion applies
+          included-tags: ${{ matrix.package-type != 'maven' && 'dev-*' || '' }}
+          excluded-tags: ${{ matrix.package-type != 'maven' && 'release-*' || '' }}
           dry-run: ${{ matrix.scenario == 'dry-run' }}
           debug: 'false'
 

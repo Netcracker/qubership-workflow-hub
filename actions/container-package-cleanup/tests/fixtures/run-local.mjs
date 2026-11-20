@@ -36,8 +36,10 @@ for (const scenario of scenarios) {
     env['INPUT_DEBUG'] = 'false';
     env['INPUT_DRY-RUN'] = String(scenario === 'dry-run');
     env['INPUT_PACKAGE-TYPE'] = scenario.startsWith('maven') || scenario === 'invalid-versions' ? 'maven' : 'container';
-    env['INPUT_INCLUDED-TAGS'] = 'dev-*';
-    env['INPUT_EXCLUDED-TAGS'] = 'release-*';
+    // tag filters belong to the container scenarios; for Maven the default SNAPSHOT inclusion applies
+    const container = env['INPUT_PACKAGE-TYPE'] === 'container';
+    env['INPUT_INCLUDED-TAGS'] = container ? 'dev-*' : '';
+    env['INPUT_EXCLUDED-TAGS'] = container ? 'release-*' : '';
     if (scenario === 'invalid-days') env['INPUT_THRESHOLD-DAYS'] = '7abc';
     if (scenario === 'invalid-versions') env['INPUT_THRESHOLD-VERSIONS'] = '1.5';
     if (scenario === 'maven-zero') { env['INPUT_THRESHOLD-DAYS'] = '0'; env['INPUT_THRESHOLD-VERSIONS'] = '0'; }

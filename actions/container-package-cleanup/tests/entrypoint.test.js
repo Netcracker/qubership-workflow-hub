@@ -266,3 +266,144 @@ describe('entry point: package listing failures', () => {
     expect(summaryText()).not.toContain('Incomplete package listing');
   });
 });
+
+describe('entry point: tag and pattern inputs', () => {
+  const savedEnv = { ...process.env };
+  const day = 86400000;
+  const ago = (days) => new Date(Date.now() - days * day).toISOString();
+  const summaryText = () => mockCore.summary.addRaw.mock.calls.map(c => c[0]).join('');
+  const deleted = () => wrapperInstance.deletePackageVersion.mock.calls.map(c => c[3]).sort((a, b) => a - b);
+
+  const mavenPackage = { id: 1, name: 'my-lib', package_type: 'maven', repository: { name: 'repo', full_name: 'owner/repo' } };
+  const mavenVersions = [
+    { id: 1, name: '1.0.0', created_at: ago(60) },
+    { id: 2, name: '1.1.0-SNAPSHOT', created_at: ago(40) },
+    { id: 3, name: '1.2.0-SNAPSHOT', created_at: ago(20) },
+    { id: 4, name: '1.3.0-SNAPSHOT', created_at: ago(10) },
+    { id: 5, name: '2.0.0-beta1', created_at: ago(50) },
+    { id: 6, name: '2.0.0-beta2', created_at: ago(45) },
+  ];
+  const mavenInputs = { 'package-type': 'maven', 'threshold-days': '14', 'threshold-versions': '1', debug: 'false' };
+
+  const containerPackage = { id: 2, name: 'my-image', package_type: 'container', repository: { name: 'repo', full_name: 'owner/repo' } };
+  const tagged = (id, tag, days) => ({ id, name: `sha256:${id}`, created_at: ago(days), metadata: { container: { tags: [tag] } } });
+  const containerVersions = [tagged(1, 'dev-old', 30), tagged(2, 'test-old', 30), tagged(3, 'release-1', 30), tagged(4, 'v1.0.0', 30), tagged(5, 'dev-fresh', 1)];
+  const containerInputs = { 'package-type': 'container', 'threshold-days': '7', debug: 'false' };
+
+  const setup = (pkg, versions) => {
+    wrapperInstance.listPackages.mockResolvedValue([pkg]);
+    wrapperInstance.listVersionsForPackage.mockResolvedValue(versions);
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.GITHUB_REPOSITORY = 'owner/repo';
+    process.env.PACKAGE_TOKEN = 'token';
+    wrapperInstance.isOrganization.mockResolvedValue(true);
+    wrapperInstance.deletePackageVersion.mockResolvedValue(undefined);
+    wrapperInstance.getManifestDigests = jest.fn().mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    process.env = { ...savedEnv };
+    delete wrapperInstance.getManifestDigests;
+  });
+
+  describe('maven', () => {
+    it('deletes only old SNAPSHOT versions without any filter inputs (default)', async () => {
+      setup(mavenPackage, mavenVersions);
+
+      await runEntryPoint(mavenInputs);
+
+      expect(deleted()).toEqual([2]);
+      expect(wrapperInstance.deletePackageVersion).toHaveBeenCalledWith('owner', 'maven', 'my-lib', 2, true);
+    });
+
+    it('works with the migrated workflow configuration (SNAPSHOT inclusion, latest and release exclusions)', async () => {
+      setup(mavenPackage, mavenVersions);
+
+      await runEntryPoint({ ...mavenInputs, 'included-patterns': '*SNAPSHOT', 'excluded-patterns': 'latest,release*' });
+
+      expect(deleted()).toEqual([2]);
+      expect(summaryText()).not.toContain('protected by excluded patterns');
+    });
+
+    it('deletes nothing and explains why when *.* protects every SNAPSHOT version', async () => {
+      setup(mavenPackage, mavenVersions);
+
+      await runEntryPoint({ ...mavenInputs, 'included-patterns': '*SNAPSHOT', 'excluded-patterns': 'latest,release*,*.*' });
+
+      expect(deleted()).toEqual([]);
+      expect(mockCore.setFailed).not.toHaveBeenCalled();
+      expect(summaryText()).toContain('Versions protected by excluded patterns');
+      expect(summaryText()).toContain('<code>*.*</code>');
+      expect(mockCore.summary.write).toHaveBeenCalled();
+    });
+
+    it('trims whitespace and skips empty items in the lists', async () => {
+      setup(mavenPackage, mavenVersions);
+
+      await runEntryPoint({ ...mavenInputs, 'included-patterns': ' *SNAPSHOT , ', 'excluded-patterns': ' latest , release* ,, ' });
+
+      expect(deleted()).toEqual([2]);
+    });
+
+    it('uses only explicit inclusions and does not add *SNAPSHOT*', async () => {
+      setup(mavenPackage, mavenVersions);
+
+      await runEntryPoint({ ...mavenInputs, 'threshold-versions': '0', 'included-patterns': '*beta*' });
+
+      expect(deleted()).toEqual([5, 6]);
+    });
+
+    it('merges excluded-tags and excluded-patterns; exclusions win over inclusions', async () => {
+      setup(mavenPackage, mavenVersions);
+
+      await runEntryPoint({ ...mavenInputs, 'threshold-versions': '0', 'excluded-tags': '1.1.0*', 'excluded-patterns': '1.2.0*' });
+
+      expect(deleted()).toEqual([]);
+    });
+  });
+
+  describe('container', () => {
+    it('deletes all old tagged versions without filter inputs (default)', async () => {
+      setup(containerPackage, containerVersions);
+
+      await runEntryPoint(containerInputs);
+
+      expect(deleted()).toEqual([1, 2, 3, 4]);
+    });
+
+    it('protects versions matched by excluded-patterns', async () => {
+      setup(containerPackage, containerVersions);
+
+      await runEntryPoint({ ...containerInputs, 'excluded-patterns': 'release-*,semver' });
+
+      expect(deleted()).toEqual([1, 2]);
+    });
+
+    it('merges included-tags and included-patterns', async () => {
+      setup(containerPackage, containerVersions);
+
+      await runEntryPoint({ ...containerInputs, 'included-tags': 'dev-*', 'included-patterns': 'test-*' });
+
+      expect(deleted()).toEqual([1, 2]);
+    });
+
+    it('applies the same result for tags and for patterns', async () => {
+      setup(containerPackage, containerVersions);
+      await runEntryPoint({ ...containerInputs, 'included-tags': 'dev-*', 'excluded-tags': 'release-*' });
+      const byTags = deleted();
+
+      jest.clearAllMocks();
+      wrapperInstance.deletePackageVersion.mockResolvedValue(undefined);
+      wrapperInstance.getManifestDigests = jest.fn().mockResolvedValue([]);
+      wrapperInstance.isOrganization.mockResolvedValue(true);
+      setup(containerPackage, containerVersions);
+      await runEntryPoint({ ...containerInputs, 'included-patterns': 'dev-*', 'excluded-patterns': 'release-*' });
+
+      expect(deleted()).toEqual(byTags);
+      expect(byTags).toEqual([1]);
+    });
+  });
+});
