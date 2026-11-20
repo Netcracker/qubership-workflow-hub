@@ -53,17 +53,16 @@ Filters are applied in this order:
 **`excluded-tags` recommended value:**
 
 ```text
-release*,semver,main,latest,*.*,*.*.*
+release*,semver,main,latest
 ```
 
 - `release*` — any tag starting with "release"
-- `semver` — literal semver marker tag
+- `semver` — special word (not a literal tag): matches version tags such as `1.2.3`, `v1.2.3` and `1.2.3-beta`, but not `dependabot-1.2.3`. It is a simplified match, not a strict SemVer check. Protects versioned release images
 - `main`, `latest` — floating tags always kept
-- `*.*`, `*.*.*` — semver-like tags (`1.2`, `1.2.3`, `v1.2.3`) — protects versioned release images
 
-Do not drop the `*.*` / `*.*.*` patterns without a specific reason.
+Broad patterns such as `*.*` or `*.*.*` match **any** tag that contains dots, including Dependabot tags like `dependabot-pip-2025.6.15`, so those images would never be deleted. Add them only when every tag with a dot must be kept; prefer `semver`.
 
-These patterns are for **container tags**. Do not copy them to Maven exclusions (see the Maven section): there `*.*` also matches `1.0.0-SNAPSHOT`.
+These tag recommendations are for **container tags**. Do not copy them to Maven exclusions (see the Maven section): there `*.*` also matches `1.0.0-SNAPSHOT`.
 
 ### Pipeline shape (container)
 
@@ -86,7 +85,7 @@ on:
       excluded-tags:
         description: "Tags to exclude from deletion"
         required: false
-        default: "release*,semver,main,latest,*.*,*.*.*"  # semver patterns protect versioned release images
+        default: "release*,semver,main,latest"  # semver protects versioned release images; *.* would also protect Dependabot tags
       dry-run:
         description: "Enable dry-run mode"
         required: false

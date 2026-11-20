@@ -38,7 +38,10 @@ It supports both Docker/container images and Maven JAR files.
 
 ## How to Use
 
-Below are examples of how to use this action in a GitHub Actions workflow for both Docker images and Maven JAR files:
+Below are examples of how to use this action in a GitHub Actions workflow for both Docker images and Maven JAR files.
+
+> **Version:** replace `vX.Y.Z` with the release that contains the described behavior. Releases up to and including `v2.8.3`
+> ignore `included-patterns` and `excluded-patterns` for Maven and read the tag inputs for container packages only.
 
 ### Example for Docker Images
 
@@ -78,7 +81,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Docker Cleanup Action
-        uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@v2.8.3
+        uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@vX.Y.Z
         with:
           threshold-days: ${{ github.event.inputs.threshold-days || 7 }}
           included-tags: ${{ github.event.inputs.included-tags || '' }}
@@ -135,7 +138,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Maven Cleanup Action
-        uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@v2.8.3
+        uses: netcracker/qubership-workflow-hub/actions/container-package-cleanup@vX.Y.Z
         with:
           threshold-days: ${{ github.event.inputs.threshold-days || 14 }}
           threshold-versions: ${{ github.event.inputs.threshold-versions || 1 }}
