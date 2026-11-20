@@ -21,12 +21,20 @@ if (invalid) {
   const expected = {
     'retained-images': [1, 12, 16], 'dry-run': [], 'manifest-failure': [1],
     'deleted-manifest-failure': [1, 12, 16], 'single-arch': [1, 16], empty: [],
-    maven: [22, 23], 'maven-zero': [21, 22, 23]
+    maven: [22, 23], 'maven-zero': [21, 22, 23], 'maven-excluded-all': [], 'maven-migrated': [22, 23]
   }[scenario];
   const deleted = requests.filter(r => r.method === 'DELETE').map(r => Number(r.path.split('/').at(-1))).sort((a, b) => a - b);
   assert.deepEqual(deleted, expected, 'Unexpected deleted versions');
-  if (scenario.startsWith('maven') || scenario === 'empty') assert.deepEqual(docker, [], 'Maven/empty cleanup must not inspect containers');
-  else {
+  if (scenario.startsWith('maven') || scenario === 'empty') {
+    assert.deepEqual(docker, [], 'Maven/empty cleanup must not inspect containers');
+    if (scenario === 'maven-excluded-all' || scenario === 'maven-migrated') {
+      // the original workflow exclusions (with *.*) protect every SNAPSHOT version; the migrated ones do not
+      const summary = fs.readFileSync(path.join(directory, 'summary.md'), 'utf8');
+      const blocked = summary.includes('Versions protected by excluded patterns');
+      assert.equal(blocked, scenario === 'maven-excluded-all', 'Unexpected exclusion warning in the report');
+      if (blocked) assert.ok(summary.includes('<code>*.*</code>'), 'The responsible pattern must be named in the report');
+    }
+  } else {
     assert.ok(docker.some(r => r.operation === 'login'), 'Docker login was not exercised');
     assert.ok(docker.some(r => r.operation === 'inspect' && r.tag === 'dev-fresh'), 'Retained-image manifest was not inspected');
     const summary = fs.readFileSync(path.join(directory, 'summary.md'), 'utf8');

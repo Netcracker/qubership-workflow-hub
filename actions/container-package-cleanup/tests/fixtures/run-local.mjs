@@ -36,10 +36,14 @@ for (const scenario of scenarios) {
     env['INPUT_DEBUG'] = 'false';
     env['INPUT_DRY-RUN'] = String(scenario === 'dry-run');
     env['INPUT_PACKAGE-TYPE'] = scenario.startsWith('maven') || scenario === 'invalid-versions' ? 'maven' : 'container';
-    env['INPUT_INCLUDED-TAGS'] = 'dev-*';
-    env['INPUT_EXCLUDED-TAGS'] = 'release-*';
+    // tag filters belong to the container scenarios; for Maven the default SNAPSHOT inclusion applies
+    const container = env['INPUT_PACKAGE-TYPE'] === 'container';
+    env['INPUT_INCLUDED-TAGS'] = container ? 'dev-*' : '';
+    env['INPUT_EXCLUDED-TAGS'] = container ? 'release-*' : '';
     if (scenario === 'invalid-days') env['INPUT_THRESHOLD-DAYS'] = '7abc';
     if (scenario === 'invalid-versions') env['INPUT_THRESHOLD-VERSIONS'] = '1.5';
+    if (scenario === 'maven-excluded-all') { env['INPUT_INCLUDED-PATTERNS'] = '*SNAPSHOT*'; env['INPUT_EXCLUDED-PATTERNS'] = 'latest,release*,*.*'; }
+    if (scenario === 'maven-migrated') { env['INPUT_INCLUDED-PATTERNS'] = '*SNAPSHOT'; env['INPUT_EXCLUDED-PATTERNS'] = 'latest,release*'; }
     if (scenario === 'maven-zero') { env['INPUT_THRESHOLD-DAYS'] = '0'; env['INPUT_THRESHOLD-VERSIONS'] = '0'; }
     const result = await execute(path.join(action, manifest.runs.main), env, ['--import', pathToFileURL(path.join(fixtures, 'preload.mjs')).href]);
     const verified = await execute(path.join(fixtures, 'verify.mjs'), { ...env, ACTUAL_OUTCOME: result.code === 0 ? 'success' : 'failure' });

@@ -10,7 +10,9 @@ import ContainerReport from "./reports/containerReport.js";
 import MavenReport from "./reports/mavenReport.js";
 import { getStrategy } from "./strategy/strategyRegistry.js";
 import { deletePackageVersion } from './utils/deleteAction.js';
-import { parseNonNegativeInt } from './utils/inputs.js';
+import { parseNonNegativeInt, parseList } from './utils/inputs.js';
+import { resolveFilters } from './utils/filters.js';
+import { writeBlockedByExclusionSummary } from './reports/blockedByExclusion.js';
 import { writeListingFailuresSummary } from './reports/listingFailures.js';
 import log from "@qubership/action-logger";
 
@@ -45,18 +47,13 @@ async function run() {
   const batchSize = parseInt(core.getInput('batch-size'), 10) || 15;
   const maxErrors = parseInt(core.getInput('max-errors'), 10) || 5;
 
-  let excludedTags = [];
-  let includedTags = [];
-
-  if (package_type === "container") {
-    const rawIncludedTags = core.getInput('included-tags');
-    includedTags = rawIncludedTags ? rawIncludedTags.split(",") : [];
-
-    const rawExcludedTags = core.getInput('excluded-tags');
-    excludedTags = rawExcludedTags ? rawExcludedTags.split(",") : [];
-  }
-
-  if (package_type === "maven") includedTags = ['*SNAPSHOT*', ...includedTags];
+  // tags and patterns are the same kind of filter: merge them; exclusions win over inclusions
+  const { included: includedTags, excluded: excludedTags } = resolveFilters(package_type, {
+    includedTags: parseList(core.getInput('included-tags')),
+    includedPatterns: parseList(core.getInput('included-patterns')),
+    excludedTags: parseList(core.getInput('excluded-tags')),
+    excludedPatterns: parseList(core.getInput('excluded-patterns')),
+  });
 
   const now = new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1000);
@@ -116,9 +113,12 @@ async function run() {
 
   // Filled by the strategy when it has to skip part of the cleanup to stay safe
   const incompleteCleanup = [];
+  // Filled by the Maven strategy when excluded patterns protect every version that would otherwise be deleted
+  const blockedByExclusion = [];
 
   const strategyContext = {
     incompleteCleanup,
+    blockedByExclusion,
     packagesWithVersions: packagesWithVersions,
     excludedPatterns: excludedTags,
     includedPatterns: includedTags,
@@ -167,6 +167,7 @@ async function run() {
 
   await showReport({ ...reportContext, deleteStatus }, package_type);
   await writeListingFailuresSummary(listingFailures);
+  await writeBlockedByExclusionSummary(blockedByExclusion);
 
   deleteStatus.some(r => r.success === false) ?
     core.setFailed("❗️ Action completed with errors. Please check the logs and the report above.") :

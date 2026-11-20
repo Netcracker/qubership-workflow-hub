@@ -11,7 +11,7 @@ class MavenStrategy extends AbstractPackageStrategy {
         this.name = 'Maven Strategy';
     }
 
-    async execute({ packagesWithVersions, excludedPatterns, includedPatterns, thresholdDate, thresholdVersions, debug = false }) {
+    async execute({ packagesWithVersions, excludedPatterns, includedPatterns, thresholdDate, thresholdVersions, debug = false, blockedByExclusion = [] }) {
         log.setDebug(debug);
         // includedTags = ['*SNAPSHOT*', ...includedTags];
         const wildcardMatcher = new WildcardMatcher();
@@ -42,6 +42,18 @@ class MavenStrategy extends AbstractPackageStrategy {
             if (versionForDelete.length === 0) {
 
                 debug && core.info(`No versions found for package: ${pkg.name} that match the criteria.`);
+
+                // Versions that match the include patterns and are old enough, but are all protected by excluded patterns:
+                // a typical misconfiguration (for example '*.*' also matches SNAPSHOT versions) that would otherwise stay silent.
+                const eligible = versions.filter(version =>
+                    new Date(version.created_at) <= thresholdDate &&
+                    includedPatterns.some(pattern => wildcardMatcher.match(version.name, pattern)));
+                if (eligible.length > 0) {
+                    const patterns = excludedPatterns.filter(pattern =>
+                        eligible.some(version => wildcardMatcher.match(version.name, pattern)));
+                    log.warn(`[${pkg.name}] All ${eligible.length} version(s) matching the include patterns and older than the threshold are protected by excluded patterns: ${patterns.join(', ')}. Check excluded-patterns.`);
+                    blockedByExclusion.push({ package: pkg.name, versions: eligible.length, patterns });
+                }
                 return null;
             }
             if (versionForDelete.length <= thresholdVersions) {

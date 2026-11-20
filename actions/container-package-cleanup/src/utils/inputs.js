@@ -20,4 +20,17 @@ function parseNonNegativeInt(name, raw) {
   return parsed;
 }
 
-export { parseNonNegativeInt };
+/**
+ * Parses a comma-separated list input: items are trimmed and empty items are skipped.
+ *
+ * @param {string} raw - raw input value
+ * @returns {string[]}
+ */
+function parseList(raw) {
+  return String(raw ?? "")
+    .split(",")
+    .map(item => item.trim())
+    .filter(item => item.length > 0);
+}
+
+export { parseNonNegativeInt, parseList };
