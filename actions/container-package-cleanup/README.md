@@ -192,6 +192,55 @@ The action filters tags/versions in the following order of priority:
 
 ---
 
+## Examples
+
+### Maven: before and after removing `*.*` from the exclusions
+
+Configuration used by several Maven cleanup workflows, with `*.*` in the exclusions:
+
+```yaml
+with:
+  package-type: maven
+  threshold-days: 14
+  included-patterns: '*SNAPSHOT*'
+  excluded-patterns: 'latest,release*,*.*'
+```
+
+`*.*` also matches `1.0.0-SNAPSHOT`, and exclusions win over inclusions. Every SNAPSHOT version is protected, nothing is
+deleted, and the action writes a warning and the job summary section *Versions protected by excluded patterns*.
+
+The same configuration without `*.*`:
+
+```yaml
+with:
+  package-type: maven
+  threshold-days: 14
+  included-patterns: '*SNAPSHOT*'
+  excluded-patterns: 'latest,release*'
+```
+
+SNAPSHOT versions older than 14 days are deleted, except the newest of them (`threshold-versions` defaults to `1`).
+Release versions such as `1.2.3` are kept because they do not match the inclusion `*SNAPSHOT*`.
+
+### Containers: tags and patterns together
+
+Tag and pattern inputs are merged, so both of these configurations select the same tags:
+
+```yaml
+with:
+  package-type: container
+  threshold-days: 7
+  included-tags: 'dev-*'
+  included-patterns: 'test-*'
+  excluded-tags: 'release*,latest'
+  excluded-patterns: 'semver'
+```
+
+Tags starting with `dev-` or `test-` that are older than 7 days are deleted. Tags starting with `release`, `latest` and
+version tags such as `1.2.3` or `v1.2.3` are kept. The layers of every kept image are protected automatically.
+
+---
+
 ## Safety Behavior
 
 ### Input validation
@@ -256,6 +305,9 @@ Supported patterns for tags/versions:
 | `release*v?`          | `release-v1`, `release_v1`, `releasev1`      | `release-v21`                      |
 | `?*`                  | `SHA2430957`, `SHANGRILLA2`                  | `1.2.3`, `SHANGRILLA-2`            |
 | `semver`              | `1.2.3`, `v1.2.3`, `1.2.3-beta`              | `alpha-1.2.3`, `dependabot-1.2.3`  |
+
+`semver` is a simplified match, not a strict SemVer check: it also matches `1.0.0-SNAPSHOT`. Do not use it in Maven
+exclusions, because it would protect SNAPSHOT versions the same way as `*.*`.
 
 ---
 
