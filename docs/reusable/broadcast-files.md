@@ -1,56 +1,16 @@
-# 🚀 Broadcast files Workflow
+# 🚀 Broadcast Files Workflow (moved)
 
-This **Broadcast files** GitHub Workflow automates propagation of common files across github organization.
-This workflow usually dont needs to be added to component repo. It should be operated via [.github repository](https://github.com/Netcracker/.github).
+> [!CAUTION]
+> **Moved out of this repository in `v2.0.8`.** The last release that contains
+> `.github/workflows/broadcast-files.yml` here is `v2.0.7`; it receives no fixes.
 
-If new functionality needed please create the [issue](https://github.com/Netcracker/qubership-workflow-hub/issues)
+The workflow now lives in the organization repository as
+[`Netcracker/.github` → `.github/workflows/broadcast-files.yaml`](https://github.com/Netcracker/.github/blob/main/.github/workflows/broadcast-files.yaml).
+It is not a reusable workflow: it runs on `workflow_dispatch` in `Netcracker/.github` and propagates
+files to the organization repositories according to a config file (`config-file` and `section` inputs,
+optional `repos` filter).
 
-## Features
+Component repositories do not need to add it. To request new files or changes, open an issue in
+[Netcracker/.github](https://github.com/Netcracker/.github/issues).
 
-- Propagates common workflows to all qubership repos.
-- Propagates .gitattributes to all qubership repos.
-- Propagates Cloud-Core specific dependabot config to Core repos.
-
-## 📌 Inputs
-
-| Name              | Description                                                                 | Required | Default |
-| ----------------- | --------------------------------------------------------------------------- | -------- | ------- |
-| `repo_name`       | The name of target repository to propagate.                                 | No       | None    |
-
-### Detailed Description of Variables
-
-- `repo_name`: The name of target repository to propagate. If not set files will be propagated to all repos in organization except the REPOS_TO_IGNORE list
-
-## Usage Example
-
-Below is an example of how to use this reusable workflow in a GitHub Actions workflow:
-
-```yaml
-name: Broadcast files to organization
-on:
-  push:
-    branches:
-      - main
-  pull_request_target:
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      repo_name:
-        description: >-
-          You can specify name of the repository where workflows should be
-          pushed manually. As long as repository is not ignored by workflow
-          settings. If you do not specify exact repository name, the workflow
-          will try to replicate all missing changes to all repositories.
-        required: false
-permissions:
-  actions: write
-  contents: write
-  pull-requests: write
-  statuses: write
-jobs:
-  broadcast_files:
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/broadcast-files.yml@main
-    secrets:
-      GH_ACCESS_TOKEN: '${{ secrets.GH_ACCESS_TOKEN }}'
-```
+See the [actions and workflows catalog](../actions-workflows-catalog.md) for the current inventory.

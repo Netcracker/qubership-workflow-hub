@@ -96,7 +96,7 @@ how slashes in branch names are rendered, so a branch such as `feature/api` prod
 ```yaml
 jobs:
   call-infra-docker-build:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-infra-docker-build.yaml@27fd7674286e5f561a6fd8277f2f389ff96ddb9 # v2.6.0
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-infra-docker-build.yaml@cdfcd0a8abd7ba80d7a04a4e9debfb4e24995f1a # v3.0.1
     permissions:
       contents: read
       packages: write
@@ -115,5 +115,5 @@ jobs:
 - The build job uses `packages: write`, so callers must grant that permission even when the
   component configuration targets GitHub Container Registry.
 - Pin to a full 40-character commit SHA with the release tag as a trailing comment, e.g.
-  `@27fd7674286e5f561a6fd8277f2f389ff96ddb9 # v2.6.0`. The SHA is the immutable pin; the comment
+  `@cdfcd0a8abd7ba80d7a04a4e9debfb4e24995f1a # v3.0.1`. The SHA is the immutable pin; the comment
   shows which release it points to. Tags alone are mutable. Never use `@main` or short SHAs.

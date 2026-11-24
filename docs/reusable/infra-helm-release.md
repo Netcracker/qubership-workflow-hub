@@ -108,7 +108,7 @@ and `packages: write`; read-only preparation uses `contents: read`.
 ```yaml
 jobs:
   release-helm:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-infra-helm-release.yaml@27fd7674286e5f561a6fd8277f2f389ff96ddb9e # v2.6.0
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-infra-helm-release.yaml@cdfcd0a8abd7ba80d7a04a4e9debfb4e24995f1a # v3.0.1
     permissions:
       contents: write
       packages: write
@@ -128,5 +128,5 @@ jobs:
 - The workflow publishes charts to GHCR and creates a GitHub Release, so do not use it with a token
   that lacks `contents: write` and `packages: write`.
 - Pin to a full 40-character commit SHA with the release tag as a trailing comment, e.g.
-  `@27fd7674286e5f561a6fd8277f2f389ff96ddb9e # v2.6.0`. The SHA is the immutable pin; the comment
+  `@cdfcd0a8abd7ba80d7a04a4e9debfb4e24995f1a # v3.0.1`. The SHA is the immutable pin; the comment
   shows which release it points to. Tags alone are mutable. Never use `@main` or short SHAs.

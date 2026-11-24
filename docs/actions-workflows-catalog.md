@@ -71,16 +71,12 @@ Always check that document before modifying or depending on a deprecated compone
 
 | Workflow                                         | Description                                                                                |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| [broadcast-files](reusable/broadcast-files.md)   | Distribute specified files to multiple target repos                                        |
-| [github-release](reusable/github-release.md)     | Create or update a GitHub Release with assets                                              |
 | [infra-docker-build](reusable/infra-docker-build.md) | Build Docker images from a component configuration with optional diff-based filtering     |
 | [infra-helm-release](reusable/infra-helm-release.md) | Release Helm charts and Docker images with validation and GitHub Release assets            |
-| [maven-publish](reusable/maven-publish.md)       | Build & publish Maven artifacts (release flow)                                             |
 | [python-publish](reusable/python-publish.md)     | Build, test & publish Python package (Poetry)                                              |
 | [release-drafter](reusable/release-drafter.md)   | Generate or refresh draft release notes                                                    |
 | [npm-publish](reusable/npm-publish.md)           | Build, test, and publish npm packages to a registry (supports monorepo and single package) |
 | [re-security-scan](reusable/re-security-scan.md) | On-demand security scan (Grype + Trivy)                                                    |
-| [tag-creator](reusable/tag-creator.md)           | Create a new tag in the repository                                                         |
 
 ### Deprecated Workflows
 
@@ -92,3 +88,6 @@ Always check that document before modifying or depending on a deprecated compone
 | maven-central-snapshot-deploy                  | Consolidated into maven-publish & maven-snapshot-deploy actions/workflows       |
 | prettier.yaml & prettierFix.yaml               | Removed; rely on local prettier + CI lint job template (no standalone workflow) |
 | re-maven-snapshot-deploy.yaml                  | Legacy name; use maven-snapshot-deploy action/workflow                          |
+| [create-github-release.yml](reusable/github-release.md) | (DELETED in v2.0.0) Use `gh release create` + release-drafter + assets-action |
+| [tag-creator](reusable/tag-creator.md)         | (DELETED in v2.0.0) Use tag-action                                              |
+| [broadcast-files](reusable/broadcast-files.md) | (MOVED in v2.0.8) Lives in Netcracker/.github, not a reusable workflow          |

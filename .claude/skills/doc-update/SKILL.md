@@ -10,7 +10,7 @@ Update or create documentation for a GitHub Action or reusable workflow.
 
 ## Arguments
 
-- `$target` — action name (e.g. `metadata-action`) or workflow name (e.g. `reusable/docker-publish`).
+- `$target` — action name (e.g. `metadata-action`) or workflow name (e.g. `reusable/npm-publish`).
   Required unless `--all` is used.
 - `--all` — find all changed actions/workflows from the current branch diff and update each.
 

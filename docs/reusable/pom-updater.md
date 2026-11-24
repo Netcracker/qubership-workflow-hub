@@ -1,42 +1,16 @@
-# 🚀 Update Version on `pom.xml` GitHub Action
+# 🚀 Update Version on `pom.xml` (removed)
 
-This **Update Version on `pom.xml`** GitHub Action automates the process of updating the `<revision>` version in a specified `pom.xml` file and commits the change back to the repository.
+> [!CAUTION]
+> **Removed in `v1.0.7`.** The `pom-updater` action (`actions/pom-updater`) no longer exists in this repository.
+> The last release that contains it is `v1.0.6`. Pins to `v1.0.6` or older keep working,
+> but they receive no fixes.
 
-## Features
+## Replacement
 
-- Automates the process of updating the `<revision>` version in a specified `pom.xml` file.
-- Commits the change back to the repository.
+- Compute the version with [metadata-action](../../actions/metadata-action/README.md) and set it with
+  Maven build tooling, e.g. `mvn versions:set -DnewVersion=<version>`.
+- For Maven releases use [maven-release](../../actions/maven-release/README.md), which updates the version itself.
 
-## 📌 Inputs
+A reusable workflow `update-version.yml` never existed in this repository.
 
-| Name       | Description                                 | Required | Default                  |
-| ---------- | ------------------------------------------- | -------- | ------------------------ |
-| `file_path`| The path to the XML file to update.         | No       | `{"default": "pom.xml"}` |
-| `path`     | The XPath expression to locate the node to update. Defaults to `//p:project/p:properties/p:revision`. | No       | `//p:project/p:properties/p:revision` |
-| `new_value`| The new value to set for the selected XML node. | Yes      |                          |
-
-## 📌 Outputs
-
-| Name         | Description                              |
-| ------------ | ---------------------------------------- |
-| `artifact_id`| The artifact ID of the updated XML file. |
-
-## Usage Example
-
-Below is an example of how to call this workflow in another workflow:
-
-```yaml
-name: Call Update Version
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  call-update-version:
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/update-version.yml
-    with:
-      file_path: '{"default": "path/to/pom.xml", "consul": "path/to/pom.xml"}'
-      path: "//p:project/p:properties/p:revision"
-      new_value: "1.0.1"
+See the [actions and workflows catalog](../actions-workflows-catalog.md) for the current inventory.

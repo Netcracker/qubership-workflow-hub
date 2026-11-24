@@ -1,38 +1,12 @@
-# 🚀 Tag Creator Workflow
+# 🚀 Tag Creator Workflow (removed)
 
-This **Tag Creator** GitHub Workflow creates a new tag in the repository.
+> [!CAUTION]
+> **Removed in `v2.0.0`.** `.github/workflows/tag-creator.yml` no longer exists in this repository.
+> The last release that contains it is `v1.0.7`. Pins to `v1.0.7` or older keep working,
+> but they receive no fixes.
 
-## Features
+## Replacement
 
-- Creates a new tag in the repository.
+- Use [tag-action](../../actions/tag-action/README.md) to create, check, or delete tags.
 
-## 📌 Inputs
-
-| Name       | Description                          | Required | Default |
-| ---------- | ------------------------------------ | -------- | ------- |
-| `tag-name` | The version of the tag to create.    | Yes      | None    |
-| `ref`      | The branch name to create the tag from. | No       | `main`  |
-
-## Usage Example
-
-Below is an example of how to use this reusable workflow in a GitHub Actions workflow:
-
-```yaml
-name: Create Tag Workflow
-
-on:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: write
-
-jobs:
-  call-tag-creator:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/tag-creator.yml@main
-    with:
-      tag-name: "v1.0.0"
-      ref: "main"
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+See the [actions and workflows catalog](../actions-workflows-catalog.md) for the current inventory.

@@ -1,44 +1,17 @@
-# 🚀 Create GitHub Release Workflow
+# 🚀 Create GitHub Release Workflow (removed)
 
-This **Create GitHub Release** GitHub Workflow automates creating and tagging releases on GitHub.
+> [!CAUTION]
+> **Removed in `v2.0.0`.** `.github/workflows/create-github-release.yml` no longer exists in this repository.
+> The last release that contains it is `v1.0.7`. Pins to `v1.0.7` or older keep working,
+> but they receive no fixes.
 
-## Features
+## Replacement
 
-- Automates creating and tagging releases on GitHub.
-- Supports draft and pre-release options.
-- Allows adding custom release information.
+- Create the release with `gh release create` in a workflow step.
+- Prepare release notes with the [release-drafter](release-drafter.md) reusable workflow.
+- Attach files with [assets-action](../../actions/assets-action/README.md).
 
-## 📌 Inputs
+`.github/workflows/github-release.yaml` in this repository is the hub's own release pipeline,
+not a reusable workflow — do not call it from other repositories.
 
-| Name          | Description                              | Required | Default |
-| ------------- | ---------------------------------------- | -------- | ------- |
-| `revision`    | The version of the release               | Yes      | None    |
-| `draft`       | Whether the release is a draft           | No       | `false` |
-| `prerelease`  | Whether the release is a pre-release     | No       | `false` |
-| `release_info`| Additional information for the release   | No       | None    |
-
-## Usage Example
-
-Below is an example of how to use this reusable workflow in a GitHub Actions workflow:
-
-```yaml
-name: Create GitHub Release Workflow
-
-on:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: write
-
-jobs:
-  call-create-github-release:
-    uses: netcracker/qubership-workflow-hub/.github/workflows/create-github-release.yml@main
-    with:
-      revision: "1.0.0"
-      draft: false
-      prerelease: false
-      release_info: "Initial release"
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+See the [actions and workflows catalog](../actions-workflows-catalog.md) for the current inventory.
