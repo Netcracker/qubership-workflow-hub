@@ -167,7 +167,7 @@ jobs:
         with:
           persist-credentials: false
       - id: resolve
-        uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@<sha>  # vX.Y.Z
+        uses: netcracker/qubership-workflow-hub/actions/config-resolver@<sha>  # vX.Y.Z
         with:
           file-path: .qubership/docker.cfg
 

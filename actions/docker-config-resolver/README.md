@@ -1,5 +1,11 @@
 # 🚀 Docker Config Resolver
 
+> [!WARNING]
+> **Deprecated.** Use [config-resolver](../config-resolver/README.md) instead (available since `v2.5.0`).
+> It accepts the same `file-path` input and emits the same `config` output for valid Docker configs.
+> Migration: replace `actions/docker-config-resolver` with `actions/config-resolver` in `uses:`.
+> This action prints a deprecation warning on every run.
+
 Reads a Docker components configuration file (`.qubership/docker.cfg`), applies global defaults
 and security settings to each component, and outputs a flat JSON array ready for use in CI/CD
 workflows — typically as the `component` input to `docker-action` or as a matrix strategy source.

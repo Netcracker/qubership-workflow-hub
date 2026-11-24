@@ -178,7 +178,7 @@ Fields not set in a component are inherited from `defaults`.
 
 ## Config file schema
 
-The config file is the central component registry for the repo. `docker-config-resolver`
+The config file is the central component registry for the repo. `config-resolver`
 reads it and outputs a JSON matrix used by any downstream job — build, scan, cleanup, deploy, etc.
 The filename is arbitrary — path is passed via `file-path` input. Convention: `docker.cfg`.
 
@@ -252,7 +252,7 @@ Note: `context` is a deprecated alias for `build_context` — always use `build_
 
 ### Merge and flatten rules
 
-`docker-config-resolver` processes each component in two steps:
+`config-resolver` (docker/v1 mode) processes each component in two steps:
 
 1. **Merge:** component-level `security` fields override global `security` fields.
 2. **Flatten:** `security.scan` → `security_scan`, `security.tag` → `security_tag`, etc.

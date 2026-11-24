@@ -60,7 +60,7 @@ a GitHub Release tagged with the requested version, and uploads the generated `.
 ### Docker Configuration
 
 The Docker configuration is JSON and follows the format accepted by
-[docker-config-resolver](../../actions/docker-config-resolver/README.md). It must contain a
+[config-resolver](../../actions/config-resolver/README.md). It must contain a
 `components` array; each component needs a `name` and may define fields such as `dockerfile`,
 `context`, and `platforms`.
 

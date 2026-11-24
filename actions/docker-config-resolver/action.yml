@@ -1,5 +1,5 @@
 name: "Docker config resolver"
-description: "Read .qubership/docker.cfg (JSON), apply global defaults and security settings, and emit a flat JSON array compatible with the docker-action component input."
+description: "[DEPRECATED: use config-resolver] Read .qubership/docker.cfg (JSON), apply global defaults and security settings, and emit a flat JSON array compatible with the docker-action component input."
 
 inputs:
   file-path:
@@ -15,6 +15,11 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Deprecation warning
+      shell: bash
+      run: |
+        echo "::warning title=docker-config-resolver is deprecated::Replace 'netcracker/qubership-workflow-hub/actions/docker-config-resolver' with 'netcracker/qubership-workflow-hub/actions/config-resolver' (available since v2.5.0, same inputs and docker output). See https://github.com/netcracker/qubership-workflow-hub/blob/main/actions/config-resolver/README.md"
+
     - name: Resolve docker configuration
       id: normalize
       shell: bash

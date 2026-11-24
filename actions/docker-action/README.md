@@ -12,7 +12,7 @@ and produces a signed metadata JSON artifact after a successful push.
   (`docker.io`).
 - Supports multi-platform builds via Docker Buildx (e.g. `linux/amd64,linux/arm64`).
 - Accepts a `component` JSON descriptor for Dockerfile path, build context, image name, and
-  build arguments — compatible with the output of `docker-config-resolver`.
+  build arguments — compatible with the output of `config-resolver`.
 - Auto-generates tags from branch name, semver, and PR number when `tags` input is empty.
 - Custom tags (comma-separated) are prefixed with the resolved registry URL automatically.
 - Merges build arguments from `component.arguments` and the `build-args` input (component takes
@@ -180,13 +180,13 @@ with:
     ]
 ```
 
-This input is directly compatible with the `config` output of `docker-config-resolver`:
+This input is directly compatible with the `config` output of `config-resolver`:
 
 ```yaml
 - id: resolve
-  uses: netcracker/qubership-workflow-hub/actions/docker-config-resolver@v2.2.1
+  uses: netcracker/qubership-workflow-hub/actions/config-resolver@v3.0.0
 
-- uses: netcracker/qubership-workflow-hub/actions/docker-action@v2.2.1
+- uses: netcracker/qubership-workflow-hub/actions/docker-action@v3.0.0
   with:
     component: ${{ steps.resolve.outputs.config }}
 ```
