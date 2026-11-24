@@ -77,9 +77,12 @@ async function run() {
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   log.startDebugGroup('Filtered Packages')
-  log.debugJSON('💡 Filtered packages:', filteredPackages);
-  // startDebugGroup opens a group only in debug mode, so close it only then
-  if (isDebug) log.endGroup();
+  try {
+    log.debugJSON('💡 Filtered packages:', filteredPackages);
+  } finally {
+    // startDebugGroup opens a group only in debug mode, so close it only then
+    if (isDebug) log.endGroup();
+  }
 
   log.notice(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
 
@@ -129,8 +132,11 @@ async function run() {
 
   log.setDebug(isDebug);
   log.startDebugGroup('Packages with versions for delete');
-  log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
-  if (isDebug) log.endGroup();
+  try {
+    log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
+  } finally {
+    if (isDebug) log.endGroup();
+  }
 
 
   const reportContext = {

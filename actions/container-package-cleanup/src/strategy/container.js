@@ -253,7 +253,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
             }
             const ordered = [];
             taggedToDelete.forEach((v, index) => {
-                ordered.push(v, ...layersOf[index]);
+                ordered.push(v);
+                // push one by one: spreading a huge array into push() exceeds the engine's argument limit
+                for (const layer of layersOf[index]) ordered.push(layer);
             });
             const orderedNames = new Set(ordered.map(o => o.name));
 

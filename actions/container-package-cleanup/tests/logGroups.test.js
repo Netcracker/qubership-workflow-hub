@@ -7,6 +7,7 @@ import { setImmediate } from 'node:timers';
 // only when debug mode is on, startGroup/endGroup always do.
 const events = [];
 let debugMode = false;
+let debugJsonError = null;
 
 jest.unstable_mockModule('@qubership/action-logger', () => ({
   default: new Proxy({}, {
@@ -15,6 +16,7 @@ jest.unstable_mockModule('@qubership/action-logger', () => ({
       if (name === 'startGroup') return () => { events.push('startGroup'); };
       if (name === 'startDebugGroup') return () => { if (debugMode) events.push('startGroup'); };
       if (name === 'endGroup') return () => { events.push('endGroup'); };
+      if (name === 'debugJSON') return () => { if (debugJsonError) throw debugJsonError; };
       return jest.fn();
     }
   })
@@ -127,6 +129,7 @@ describe('entry point: log groups', () => {
     jest.clearAllMocks();
     events.length = 0;
     debugMode = false;
+    debugJsonError = null;
     process.env.GITHUB_REPOSITORY = 'owner/repo';
     process.env.PACKAGE_TOKEN = 'token';
     wrapperInstance.isOrganization.mockResolvedValue(true);
@@ -175,5 +178,14 @@ describe('entry point: log groups', () => {
     expect(mockCore.setFailed).not.toHaveBeenCalled();
     expect(wrapperInstance.listVersionsForPackage).toHaveBeenCalled();
     expect(events).toEqual([...OPEN_AND_CLOSE, ...OPEN_AND_CLOSE]);
+  });
+
+  it('closes the first debug group when writing its content throws', async () => {
+    wrapperInstance.listPackages.mockResolvedValue([repoPackage]);
+    debugJsonError = new Error('cannot serialize');
+    await runEntryPoint({ debug: 'true' });
+
+    expect(mockCore.setFailed).toHaveBeenCalledWith('cannot serialize');
+    expect(events).toEqual(OPEN_AND_CLOSE);
   });
 });

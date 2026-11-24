@@ -136,6 +136,20 @@ describe('container strategy: selection order', () => {
     expect(ids).toEqual([1, 2, 20]);
   });
 
+  it('selects a very large number of layers of one image in the order of the version list', async () => {
+    const count = 150000;
+    const layers = Array.from({ length: count }, (_, i) => ver(1000 + i, `sha256:layer-${i}`));
+    const ids = await selectIds(
+      [ver(1, 'sha256:a', ['a']), ...layers],
+      { a: layers.map(layer => layer.name).reverse() }
+    );
+
+    expect(ids).toHaveLength(count + 1);
+    expect(ids[0]).toBe(1);
+    expect(ids[1]).toBe(1000);
+    expect(ids[count]).toBe(1000 + count - 1);
+  });
+
   it('does not select layers of retained images', async () => {
     const ids = await selectIds([
       ver(1, 'sha256:a', ['a']),

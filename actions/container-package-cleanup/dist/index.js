@@ -25406,7 +25406,8 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       }
       const ordered = [];
       taggedToDelete.forEach((v, index) => {
-        ordered.push(v, ...layersOf[index]);
+        ordered.push(v);
+        for (const layer of layersOf[index]) ordered.push(layer);
       });
       const orderedNames = new Set(ordered.map((o) => o.name));
       const danglingLayers = !untaggedDeletionSafe ? [] : pkg.versions.filter(
@@ -25672,8 +25673,11 @@ async function run() {
   const listingFailures = wrapper.listingFailures ?? [];
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   action_logger_default.startDebugGroup("Filtered Packages");
-  action_logger_default.debugJSON("\u{1F4A1} Filtered packages:", filteredPackages);
-  if (isDebug) action_logger_default.endGroup();
+  try {
+    action_logger_default.debugJSON("\u{1F4A1} Filtered packages:", filteredPackages);
+  } finally {
+    if (isDebug) action_logger_default.endGroup();
+  }
   action_logger_default.notice(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
   if (filteredPackages.length === 0) {
     action_logger_default.warn(`No packages found for repository '${repo}' (packages found for owner '${owner}': ${packages.length}).`);
@@ -25710,8 +25714,11 @@ async function run() {
   const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
   action_logger_default.setDebug(isDebug);
   action_logger_default.startDebugGroup("Packages with versions for delete");
-  action_logger_default.debugJSON("\u{1F4A1} Package with version for delete:", filteredPackagesWithVersionsForDelete);
-  if (isDebug) action_logger_default.endGroup();
+  try {
+    action_logger_default.debugJSON("\u{1F4A1} Package with version for delete:", filteredPackagesWithVersionsForDelete);
+  } finally {
+    if (isDebug) action_logger_default.endGroup();
+  }
   const reportContext = {
     filteredPackagesWithVersionsForDelete,
     thresholdDays,
