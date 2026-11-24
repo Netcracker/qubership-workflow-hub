@@ -54,7 +54,7 @@ When `dry-run` is `"true"`, Docker images are built without being pushed.
 ### Configuration File
 
 The configuration file is JSON and follows the format accepted by
-[docker-config-resolver](../../actions/docker-config-resolver/README.md). Each component should
+[config-resolver](../../actions/config-resolver/README.md). Each component should
 include a `name` and one or more `changeset` path prefixes. Defaults can provide shared Docker
 settings such as `dockerfile`, `context`, and `platforms`.
 

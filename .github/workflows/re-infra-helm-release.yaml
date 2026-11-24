@@ -63,7 +63,7 @@ jobs:
 
       - name: Load Docker Configuration
         id: load-config
-        uses: $/actions/docker-config-resolver
+        uses: $/actions/config-resolver
         with:
           file-path: ${{ env.DOCKER_CONFIG_FILE }}
 

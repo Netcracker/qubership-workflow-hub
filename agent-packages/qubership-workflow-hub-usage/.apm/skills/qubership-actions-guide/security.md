@@ -8,7 +8,7 @@ Trigger and runner are inferred per `workflow-patterns.md` → *Trigger rules* �
 | Question | Why |
 | --- | --- |
 | What to scan: source/deps, Docker images in GHCR, or running k8s cluster? | Determines which action to use: `cdxgen`, `re-security-scan`, or `k8s-hardening-scan` |
-| *(Docker image scan only)* Do you have a Docker config file with `security` settings? If yes — what is its path? | If yes — read it. If no — `.qubership/docker.cfg` is the conventional default; path passed via `file-path` to `docker-config-resolver`. |
+| *(Docker image scan only)* Do you have a Docker config file with `security` settings? If yes — what is its path? | If yes — read it. If no — `.qubership/docker.cfg` is the conventional default; path passed via `file-path` to `config-resolver`. |
 
 ## Source / dependency scan (`cdxgen`)
 
@@ -28,7 +28,7 @@ Two patterns depending on whether a Docker config file exists:
 **With Docker config file** (recommended — filename is arbitrary, conventional default is `.qubership/docker.cfg`; this is the same central component config used across build, scan, cleanup, and other jobs):
 
 ```text
-docker-config-resolver  →  filter security.scan==true  →  re-security-scan (matrix)
+config-resolver         →  filter security.scan==true  →  re-security-scan (matrix)
 reads docker config file    per-component scan settings    Trivy + Grype
 ```
 
@@ -41,7 +41,7 @@ uses: netcracker/qubership-workflow-hub/.github/workflows/re-security-scan.yml@<
 Each component with `security.scan: true` becomes a matrix entry.
 Scan settings (`trivy_scan`, `only_high_critical`, etc.) come from the
 component's `security` block — load `docker.md` as well for the full config file schema.
-The config file path is passed via `file-path` input to `docker-config-resolver`.
+The config file path is passed via `file-path` input to `config-resolver`.
 
 **Without Docker config file** (discover from GHCR):
 
