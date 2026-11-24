@@ -25376,8 +25376,12 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       for (const result2 of digestResults) {
         digestMap.set(result2.versionName, result2.digests);
       }
+      const allDigests = /* @__PURE__ */ new Set();
+      for (const digs of digestMap.values()) {
+        for (const d of digs) allDigests.add(d);
+      }
       const archLayers = !untaggedDeletionSafe ? [] : withoutExclude.filter(
-        (v) => v.metadata.container.tags.length === 0 && Array.from(digestMap.values()).some((digs) => digs.has(v.name)) && !protectedDigests.has(v.name)
+        (v) => v.metadata.container.tags.length === 0 && allDigests.has(v.name) && !protectedDigests.has(v.name)
       );
       if (archLayers.length > 0) {
         const preview = archLayers.map((v) => v.name).join(", ");
@@ -25385,20 +25389,29 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       } else {
         action_logger_default.debug(` [${pkg.name}] archLayers: none`, MODULE4);
       }
-      const ordered = [];
+      const firstOwner = /* @__PURE__ */ new Map();
+      taggedToDelete.forEach((v, index) => {
+        for (const digest of digestMap.get(v.name) || []) {
+          if (!firstOwner.has(digest)) firstOwner.set(digest, index);
+        }
+      });
+      const layersOf = taggedToDelete.map(() => []);
       const used = /* @__PURE__ */ new Set();
-      for (const v of taggedToDelete) {
-        ordered.push(v);
-        const digs = digestMap.get(v.name) || /* @__PURE__ */ new Set();
-        for (const layer of archLayers) {
-          if (!used.has(layer.name) && digs.has(layer.name)) {
-            ordered.push(layer);
-            used.add(layer.name);
-          }
+      for (const layer of archLayers) {
+        const owner2 = firstOwner.get(layer.name);
+        if (owner2 !== void 0 && !used.has(layer.name)) {
+          layersOf[owner2].push(layer);
+          used.add(layer.name);
         }
       }
+      const ordered = [];
+      taggedToDelete.forEach((v, index) => {
+        ordered.push(v);
+        for (const layer of layersOf[index]) ordered.push(layer);
+      });
+      const orderedNames = new Set(ordered.map((o) => o.name));
       const danglingLayers = !untaggedDeletionSafe ? [] : pkg.versions.filter(
-        (v) => new Date(v.createdAt) <= thresholdDate && v.metadata.container.tags.length === 0 && !Array.from(digestMap.values()).some((digs) => digs.has(v.name)) && !protectedDigests.has(v.name) && !ordered.some((o) => o.name === v.name)
+        (v) => new Date(v.createdAt) <= thresholdDate && v.metadata.container.tags.length === 0 && !allDigests.has(v.name) && !protectedDigests.has(v.name) && !orderedNames.has(v.name)
       );
       if (debug2) {
         if (danglingLayers.length > 0) {
@@ -25457,12 +25470,6 @@ async function deleteSinglePackageVersion({ wrapper, owner, packageType, package
 async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, batchSize = 15, maxErrors = 5, dryRun = false, debug: debug2 = false } = {}) {
   action_logger_default.setDebug(debug2);
   action_logger_default.setDryRun(dryRun);
-  const totalDeletedVersions = filtered.reduce((sum, item) => sum + item.versions.length, 0);
-  action_logger_default.info(`Total packages to process: ${filtered.length}`);
-  action_logger_default.info(`Total versions to delete: ${totalDeletedVersions}`);
-  action_logger_default.endGroup();
-  action_logger_default.startGroup("\u{1F680} Starting package version deletion process");
-  const resultStatus = [];
   if (!Array.isArray(filtered) || filtered.length === 0) {
     action_logger_default.warn("Nothing to delete.");
     return;
@@ -25476,67 +25483,75 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   if (!Number.isSafeInteger(batchSize) || batchSize < 1) {
     throw new Error(`Invalid batchSize: ${batchSize}. Expected a positive integer.`);
   }
-  const normalizedOwner = owner.toLowerCase();
-  let errorCount = 0;
-  action_logger_default.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
-  for (const { package: pkg, versions } of filtered) {
-    const normalizedPackageName = (pkg.name || "").toLowerCase();
-    const packageType = pkg.type;
-    action_logger_default.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
-    action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
-    for (let i = 0; i < versions.length; i += batchSize) {
-      const batch = versions.slice(i, i + batchSize);
-      const promises3 = batch.map(async (version) => {
-        const tags = version.metadata?.container?.tags ?? [];
-        const detail = packageType === "maven" ? version.name : tags.length ? tags.join(", ") : version.name;
-        if (dryRun) {
-          action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
-          return { success: true, dryRun: true };
-        }
-        try {
-          await deleteSinglePackageVersion({
-            wrapper,
-            owner: normalizedOwner,
-            packageType,
-            packageName: normalizedPackageName,
-            versionId: version.id,
-            isOrganization,
-            dryRun,
-            debug: debug2,
-            detail
-          });
-          return { success: true };
-        } catch (error2) {
-          if (isSkippableError(error2)) {
-            action_logger_default.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error2.message}`);
+  const totalDeletedVersions = filtered.reduce((sum, item) => sum + item.versions.length, 0);
+  action_logger_default.info(`Total packages to process: ${filtered.length}`);
+  action_logger_default.info(`Total versions to delete: ${totalDeletedVersions}`);
+  action_logger_default.startGroup("\u{1F680} Starting package version deletion process");
+  try {
+    const resultStatus = [];
+    const normalizedOwner = owner.toLowerCase();
+    let errorCount = 0;
+    action_logger_default.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
+    for (const { package: pkg, versions } of filtered) {
+      const normalizedPackageName = (pkg.name || "").toLowerCase();
+      const packageType = pkg.type;
+      action_logger_default.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
+      action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
+      for (let i = 0; i < versions.length; i += batchSize) {
+        const batch = versions.slice(i, i + batchSize);
+        const promises3 = batch.map(async (version) => {
+          const tags = version.metadata?.container?.tags ?? [];
+          const detail = packageType === "maven" ? version.name : tags.length ? tags.join(", ") : version.name;
+          if (dryRun) {
+            action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
+            return { success: true, dryRun: true };
+          }
+          try {
+            await deleteSinglePackageVersion({
+              wrapper,
+              owner: normalizedOwner,
+              packageType,
+              packageName: normalizedPackageName,
+              versionId: version.id,
+              isOrganization,
+              dryRun,
+              debug: debug2,
+              detail
+            });
+            return { success: true };
+          } catch (error2) {
+            if (isSkippableError(error2)) {
+              action_logger_default.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error2.message}`);
+              resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: false });
+              return { success: false, skipped: true };
+            }
+            if (isCriticalError(error2)) {
+              resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: true });
+              return { success: false, critical: true, error: error2 };
+            }
+            action_logger_default.error(`Failed ${normalizedPackageName} v:${version.id} - ${error2.message}`);
             resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: false });
-            return { success: false, skipped: true };
+            return { success: false, error: error2 };
           }
-          if (isCriticalError(error2)) {
-            resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: true });
-            return { success: false, critical: true, error: error2 };
-          }
-          action_logger_default.error(`Failed ${normalizedPackageName} v:${version.id} - ${error2.message}`);
-          resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: false });
-          return { success: false, error: error2 };
+        });
+        const results = await Promise.all(promises3);
+        const criticalResult = results.find((r) => r.critical);
+        if (criticalResult) {
+          action_logger_default.error("Rate limit or permission error. Stopping.");
+          throw criticalResult.error;
         }
-      });
-      const results = await Promise.all(promises3);
-      const criticalResult = results.find((r) => r.critical);
-      if (criticalResult) {
-        action_logger_default.error("Rate limit or permission error. Stopping.");
-        throw criticalResult.error;
-      }
-      const newErrors = results.filter((r) => !r.success && !r.skipped && !r.critical).length;
-      errorCount += newErrors;
-      if (errorCount >= maxErrors) {
-        action_logger_default.error(`Too many errors (${errorCount}). Stopping.`);
-        throw new Error(`Stopped after ${errorCount} errors`);
+        const newErrors = results.filter((r) => !r.success && !r.skipped && !r.critical).length;
+        errorCount += newErrors;
+        if (errorCount >= maxErrors) {
+          action_logger_default.error(`Too many errors (${errorCount}). Stopping.`);
+          throw new Error(`Stopped after ${errorCount} errors`);
+        }
       }
     }
+    return resultStatus;
+  } finally {
+    action_logger_default.endGroup();
   }
-  action_logger_default.endGroup();
-  return resultStatus;
 }
 function isCriticalError(error2) {
   const msg = String(error2?.message || error2);
@@ -25654,15 +25669,16 @@ async function run() {
   const isOrganization = await wrapper.isOrganization(owner);
   action_logger_default.info(`Is Organization? -> ${isOrganization}`);
   action_logger_default.info(`Run for type: ${package_type}, owner: ${owner}, repo: ${repo}`);
-  action_logger_default.info;
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
   const listingFailures = wrapper.listingFailures ?? [];
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   action_logger_default.startDebugGroup("Filtered Packages");
-  action_logger_default.debugJSON("\u{1F4A1} Filtered packages:", filteredPackages);
-  action_logger_default.endGroup();
+  try {
+    action_logger_default.debugJSON("\u{1F4A1} Filtered packages:", filteredPackages);
+  } finally {
+    if (isDebug) action_logger_default.endGroup();
+  }
   action_logger_default.notice(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
-  action_logger_default.endGroup();
   if (filteredPackages.length === 0) {
     action_logger_default.warn(`No packages found for repository '${repo}' (packages found for owner '${owner}': ${packages.length}).`);
     await writeListingFailuresSummary(listingFailures);
@@ -25677,9 +25693,7 @@ async function run() {
       return { package: pkg, versions: versionsForPkg };
     })
   );
-  action_logger_default.endGroup();
   action_logger_default.notice(`Total packages to process: ${filteredPackages.length}, total versions found: ${totalPackagesVersions}`);
-  action_logger_default.endGroup();
   const incompleteCleanup = [];
   const blockedByExclusion = [];
   const strategyContext = {
@@ -25700,8 +25714,11 @@ async function run() {
   const filteredPackagesWithVersionsForDelete = await strategy.execute(strategyContext);
   action_logger_default.setDebug(isDebug);
   action_logger_default.startDebugGroup("Packages with versions for delete");
-  action_logger_default.debugJSON("\u{1F4A1} Package with version for delete:", filteredPackagesWithVersionsForDelete);
-  action_logger_default.endGroup();
+  try {
+    action_logger_default.debugJSON("\u{1F4A1} Package with version for delete:", filteredPackagesWithVersionsForDelete);
+  } finally {
+    if (isDebug) action_logger_default.endGroup();
+  }
   const reportContext = {
     filteredPackagesWithVersionsForDelete,
     thresholdDays,

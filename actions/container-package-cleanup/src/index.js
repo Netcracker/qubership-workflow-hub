@@ -1,8 +1,3 @@
-// With a mfkg microphone, plug it in my soul
-// I'm a renegade riot getting out of control
-// I'm-a keeping it alive and continue to be
-// Flying like an eagle to my destiny
-
 import * as core from "@actions/core";
 import process from "node:process";
 import OctokitWrapper from "./utils/wrapper.js";
@@ -75,7 +70,6 @@ async function run() {
 
   // strategy will start  here for different types of packages
   log.info(`Run for type: ${package_type}, owner: ${owner}, repo: ${repo}`);
-  log.info
 
   const packages = await wrapper.listPackages(owner, package_type, isOrganization);
   // visibilities that could not be listed (the listing continued with the rest)
@@ -83,11 +77,14 @@ async function run() {
 
   const filteredPackages = packages.filter((pkg) => pkg.repository?.name === repo);
   log.startDebugGroup('Filtered Packages')
-  log.debugJSON('💡 Filtered packages:', filteredPackages);
-  log.endGroup();
+  try {
+    log.debugJSON('💡 Filtered packages:', filteredPackages);
+  } finally {
+    // startDebugGroup opens a group only in debug mode, so close it only then
+    if (isDebug) log.endGroup();
+  }
 
   log.notice(`Total packages found: ${packages.length}, packages filtered by repo '${repo}': ${filteredPackages.length}`);
-  log.endGroup();
 
   if (filteredPackages.length === 0) {
     log.warn(`No packages found for repository '${repo}' (packages found for owner '${owner}': ${packages.length}).`);
@@ -101,17 +98,11 @@ async function run() {
       const versionsForPkg = await wrapper.listVersionsForPackage(owner, pkg.package_type, pkg.name, isOrganization);
       totalPackagesVersions += versionsForPkg.length;
       log.info(`Found ${versionsForPkg.length} versions for package: ${pkg.name}`);
-      // core.info(JSON.stringify(versionsForPkg, null, 2));
       return { package: pkg, versions: versionsForPkg };
     })
   );
 
-  log.endGroup();
   log.notice(`Total packages to process: ${filteredPackages.length}, total versions found: ${totalPackagesVersions}`);
-  log.endGroup();
-
-
-  // core.info(JSON.stringify(packagesWithVersions, null, 2));
 
   // Filled by the strategy when it has to skip part of the cleanup to stay safe
   const incompleteCleanup = [];
@@ -141,8 +132,11 @@ async function run() {
 
   log.setDebug(isDebug);
   log.startDebugGroup('Packages with versions for delete');
-  log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
-  log.endGroup();
+  try {
+    log.debugJSON('💡 Package with version for delete:', filteredPackagesWithVersionsForDelete);
+  } finally {
+    if (isDebug) log.endGroup();
+  }
 
 
   const reportContext = {
@@ -155,7 +149,6 @@ async function run() {
     incompleteCleanup
   };
 
-  // dryRun && await showReport(reportContext, package_type);
   let deleteStatus = [];
   try {
     if (filteredPackagesWithVersionsForDelete.length > 0) {

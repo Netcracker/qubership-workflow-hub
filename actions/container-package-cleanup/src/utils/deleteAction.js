@@ -20,16 +20,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   log.setDebug(debug);
   log.setDryRun(dryRun);
 
-  const totalDeletedVersions = filtered.reduce((sum, item) => sum + item.versions.length, 0);
-  log.info(`Total packages to process: ${filtered.length}`);
-  log.info(`Total versions to delete: ${totalDeletedVersions}`);
-
-  log.endGroup();
-
-  log.startGroup("🚀 Starting package version deletion process");
-
-  const resultStatus = [];
-
+  // Validate before opening the log group, so every early exit leaves the log groups balanced
   if (!Array.isArray(filtered) || filtered.length === 0) {
     log.warn("Nothing to delete.");
     return;
@@ -45,77 +36,87 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     throw new Error(`Invalid batchSize: ${batchSize}. Expected a positive integer.`);
   }
 
-  const normalizedOwner = owner.toLowerCase();
-  let errorCount = 0;
+  const totalDeletedVersions = filtered.reduce((sum, item) => sum + item.versions.length, 0);
+  log.info(`Total packages to process: ${filtered.length}`);
+  log.info(`Total versions to delete: ${totalDeletedVersions}`);
 
-  log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
+  log.startGroup("🚀 Starting package version deletion process");
+  try {
+    const resultStatus = [];
 
-  for (const { package: pkg, versions } of filtered) {
-    const normalizedPackageName = (pkg.name || "").toLowerCase();
-    const packageType = pkg.type; // "container" | "maven" ...
+    const normalizedOwner = owner.toLowerCase();
+    let errorCount = 0;
 
-    log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
-    log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
+    log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
 
-    for (let i = 0; i < versions.length; i += batchSize) {
-      const batch = versions.slice(i, i + batchSize);
+    for (const { package: pkg, versions } of filtered) {
+      const normalizedPackageName = (pkg.name || "").toLowerCase();
+      const packageType = pkg.type; // "container" | "maven" ...
 
-      const promises = batch.map(async (version) => {
-        const tags = version.metadata?.container?.tags ?? [];
-        const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
-        if (dryRun) {
-          log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
-          return { success: true, dryRun: true };
-        }
+      log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
+      log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
 
-        try {
-          await deleteSinglePackageVersion({
-            wrapper,
-            owner: normalizedOwner,
-            packageType,
-            packageName: normalizedPackageName,
-            versionId: version.id,
-            isOrganization, dryRun, debug, detail
-          });
-          return { success: true };
+      for (let i = 0; i < versions.length; i += batchSize) {
+        const batch = versions.slice(i, i + batchSize);
 
-        } catch (error) {
-          if (isSkippableError(error)) {
-            log.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error.message}`);
+        const promises = batch.map(async (version) => {
+          const tags = version.metadata?.container?.tags ?? [];
+          const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
+          if (dryRun) {
+            log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
+            return { success: true, dryRun: true };
+          }
+
+          try {
+            await deleteSinglePackageVersion({
+              wrapper,
+              owner: normalizedOwner,
+              packageType,
+              packageName: normalizedPackageName,
+              versionId: version.id,
+              isOrganization, dryRun, debug, detail
+            });
+            return { success: true };
+
+          } catch (error) {
+            if (isSkippableError(error)) {
+              log.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error.message}`);
+              resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: false });
+              return { success: false, skipped: true };
+            }
+            if (isCriticalError(error)) {
+              resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: true });
+              return { success: false, critical: true, error };
+            }
+            log.error(`Failed ${normalizedPackageName} v:${version.id} - ${error.message}`);
             resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: false });
-            return { success: false, skipped: true };
+            return { success: false, error };
           }
-          if (isCriticalError(error)) {
-            resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: true });
-            return { success: false, critical: true, error };
-          }
-          log.error(`Failed ${normalizedPackageName} v:${version.id} - ${error.message}`);
-          resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: false });
-          return { success: false, error };
+        });
+
+        const results = await Promise.all(promises);
+
+        const criticalResult = results.find(r => r.critical);
+        if (criticalResult) {
+          log.error("Rate limit or permission error. Stopping.");
+          throw criticalResult.error;
         }
-      });
 
-      const results = await Promise.all(promises);
-
-      const criticalResult = results.find(r => r.critical);
-      if (criticalResult) {
-        log.error("Rate limit or permission error. Stopping.");
-        throw criticalResult.error;
+        const newErrors = results.filter(r => !r.success && !r.skipped && !r.critical).length;
+        errorCount += newErrors;
+        if (errorCount >= maxErrors) {
+          log.error(`Too many errors (${errorCount}). Stopping.`);
+          throw new Error(`Stopped after ${errorCount} errors`);
+        }
+        // Finished all versions for this package
       }
-
-      const newErrors = results.filter(r => !r.success && !r.skipped && !r.critical).length;
-      errorCount += newErrors;
-      if (errorCount >= maxErrors) {
-        log.error(`Too many errors (${errorCount}). Stopping.`);
-        throw new Error(`Stopped after ${errorCount} errors`);
-      }
-      // Finished all versions for this package
+      // Finished all packages
     }
-    // Finished all packages
+    return resultStatus;
+  } finally {
+    // also closes the group when the deletion stops with an error
+    log.endGroup();
   }
-
-  log.endGroup();
-  return resultStatus;
 }
 
 function isCriticalError(error) {
@@ -130,10 +131,3 @@ function isSkippableError(error) {
 
 
 export { deletePackageVersion };
-
-
-
-// const tags = v.metadata?.container?.tags ?? [];
-// const detail = packageType === "maven" ? v.name : (tags.length ? tags.join(", ") : v.name);
-// log.dryrun(`${normalizedOwner}/${normalizedPackageName} (${packageType}) - would delete version ${v.id} (${detail})`);
-

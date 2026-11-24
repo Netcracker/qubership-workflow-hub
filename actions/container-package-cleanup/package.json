@@ -19,12 +19,11 @@
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
     "@qubership/action-logger": "file:../../packages/action-logger",
-    "ajv": "^8.17.1",
-    "escape-string-regexp": "^5.0.0",
-    "js-yaml": "^5.0.0"
+    "escape-string-regexp": "^5.0.0"
   },
   "devDependencies": {
     "esbuild": "0.28.2",
-    "jest": "30.5.2"
+    "jest": "30.5.2",
+    "js-yaml": "^5.0.0"
   }
 }
