@@ -29,10 +29,10 @@ inputs:
     description: "A comma-separated list of patterns to exclude from deletion. Merged with excluded-tags; exclusions always win over inclusions."
     default: ""
   batch-size:
-    description: "Number of items to delete in each batch."
+    description: "Number of items to delete in each batch. A positive integer; an empty value or 0 uses the default."
     default: "15"
   max-errors:
-    description: "Maximum number of delete processing errors allowed before stopping."
+    description: "Maximum number of delete processing errors allowed before stopping. A positive integer; an empty value or 0 uses the default."
     default: "5"
 runs:
   using: "node24"

@@ -1,4 +1,5 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { setImmediate } from 'node:timers';
 
 jest.unstable_mockModule('@actions/core', () => ({
   setFailed: jest.fn(),
@@ -70,6 +71,51 @@ describe('cleanup flow: strategy -> delete executor', () => {
     expect(deletedIds().sort()).toEqual([101, 103]);
     expect(deletedIds()).not.toContain(102); // layer shared with the fresh image
     expect(deletedIds()).not.toContain(104); // the fresh image itself
+  });
+
+  it.each([[0], [-1], [-15], [1.5], [NaN], ['3']])('rejects batchSize %j before deleting anything', async (batchSize) => {
+    const toDelete = await select(versions, manifests);
+
+    await expect(deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize }))
+      .rejects.toThrow(/batchSize/);
+    expect(wrapper.deletePackageVersion).not.toHaveBeenCalled();
+  });
+
+  // Delete calls stay pending until the test releases them, so the batching is observable.
+  const holdDeletes = () => {
+    const releases = [];
+    wrapper.deletePackageVersion.mockImplementation(() => new Promise(resolve => { releases.push(resolve); }));
+    return releases;
+  };
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+
+  it('starts the next delete only after the previous batch of size 1 has finished', async () => {
+    const toDelete = await select(versions, manifests);
+    const releases = holdDeletes();
+
+    const done = deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize: 1 });
+    await tick();
+    expect(deletedIds()).toEqual([101]);
+
+    releases[0]();
+    await tick();
+    expect(deletedIds()).toEqual([101, 103]);
+
+    releases[1]();
+    await done;
+    expect(wrapper.deletePackageVersion).toHaveBeenCalledTimes(2);
+  });
+
+  it('starts all deletes of a batch together when batchSize covers them', async () => {
+    const toDelete = await select(versions, manifests);
+    const releases = holdDeletes();
+
+    const done = deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize: 2 });
+    await tick();
+    expect(deletedIds().sort()).toEqual([101, 103]);
+
+    releases.forEach(release => release());
+    await done;
   });
 
   it('makes no delete calls at all in dry-run mode', async () => {

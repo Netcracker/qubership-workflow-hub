@@ -208,5 +208,5 @@ on:
 | `excluded-patterns` | `""` | Merged with `excluded-tags`. Never delete versions matching these patterns |
 | `dry-run` | `false` | Print what would be deleted without actually deleting |
 | `debug` | `true` | Extra debug logs — set `false` in production to reduce noise |
-| `batch-size` | `15` | Parallel deletion threads per package |
-| `max-errors` | `5` | Stop after this many errors |
+| `batch-size` | `15` | Number of versions deleted in parallel per package. Positive integer; empty or `0` uses the default. Any other value (negative, `1.5`, non-numeric) fails the action before anything is deleted |
+| `max-errors` | `5` | Stop after this many errors. Positive integer; empty or `0` uses the default. Any other value fails the action before anything is deleted |

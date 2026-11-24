@@ -40,6 +40,10 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   if (!owner) {
     throw new Error("owner is required");
   }
+  // A non-positive step would never reach the loop exit condition below
+  if (!Number.isSafeInteger(batchSize) || batchSize < 1) {
+    throw new Error(`Invalid batchSize: ${batchSize}. Expected a positive integer.`);
+  }
 
   const normalizedOwner = owner.toLowerCase();
   let errorCount = 0;

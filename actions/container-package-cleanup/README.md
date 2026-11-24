@@ -18,8 +18,8 @@ It supports both Docker/container images and Maven JAR files.
 | `package-type`       | Package kind to clean: `container` or `maven`.                                               | No       | `container`                               |
 | `dry-run`            | If `true`, only prints what would be deleted.                                                | No       | `false`                                   |
 | `debug`              | If `true`, prints extra debug logs.                                                          | No       | `false`                                   |
-| `batch-size`         | Number of versions deleted in parallel per package.                                          | No       | `15`                                      |
-| `max-errors`         | Stop after this many errors.                                                                 | No       | `5`                                       |
+| `batch-size`         | Number of versions deleted in parallel per package. Positive integer; empty or `0` uses the default. Invalid values fail the action. | No       | `15`                                      |
+| `max-errors`         | Stop after this many errors. Positive integer; empty or `0` uses the default. Invalid values fail the action. | No       | `5`                                       |
 
 ---
 
