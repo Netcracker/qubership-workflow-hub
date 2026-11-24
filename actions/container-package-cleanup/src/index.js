@@ -10,7 +10,7 @@ import ContainerReport from "./reports/containerReport.js";
 import MavenReport from "./reports/mavenReport.js";
 import { getStrategy } from "./strategy/strategyRegistry.js";
 import { deletePackageVersion } from './utils/deleteAction.js';
-import { parseNonNegativeInt, parseList } from './utils/inputs.js';
+import { parseNonNegativeInt, parseIntWithDefault, parseList } from './utils/inputs.js';
 import { resolveFilters } from './utils/filters.js';
 import { writeBlockedByExclusionSummary } from './reports/blockedByExclusion.js';
 import { writeListingFailuresSummary } from './reports/listingFailures.js';
@@ -33,19 +33,21 @@ async function run() {
   // Retention settings decide what gets deleted: validate them strictly before doing anything else.
   let thresholdDays;
   let thresholdVersions;
+  let batchSize;
+  let maxErrors;
   try {
     thresholdDays = parseNonNegativeInt('threshold-days', core.getInput('threshold-days'));
     // threshold-versions is only used by the Maven strategy
     thresholdVersions = package_type === "maven"
       ? parseNonNegativeInt('threshold-versions', core.getInput('threshold-versions'))
       : parseInt(core.getInput('threshold-versions'), 10);
+    // an empty value or 0 selects the default; negative and non-integer values are rejected
+    batchSize = parseIntWithDefault('batch-size', core.getInput('batch-size'), 15);
+    maxErrors = parseIntWithDefault('max-errors', core.getInput('max-errors'), 5);
   } catch (error) {
     core.setFailed(error.message);
     return;
   }
-
-  const batchSize = parseInt(core.getInput('batch-size'), 10) || 15;
-  const maxErrors = parseInt(core.getInput('max-errors'), 10) || 5;
 
   // tags and patterns are the same kind of filter: merge them; exclusions win over inclusions
   const { included: includedTags, excluded: excludedTags } = resolveFilters(package_type, {

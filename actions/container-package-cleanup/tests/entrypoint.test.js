@@ -92,6 +92,34 @@ describe('entry point: retention input validation', () => {
     expectNothingTouched();
   });
 
+  it.each([
+    ['batch-size', 'negative', '-1'],
+    ['batch-size', 'fractional', '1.5'],
+    ['batch-size', 'nonnumeric', 'abc'],
+    ['batch-size', 'partially numeric', '7abc'],
+    ['max-errors', 'negative', '-1'],
+    ['max-errors', 'fractional', '1.5'],
+    ['max-errors', 'nonnumeric', 'abc'],
+    ['max-errors', 'partially numeric', '7abc'],
+  ])('fails before any API call for %s that is %s', async (name, _label, value) => {
+    await runEntryPoint({ 'package-type': 'container', 'threshold-days': '7', [name]: value, debug: 'false' });
+
+    expect(mockCore.setFailed).toHaveBeenCalledTimes(1);
+    expect(mockCore.setFailed.mock.calls[0][0]).toMatch(new RegExp(name));
+    expectNothingTouched();
+  });
+
+  it.each([
+    ['empty', ''],
+    ['zero', '0'],
+    ['valid', '3'],
+  ])('accepts %s batch-size and max-errors and continues to the API', async (_label, value) => {
+    await runEntryPoint({ 'package-type': 'container', 'threshold-days': '7', 'batch-size': value, 'max-errors': value, debug: 'false' });
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(wrapperInstance.listPackages).toHaveBeenCalled();
+  });
+
   it('fails for an invalid threshold-days on maven too', async () => {
     await runEntryPoint({ 'package-type': 'maven', 'threshold-days': 'abc', 'threshold-versions': '1', debug: 'false' });
 

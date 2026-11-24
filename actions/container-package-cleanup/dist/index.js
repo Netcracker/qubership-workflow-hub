@@ -25473,6 +25473,9 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
   if (!owner) {
     throw new Error("owner is required");
   }
+  if (!Number.isSafeInteger(batchSize) || batchSize < 1) {
+    throw new Error(`Invalid batchSize: ${batchSize}. Expected a positive integer.`);
+  }
   const normalizedOwner = owner.toLowerCase();
   let errorCount = 0;
   action_logger_default.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
@@ -25556,6 +25559,10 @@ function parseNonNegativeInt(name, raw) {
   }
   return parsed;
 }
+function parseIntWithDefault(name, raw, defaultValue) {
+  if (String(raw ?? "").trim() === "") return defaultValue;
+  return parseNonNegativeInt(name, raw) || defaultValue;
+}
 function parseList(raw) {
   return String(raw ?? "").split(",").map((item) => item.trim()).filter((item) => item.length > 0);
 }
@@ -25619,15 +25626,17 @@ async function run() {
   action_logger_default.setDryRun(dryRun);
   let thresholdDays;
   let thresholdVersions;
+  let batchSize;
+  let maxErrors;
   try {
     thresholdDays = parseNonNegativeInt("threshold-days", getInput("threshold-days"));
     thresholdVersions = package_type === "maven" ? parseNonNegativeInt("threshold-versions", getInput("threshold-versions")) : parseInt(getInput("threshold-versions"), 10);
+    batchSize = parseIntWithDefault("batch-size", getInput("batch-size"), 15);
+    maxErrors = parseIntWithDefault("max-errors", getInput("max-errors"), 5);
   } catch (error2) {
     setFailed(error2.message);
     return;
   }
-  const batchSize = parseInt(getInput("batch-size"), 10) || 15;
-  const maxErrors = parseInt(getInput("max-errors"), 10) || 5;
   const { included: includedTags, excluded: excludedTags } = resolveFilters(package_type, {
     includedTags: parseList(getInput("included-tags")),
     includedPatterns: parseList(getInput("included-patterns")),

@@ -21,6 +21,22 @@ function parseNonNegativeInt(name, raw) {
 }
 
 /**
+ * Strictly parses an optional positive integer input with a default.
+ * An empty value and "0" select the default (kept for backward compatibility);
+ * negative, non-integer, non-numeric and out-of-range values are rejected.
+ *
+ * @param {string} name - input name, used in the error message
+ * @param {string} raw - raw input value
+ * @param {number} defaultValue - value used for an empty input or "0"
+ * @returns {number}
+ * @throws {Error} if the value is not a valid non-negative integer
+ */
+function parseIntWithDefault(name, raw, defaultValue) {
+  if (String(raw ?? "").trim() === "") return defaultValue;
+  return parseNonNegativeInt(name, raw) || defaultValue;
+}
+
+/**
  * Parses a comma-separated list input: items are trimmed and empty items are skipped.
  *
  * @param {string} raw - raw input value
@@ -33,4 +49,4 @@ function parseList(raw) {
     .filter(item => item.length > 0);
 }
 
-export { parseNonNegativeInt, parseList };
+export { parseNonNegativeInt, parseIntWithDefault, parseList };

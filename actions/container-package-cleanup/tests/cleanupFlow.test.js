@@ -72,6 +72,21 @@ describe('cleanup flow: strategy -> delete executor', () => {
     expect(deletedIds()).not.toContain(104); // the fresh image itself
   });
 
+  it.each([[0], [-1], [-15], [1.5], [NaN], ['3']])('rejects batchSize %j before deleting anything', async (batchSize) => {
+    const toDelete = await select(versions, manifests);
+
+    await expect(deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize }))
+      .rejects.toThrow(/batchSize/);
+    expect(wrapper.deletePackageVersion).not.toHaveBeenCalled();
+  });
+
+  it('deletes in batches of the requested size', async () => {
+    const toDelete = await select(versions, manifests);
+    await deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize: 1 });
+
+    expect(deletedIds().sort()).toEqual([101, 103]);
+  });
+
   it('makes no delete calls at all in dry-run mode', async () => {
     const toDelete = await select(versions, manifests);
     const status = await deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, dryRun: true });
