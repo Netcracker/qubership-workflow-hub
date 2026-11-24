@@ -20,9 +20,16 @@ describe("CLA allowlist", () => {
     expect(checkAllowList([alice, bot])).toEqual([bot]);
   });
 
-  test("matches the whole username for wildcard entries", () => {
+  test("wildcard entries match bot accounts such as dependabot[bot]", () => {
     getInput.mockReturnValue("bot*");
-    expect(checkAllowList([alice, bot, other])).toEqual([alice, other]);
+    const dependabot = { name: "dependabot[bot]", id: 6 };
+    expect(checkAllowList([alice, bot, dependabot])).toEqual([alice]);
+  });
+
+  test("supports a [bot] suffix wildcard", () => {
+    getInput.mockReturnValue("*[bot]");
+    const renovate = { name: "renovate[bot]", id: 7 };
+    expect(checkAllowList([alice, renovate])).toEqual([alice]);
   });
 
   test("treats regular expression characters literally", () => {

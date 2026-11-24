@@ -37477,7 +37477,7 @@ function isUserNotInAllowList(committer) {
         pattern = pattern.trim();
         if (pattern.includes('*')) {
             const regex = escapeRegExp(pattern).split('\\*').join('.*');
-            return new RegExp("^" + regex + "$").test(committer);
+            return new RegExp(regex).test(committer);
         }
         return pattern === committer;
     }).length > 0;
