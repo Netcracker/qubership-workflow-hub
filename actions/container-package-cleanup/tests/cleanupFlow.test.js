@@ -1,4 +1,5 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { setImmediate } from 'node:timers';
 
 jest.unstable_mockModule('@actions/core', () => ({
   setFailed: jest.fn(),
@@ -80,11 +81,41 @@ describe('cleanup flow: strategy -> delete executor', () => {
     expect(wrapper.deletePackageVersion).not.toHaveBeenCalled();
   });
 
-  it('deletes in batches of the requested size', async () => {
-    const toDelete = await select(versions, manifests);
-    await deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize: 1 });
+  // Delete calls stay pending until the test releases them, so the batching is observable.
+  const holdDeletes = () => {
+    const releases = [];
+    wrapper.deletePackageVersion.mockImplementation(() => new Promise(resolve => { releases.push(resolve); }));
+    return releases;
+  };
+  const tick = () => new Promise(resolve => setImmediate(resolve));
 
+  it('starts the next delete only after the previous batch of size 1 has finished', async () => {
+    const toDelete = await select(versions, manifests);
+    const releases = holdDeletes();
+
+    const done = deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize: 1 });
+    await tick();
+    expect(deletedIds()).toEqual([101]);
+
+    releases[0]();
+    await tick();
+    expect(deletedIds()).toEqual([101, 103]);
+
+    releases[1]();
+    await done;
+    expect(wrapper.deletePackageVersion).toHaveBeenCalledTimes(2);
+  });
+
+  it('starts all deletes of a batch together when batchSize covers them', async () => {
+    const toDelete = await select(versions, manifests);
+    const releases = holdDeletes();
+
+    const done = deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize: 2 });
+    await tick();
     expect(deletedIds().sort()).toEqual([101, 103]);
+
+    releases.forEach(release => release());
+    await done;
   });
 
   it('makes no delete calls at all in dry-run mode', async () => {
