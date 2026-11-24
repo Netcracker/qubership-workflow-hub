@@ -9,7 +9,6 @@ beforeEach(() => getInput.mockReturnValue(""));
 describe("CLA allowlist", () => {
   const alice = { name: "alice", id: 1 };
   const bot = { name: "bot-worker", id: 2 };
-  const other = { name: "robot-worker", id: 3 };
 
   test("retains contributors when the allowlist is empty", () => {
     expect(checkAllowList([alice, bot])).toEqual([alice, bot]);
