@@ -214,10 +214,16 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 digestMap.set(result.versionName, result.digests);
             }
 
+            // All digests referenced by the tagged candidates: one lookup instead of scanning digestMap per version
+            const allDigests = new Set();
+            for (const digs of digestMap.values()) {
+                for (const d of digs) allDigests.add(d);
+            }
+
             // 4) Arch layers: from withoutExclude, but not used by protected versions
             const archLayers = !untaggedDeletionSafe ? [] : withoutExclude.filter(v =>
                 v.metadata.container.tags.length === 0 &&
-                Array.from(digestMap.values()).some(digs => digs.has(v.name)) &&
+                allDigests.has(v.name) &&
                 !protectedDigests.has(v.name)
             );
             if (archLayers.length > 0) {
@@ -227,27 +233,37 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 log.debug(` [${pkg.name}] archLayers: none`, MODULE);
             }
 
-            // 5) Sorting tagged + their archLayers
-            const ordered = [];
+            // 5) Sorting tagged + their archLayers.
+            // A layer goes right after the FIRST tagged version (taggedToDelete order) that references it,
+            // layers of one version keep the archLayers order, and a repeated layer name is taken once.
+            const firstOwner = new Map();
+            taggedToDelete.forEach((v, index) => {
+                for (const digest of digestMap.get(v.name) || []) {
+                    if (!firstOwner.has(digest)) firstOwner.set(digest, index);
+                }
+            });
+            const layersOf = taggedToDelete.map(() => []);
             const used = new Set();
-            for (const v of taggedToDelete) {
-                ordered.push(v);
-                const digs = digestMap.get(v.name) || new Set();
-                for (const layer of archLayers) {
-                    if (!used.has(layer.name) && digs.has(layer.name)) {
-                        ordered.push(layer);
-                        used.add(layer.name);
-                    }
+            for (const layer of archLayers) {
+                const owner = firstOwner.get(layer.name);
+                if (owner !== undefined && !used.has(layer.name)) {
+                    layersOf[owner].push(layer);
+                    used.add(layer.name);
                 }
             }
+            const ordered = [];
+            taggedToDelete.forEach((v, index) => {
+                ordered.push(v, ...layersOf[index]);
+            });
+            const orderedNames = new Set(ordered.map(o => o.name));
 
             // 6) Dangling: only by date, without tags, not in ordered and not in protectedDigests
             const danglingLayers = !untaggedDeletionSafe ? [] : pkg.versions.filter(v =>
                 new Date(v.createdAt) <= thresholdDate &&
                 v.metadata.container.tags.length === 0 &&
-                !Array.from(digestMap.values()).some(digs => digs.has(v.name)) &&
+                !allDigests.has(v.name) &&
                 !protectedDigests.has(v.name) &&
-                !ordered.some(o => o.name === v.name)
+                !orderedNames.has(v.name)
             );
             if (debug) {
                 if (danglingLayers.length > 0) {
