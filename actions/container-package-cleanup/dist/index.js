@@ -24912,7 +24912,11 @@ var wrapper_default = OctokitWrapper;
 
 // src/utils/deletionProgress.js
 function createDeletionProgress(selected = 0) {
-  return { selected, deleted: 0, skipped: 0, failed: 0, simulated: 0 };
+  return { selected, deleted: 0, skipped: 0, failed: 0, simulated: 0, outcomes: /* @__PURE__ */ new Map() };
+}
+function recordOutcome(progress, versionId, outcome) {
+  progress[outcome]++;
+  progress.outcomes?.set(versionId, outcome);
 }
 function notProcessed(progress) {
   const handled = progress.deleted + progress.skipped + progress.failed + progress.simulated;
@@ -24943,6 +24947,15 @@ function summarizeDeletion({ selected, progress = null, dryRun = false, deleteSt
     finalMessage = "\u2705 Cleanup operation completed successfully.";
   }
   return { lines, finalMessage };
+}
+var OUTCOME_LABELS = {
+  deleted: "\u2705 deleted",
+  skipped: "\u26A0\uFE0F skipped",
+  failed: "\u274C failed"
+};
+function outcomeLabel({ progress, dryRun = false, versionId }) {
+  if (dryRun || !progress?.outcomes) return "";
+  return OUTCOME_LABELS[progress.outcomes.get(versionId)] ?? "\u23F3 not processed";
 }
 
 // src/reports/containerReport.js
@@ -25002,7 +25015,8 @@ var ContainerReport = class {
       const versionsInfo = versions.map(({ id, name, metadata }) => {
         const tags = metadata?.container?.tags ?? [];
         const label = tags.length ? tags.join(", ") : `<em>${name}</em>`;
-        return `\u2022 <code>${id}</code> \u2014 ${label}`;
+        const outcome = outcomeLabel({ progress, dryRun, versionId: id });
+        return `\u2022 <code>${id}</code> \u2014 ${label}${outcome ? ` \u2014 ${outcome}` : ""}`;
       }).join("<br>");
       tableData.push([pkgInfo, versionsInfo]);
     });
@@ -25012,7 +25026,7 @@ var ContainerReport = class {
     summary.addRaw(`**Threshold:** versions older than **${thresholdDays} days** (created before **${thresholdDate.toISOString().slice(0, 10)}**)
 
 `);
-    summary.addRaw(`**Total Packages Processed:** ${totalPackages}  
+    summary.addRaw(`**Packages Selected:** ${totalPackages}  
 `);
     summary.addRaw(`${deletionLines.join("  \n")}
 
@@ -25078,11 +25092,13 @@ var MavenReport = class {
       deleteStatus,
       deletionError
     });
+    const showOutcome = !dryRun && Boolean(progress?.outcomes);
     const tableData = [
       [
         { data: "Package", header: true },
         { data: "Version", header: true },
-        { data: "Created At", header: true }
+        { data: "Created At", header: true },
+        ...showOutcome ? [{ data: "Result", header: true }] : []
       ]
     ];
     filteredPackagesWithVersionsForDelete.forEach(({ package: pkg, versions }) => {
@@ -25090,7 +25106,7 @@ var MavenReport = class {
         const pkgInfo = `<strong>${pkg.name}</strong><br/>(ID: ${pkg.id})`;
         const versionInfo = `<code>${version.name}</code>`;
         const createdAt = new Date(version.created_at).toISOString();
-        tableData.push([pkgInfo, versionInfo, createdAt]);
+        tableData.push([pkgInfo, versionInfo, createdAt, ...showOutcome ? [outcomeLabel({ progress, dryRun, versionId: version.id })] : []]);
       });
     });
     summary.addRaw(`## \u{1F3AF} Container Package Cleanup Summary ${dryRunText}
@@ -25099,7 +25115,7 @@ var MavenReport = class {
     summary.addRaw(`**Threshold:** versions older than **${thresholdDays} days** (created before **${thresholdDate.toISOString().slice(0, 10)}**)
 
 `);
-    summary.addRaw(`**Total Packages Processed:** ${totalPackages}  
+    summary.addRaw(`**Packages Selected:** ${totalPackages}  
 `);
     summary.addRaw(`${deletionLines.join("  \n")}
 
@@ -25588,7 +25604,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
           const detail = packageType === "maven" ? version.name : tags.length ? tags.join(", ") : version.name;
           if (dryRun) {
             action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
-            progress.simulated++;
+            recordOutcome(progress, version.id, "simulated");
             return { success: true, dryRun: true };
           }
           try {
@@ -25603,22 +25619,22 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
               debug: debug2,
               detail
             });
-            progress.deleted++;
+            recordOutcome(progress, version.id, "deleted");
             return { success: true };
           } catch (error2) {
             if (isSkippableError(error2)) {
               action_logger_default.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error2.message}`);
-              progress.skipped++;
+              recordOutcome(progress, version.id, "skipped");
               resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: false });
               return { success: false, skipped: true };
             }
             if (isCriticalError(error2)) {
-              progress.failed++;
+              recordOutcome(progress, version.id, "failed");
               resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: true });
               return { success: false, critical: true, error: error2 };
             }
             action_logger_default.error(`Failed ${normalizedPackageName} v:${version.id} - ${error2.message}`);
-            progress.failed++;
+            recordOutcome(progress, version.id, "failed");
             resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: false });
             return { success: false, error: error2 };
           }
