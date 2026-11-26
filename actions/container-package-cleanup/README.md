@@ -297,6 +297,14 @@ either, because no untagged version is deleted in that run.
 
 To limit load, up to 8 `docker manifest inspect` calls run in parallel, and the `docker login` to `ghcr.io` runs once.
 
+### Deletion result in the job summary
+
+The summary shows the selected versions and what really happened: `Deleted Versions`, `Skipped Versions` (for example
+a version that was already removed), `Failed Versions` and `Not Processed Versions` (the run stopped before them).
+In a real run the table also names the result of every version (deleted, skipped, failed or not processed).
+In a dry run `Deleted Versions` is always `0`. A run that stops with an error says so in the summary and never ends
+with a success message.
+
 ### Package listing failures
 
 For an organization the action lists public, internal and private packages separately. If none of them can be listed

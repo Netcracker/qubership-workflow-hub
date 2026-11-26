@@ -5,6 +5,7 @@ import ContainerReport from "./reports/containerReport.js";
 import MavenReport from "./reports/mavenReport.js";
 import { getStrategy, isSupportedPackageType, SUPPORTED_PACKAGE_TYPES } from "./strategy/strategyRegistry.js";
 import { deletePackageVersion } from './utils/deleteAction.js';
+import { createDeletionProgress } from './utils/deletionProgress.js';
 import { parseNonNegativeInt, parseIntWithDefault, parseBooleanInput, parseList } from './utils/inputs.js';
 import { resolveFilters } from './utils/filters.js';
 import { writeBlockedByExclusionSummary } from './reports/blockedByExclusion.js';
@@ -165,20 +166,29 @@ async function run() {
     incompleteCleanup
   };
 
+  // Counters of the deletion: they stay available when the run stops with an error, unlike the returned statuses.
+  const selectedVersions = filteredPackagesWithVersionsForDelete.reduce((total, item) => total + item.versions.length, 0);
+  const progress = createDeletionProgress(selectedVersions);
+
   let deleteStatus = [];
+  let deletionError = null;
   try {
     if (filteredPackagesWithVersionsForDelete.length > 0) {
       deleteStatus = await deletePackageVersion(filteredPackagesWithVersionsForDelete,
-        { wrapper, owner, isOrganization, batchSize, maxErrors, dryRun, debug: isDebug });
+        { wrapper, owner, isOrganization, batchSize, maxErrors, dryRun, debug: isDebug, progress });
     }
 
   } catch (error) {
-    core.setFailed(error.message || String(error));
+    deletionError = error.message || String(error);
+    core.setFailed(deletionError);
   }
 
-  await showReport({ ...reportContext, deleteStatus }, package_type);
+  await showReport({ ...reportContext, deleteStatus, progress, deletionError }, package_type);
   await writeListingFailuresSummary(listingFailures);
   await writeBlockedByExclusionSummary(blockedByExclusion);
+
+  // the run already failed: never finish with a success message
+  if (deletionError) return;
 
   deleteStatus.some(r => r.success === false) ?
     core.setFailed("❗️ Action completed with errors. Please check the logs and the report above.") :

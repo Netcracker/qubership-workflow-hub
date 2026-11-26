@@ -292,6 +292,72 @@ describe('entry point: error handling and repository filter', () => {
   });
 });
 
+describe('entry point: deletion result in the report', () => {
+  const savedEnv = { ...process.env };
+  const ago = (days) => new Date(Date.now() - days * 86400000).toISOString();
+  const mavenPackage = { id: 9, name: 'lib', package_type: 'maven', repository: { name: 'repo', full_name: 'owner/repo' } };
+  // the Maven strategy deletes the newest version first: ids 1, 2, 3 in this order
+  const mavenVersions = [1, 2, 3].map(n => ({ id: n, name: `1.${n}-SNAPSHOT`, created_at: ago(30 + n * 10), updated_at: ago(30 + n * 10) }));
+  const inputs = { 'package-type': 'maven', 'threshold-days': '7', 'threshold-versions': '0', 'batch-size': '1', debug: 'false' };
+  const summaryText = () => mockCore.summary.addRaw.mock.calls.map(c => c[0]).join('');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.GITHUB_REPOSITORY = 'owner/repo';
+    process.env.PACKAGE_TOKEN = 'token';
+    wrapperInstance.isOrganization.mockResolvedValue(true);
+    wrapperInstance.listPackages.mockResolvedValue([mavenPackage]);
+    wrapperInstance.listVersionsForPackage.mockResolvedValue(mavenVersions);
+    wrapperInstance.deletePackageVersion.mockReset();
+    wrapperInstance.deletePackageVersion.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    process.env = { ...savedEnv };
+  });
+
+  it('reports the counters and no success when a critical error stops the deletion', async () => {
+    wrapperInstance.deletePackageVersion.mockImplementation(async (_owner, _type, _name, id) => {
+      if (id === 2) throw new Error('403 rate limit exceeded');
+    });
+
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).toHaveBeenCalledTimes(1);
+    expect(mockCore.setFailed).toHaveBeenCalledWith('403 rate limit exceeded');
+    const text = summaryText();
+    expect(text).toContain('**Selected Versions:** 3');
+    expect(text).toContain('**Deleted Versions:** 1');
+    expect(text).toContain('**Failed Versions:** 1');
+    expect(text).toContain('**Not Processed Versions:** 1');
+    expect(text).toContain('Cleanup stopped with an error: 403 rate limit exceeded');
+    expect(text).not.toContain('completed successfully');
+    // the table names the result of every version: 1 deleted, 2 failed, 3 never reached
+    const table = mockCore.summary.addTable.mock.calls[0][0];
+    expect(table.slice(1).map(row => [row[1], row[3]])).toEqual([
+      ['<code>1.1-SNAPSHOT</code>', '✅ deleted'],
+      ['<code>1.2-SNAPSHOT</code>', '❌ failed'],
+      ['<code>1.3-SNAPSHOT</code>', '⏳ not processed']
+    ]);
+  });
+
+  it('reports all versions as deleted after a clean run', async () => {
+    await runEntryPoint(inputs);
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(summaryText()).toContain('**Deleted Versions:** 3');
+    expect(summaryText()).toContain('Cleanup operation completed successfully.');
+  });
+
+  it('does not report any version as deleted in a dry run', async () => {
+    await runEntryPoint({ ...inputs, 'dry-run': 'true' });
+
+    expect(wrapperInstance.deletePackageVersion).not.toHaveBeenCalled();
+    expect(summaryText()).toContain('**Selected Versions:** 3');
+    expect(summaryText()).toContain('**Deleted Versions:** 0 (dry run)');
+  });
+});
+
 describe('entry point: package listing failures', () => {
   const savedEnv = { ...process.env };
   const inputs = { 'package-type': 'container', 'threshold-days': '7', debug: 'false' };

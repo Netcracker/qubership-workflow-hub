@@ -24910,6 +24910,54 @@ var OctokitWrapper = class {
 };
 var wrapper_default = OctokitWrapper;
 
+// src/utils/deletionProgress.js
+function createDeletionProgress(selected = 0) {
+  return { selected, deleted: 0, skipped: 0, failed: 0, simulated: 0, outcomes: /* @__PURE__ */ new Map() };
+}
+function recordOutcome(progress, versionId, outcome) {
+  progress[outcome]++;
+  progress.outcomes?.set(versionId, outcome);
+}
+function notProcessed(progress) {
+  const handled = progress.deleted + progress.skipped + progress.failed + progress.simulated;
+  return Math.max(0, progress.selected - handled);
+}
+
+// src/reports/deletionSummary.js
+var escapeHtml = (text) => String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function summarizeDeletion({ selected, progress = null, dryRun = false, deleteStatus = [], deletionError = null }) {
+  const lines = [`**Selected Versions:** ${selected}`];
+  if (dryRun) {
+    lines.push("**Deleted Versions:** 0 (dry run)");
+  } else if (progress) {
+    lines.push(`**Deleted Versions:** ${progress.deleted}`);
+    if (progress.skipped > 0) lines.push(`**Skipped Versions:** ${progress.skipped}`);
+    if (progress.failed > 0) lines.push(`**Failed Versions:** ${progress.failed}`);
+    const left = notProcessed(progress);
+    if (left > 0) lines.push(`**Not Processed Versions:** ${left}`);
+  }
+  let finalMessage;
+  if (deletionError) {
+    finalMessage = `\u2757\uFE0FCleanup stopped with an error: ${escapeHtml(deletionError)}. See details above.`;
+  } else if (deleteStatus.some((r) => r.success === false || r.status === "error" || r.status === "critical")) {
+    finalMessage = "\u2757\uFE0FCleanup operation completed with errors. See details above.";
+  } else if (dryRun) {
+    finalMessage = "\u2705 Dry run completed. No version was deleted.";
+  } else {
+    finalMessage = "\u2705 Cleanup operation completed successfully.";
+  }
+  return { lines, finalMessage };
+}
+var OUTCOME_LABELS = {
+  deleted: "\u2705 deleted",
+  skipped: "\u26A0\uFE0F skipped",
+  failed: "\u274C failed"
+};
+function outcomeLabel({ progress, dryRun = false, versionId }) {
+  if (dryRun || !progress?.outcomes) return "";
+  return OUTCOME_LABELS[progress.outcomes.get(versionId)] ?? "\u23F3 not processed";
+}
+
 // src/reports/containerReport.js
 var ContainerReport = class {
   async writeSummary(context3) {
@@ -24921,7 +24969,7 @@ var ContainerReport = class {
       includedTags,
       excludedTags
     } = context3;
-    const { deleteStatus = [], incompleteCleanup = [] } = context3;
+    const { deleteStatus = [], incompleteCleanup = [], progress = null, deletionError = null } = context3;
     const writeIncompleteCleanup = () => {
       if (incompleteCleanup.length === 0) return;
       summary.addRaw(`
@@ -24948,11 +24996,18 @@ var ContainerReport = class {
     }
     const dryRunText = dryRun ? "(Dry Run)" : "";
     const totalPackages = filteredPackagesWithVersionsForDelete.length;
-    const totalDeletedVersions = filteredPackagesWithVersionsForDelete.reduce((total, item) => total + item.versions.length, 0);
+    const totalSelectedVersions = filteredPackagesWithVersionsForDelete.reduce((total, item) => total + item.versions.length, 0);
+    const { lines: deletionLines, finalMessage } = summarizeDeletion({
+      selected: totalSelectedVersions,
+      progress,
+      dryRun,
+      deleteStatus,
+      deletionError
+    });
     const tableData = [
       [
         { data: "Package", header: true },
-        { data: "Deleted Versions", header: true }
+        { data: "Selected Versions", header: true }
       ]
     ];
     filteredPackagesWithVersionsForDelete.forEach(({ package: pkg, versions }) => {
@@ -24960,7 +25015,8 @@ var ContainerReport = class {
       const versionsInfo = versions.map(({ id, name, metadata }) => {
         const tags = metadata?.container?.tags ?? [];
         const label = tags.length ? tags.join(", ") : `<em>${name}</em>`;
-        return `\u2022 <code>${id}</code> \u2014 ${label}`;
+        const outcome = outcomeLabel({ progress, dryRun, versionId: id });
+        return `\u2022 <code>${id}</code> \u2014 ${label}${outcome ? ` \u2014 ${outcome}` : ""}`;
       }).join("<br>");
       tableData.push([pkgInfo, versionsInfo]);
     });
@@ -24970,9 +25026,9 @@ var ContainerReport = class {
     summary.addRaw(`**Threshold:** versions older than **${thresholdDays} days** (created before **${thresholdDate.toISOString().slice(0, 10)}**)
 
 `);
-    summary.addRaw(`**Total Packages Processed:** ${totalPackages}  
+    summary.addRaw(`**Packages Selected:** ${totalPackages}  
 `);
-    summary.addRaw(`**Total Deleted Versions:** ${totalDeletedVersions}
+    summary.addRaw(`${deletionLines.join("  \n")}
 
 `);
     summary.addRaw(`---
@@ -24994,10 +25050,6 @@ var ContainerReport = class {
 
 `);
     summary.addTable(tableData);
-    let finalMessage = "\u2705 Cleanup operation completed successfully.";
-    if (deleteStatus.some((r) => r.success === false || r.status === "error" || r.status === "critical")) {
-      finalMessage = "\u2757\uFE0FCleanup operation completed with errors. See details above.";
-    }
     summary.addRaw(`
 
 ${finalMessage}`);
@@ -25025,19 +25077,28 @@ var MavenReport = class {
       includedTags,
       excludedTags
     } = context3;
-    const { deleteStatus } = context3;
+    const { deleteStatus = [], progress = null, deletionError = null } = context3;
     if (!filteredPackagesWithVersionsForDelete || filteredPackagesWithVersionsForDelete.length === 0) {
       info("\u2757\uFE0FNo packages or versions to delete.");
       return;
     }
     const dryRunText = dryRun ? "(Dry Run)" : "";
     const totalPackages = filteredPackagesWithVersionsForDelete.length;
-    const totalDeletedVersions = filteredPackagesWithVersionsForDelete.reduce((sum, item) => sum + item.versions.length, 0);
+    const totalSelectedVersions = filteredPackagesWithVersionsForDelete.reduce((sum, item) => sum + item.versions.length, 0);
+    const { lines: deletionLines, finalMessage } = summarizeDeletion({
+      selected: totalSelectedVersions,
+      progress,
+      dryRun,
+      deleteStatus,
+      deletionError
+    });
+    const showOutcome = !dryRun && Boolean(progress?.outcomes);
     const tableData = [
       [
         { data: "Package", header: true },
         { data: "Version", header: true },
-        { data: "Created At", header: true }
+        { data: "Created At", header: true },
+        ...showOutcome ? [{ data: "Result", header: true }] : []
       ]
     ];
     filteredPackagesWithVersionsForDelete.forEach(({ package: pkg, versions }) => {
@@ -25045,7 +25106,7 @@ var MavenReport = class {
         const pkgInfo = `<strong>${pkg.name}</strong><br/>(ID: ${pkg.id})`;
         const versionInfo = `<code>${version.name}</code>`;
         const createdAt = new Date(version.created_at).toISOString();
-        tableData.push([pkgInfo, versionInfo, createdAt]);
+        tableData.push([pkgInfo, versionInfo, createdAt, ...showOutcome ? [outcomeLabel({ progress, dryRun, versionId: version.id })] : []]);
       });
     });
     summary.addRaw(`## \u{1F3AF} Container Package Cleanup Summary ${dryRunText}
@@ -25054,9 +25115,9 @@ var MavenReport = class {
     summary.addRaw(`**Threshold:** versions older than **${thresholdDays} days** (created before **${thresholdDate.toISOString().slice(0, 10)}**)
 
 `);
-    summary.addRaw(`**Total Packages Processed:** ${totalPackages}  
+    summary.addRaw(`**Packages Selected:** ${totalPackages}  
 `);
-    summary.addRaw(`**Total Deleted Versions:** ${totalDeletedVersions}
+    summary.addRaw(`${deletionLines.join("  \n")}
 
 `);
     summary.addRaw(`---
@@ -25078,10 +25139,6 @@ var MavenReport = class {
 
 `);
     summary.addTable(tableData);
-    let finalMessage = "\u2705 Cleanup operation completed successfully.";
-    if (deleteStatus.some((r) => r.success === false || r.status === "error" || r.status === "critical")) {
-      finalMessage = "\u2757\uFE0FCleanup operation completed with errors. See details above.";
-    }
     summary.addRaw(`
 
 ${finalMessage}`);
@@ -25510,7 +25567,7 @@ async function deleteSinglePackageVersion({ wrapper, owner, packageType, package
   await wrapper.deletePackageVersion(owner, packageType, packageName, versionId, isOrganization);
   action_logger_default.lightSuccess(`\u2713 Deleted ${owner}/${packageName} (${packageType}) - id: ${versionId}, (${detail})`);
 }
-async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, batchSize = 15, maxErrors = 5, dryRun = false, debug: debug2 = false } = {}) {
+async function deletePackageVersion(filtered, { wrapper, owner, isOrganization = true, batchSize = 15, maxErrors = 5, dryRun = false, debug: debug2 = false, progress = createDeletionProgress() } = {}) {
   action_logger_default.setDebug(debug2);
   action_logger_default.setDryRun(dryRun);
   if (!Array.isArray(filtered) || filtered.length === 0) {
@@ -25547,6 +25604,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
           const detail = packageType === "maven" ? version.name : tags.length ? tags.join(", ") : version.name;
           if (dryRun) {
             action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
+            recordOutcome(progress, version.id, "simulated");
             return { success: true, dryRun: true };
           }
           try {
@@ -25561,18 +25619,22 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
               debug: debug2,
               detail
             });
+            recordOutcome(progress, version.id, "deleted");
             return { success: true };
           } catch (error2) {
             if (isSkippableError(error2)) {
               action_logger_default.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error2.message}`);
+              recordOutcome(progress, version.id, "skipped");
               resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: false });
               return { success: false, skipped: true };
             }
             if (isCriticalError(error2)) {
+              recordOutcome(progress, version.id, "failed");
               resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: true });
               return { success: false, critical: true, error: error2 };
             }
             action_logger_default.error(`Failed ${normalizedPackageName} v:${version.id} - ${error2.message}`);
+            recordOutcome(progress, version.id, "failed");
             resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error2.message, success: false, critical: false });
             return { success: false, error: error2 };
           }
@@ -25793,20 +25855,25 @@ async function run() {
     excludedTags,
     incompleteCleanup
   };
+  const selectedVersions = filteredPackagesWithVersionsForDelete.reduce((total, item) => total + item.versions.length, 0);
+  const progress = createDeletionProgress(selectedVersions);
   let deleteStatus = [];
+  let deletionError = null;
   try {
     if (filteredPackagesWithVersionsForDelete.length > 0) {
       deleteStatus = await deletePackageVersion(
         filteredPackagesWithVersionsForDelete,
-        { wrapper, owner, isOrganization, batchSize, maxErrors, dryRun, debug: isDebug }
+        { wrapper, owner, isOrganization, batchSize, maxErrors, dryRun, debug: isDebug, progress }
       );
     }
   } catch (error2) {
-    setFailed(error2.message || String(error2));
+    deletionError = error2.message || String(error2);
+    setFailed(deletionError);
   }
-  await showReport({ ...reportContext, deleteStatus }, package_type);
+  await showReport({ ...reportContext, deleteStatus, progress, deletionError }, package_type);
   await writeListingFailuresSummary(listingFailures);
   await writeBlockedByExclusionSummary(blockedByExclusion);
+  if (deletionError) return;
   deleteStatus.some((r) => r.success === false) ? setFailed("\u2757\uFE0F Action completed with errors. Please check the logs and the report above.") : action_logger_default.success("\u2705 Action completed.");
 }
 async function showReport(context3, type = "container") {

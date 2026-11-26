@@ -1,4 +1,6 @@
 import * as core from "@actions/core";
+import { summarizeDeletion, outcomeLabel } from "./deletionSummary.js";
+
 class ContainerReport {
     async writeSummary(context) {
 
@@ -11,7 +13,7 @@ class ContainerReport {
             excludedTags
         } = context;
 
-        const { deleteStatus = [], incompleteCleanup = [] } = context;
+        const { deleteStatus = [], incompleteCleanup = [], progress = null, deletionError = null } = context;
 
         const writeIncompleteCleanup = () => {
             if (incompleteCleanup.length === 0) return;
@@ -36,12 +38,16 @@ class ContainerReport {
 
         const dryRunText = dryRun ? "(Dry Run)" : "";
         const totalPackages = filteredPackagesWithVersionsForDelete.length;
-        const totalDeletedVersions = filteredPackagesWithVersionsForDelete.reduce((total, item) => total + item.versions.length, 0);
+        const totalSelectedVersions = filteredPackagesWithVersionsForDelete.reduce((total, item) => total + item.versions.length, 0);
+        // The selection says what was chosen; what really happened comes from the progress counters.
+        const { lines: deletionLines, finalMessage } = summarizeDeletion({
+            selected: totalSelectedVersions, progress, dryRun, deleteStatus, deletionError
+        });
 
         const tableData = [
             [
                 { data: "Package", header: true },
-                { data: "Deleted Versions", header: true }
+                { data: "Selected Versions", header: true }
             ]
         ];
 
@@ -53,7 +59,8 @@ class ContainerReport {
                 .map(({ id, name, metadata }) => {
                     const tags = metadata?.container?.tags ?? [];
                     const label = tags.length ? tags.join(', ') : `<em>${name}</em>`;
-                    return `• <code>${id}</code> — ${label}`;
+                    const outcome = outcomeLabel({ progress, dryRun, versionId: id });
+                    return `• <code>${id}</code> — ${label}${outcome ? ` — ${outcome}` : ""}`;
                 })
                 .join('<br>');
 
@@ -62,8 +69,8 @@ class ContainerReport {
 
         core.summary.addRaw(`## 🎯 Container Package Cleanup Summary ${dryRunText}\n\n`);
         core.summary.addRaw(`**Threshold:** versions older than **${thresholdDays} days** (created before **${thresholdDate.toISOString().slice(0, 10)}**)\n\n`);
-        core.summary.addRaw(`**Total Packages Processed:** ${totalPackages}  \n`);
-        core.summary.addRaw(`**Total Deleted Versions:** ${totalDeletedVersions}\n\n`);
+        core.summary.addRaw(`**Packages Selected:** ${totalPackages}  \n`);
+        core.summary.addRaw(`${deletionLines.join("  \n")}\n\n`);
         core.summary.addRaw(`---\n\n`);
         core.summary.addRaw(`**Parameters:**\n\n`);
         core.summary.addRaw(`- Threshold Days: ${thresholdDays}\n`);
@@ -77,10 +84,6 @@ class ContainerReport {
         core.summary.addTable(tableData);
         // core.summary.addRaw(`\n\n✅ Cleanup operation completed successfully.`);
 
-        let finalMessage = "✅ Cleanup operation completed successfully.";
-        if (deleteStatus.some(r => r.success === false || r.status === 'error' || r.status === 'critical')) {
-            finalMessage = "❗️Cleanup operation completed with errors. See details above.";
-        }
         core.summary.addRaw(`\n\n${finalMessage}`);
         writeIncompleteCleanup();
 
