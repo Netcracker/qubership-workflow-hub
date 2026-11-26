@@ -6,12 +6,18 @@ const strategyRegistry = {
     container: ContainerStrategy,
 };
 
-function getStrategy(packageType) {
-    const StrategyClass = strategyRegistry[packageType];
+const SUPPORTED_PACKAGE_TYPES = Object.keys(strategyRegistry).sort();
 
-    if (!StrategyClass) {
+// hasOwn: names such as "constructor" must not match members inherited from Object
+function isSupportedPackageType(packageType) {
+    return Object.hasOwn(strategyRegistry, packageType);
+}
+
+function getStrategy(packageType) {
+    if (!isSupportedPackageType(packageType)) {
         throw new Error(`Unsupported package type: ${packageType}`);
     }
+    const StrategyClass = strategyRegistry[packageType];
 
     const instance = new StrategyClass();
 
@@ -22,4 +28,4 @@ function getStrategy(packageType) {
     return instance;
 }
 
-export { getStrategy };
+export { getStrategy, isSupportedPackageType, SUPPORTED_PACKAGE_TYPES };

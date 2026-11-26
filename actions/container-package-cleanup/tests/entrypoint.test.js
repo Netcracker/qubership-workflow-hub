@@ -147,6 +147,51 @@ describe('entry point: retention input validation', () => {
     expect(wrapperInstance.listPackages).toHaveBeenCalled();
   });
 
+  it.each([
+    ['docker', 'docker'],
+    ['npm', 'npm'],
+    ['empty', ''],
+    ['a name of an inherited object member', 'constructor'],
+  ])('fails before any API call for the unsupported package-type %s', async (_label, value) => {
+    await runEntryPoint({ 'package-type': value, 'threshold-days': '7', debug: 'false' });
+
+    expect(mockCore.setFailed).toHaveBeenCalledTimes(1);
+    expect(mockCore.setFailed.mock.calls[0][0]).toMatch(/Invalid 'package-type' input/);
+    expect(mockCore.setFailed.mock.calls[0][0]).toMatch(/container, maven/);
+    expectNothingTouched();
+  });
+
+  it.each([
+    ['container'],
+    ['Container'],
+    ['MAVEN'],
+  ])('accepts the package-type %s and continues to the API', async (value) => {
+    await runEntryPoint({ 'package-type': value, 'threshold-days': '7', 'threshold-versions': '1', debug: 'false' });
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(wrapperInstance.listPackages).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['container', '9000000000000000'],
+    ['maven', '9000000000000000'],
+    ['container', '200000000'],
+  ])('fails before any API call when threshold-days gives a cutoff out of range (%s, %s)', async (packageType, days) => {
+    await runEntryPoint({ 'package-type': packageType, 'threshold-days': days, 'threshold-versions': '1', debug: 'false' });
+
+    expect(mockCore.setFailed).toHaveBeenCalledTimes(1);
+    expect(mockCore.setFailed.mock.calls[0][0]).toMatch(/threshold-days/);
+    expect(mockCore.setFailed.mock.calls[0][0]).toMatch(/out of range/);
+    expectNothingTouched();
+  });
+
+  it('accepts a large threshold-days whose cutoff is still a valid date', async () => {
+    await runEntryPoint({ 'package-type': 'container', 'threshold-days': '36500', debug: 'false' });
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(wrapperInstance.listPackages).toHaveBeenCalled();
+  });
+
   it('fails for an invalid threshold-days on maven too', async () => {
     await runEntryPoint({ 'package-type': 'maven', 'threshold-days': 'abc', 'threshold-versions': '1', debug: 'false' });
 

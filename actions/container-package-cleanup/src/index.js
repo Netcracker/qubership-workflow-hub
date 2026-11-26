@@ -3,7 +3,7 @@ import process from "node:process";
 import OctokitWrapper from "./utils/wrapper.js";
 import ContainerReport from "./reports/containerReport.js";
 import MavenReport from "./reports/mavenReport.js";
-import { getStrategy } from "./strategy/strategyRegistry.js";
+import { getStrategy, isSupportedPackageType, SUPPORTED_PACKAGE_TYPES } from "./strategy/strategyRegistry.js";
 import { deletePackageVersion } from './utils/deleteAction.js';
 import { parseNonNegativeInt, parseIntWithDefault, parseBooleanInput, parseList } from './utils/inputs.js';
 import { resolveFilters } from './utils/filters.js';
@@ -33,13 +33,16 @@ async function run() {
   log.setDebug(isDebug);
   log.setDryRun(dryRun);
 
-  // Retention settings decide what gets deleted: validate them strictly before doing anything else.
+  // The package type and the retention settings decide what gets deleted: validate them strictly before doing anything else.
   let thresholdDays;
   let thresholdVersions;
   let batchSize;
   let maxErrors;
   try {
-    thresholdDays = parseNonNegativeInt('threshold-days', core.getInput('threshold-days'));
+    if (!isSupportedPackageType(package_type)) {
+      throw new Error(`Invalid 'package-type' input: "${package_type}". Supported values: ${SUPPORTED_PACKAGE_TYPES.join(', ')}.`);
+    }
+    thresholdDays =parseNonNegativeInt('threshold-days', core.getInput('threshold-days'));
     // threshold-versions is only used by the Maven strategy
     thresholdVersions = package_type === "maven"
       ? parseNonNegativeInt('threshold-versions', core.getInput('threshold-versions'))
@@ -62,6 +65,11 @@ async function run() {
 
   const now = new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1000);
+  // A huge threshold-days gives a date outside the Date range: fail now instead of comparing with an invalid date later
+  if (Number.isNaN(thresholdDate.getTime())) {
+    core.setFailed(`Invalid 'threshold-days' input: "${thresholdDays}". The cutoff date is out of range.`);
+    return;
+  }
 
   log.info(`Threshold Days: ${thresholdDays}`);
   log.info(`Threshold Date: ${thresholdDate}`);
