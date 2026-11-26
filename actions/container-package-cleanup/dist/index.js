@@ -25487,11 +25487,15 @@ var strategyRegistry = {
   maven: maven_default,
   container: container_default
 };
+var SUPPORTED_PACKAGE_TYPES = Object.keys(strategyRegistry).sort();
+function isSupportedPackageType(packageType) {
+  return Object.hasOwn(strategyRegistry, packageType);
+}
 function getStrategy(packageType) {
-  const StrategyClass = strategyRegistry[packageType];
-  if (!StrategyClass) {
+  if (!isSupportedPackageType(packageType)) {
     throw new Error(`Unsupported package type: ${packageType}`);
   }
+  const StrategyClass = strategyRegistry[packageType];
   const instance = new StrategyClass();
   if (typeof instance.execute !== "function") {
     throw new Error(`Strategy ${packageType} must implement 'execute()'`);
@@ -25698,6 +25702,9 @@ async function run() {
   let batchSize;
   let maxErrors;
   try {
+    if (!isSupportedPackageType(package_type)) {
+      throw new Error(`Invalid 'package-type' input: "${package_type}". Supported values: ${SUPPORTED_PACKAGE_TYPES.join(", ")}.`);
+    }
     thresholdDays = parseNonNegativeInt("threshold-days", getInput("threshold-days"));
     thresholdVersions = package_type === "maven" ? parseNonNegativeInt("threshold-versions", getInput("threshold-versions")) : parseInt(getInput("threshold-versions"), 10);
     batchSize = parseIntWithDefault("batch-size", getInput("batch-size"), 15);
@@ -25714,6 +25721,10 @@ async function run() {
   });
   const now = /* @__PURE__ */ new Date();
   const thresholdDate = new Date(now.getTime() - thresholdDays * 24 * 60 * 60 * 1e3);
+  if (Number.isNaN(thresholdDate.getTime())) {
+    setFailed(`Invalid 'threshold-days' input: "${thresholdDays}". The cutoff date is out of range.`);
+    return;
+  }
   action_logger_default.info(`Threshold Days: ${thresholdDays}`);
   action_logger_default.info(`Threshold Date: ${thresholdDate}`);
   excludedTags.length && action_logger_default.info(`Excluded Tags: ${excludedTags}`);
