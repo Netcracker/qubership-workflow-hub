@@ -31,6 +31,25 @@ function collectDigests(target, ds) {
     else if (ds) target.add(ds);
 }
 
+// GitHub returns created_at as a full ISO 8601 timestamp with a time zone, e.g. 2025-01-31T12:00:00Z.
+const ISO_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+// Creation time in milliseconds, or NaN when the date is missing or invalid.
+// new Date() alone is too lenient: it turns false, 0 and null into the 1970 epoch, moves 2024-02-30 to
+// 1 March and reads a string without a time zone in the local zone. So the value must be a string in the
+// format above with a real calendar date and time (or a valid Date object).
+function creationTime(createdAt) {
+    if (createdAt instanceof Date) return createdAt.getTime();
+    if (typeof createdAt !== 'string') return NaN;
+    const match = ISO_TIMESTAMP.exec(createdAt);
+    if (!match) return NaN;
+    const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number);
+    if (month < 1 || month > 12) return NaN;
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    if (day < 1 || day > daysInMonth || hour > 23 || minute > 59 || second > 59) return NaN;
+    return new Date(createdAt).getTime();
+}
+
 class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
         super();
@@ -90,6 +109,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             throw new Error(`Invalid threshold date: ${thresholdDate}`);
         }
 
+        const thresholdTime = thresholdDate.getTime();
         const limit = createLimiter(MANIFEST_CONCURRENCY);
 
         const excluded = excludedPatterns.map(p => p.toLowerCase());
@@ -118,8 +138,15 @@ class ContainerStrategy extends AbstractPackageStrategy {
             const imageLC = pkg.name.toLowerCase();
 
             // 1) Basic filtering by date and excludedPatterns for tagged/orphan
+            // A version without a valid creation date cannot be judged by age: it is always kept.
+            const invalidDateIds = [];
             const withoutExclude = pkg.versions.filter(v => {
-                if (new Date(v.createdAt) > thresholdDate) return false;
+                const created = creationTime(v.createdAt);
+                if (Number.isNaN(created)) {
+                    invalidDateIds.push(v.id);
+                    return false;
+                }
+                if (created > thresholdTime) return false;
                 const tags = v.metadata.container.tags.map(t => t.toLowerCase());
                 if (tags.includes('latest')) return false;
                 if (excluded.some(pat => tags.some(t => this.wildcardMatcher.match(t, pat)))) {
@@ -127,6 +154,11 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
                 return true;
             });
+            if (invalidDateIds.length > 0) {
+                const shown = invalidDateIds.slice(0, 10).join(', ');
+                const more = invalidDateIds.length > 10 ? `, ... (${invalidDateIds.length - 10} more)` : '';
+                log.warn(`[${pkg.name}] ${invalidDateIds.length} version(s) have a missing or invalid creation date and are kept (ids: ${shown}${more})`);
+            }
             log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`, MODULE);
 
             // Show versions with their tags for debugging
@@ -270,7 +302,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
 
             // 6) Dangling: only by date, without tags, not in ordered and not in protectedDigests
             const danglingLayers = !untaggedDeletionSafe ? [] : pkg.versions.filter(v =>
-                new Date(v.createdAt) <= thresholdDate &&
+                creationTime(v.createdAt) <= thresholdTime &&
                 v.metadata.container.tags.length === 0 &&
                 !allDigests.has(v.name) &&
                 !protectedDigests.has(v.name) &&
