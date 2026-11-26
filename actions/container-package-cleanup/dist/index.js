@@ -25593,6 +25593,14 @@ function parseIntWithDefault(name, raw, defaultValue) {
   if (String(raw ?? "").trim() === "") return defaultValue;
   return parseNonNegativeInt(name, raw) || defaultValue;
 }
+function parseBooleanInput(name, raw, defaultValue = false) {
+  const value = String(raw ?? "").trim();
+  if (value === "") return defaultValue;
+  const lower = value.toLowerCase();
+  if (lower === "true") return true;
+  if (lower === "false") return false;
+  throw new Error(`Invalid '${name}' input: "${value}". Expected "true" or "false".`);
+}
 function parseList(raw) {
   return String(raw ?? "").split(",").map((item) => item.trim()).filter((item) => item.length > 0);
 }
@@ -25646,8 +25654,15 @@ async function writeListingFailuresSummary(listingFailures = []) {
 
 // src/index.js
 async function run() {
-  const isDebug = getInput("debug").toLowerCase() === "true";
-  const dryRun = getInput("dry-run").toLowerCase() === "true";
+  let isDebug;
+  let dryRun;
+  try {
+    isDebug = parseBooleanInput("debug", getInput("debug"));
+    dryRun = parseBooleanInput("dry-run", getInput("dry-run"));
+  } catch (error2) {
+    setFailed(error2.message);
+    return;
+  }
   const package_type = getInput("package-type").toLowerCase();
   dryRun && action_logger_default.warn("Dry run mode is enabled, no version will be deleted.");
   action_logger_default.info(`Is debug? -> ${isDebug}`);
