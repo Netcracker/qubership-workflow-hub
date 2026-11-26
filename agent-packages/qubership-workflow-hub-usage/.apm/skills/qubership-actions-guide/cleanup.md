@@ -199,7 +199,7 @@ on:
 
 | Input | Action default | Description |
 | --- | --- | --- |
-| `package-type` | `container` | `container` or `maven` |
+| `package-type` | `container` | `container` or `maven` (any letter case). Any other value fails the action before any API call |
 | `threshold-days` | `7` | Delete versions older than this many days |
 | `threshold-versions` | `1` | *(Maven only)* Keep this many newest versions per package |
 | `included-tags` | `""` | Only delete versions matching these tags/versions. Merged with `included-patterns`. Wildcard `*`/`?` supported |

@@ -15,7 +15,7 @@ It supports both Docker/container images and Maven JAR files.
 | `excluded-tags`      | Comma-separated tags/versions never deleted (`*` wildcards supported). Merged with `excluded-patterns`. | No       | `""`                                      |
 | `included-patterns`  | Comma-separated patterns to include (`*` wildcards supported). Merged with `included-tags`. | No       | `""`                                      |
 | `excluded-patterns`  | Comma-separated patterns to exclude (`*` wildcards supported). Merged with `excluded-tags`; exclusions always win over inclusions. | No       | `""`                                      |
-| `package-type`       | Package kind to clean: `container` or `maven`.                                               | No       | `container`                               |
+| `package-type`       | Package kind to clean: `container` or `maven` (any letter case). Any other value fails the action. | No       | `container`                               |
 | `dry-run`            | If `true`, only prints what would be deleted. Accepts `true` or `false` in any letter case; an empty value means `false`; any other value fails the action. | No       | `false`                                   |
 | `debug`              | If `true`, prints extra debug logs. Accepts `true` or `false` in any letter case; an empty value means `false`; any other value fails the action. | No       | `true`                                    |
 | `batch-size`         | Number of versions deleted in parallel per package. Positive integer; empty or `0` uses the default. Invalid values fail the action. | No       | `15`                                      |

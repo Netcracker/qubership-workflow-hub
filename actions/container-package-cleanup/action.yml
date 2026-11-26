@@ -20,7 +20,7 @@ inputs:
     description: "Enable dry run mode. Accepts true or false in any letter case; an empty value means false; any other value fails the action."
     default: "false"
   package-type:
-    description: "Type of cleanup to perform (e.g., 'docker', 'container')."
+    description: "Type of cleanup to perform: 'container' or 'maven'. Any other value fails the action."
     default: "container"
   included-patterns:
     description: "A comma-separated list of patterns to include for deletion. Merged with included-tags; for Maven *SNAPSHOT* is used when no include filter is given."
