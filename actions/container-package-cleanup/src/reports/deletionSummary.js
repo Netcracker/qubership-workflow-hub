@@ -41,4 +41,25 @@ function summarizeDeletion({ selected, progress = null, dryRun = false, deleteSt
   return { lines, finalMessage };
 }
 
-export { summarizeDeletion };
+const OUTCOME_LABELS = {
+  deleted: "✅ deleted",
+  skipped: "⚠️ skipped",
+  failed: "❌ failed"
+};
+
+/**
+ * Label of one version for the report table: what happened to it in a real run.
+ * Empty in a dry run and when the run has no per-version information.
+ *
+ * @param {Object} params
+ * @param {{ outcomes?: Map<any, string> }|null} params.progress
+ * @param {boolean} [params.dryRun]
+ * @param {string|number} params.versionId
+ * @returns {string}
+ */
+function outcomeLabel({ progress, dryRun = false, versionId }) {
+  if (dryRun || !progress?.outcomes) return "";
+  return OUTCOME_LABELS[progress.outcomes.get(versionId)] ?? "⏳ not processed";
+}
+
+export { summarizeDeletion, outcomeLabel };

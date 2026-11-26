@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { summarizeDeletion } from "./deletionSummary.js";
+import { summarizeDeletion, outcomeLabel } from "./deletionSummary.js";
 
 class ContainerReport {
     async writeSummary(context) {
@@ -59,7 +59,8 @@ class ContainerReport {
                 .map(({ id, name, metadata }) => {
                     const tags = metadata?.container?.tags ?? [];
                     const label = tags.length ? tags.join(', ') : `<em>${name}</em>`;
-                    return `• <code>${id}</code> — ${label}`;
+                    const outcome = outcomeLabel({ progress, dryRun, versionId: id });
+                    return `• <code>${id}</code> — ${label}${outcome ? ` — ${outcome}` : ""}`;
                 })
                 .join('<br>');
 
@@ -68,7 +69,7 @@ class ContainerReport {
 
         core.summary.addRaw(`## 🎯 Container Package Cleanup Summary ${dryRunText}\n\n`);
         core.summary.addRaw(`**Threshold:** versions older than **${thresholdDays} days** (created before **${thresholdDate.toISOString().slice(0, 10)}**)\n\n`);
-        core.summary.addRaw(`**Total Packages Processed:** ${totalPackages}  \n`);
+        core.summary.addRaw(`**Packages Selected:** ${totalPackages}  \n`);
         core.summary.addRaw(`${deletionLines.join("  \n")}\n\n`);
         core.summary.addRaw(`---\n\n`);
         core.summary.addRaw(`**Parameters:**\n\n`);

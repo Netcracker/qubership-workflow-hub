@@ -75,7 +75,7 @@ describe("ContainerReport", () => {
     await report.writeSummary(context);
 
     expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("## 🎯 Container Package Cleanup Summary (Dry Run)"));
-    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Packages Processed:** 2"));
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Packages Selected:** 2"));
     expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Selected Versions:** 3"));
     expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Deleted Versions:** 0 (dry run)"));
     expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("Dry run completed. No version was deleted."));
@@ -120,7 +120,7 @@ describe("ContainerReport", () => {
     await report.writeSummary(context);
 
     expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("## 🎯 Container Package Cleanup Summary "));
-    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Total Packages Processed:** 1"));
+    expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Packages Selected:** 1"));
     expect(mockCore.summary.addRaw).toHaveBeenCalledWith(expect.stringContaining("**Selected Versions:** 1"));
     expect(mockCore.summary.addRaw).not.toHaveBeenCalledWith(expect.stringContaining("Total Deleted Versions"));
     expect(mockCore.summary.addTable).toHaveBeenCalledWith([
@@ -262,6 +262,36 @@ describe("ContainerReport", () => {
       expect(mockCore.summary.write).toHaveBeenCalled();
     });
 
+    test("labels every version with what happened to it", async () => {
+      await report.writeSummary({
+        ...baseContext,
+        progress: {
+          selected: 4, deleted: 1, skipped: 1, failed: 1, simulated: 0,
+          outcomes: new Map([["v1", "deleted"], ["v2", "skipped"], ["v3", "failed"]])
+        },
+        deletionError: "403 rate limit",
+        deleteStatus: []
+      });
+
+      const [[, row]] = mockCore.summary.addTable.mock.calls[0][0].slice(1).map(r => [r[0], r[1]]);
+      expect(row).toContain("<code>v1</code> — t1 — ✅ deleted");
+      expect(row).toContain("<code>v2</code> — t2 — ⚠️ skipped");
+      expect(row).toContain("<code>v3</code> — t3 — ❌ failed");
+      expect(row).toContain("<code>v4</code> — t4 — ⏳ not processed");
+    });
+
+    test("adds no per-version label in a dry run", async () => {
+      await report.writeSummary({
+        ...baseContext,
+        dryRun: true,
+        progress: { selected: 4, deleted: 0, skipped: 0, failed: 0, simulated: 4, outcomes: new Map() }
+      });
+
+      const [[, row]] = mockCore.summary.addTable.mock.calls[0][0].slice(1).map(r => [r[0], r[1]]);
+      expect(row).toContain("<code>v1</code> — t1<br>");
+      expect(row).not.toContain("not processed");
+    });
+
     test("does not count candidates as deleted in a dry run, whatever the progress says", async () => {
       await report.writeSummary({
         ...baseContext,
@@ -384,6 +414,30 @@ describe("MavenReport", () => {
     expect(text).toContain("**Not Processed Versions:** 1");
     expect(text).toContain("Cleanup stopped with an error: 403 rate limit");
     expect(text).not.toContain("completed successfully");
+  });
+
+  test("adds a result column that names what happened to every version", async () => {
+    await new MavenReport().writeSummary({
+      ...baseContext,
+      progress: { selected: 3, deleted: 1, skipped: 0, failed: 1, simulated: 0, outcomes: new Map([[1, "deleted"], [2, "failed"]]) },
+      deleteStatus: [],
+      deletionError: "403 rate limit"
+    });
+
+    const table = mockCore.summary.addTable.mock.calls[0][0];
+    expect(table[0].map(c => c.data)).toEqual(["Package", "Version", "Created At", "Result"]);
+    expect(table.slice(1).map(r => r[3])).toEqual(["✅ deleted", "❌ failed", "⏳ not processed"]);
+  });
+
+  test("has no result column in a dry run", async () => {
+    await new MavenReport().writeSummary({
+      ...baseContext,
+      dryRun: true,
+      progress: { selected: 3, deleted: 0, skipped: 0, failed: 0, simulated: 3, outcomes: new Map() },
+      deleteStatus: []
+    });
+
+    expect(mockCore.summary.addTable.mock.calls[0][0][0].map(c => c.data)).toEqual(["Package", "Version", "Created At"]);
   });
 
   test("still writes a success message for a clean run", async () => {

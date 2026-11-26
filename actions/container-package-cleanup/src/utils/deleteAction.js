@@ -1,5 +1,5 @@
 import log from "@qubership/action-logger";
-import { createDeletionProgress } from "./deletionProgress.js";
+import { createDeletionProgress, recordOutcome } from "./deletionProgress.js";
 
 const _MODULE = 'deleteAction.js';
 /**
@@ -67,7 +67,7 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
           const detail = packageType === "maven" ? version.name : (tags.length ? tags.join(", ") : version.name);
           if (dryRun) {
             log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
-            progress.simulated++;
+            recordOutcome(progress, version.id, "simulated");
             return { success: true, dryRun: true };
           }
 
@@ -80,23 +80,23 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
               versionId: version.id,
               isOrganization, dryRun, debug, detail
             });
-            progress.deleted++;
+            recordOutcome(progress, version.id, "deleted");
             return { success: true };
 
           } catch (error) {
             if (isSkippableError(error)) {
               log.warn(`Skipped ${normalizedPackageName} v:${version.id} - ${error.message}`);
-              progress.skipped++;
+              recordOutcome(progress, version.id, "skipped");
               resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: false });
               return { success: false, skipped: true };
             }
             if (isCriticalError(error)) {
-              progress.failed++;
+              recordOutcome(progress, version.id, "failed");
               resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: true });
               return { success: false, critical: true, error };
             }
             log.error(`Failed ${normalizedPackageName} v:${version.id} - ${error.message}`);
-            progress.failed++;
+            recordOutcome(progress, version.id, "failed");
             resultStatus.push({ packageName: normalizedPackageName, versionId: version.id, reason: error.message, success: false, critical: false });
             return { success: false, error };
           }

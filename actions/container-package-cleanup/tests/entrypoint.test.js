@@ -332,6 +332,13 @@ describe('entry point: deletion result in the report', () => {
     expect(text).toContain('**Not Processed Versions:** 1');
     expect(text).toContain('Cleanup stopped with an error: 403 rate limit exceeded');
     expect(text).not.toContain('completed successfully');
+    // the table names the result of every version: 1 deleted, 2 failed, 3 never reached
+    const table = mockCore.summary.addTable.mock.calls[0][0];
+    expect(table.slice(1).map(row => [row[1], row[3]])).toEqual([
+      ['<code>1.1-SNAPSHOT</code>', '✅ deleted'],
+      ['<code>1.2-SNAPSHOT</code>', '❌ failed'],
+      ['<code>1.3-SNAPSHOT</code>', '⏳ not processed']
+    ]);
   });
 
   it('reports all versions as deleted after a clean run', async () => {
