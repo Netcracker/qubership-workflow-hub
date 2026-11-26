@@ -1,5 +1,6 @@
 // tests/wrapper.test.js
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { setImmediate } from 'node:timers';
 
 // Mock @actions/github
 const mockGetOctokit = jest.fn();
