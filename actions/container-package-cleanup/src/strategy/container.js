@@ -170,9 +170,16 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
             }
 
+            // Digests only decide which untagged versions (layers or dangling) may be deleted.
+            // Without untagged versions in the package there is nothing to decide, so skip the inspections.
+            const hasUntagged = pkg.versions.some(v => v.metadata.container.tags.length === 0);
+            if (!hasUntagged) {
+                log.debug(` [${pkg.name}] No untagged versions: manifest inspection skipped`, MODULE);
+            }
+
             const protectedDigests = new Set();
             const failedRetainedTags = [];
-            await Promise.all(Array.from(retainedTags).map(async (tag) => {
+            await Promise.all((hasUntagged ? Array.from(retainedTags) : []).map(async (tag) => {
                 try {
                     const ds = await limit(() => wrapper.getManifestDigests(ownerLC, imageLC, tag));
                     collectDigests(protectedDigests, ds);
@@ -190,9 +197,11 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 incompleteCleanup.push({ package: pkg.name, failedTags: failedRetainedTags });
             }
 
-            // 3) Gathering manifest digests for each tagged
+            // 3) Gathering manifest digests for each tagged.
+            // When untagged deletion is already blocked, the digests would not be used: skip the candidates.
             const digestMap = new Map();
-            const digestPromises = taggedToDelete.map(async (v) => {
+            const candidatesToInspect = hasUntagged && untaggedDeletionSafe ? taggedToDelete : [];
+            const digestPromises = candidatesToInspect.map(async (v) => {
                 const tagPromises = v.metadata.container.tags.map(async (tag) => {
                     try {
                         const ds = await limit(() => wrapper.getManifestDigests(ownerLC, imageLC, tag));
