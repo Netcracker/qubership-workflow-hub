@@ -826,6 +826,102 @@ describe('ContainerStrategy', () => {
     });
   });
 
+  describe('execute - missing or invalid creation dates', () => {
+    const pkgInfo = {
+      id: 1, name: 'test-image', package_type: 'container',
+      repository: { full_name: 'owner/repo' },
+      created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
+    };
+    const OLD = '2025-01-01T00:00:00Z';
+    const ver = (id, name, tags, created = OLD) => ({
+      id, name, metadata: { container: { tags } }, created_at: created, updated_at: OLD
+    });
+    const withDate = (version, created) => ({ ...version, created_at: created });
+    const run = (versions, incompleteCleanup = []) => strategy.execute({
+      packagesWithVersions: [{ package: pkgInfo, versions }],
+      excludedPatterns: [], includedPatterns: [],
+      thresholdDate: new Date('2025-01-10T00:00:00Z'),
+      wrapper: mockWrapper, owner: 'test-owner', debug: false, incompleteCleanup
+    });
+    const deletedIds = (result) => (result[0]?.versions ?? []).map(v => v.id);
+
+    beforeEach(() => {
+      mockWrapper.getManifestDigests.mockResolvedValue([]);
+      log.warn.mockClear();
+    });
+
+    it.each([
+      ['an unparsable string', 'not a date'],
+      ['an empty string', ''],
+      ['undefined', undefined],
+      ['null', null],
+    ])('does not select a tagged version whose date is %s', async (_label, created) => {
+      const result = await run([
+        ver(1, 'sha256:old', ['old']),
+        withDate(ver(2, 'sha256:bad', ['bad']), created)
+      ]);
+
+      expect(deletedIds(result)).toEqual([1]);
+    });
+
+    it('does not select untagged versions with an invalid date (layer or dangling)', async () => {
+      mockWrapper.getManifestDigests.mockImplementation(async (_o, _i, tag) => tag === 'old' ? ['sha256:bad-layer'] : []);
+
+      const result = await run([
+        ver(1, 'sha256:old', ['old']),
+        withDate(ver(2, 'sha256:bad-layer', []), 'garbage'),
+        withDate(ver(3, 'sha256:bad-dangling', []), null),
+        ver(4, 'sha256:good-dangling', [])
+      ]);
+
+      expect(deletedIds(result)).toEqual([1, 4]);
+    });
+
+    it('treats a tagged version with an invalid date as retained and protects its layers', async () => {
+      mockWrapper.getManifestDigests.mockImplementation(async (_o, _i, tag) =>
+        tag === 'old' || tag === 'bad' ? ['sha256:shared-layer'] : []);
+
+      const result = await run([
+        ver(1, 'sha256:old', ['old']),
+        withDate(ver(2, 'sha256:bad', ['bad']), 'not a date'),
+        ver(3, 'sha256:shared-layer', [])
+      ]);
+
+      expect(deletedIds(result)).toEqual([1]);
+    });
+
+    it('warns with the ids of the versions that were kept', async () => {
+      await run([
+        ver(1, 'sha256:old', ['old']),
+        withDate(ver(2, 'sha256:bad', ['bad']), 'not a date'),
+        withDate(ver(3, 'sha256:missing', []), undefined)
+      ]);
+
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('2 version(s) have a missing or invalid creation date'));
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('ids: 2, 3'));
+    });
+
+    it('lists at most ten ids in the warning', async () => {
+      const versions = Array.from({ length: 12 }, (_, i) => withDate(ver(i + 1, `sha256:bad-${i}`, [`bad-${i}`]), 'x'));
+      await run(versions);
+
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('12 version(s)'));
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('(2 more)'));
+    });
+
+    it('does not warn when every date is valid', async () => {
+      await run([ver(1, 'sha256:old', ['old']), ver(2, 'sha256:layer', [])]);
+
+      expect(log.warn).not.toHaveBeenCalled();
+    });
+
+    it('selects a version created exactly at the threshold, as before', async () => {
+      const result = await run([ver(1, 'sha256:edge', ['edge'], '2025-01-10T00:00:00Z')]);
+
+      expect(deletedIds(result)).toEqual([1]);
+    });
+  });
+
   describe('isValidMetadata', () => {
     it('should return true for valid metadata', () => {
       expect(strategy.isValidMetadata({ metadata: { container: { tags: ['v1.0.0'] } } })).toBe(true);

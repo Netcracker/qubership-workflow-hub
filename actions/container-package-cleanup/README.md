@@ -162,6 +162,7 @@ See [Examples](#examples) and the migration note below.
 - Filtering by `included-tags` / `included-patterns` and `excluded-tags` / `excluded-patterns` works on image tags (the two inputs of each pair are merged).
 - Wildcards (`*`) are supported for flexible tag matching.
 - All container image versions older than `threshold-days` and matching the tag filters will be deleted (unless `dry-run` is enabled).
+- A version whose creation date is missing or invalid is never deleted: its age cannot be judged, so it is kept and listed in a warning.
 
 ---
 

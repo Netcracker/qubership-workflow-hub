@@ -31,6 +31,13 @@ function collectDigests(target, ds) {
     else if (ds) target.add(ds);
 }
 
+// Creation time in milliseconds, or NaN when the date is missing or invalid.
+// null is checked explicitly, because new Date(null) is the 1970 epoch and would look "old enough".
+function creationTime(createdAt) {
+    if (createdAt === null || createdAt === undefined) return NaN;
+    return new Date(createdAt).getTime();
+}
+
 class ContainerStrategy extends AbstractPackageStrategy {
     constructor() {
         super();
@@ -90,6 +97,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             throw new Error(`Invalid threshold date: ${thresholdDate}`);
         }
 
+        const thresholdTime = thresholdDate.getTime();
         const limit = createLimiter(MANIFEST_CONCURRENCY);
 
         const excluded = excludedPatterns.map(p => p.toLowerCase());
@@ -118,8 +126,15 @@ class ContainerStrategy extends AbstractPackageStrategy {
             const imageLC = pkg.name.toLowerCase();
 
             // 1) Basic filtering by date and excludedPatterns for tagged/orphan
+            // A version without a valid creation date cannot be judged by age: it is always kept.
+            const invalidDateIds = [];
             const withoutExclude = pkg.versions.filter(v => {
-                if (new Date(v.createdAt) > thresholdDate) return false;
+                const created = creationTime(v.createdAt);
+                if (Number.isNaN(created)) {
+                    invalidDateIds.push(v.id);
+                    return false;
+                }
+                if (created > thresholdTime) return false;
                 const tags = v.metadata.container.tags.map(t => t.toLowerCase());
                 if (tags.includes('latest')) return false;
                 if (excluded.some(pat => tags.some(t => this.wildcardMatcher.match(t, pat)))) {
@@ -127,6 +142,11 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 }
                 return true;
             });
+            if (invalidDateIds.length > 0) {
+                const shown = invalidDateIds.slice(0, 10).join(', ');
+                const more = invalidDateIds.length > 10 ? `, ... (${invalidDateIds.length - 10} more)` : '';
+                log.warn(`[${pkg.name}] ${invalidDateIds.length} version(s) have a missing or invalid creation date and are kept (ids: ${shown}${more})`);
+            }
             log.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`, MODULE);
 
             // Show versions with their tags for debugging
@@ -270,7 +290,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
 
             // 6) Dangling: only by date, without tags, not in ordered and not in protectedDigests
             const danglingLayers = !untaggedDeletionSafe ? [] : pkg.versions.filter(v =>
-                new Date(v.createdAt) <= thresholdDate &&
+                creationTime(v.createdAt) <= thresholdTime &&
                 v.metadata.container.tags.length === 0 &&
                 !allDigests.has(v.name) &&
                 !protectedDigests.has(v.name) &&
