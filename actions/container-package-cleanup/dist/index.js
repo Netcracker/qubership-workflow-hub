@@ -24671,7 +24671,7 @@ ${formatted}${COLORS.reset}`;
 var action_logger_default = new Logger();
 
 // src/utils/wrapper.js
-var execPromise = (0, import_node_util.promisify)(import_node_child_process.exec);
+var execFilePromise = (0, import_node_util.promisify)(import_node_child_process.execFile);
 var MODULE = "wrapper.js";
 var OctokitWrapper = class {
   /**
@@ -24682,6 +24682,7 @@ var OctokitWrapper = class {
     this.octokit = getOctokit(authToken);
     this.authToken = authToken;
     this.dockerLoggedIn = false;
+    this.dockerLoginPromise = null;
     this.listingFailures = [];
     action_logger_default.setDebug(debug2);
   }
@@ -24691,6 +24692,15 @@ var OctokitWrapper = class {
    */
   async ensureDockerLogin() {
     if (this.dockerLoggedIn) return;
+    this.dockerLoginPromise ??= this.loginToDocker().finally(() => {
+      this.dockerLoginPromise = null;
+    });
+    await this.dockerLoginPromise;
+  }
+  /**
+   * Runs one `docker login` attempt. A failure is logged as a warning and does not throw.
+   */
+  async loginToDocker() {
     try {
       action_logger_default.info("Logging in to ghcr.io for docker manifest access...");
       await new Promise((resolve, reject) => {
@@ -24891,7 +24901,7 @@ var OctokitWrapper = class {
   async getManifestDigests(owner, packageName, tag) {
     await this.ensureDockerLogin();
     const ref = `ghcr.io/${owner}/${packageName}:${tag}`;
-    const { stdout } = await execPromise(`docker manifest inspect ${ref}`);
+    const { stdout } = await execFilePromise("docker", ["manifest", "inspect", ref]);
     const manifest = JSON.parse(stdout);
     const digests = (manifest.manifests ?? []).map((m) => m.digest);
     action_logger_default.debug(`[getManifestDigests] ${ref} \u2192 ${digests.length} digests: ${digests.join(", ") || "none (single-arch)"}`, MODULE);
@@ -25338,9 +25348,13 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
           });
         }
       }
+      const hasUntagged = pkg.versions.some((v) => v.metadata.container.tags.length === 0);
+      if (!hasUntagged) {
+        action_logger_default.debug(` [${pkg.name}] No untagged versions: manifest inspection skipped`, MODULE4);
+      }
       const protectedDigests = /* @__PURE__ */ new Set();
       const failedRetainedTags = [];
-      await Promise.all(Array.from(retainedTags).map(async (tag) => {
+      await Promise.all((hasUntagged ? Array.from(retainedTags) : []).map(async (tag) => {
         try {
           const ds = await limit(() => wrapper.getManifestDigests(ownerLC, imageLC, tag));
           collectDigests(protectedDigests, ds);
@@ -25355,7 +25369,8 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         incompleteCleanup.push({ package: pkg.name, failedTags: failedRetainedTags });
       }
       const digestMap = /* @__PURE__ */ new Map();
-      const digestPromises = taggedToDelete.map(async (v) => {
+      const candidatesToInspect = hasUntagged && untaggedDeletionSafe ? taggedToDelete : [];
+      const digestPromises = candidatesToInspect.map(async (v) => {
         const tagPromises = v.metadata.container.tags.map(async (tag) => {
           try {
             const ds = await limit(() => wrapper.getManifestDigests(ownerLC, imageLC, tag));
