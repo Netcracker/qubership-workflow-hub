@@ -84,7 +84,7 @@ permissions:
 
 jobs:
   npm-publish:
-    uses: Netcracker/qubership-workflow-hub/.github/workflows/re-npm-publish.yml@main
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-npm-publish.yml@cdfcd0a8abd7ba80d7a04a4e9debfb4e24995f1a # v3.0.1
     with:
       version: ${{ github.event_name == 'workflow_dispatch' && 
         inputs.version || '' }}

@@ -11,14 +11,14 @@ Update or create documentation for a specific GitHub Action or reusable workflow
 
 ## Arguments
 
-- `target` — action name (e.g. `metadata-action`) or reusable workflow name prefixed with `reusable/` (e.g. `reusable/docker-publish`). Required unless `--all` is used.
+- `target` — action name (e.g. `metadata-action`) or reusable workflow name prefixed with `reusable/` (e.g. `reusable/npm-publish`). Required unless `--all` is used.
 - `--all` — find all changed actions and reusable workflows from `git diff main..HEAD` and update their docs. No `target` needed.
 
 ## Examples
 
 ```text
 /doc-update metadata-action
-/doc-update reusable/docker-publish
+/doc-update reusable/npm-publish
 /doc-update --all
 ```
 

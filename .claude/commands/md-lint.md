@@ -18,7 +18,7 @@ Audit markdown files for markdownlint violations and fix them.
 ```text
 /md-lint
 /md-lint actions/my-action/README.md
-/md-lint actions/my-action/README.md docs/reusable/docker-publish.md
+/md-lint actions/my-action/README.md docs/reusable/npm-publish.md
 ```
 
 ## What this command does
