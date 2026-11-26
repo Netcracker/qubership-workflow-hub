@@ -41,21 +41,23 @@ net.Socket.prototype.connect = function (...args) {
   return Reflect.apply(connect, this, args);
 };
 
-const inspect = async command => {
-  const prefix = 'docker manifest inspect ghcr.io/fixture-owner/fixture-image:';
-  if (!command.startsWith(prefix)) throw new Error(`Unexpected command: ${command}`);
-  const tag = command.slice(prefix.length);
+const inspect = async (file, args = []) => {
+  const prefix = 'ghcr.io/fixture-owner/fixture-image:';
+  if (file !== 'docker' || args.length !== 3 || args[0] !== 'manifest' || args[1] !== 'inspect' || !String(args[2]).startsWith(prefix)) {
+    throw new Error(`Unexpected command: ${file} ${args.join(' ')}`);
+  }
+  const tag = args[2].slice(prefix.length);
   record({ operation: 'inspect', tag });
   if (data.failedTags.includes(tag)) throw new Error(`Fixture manifest unavailable: ${tag}`);
   if (!Object.hasOwn(data.manifests, tag)) throw new Error(`Unknown fixture tag: ${tag}`);
   return { stdout: JSON.stringify(data.manifests[tag]), stderr: '' };
 };
-const fixtureExec = (command, options, callback) => {
+const fixtureExecFile = (file, args, options, callback) => {
   const done = typeof options === 'function' ? options : callback;
-  inspect(command).then(result => done(null, result.stdout, result.stderr), error => done(error));
+  inspect(file, args).then(result => done(null, result.stdout, result.stderr), error => done(error));
 };
-fixtureExec[promisify.custom] = inspect;
-childProcess.exec = fixtureExec;
+fixtureExecFile[promisify.custom] = inspect;
+childProcess.execFile = fixtureExecFile;
 childProcess.spawn = (command, args) => {
   if (command !== 'docker' || JSON.stringify(args) !== JSON.stringify(['login', 'ghcr.io', '-u', 'x-access-token', '--password-stdin'])) {
     throw new Error(`Unexpected spawned command: ${command}`);
