@@ -31,10 +31,22 @@ function collectDigests(target, ds) {
     else if (ds) target.add(ds);
 }
 
+// GitHub returns created_at as a full ISO 8601 timestamp with a time zone, e.g. 2025-01-31T12:00:00Z.
+const ISO_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
 // Creation time in milliseconds, or NaN when the date is missing or invalid.
-// null is checked explicitly, because new Date(null) is the 1970 epoch and would look "old enough".
+// new Date() alone is too lenient: it turns false, 0 and null into the 1970 epoch, moves 2024-02-30 to
+// 1 March and reads a string without a time zone in the local zone. So the value must be a string in the
+// format above with a real calendar date and time (or a valid Date object).
 function creationTime(createdAt) {
-    if (createdAt === null || createdAt === undefined) return NaN;
+    if (createdAt instanceof Date) return createdAt.getTime();
+    if (typeof createdAt !== 'string') return NaN;
+    const match = ISO_TIMESTAMP.exec(createdAt);
+    if (!match) return NaN;
+    const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number);
+    if (month < 1 || month > 12) return NaN;
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    if (day < 1 || day > daysInMonth || hour > 23 || minute > 59 || second > 59) return NaN;
     return new Date(createdAt).getTime();
 }
 

@@ -855,6 +855,16 @@ describe('ContainerStrategy', () => {
       ['an empty string', ''],
       ['undefined', undefined],
       ['null', null],
+      ['false', false],
+      ['true', true],
+      ['zero', 0],
+      ['a number timestamp', 1735689600000],
+      ['a nonexistent day in February', '2024-02-30T00:00:00Z'],
+      ['a nonexistent day in June', '2025-06-31T00:00:00Z'],
+      ['month 13', '2025-13-01T00:00:00Z'],
+      ['hour 24', '2025-01-01T24:00:00Z'],
+      ['a date without a time', '2025-01-01'],
+      ['a time without a time zone', '2025-01-01T00:00:00'],
     ])('does not select a tagged version whose date is %s', async (_label, created) => {
       const result = await run([
         ver(1, 'sha256:old', ['old']),
@@ -913,6 +923,16 @@ describe('ContainerStrategy', () => {
       await run([ver(1, 'sha256:old', ['old']), ver(2, 'sha256:layer', [])]);
 
       expect(log.warn).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['milliseconds', '2025-01-01T00:00:00.000Z'],
+      ['a UTC offset', '2025-01-01T03:00:00+03:00'],
+      ['a leap day', '2024-02-29T00:00:00Z'],
+    ])('still selects an old version whose date has %s', async (_label, created) => {
+      const result = await run([withDate(ver(1, 'sha256:old', ['old']), created)]);
+
+      expect(deletedIds(result)).toEqual([1]);
     });
 
     it('selects a version created exactly at the threshold, as before', async () => {
