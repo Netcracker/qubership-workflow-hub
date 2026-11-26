@@ -1,6 +1,6 @@
 export const scenarios = [
   'retained-images', 'dry-run', 'manifest-failure', 'deleted-manifest-failure',
-  'single-arch', 'empty', 'maven', 'maven-zero', 'maven-excluded-all', 'maven-migrated', 'invalid-days', 'invalid-versions'
+  'single-arch', 'tagged-only', 'empty', 'maven', 'maven-zero', 'maven-excluded-all', 'maven-migrated', 'invalid-days', 'invalid-versions'
 ];
 
 export function fixture(scenario) {
@@ -32,6 +32,8 @@ export function fixture(scenario) {
     version(23, '1.1-SNAPSHOT', [], new Date(Date.now() - 50 * 86400000).toISOString()),
     version(24, '1.0', [])
   ];
+  // a package without untagged versions: nothing can be inspected or protected
+  if (scenario === 'tagged-only') versions = [tagged[0], tagged[1]];
   if (scenario === 'single-arch') {
     versions = [tagged[0], tagged[1], layers[5]];
     for (const tag of ['dev-old', 'dev-alias', 'dev-fresh']) manifests[tag] = { schemaVersion: 2, config: { digest: 'sha256:config' }, layers: [] };
