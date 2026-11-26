@@ -16,7 +16,7 @@ const wrapperFailing = (failures = {}) => ({
   })
 });
 // the counters without the per-version outcomes
-const counters = ({ outcomes: _outcomes, ...rest }) => rest;
+const counters = ({ selected, deleted, skipped, failed, simulated }) => ({ selected, deleted, skipped, failed, simulated });
 const outcomesOf = (progress) => Object.fromEntries(progress.outcomes);
 const run = (ids, wrapper, extra = {}) => {
   const progress = createDeletionProgress(ids.length);
