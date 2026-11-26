@@ -120,6 +120,33 @@ describe('entry point: retention input validation', () => {
     expect(wrapperInstance.listPackages).toHaveBeenCalled();
   });
 
+  it.each([
+    ['dry-run', 'ture'],
+    ['dry-run', 'yes'],
+    ['dry-run', '1'],
+    ['dry-run', 'on'],
+    ['debug', 'yes'],
+    ['debug', '1'],
+  ])('fails before any API call for %s set to %j', async (name, value) => {
+    await runEntryPoint({ 'package-type': 'container', 'threshold-days': '7', debug: 'false', [name]: value });
+
+    expect(mockCore.setFailed).toHaveBeenCalledTimes(1);
+    expect(mockCore.setFailed.mock.calls[0][0]).toMatch(new RegExp(`'${name}'`));
+    expectNothingTouched();
+  });
+
+  it.each([
+    ['true'],
+    ['TRUE'],
+    ['False'],
+    [''],
+  ])('accepts %j for dry-run and debug and continues to the API', async (value) => {
+    await runEntryPoint({ 'package-type': 'container', 'threshold-days': '7', 'dry-run': value, debug: value });
+
+    expect(mockCore.setFailed).not.toHaveBeenCalled();
+    expect(wrapperInstance.listPackages).toHaveBeenCalled();
+  });
+
   it('fails for an invalid threshold-days on maven too', async () => {
     await runEntryPoint({ 'package-type': 'maven', 'threshold-days': 'abc', 'threshold-versions': '1', debug: 'false' });
 

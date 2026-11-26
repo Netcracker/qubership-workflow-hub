@@ -5,7 +5,7 @@ import ContainerReport from "./reports/containerReport.js";
 import MavenReport from "./reports/mavenReport.js";
 import { getStrategy } from "./strategy/strategyRegistry.js";
 import { deletePackageVersion } from './utils/deleteAction.js';
-import { parseNonNegativeInt, parseIntWithDefault, parseList } from './utils/inputs.js';
+import { parseNonNegativeInt, parseIntWithDefault, parseBooleanInput, parseList } from './utils/inputs.js';
 import { resolveFilters } from './utils/filters.js';
 import { writeBlockedByExclusionSummary } from './reports/blockedByExclusion.js';
 import { writeListingFailuresSummary } from './reports/listingFailures.js';
@@ -13,8 +13,16 @@ import log from "@qubership/action-logger";
 
 async function run() {
 
-  const isDebug = core.getInput("debug").toLowerCase() === "true";
-  const dryRun = core.getInput("dry-run").toLowerCase() === "true";
+  // dry-run is a safety switch: a mistyped value must fail the action instead of silently selecting real deletion
+  let isDebug;
+  let dryRun;
+  try {
+    isDebug = parseBooleanInput('debug', core.getInput("debug"));
+    dryRun = parseBooleanInput('dry-run', core.getInput("dry-run"));
+  } catch (error) {
+    core.setFailed(error.message);
+    return;
+  }
 
   const package_type = core.getInput("package-type").toLowerCase();
 

@@ -206,7 +206,7 @@ on:
 | `excluded-tags` | `""` | Never delete versions matching these. Merged with `excluded-patterns`; exclusions always win |
 | `included-patterns` | `""` | Merged with `included-tags`. For Maven, when no include filter is given: `*SNAPSHOT*` applied automatically |
 | `excluded-patterns` | `""` | Merged with `excluded-tags`. Never delete versions matching these patterns |
-| `dry-run` | `false` | Print what would be deleted without actually deleting |
-| `debug` | `true` | Extra debug logs — set `false` in production to reduce noise |
+| `dry-run` | `false` | Print what would be deleted without actually deleting. Accepts `true` or `false`; any other value fails the action |
+| `debug` | `true` | Extra debug logs — set `false` in production to reduce noise. Accepts `true` or `false`; any other value fails the action |
 | `batch-size` | `15` | Number of versions deleted in parallel per package. Positive integer; empty or `0` uses the default. Any other value (negative, `1.5`, non-numeric) fails the action before anything is deleted |
 | `max-errors` | `5` | Stop after this many errors. Positive integer; empty or `0` uses the default. Any other value fails the action before anything is deleted |

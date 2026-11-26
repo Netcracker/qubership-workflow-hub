@@ -37,6 +37,26 @@ function parseIntWithDefault(name, raw, defaultValue) {
 }
 
 /**
+ * Strictly parses a boolean switch input.
+ * Only "true" and "false" (any letter case) are accepted. An empty value selects the default,
+ * so a mistyped value (for example "ture" or "yes") can never silently select the opposite mode.
+ *
+ * @param {string} name - input name, used in the error message
+ * @param {string} raw - raw input value
+ * @param {boolean} [defaultValue=false] - value used for an empty input
+ * @returns {boolean}
+ * @throws {Error} if the value is neither empty, "true" nor "false"
+ */
+function parseBooleanInput(name, raw, defaultValue = false) {
+  const value = String(raw ?? "").trim();
+  if (value === "") return defaultValue;
+  const lower = value.toLowerCase();
+  if (lower === "true") return true;
+  if (lower === "false") return false;
+  throw new Error(`Invalid '${name}' input: "${value}". Expected "true" or "false".`);
+}
+
+/**
  * Parses a comma-separated list input: items are trimmed and empty items are skipped.
  *
  * @param {string} raw - raw input value
@@ -49,4 +69,4 @@ function parseList(raw) {
     .filter(item => item.length > 0);
 }
 
-export { parseNonNegativeInt, parseIntWithDefault, parseList };
+export { parseNonNegativeInt, parseIntWithDefault, parseBooleanInput, parseList };
