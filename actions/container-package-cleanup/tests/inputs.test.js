@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseNonNegativeInt, parseIntWithDefault } from '../src/utils/inputs.js';
+import { parseNonNegativeInt, parseIntWithDefault, parseBooleanInput } from '../src/utils/inputs.js';
 
 describe('parseNonNegativeInt', () => {
   it.each([['0', 0], ['7', 7], ['14', 14], ['007', 7], [' 30 ', 30]])('accepts %j', (raw, expected) => {
@@ -30,5 +30,20 @@ describe('parseIntWithDefault', () => {
 
   it('rejects values beyond the safe integer range', () => {
     expect(() => parseIntWithDefault('max-errors', '99999999999999999999', 5)).toThrow(/too large/);
+  });
+});
+
+describe('parseBooleanInput', () => {
+  it.each([['true', true], ['TRUE', true], ['True', true], [' true ', true], ['false', false], ['False', false], ['FALSE', false]])('accepts %j', (raw, expected) => {
+    expect(parseBooleanInput('dry-run', raw)).toBe(expected);
+  });
+
+  it.each([[''], ['   '], [undefined], [null]])('uses the default for %j', (raw) => {
+    expect(parseBooleanInput('dry-run', raw)).toBe(false);
+    expect(parseBooleanInput('dry-run', raw, true)).toBe(true);
+  });
+
+  it.each([['ture'], ['yes'], ['no'], ['y'], ['on'], ['off'], ['1'], ['0'], ['truee'], ['tru']])('rejects %j', (raw) => {
+    expect(() => parseBooleanInput('dry-run', raw)).toThrow(/Invalid 'dry-run' input/);
   });
 });

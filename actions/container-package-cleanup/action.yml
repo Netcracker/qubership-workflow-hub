@@ -14,10 +14,10 @@ inputs:
     description: "A comma-separated list of tags to exclude from deletion. Merged with excluded-patterns."
     default: ""
   debug:
-    description: "Enable debug mode."
+    description: "Enable debug mode. Accepts true or false in any letter case; an empty value means false; any other value fails the action."
     default: "true"
   dry-run:
-    description: "Enable dry run mode."
+    description: "Enable dry run mode. Accepts true or false in any letter case; an empty value means false; any other value fails the action."
     default: "false"
   package-type:
     description: "Type of cleanup to perform (e.g., 'docker', 'container')."
