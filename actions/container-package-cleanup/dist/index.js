@@ -25239,8 +25239,16 @@ function collectDigests(target, ds) {
   });
   else if (ds) target.add(ds);
 }
+var ISO_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 function creationTime(createdAt) {
-  if (createdAt === null || createdAt === void 0) return NaN;
+  if (createdAt instanceof Date) return createdAt.getTime();
+  if (typeof createdAt !== "string") return NaN;
+  const match = ISO_TIMESTAMP.exec(createdAt);
+  if (!match) return NaN;
+  const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number);
+  if (month < 1 || month > 12) return NaN;
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (day < 1 || day > daysInMonth || hour > 23 || minute > 59 || second > 59) return NaN;
   return new Date(createdAt).getTime();
 }
 var ContainerStrategy = class extends abstractPackageStrategy_default {
