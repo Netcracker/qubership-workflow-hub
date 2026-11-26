@@ -1,9 +1,9 @@
 import * as github from "@actions/github";
-import { exec, spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import log from "@qubership/action-logger";
 
-const execPromise = promisify(exec);
+const execFilePromise = promisify(execFile);
 
 const MODULE = 'wrapper.js';
 
@@ -17,6 +17,8 @@ class OctokitWrapper {
     this.octokit = github.getOctokit(authToken);
     this.authToken = authToken;
     this.dockerLoggedIn = false;
+    // the login attempt in progress: concurrent callers wait for it instead of starting their own
+    this.dockerLoginPromise = null;
     // visibilities that could not be listed by the last organization listing
     this.listingFailures = [];
     log.setDebug(debug);
@@ -28,6 +30,15 @@ class OctokitWrapper {
    */
   async ensureDockerLogin() {
     if (this.dockerLoggedIn) return;
+    // loginToDocker never rejects; the attempt is forgotten once it settles, so a failed login is retried by the next call
+    this.dockerLoginPromise ??= this.loginToDocker().finally(() => { this.dockerLoginPromise = null; });
+    await this.dockerLoginPromise;
+  }
+
+  /**
+   * Runs one `docker login` attempt. A failure is logged as a warning and does not throw.
+   */
+  async loginToDocker() {
     try {
       log.info('Logging in to ghcr.io for docker manifest access...');
       await new Promise((resolve, reject) => {
@@ -235,8 +246,10 @@ class OctokitWrapper {
   async getManifestDigests(owner, packageName, tag) {
     await this.ensureDockerLogin();
     const ref = `ghcr.io/${owner}/${packageName}:${tag}`;
-    // Run docker manifest inspect and parse JSON
-    const { stdout } = await execPromise(`docker manifest inspect ${ref}`);
+    // We still run `docker manifest inspect`: the registry is the only source of which untagged
+    // versions an image references. execFile only changes how it is started: no shell is involved
+    // and the reference is passed as a single argument.
+    const { stdout } = await execFilePromise('docker', ['manifest', 'inspect', ref]);
     const manifest = JSON.parse(stdout);
     const digests = (manifest.manifests ?? []).map(m => m.digest);
     log.debug(`[getManifestDigests] ${ref} → ${digests.length} digests: ${digests.join(', ') || 'none (single-arch)'}`, MODULE);

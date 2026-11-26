@@ -1,5 +1,6 @@
 // tests/wrapper.test.js
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { setImmediate } from 'node:timers';
 
 // Mock @actions/github
 const mockGetOctokit = jest.fn();
@@ -10,7 +11,7 @@ jest.unstable_mockModule('@actions/github', () => ({
 // Mock child_process
 const mockSpawn = jest.fn();
 jest.unstable_mockModule('node:child_process', () => ({
-  exec: jest.fn(),
+  execFile: jest.fn(),
   spawn: mockSpawn
 }));
 
@@ -26,6 +27,7 @@ jest.unstable_mockModule('@qubership/action-logger', () => ({
 }));
 
 const { default: OctokitWrapper } = await import('../src/utils/wrapper.js');
+const { default: log } = await import('@qubership/action-logger');
 
 describe('OctokitWrapper', () => {
   const fakeToken = 'fake-token';
@@ -185,6 +187,65 @@ describe('OctokitWrapper', () => {
 
       const digests = await wrapper.getManifestDigests('owner', 'pkg', 'tag');
       expect(digests).toEqual(['sha1', 'sha2']);
+    });
+
+    it('runs docker without a shell and passes the reference as one argument', async () => {
+      mockExecPromise.mockResolvedValue({ stdout: '{}' });
+
+      await wrapper.getManifestDigests('owner', 'pkg', 'v1; echo hacked');
+
+      expect(mockExecPromise).toHaveBeenCalledWith('docker', ['manifest', 'inspect', 'ghcr.io/owner/pkg:v1; echo hacked']);
+    });
+  });
+
+  describe('ensureDockerLogin', () => {
+    // a fake `docker login` process that finishes with the given exit code
+    const fakeLogin = (code) => {
+      const handlers = {};
+      const proc = {
+        stdin: { write: jest.fn(), end: jest.fn() },
+        on: (event, handler) => { handlers[event] = handler; return proc; }
+      };
+      setImmediate(() => handlers.close(code));
+      return proc;
+    };
+
+    beforeEach(() => {
+      mockSpawn.mockReset();
+      log.warn.mockClear();
+      wrapper.dockerLoggedIn = false;
+    });
+
+    it('runs one docker login for parallel calls', async () => {
+      mockSpawn.mockImplementation(() => fakeLogin(0));
+
+      await Promise.all(Array.from({ length: 8 }, () => wrapper.ensureDockerLogin()));
+
+      expect(mockSpawn).toHaveBeenCalledTimes(1);
+      expect(mockSpawn).toHaveBeenCalledWith('docker', ['login', 'ghcr.io', '-u', 'x-access-token', '--password-stdin'], expect.anything());
+      expect(wrapper.dockerLoggedIn).toBe(true);
+    });
+
+    it('does not log in again once logged in', async () => {
+      mockSpawn.mockImplementation(() => fakeLogin(0));
+
+      await wrapper.ensureDockerLogin();
+      await wrapper.ensureDockerLogin();
+
+      expect(mockSpawn).toHaveBeenCalledTimes(1);
+    });
+
+    it('shares a failed attempt between parallel calls and retries on the next call', async () => {
+      mockSpawn.mockImplementationOnce(() => fakeLogin(1)).mockImplementationOnce(() => fakeLogin(0));
+
+      await Promise.all(Array.from({ length: 3 }, () => wrapper.ensureDockerLogin()));
+      expect(mockSpawn).toHaveBeenCalledTimes(1);
+      expect(wrapper.dockerLoggedIn).toBe(false);
+      expect(log.warn).toHaveBeenCalledTimes(1);
+
+      await wrapper.ensureDockerLogin();
+      expect(mockSpawn).toHaveBeenCalledTimes(2);
+      expect(wrapper.dockerLoggedIn).toBe(true);
     });
   });
 });

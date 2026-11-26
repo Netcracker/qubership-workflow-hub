@@ -289,7 +289,12 @@ untagged version of that package in the current run. Tagged versions selected fo
 The affected packages and tags are listed in the warning log and in the job summary under *Incomplete cleanup*;
 the skipped untagged versions are picked up by a later run once inspection works again.
 
-To limit load, up to 8 `docker manifest inspect` calls run in parallel.
+Manifests are inspected only for packages that have untagged versions, because only those can be affected.
+A package without untagged versions is not inspected, so a registry error does not appear under *Incomplete cleanup* for it.
+Once the manifest of a retained image cannot be read, the manifests of the versions selected for deletion are not inspected
+either, because no untagged version is deleted in that run.
+
+To limit load, up to 8 `docker manifest inspect` calls run in parallel, and the `docker login` to `ghcr.io` runs once.
 
 ### Package listing failures
 

@@ -95,6 +95,7 @@ jobs:
           - scenario: manifest-failure
           - scenario: deleted-manifest-failure
           - scenario: single-arch
+          - scenario: tagged-only
           - scenario: empty
           - scenario: maven
             package-type: maven

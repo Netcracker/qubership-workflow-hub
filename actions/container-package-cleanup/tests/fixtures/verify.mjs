@@ -20,7 +20,7 @@ if (invalid) {
   assert.ok(requests.some(r => r.path === '/users/fixture-owner'), 'The real wrapper must query the fixture');
   const expected = {
     'retained-images': [1, 12, 16], 'dry-run': [], 'manifest-failure': [1],
-    'deleted-manifest-failure': [1, 12, 16], 'single-arch': [1, 16], empty: [],
+    'deleted-manifest-failure': [1, 12, 16], 'single-arch': [1, 16], 'tagged-only': [1], empty: [],
     maven: [22, 23], 'maven-zero': [21, 22, 23], 'maven-excluded-all': [], 'maven-migrated': [22, 23]
   }[scenario];
   const deleted = requests.filter(r => r.method === 'DELETE').map(r => Number(r.path.split('/').at(-1))).sort((a, b) => a - b);
@@ -35,8 +35,16 @@ if (invalid) {
       if (blocked) assert.ok(summary.includes('<code>*.*</code>'), 'The responsible pattern must be named in the report');
     }
   } else {
-    assert.ok(docker.some(r => r.operation === 'login'), 'Docker login was not exercised');
-    assert.ok(docker.some(r => r.operation === 'inspect' && r.tag === 'dev-fresh'), 'Retained-image manifest was not inspected');
+    if (scenario === 'tagged-only') {
+      assert.deepEqual(docker, [], 'A package without untagged versions must not run any Docker operation');
+    } else {
+      // parallel inspections share one login
+      assert.equal(docker.filter(r => r.operation === 'login').length, 1, 'Docker login must run exactly once');
+      assert.ok(docker.some(r => r.operation === 'inspect' && r.tag === 'dev-fresh'), 'Retained-image manifest was not inspected');
+      const candidateInspected = docker.some(r => r.operation === 'inspect' && r.tag === 'dev-old');
+      if (scenario === 'manifest-failure') assert.ok(!candidateInspected, 'Candidates must not be inspected once a retained manifest failed');
+      if (scenario === 'retained-images') assert.ok(candidateInspected, 'Candidates must be inspected when untagged versions can be deleted');
+    }
     const summary = fs.readFileSync(path.join(directory, 'summary.md'), 'utf8');
     assert.ok(summary.includes('Container Package Cleanup Summary'), 'Cleanup summary is missing');
     if (scenario === 'manifest-failure') {

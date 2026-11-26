@@ -556,6 +556,11 @@ describe('ContainerStrategy', () => {
               id: 101, name: 'sha256:abc123',
               metadata: { container: { tags: ['v1.0.0'] } },
               created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
+            },
+            {
+              id: 102, name: 'sha256:untagged',
+              metadata: { container: { tags: [] } },
+              created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z'
             }
           ]
         }
@@ -742,10 +747,82 @@ describe('ContainerStrategy', () => {
 
       const versions = Array.from({ length: 40 }, (_, i) =>
         ver(i + 1, `sha256:fresh-${i}`, [`fresh-${i}`], '2025-01-20T00:00:00Z'));
+      // inspections only run for packages that have untagged versions
+      versions.push(ver(100, 'sha256:untagged', []));
       await run(versions);
 
       expect(mockWrapper.getManifestDigests).toHaveBeenCalledTimes(40);
       expect(maxActive).toBeLessThanOrEqual(8);
+    });
+  });
+
+  describe('execute - skipped manifest inspections', () => {
+    const pkgInfo = {
+      id: 1, name: 'test-image', package_type: 'container',
+      repository: { full_name: 'owner/repo' },
+      created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-02T00:00:00Z'
+    };
+    const OLD = '2025-01-01T00:00:00Z';
+    const FRESH = '2025-01-20T00:00:00Z';
+    const ver = (id, name, tags, created = OLD) => ({
+      id, name, metadata: { container: { tags } }, created_at: created, updated_at: created
+    });
+    const run = (versions, incompleteCleanup = []) => strategy.execute({
+      packagesWithVersions: [{ package: pkgInfo, versions }],
+      excludedPatterns: [], includedPatterns: [],
+      thresholdDate: new Date('2025-01-10T00:00:00Z'),
+      wrapper: mockWrapper, owner: 'test-owner', debug: false, incompleteCleanup
+    });
+    const deletedIds = (result) => (result[0]?.versions ?? []).map(v => v.id);
+    const inspectedTags = () => mockWrapper.getManifestDigests.mock.calls.map(c => c[2]).sort();
+
+    it('does not inspect anything when the package has no untagged versions', async () => {
+      mockWrapper.getManifestDigests.mockRejectedValue(new Error('registry down'));
+      const incompleteCleanup = [];
+
+      const result = await run([
+        ver(1, 'sha256:old', ['old']),
+        ver(2, 'sha256:fresh', ['fresh'], FRESH),
+        ver(3, 'sha256:latest', ['latest'])
+      ], incompleteCleanup);
+
+      expect(mockWrapper.getManifestDigests).not.toHaveBeenCalled();
+      expect(deletedIds(result)).toEqual([1]);
+      expect(incompleteCleanup).toEqual([]);
+    });
+
+    it('does not inspect the candidates when a retained manifest blocks untagged deletion', async () => {
+      mockWrapper.getManifestDigests.mockImplementation(async (_o, _i, tag) => {
+        if (tag === 'fresh') throw new Error('registry down');
+        return ['sha256:layer'];
+      });
+      const incompleteCleanup = [];
+
+      const result = await run([
+        ver(1, 'sha256:old', ['old', 'old-alias']),
+        ver(2, 'sha256:fresh', ['fresh'], FRESH),
+        ver(3, 'sha256:layer', []),
+        ver(4, 'sha256:dangling', [])
+      ], incompleteCleanup);
+
+      expect(inspectedTags()).toEqual(['fresh']);
+      expect(deletedIds(result)).toEqual([1]);
+      expect(incompleteCleanup).toEqual([{ package: 'test-image', failedTags: [{ tag: 'fresh', reason: 'registry down' }] }]);
+    });
+
+    it('inspects retained images and candidates when untagged versions can be deleted', async () => {
+      mockWrapper.getManifestDigests.mockImplementation(async (_o, _i, tag) =>
+        tag === 'old' ? ['sha256:layer'] : ['sha256:kept-layer']);
+
+      const result = await run([
+        ver(1, 'sha256:old', ['old']),
+        ver(2, 'sha256:fresh', ['fresh'], FRESH),
+        ver(3, 'sha256:layer', []),
+        ver(4, 'sha256:kept-layer', [])
+      ]);
+
+      expect(inspectedTags()).toEqual(['fresh', 'old']);
+      expect(deletedIds(result)).toEqual([1, 3]);
     });
   });
 
