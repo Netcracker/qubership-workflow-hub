@@ -25239,6 +25239,10 @@ function collectDigests(target, ds) {
   });
   else if (ds) target.add(ds);
 }
+function creationTime(createdAt) {
+  if (createdAt === null || createdAt === void 0) return NaN;
+  return new Date(createdAt).getTime();
+}
 var ContainerStrategy = class extends abstractPackageStrategy_default {
   constructor() {
     super();
@@ -25291,6 +25295,7 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
     if (!(thresholdDate instanceof Date) || Number.isNaN(thresholdDate.getTime())) {
       throw new Error(`Invalid threshold date: ${thresholdDate}`);
     }
+    const thresholdTime = thresholdDate.getTime();
     const limit = createLimiter(MANIFEST_CONCURRENCY);
     const excluded = excludedPatterns.map((p) => p.toLowerCase());
     const included = includedPatterns.map((p) => p.toLowerCase());
@@ -25311,8 +25316,14 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         action_logger_default.debug(` [${pkg.name}] Protected tags: ${Array.from(protectedTags).join(", ")}`, MODULE4);
       }
       const imageLC = pkg.name.toLowerCase();
+      const invalidDateIds = [];
       const withoutExclude = pkg.versions.filter((v) => {
-        if (new Date(v.createdAt) > thresholdDate) return false;
+        const created = creationTime(v.createdAt);
+        if (Number.isNaN(created)) {
+          invalidDateIds.push(v.id);
+          return false;
+        }
+        if (created > thresholdTime) return false;
         const tags = v.metadata.container.tags.map((t) => t.toLowerCase());
         if (tags.includes("latest")) return false;
         if (excluded.some((pat) => tags.some((t) => this.wildcardMatcher.match(t, pat)))) {
@@ -25320,6 +25331,11 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         }
         return true;
       });
+      if (invalidDateIds.length > 0) {
+        const shown = invalidDateIds.slice(0, 10).join(", ");
+        const more = invalidDateIds.length > 10 ? `, ... (${invalidDateIds.length - 10} more)` : "";
+        action_logger_default.warn(`[${pkg.name}] ${invalidDateIds.length} version(s) have a missing or invalid creation date and are kept (ids: ${shown}${more})`);
+      }
       action_logger_default.debug(` [${pkg.name}] After date & exclude filter: ${withoutExclude.length} versions`, MODULE4);
       if (withoutExclude.length > 0 && withoutExclude.length <= 10) {
         withoutExclude.forEach((v) => {
@@ -25426,7 +25442,7 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       });
       const orderedNames = new Set(ordered.map((o) => o.name));
       const danglingLayers = !untaggedDeletionSafe ? [] : pkg.versions.filter(
-        (v) => new Date(v.createdAt) <= thresholdDate && v.metadata.container.tags.length === 0 && !allDigests.has(v.name) && !protectedDigests.has(v.name) && !orderedNames.has(v.name)
+        (v) => creationTime(v.createdAt) <= thresholdTime && v.metadata.container.tags.length === 0 && !allDigests.has(v.name) && !protectedDigests.has(v.name) && !orderedNames.has(v.name)
       );
       if (debug2) {
         if (danglingLayers.length > 0) {
