@@ -248,11 +248,17 @@ class ContainerStrategy extends AbstractPackageStrategy {
                 for (const result of results) {
                     if (result.success) collectDigests(digs, result.digests);
                 }
-                return { versionName: v.name, digests: digs };
+                // A failed read of any tag leaves the layers of this image uncertain
+                return { versionName: v.name, versionId: v.id, digests: digs, complete: results.every(r => r.success) };
             });
             const digestResults = await Promise.all(digestPromises);
+            const unresolvedCandidates = [];
             for (const result of digestResults) {
                 digestMap.set(result.versionName, result.digests);
+                if (!result.complete) unresolvedCandidates.push(result.versionId);
+            }
+            if (unresolvedCandidates.length > 0) {
+                log.warn(`[${pkg.name}] The manifest of ${unresolvedCandidates.length} image(s) selected for deletion could not be fully read. Untagged versions of this package are deleted only after these images were deleted.`);
             }
 
             // All digests referenced by the tagged candidates: one lookup instead of scanning digestMap per version
@@ -277,10 +283,16 @@ class ContainerStrategy extends AbstractPackageStrategy {
             // 5) Sorting tagged + their archLayers.
             // A layer goes right after the FIRST tagged version (taggedToDelete order) that references it,
             // layers of one version keep the archLayers order, and a repeated layer name is taken once.
+            // The ids of ALL candidate images that reference a layer are kept in dependsOn: the layer may be
+            // deleted only after every one of them was deleted.
             const firstOwner = new Map();
+            const ownerIdsOf = new Map();
             taggedToDelete.forEach((v, index) => {
                 for (const digest of digestMap.get(v.name) || []) {
                     if (!firstOwner.has(digest)) firstOwner.set(digest, index);
+                    const ids = ownerIdsOf.get(digest);
+                    if (ids) ids.push(v.id);
+                    else ownerIdsOf.set(digest, [v.id]);
                 }
             });
             const layersOf = taggedToDelete.map(() => []);
@@ -288,7 +300,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             for (const layer of archLayers) {
                 const owner = firstOwner.get(layer.name);
                 if (owner !== undefined && !used.has(layer.name)) {
-                    layersOf[owner].push(layer);
+                    layersOf[owner].push({ ...layer, dependsOn: ownerIdsOf.get(layer.name) });
                     used.add(layer.name);
                 }
             }
@@ -321,7 +333,9 @@ class ContainerStrategy extends AbstractPackageStrategy {
             if (toDelete.length > 0) {
                 return {
                     package: { id: pkg.id, name: pkg.name, type: pkg.packageType },
-                    versions: toDelete
+                    versions: toDelete,
+                    // images whose manifest could not be fully read: every untagged version waits for them (set once per package)
+                    ...(unresolvedCandidates.length > 0 ? { unresolvedCandidates } : {})
                 };
             }
             return null;

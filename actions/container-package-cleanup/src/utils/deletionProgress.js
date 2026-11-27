@@ -3,7 +3,8 @@
  * The caller creates the object and passes it to `deletePackageVersion`, so the numbers stay available
  * even when the run stops with an error (the thrown error carries no statuses).
  *
- * `outcomes` maps a version id to "deleted", "skipped", "failed" or "simulated" (dry run).
+ * `outcomes` maps a version id to "deleted", "skipped", "blocked" (kept because an image it may belong to was
+ * not deleted), "failed" or "simulated" (dry run).
  * A selected version without an entry was never reached.
  *
  * @param {number} [selected=0] - number of versions selected for deletion
@@ -18,10 +19,10 @@ function createDeletionProgress(selected = 0) {
  *
  * @param {ReturnType<typeof createDeletionProgress>} progress
  * @param {string|number} versionId
- * @param {"deleted"|"skipped"|"failed"|"simulated"} outcome
+ * @param {"deleted"|"skipped"|"blocked"|"failed"|"simulated"} outcome
  */
 function recordOutcome(progress, versionId, outcome) {
-  progress[outcome]++;
+  progress[outcome === "blocked" ? "skipped" : outcome]++;
   progress.outcomes?.set(versionId, outcome);
 }
 

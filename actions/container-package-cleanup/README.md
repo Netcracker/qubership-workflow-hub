@@ -282,6 +282,18 @@ fresh versions, `latest`, versions matching `excluded-tags`, and versions not ma
 The untagged versions referenced by retained images are never deleted, even if they are older than `threshold-days`
 or are also referenced by an image that is being deleted.
 
+### Untagged versions of a deleted image
+
+The action deletes the images selected for deletion first and the untagged versions of the package afterwards.
+An untagged version is deleted only after every image it may belong to was deleted successfully: the images that
+reference it and the images whose manifest could not be fully read (a failed read of any one tag counts).
+If such an image was not deleted (an error, a `404` or the download limit), the untagged version is kept: the log
+has a warning, the job summary marks it *kept: its image was not deleted* and it counts as *Skipped Versions*.
+A later run deletes what is left once the image is gone or can be deleted.
+
+The order of the requests differs from earlier versions (all images, then the untagged versions). The set of deleted
+versions of a successful run is the same.
+
 ### Manifest inspection failure
 
 If the manifest of a retained image cannot be inspected (for example a registry or authentication error),

@@ -52,15 +52,27 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
 
     log.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
 
-    for (const { package: pkg, versions } of filtered) {
+    for (const { package: pkg, versions, unresolvedCandidates = [] } of filtered) {
       const normalizedPackageName = (pkg.name || "").toLowerCase();
       const packageType = pkg.type; // "container" | "maven" ...
 
       log.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
       log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
 
-      for (let i = 0; i < versions.length; i += batchSize) {
-        const batch = versions.slice(i, i + batchSize);
+      // Images (versions with tags) go first, then the untagged versions. An untagged version may be a layer of an
+      // image, so it is deleted only after every image it may belong to was deleted successfully:
+      // the images listed in its dependsOn and the images whose manifest could not be fully read.
+      const isImage = (version) => (version.metadata?.container?.tags ?? []).length > 0;
+      const phases = [versions.filter(isImage), versions.filter(version => !isImage(version))];
+      const imagesNotDeleted = (version) => [...(version.dependsOn ?? []), ...unresolvedCandidates]
+        .filter(id => progress.outcomes.get(id) !== "deleted");
+      const batches = phases.flatMap((phaseVersions) => {
+        const chunks = [];
+        for (let i = 0; i < phaseVersions.length; i += batchSize) chunks.push(phaseVersions.slice(i, i + batchSize));
+        return chunks;
+      });
+
+      for (const batch of batches) {
 
         const promises = batch.map(async (version) => {
           const tags = version.metadata?.container?.tags ?? [];
@@ -69,6 +81,16 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
             log.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
             recordOutcome(progress, version.id, "simulated");
             return { success: true, dryRun: true };
+          }
+
+          if (!isImage(version)) {
+            const waiting = imagesNotDeleted(version);
+            if (waiting.length > 0) {
+              const shown = waiting.slice(0, 5).join(", ") + (waiting.length > 5 ? `, ... (${waiting.length - 5} more)` : "");
+              log.warn(`Kept ${normalizedPackageName} v:${version.id} (${detail}) - the image(s) it may belong to were not deleted: ${shown}`);
+              recordOutcome(progress, version.id, "blocked");
+              return { success: false, skipped: true, blocked: true };
+            }
           }
 
           try {

@@ -106,15 +106,31 @@ describe('cleanup flow: strategy -> delete executor', () => {
     expect(wrapper.deletePackageVersion).toHaveBeenCalledTimes(2);
   });
 
-  it('starts all deletes of a batch together when batchSize covers them', async () => {
-    const toDelete = await select(versions, manifests);
+  it('starts all image deletes of a batch together when batchSize covers them', async () => {
+    const toDelete = await select([ver(301, 'sha256:a', ['a']), ver(302, 'sha256:b', ['b'])], {});
     const releases = holdDeletes();
 
     const done = deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize: 2 });
     await tick();
-    expect(deletedIds().sort()).toEqual([101, 103]);
+    expect(deletedIds().sort()).toEqual([301, 302]);
 
     releases.forEach(release => release());
+    await done;
+  });
+
+  it('starts the layers only after the image deletes have finished, even when batchSize covers them all', async () => {
+    const toDelete = await select(versions, manifests);
+    const releases = holdDeletes();
+
+    const done = deletePackageVersion(toDelete, { wrapper, owner: 'test-owner', isOrganization: true, batchSize: 15 });
+    await tick();
+    expect(deletedIds()).toEqual([101]);
+
+    releases[0]();
+    await tick();
+    expect(deletedIds()).toEqual([101, 103]);
+
+    releases[1]();
     await done;
   });
 
