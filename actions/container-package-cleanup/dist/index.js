@@ -24915,7 +24915,7 @@ function createDeletionProgress(selected = 0) {
   return { selected, deleted: 0, skipped: 0, failed: 0, simulated: 0, outcomes: /* @__PURE__ */ new Map() };
 }
 function recordOutcome(progress, versionId, outcome) {
-  progress[outcome]++;
+  progress[outcome === "blocked" ? "skipped" : outcome]++;
   progress.outcomes?.set(versionId, outcome);
 }
 function notProcessed(progress) {
@@ -24951,6 +24951,7 @@ function summarizeDeletion({ selected, progress = null, dryRun = false, deleteSt
 var OUTCOME_LABELS = {
   deleted: "\u2705 deleted",
   skipped: "\u26A0\uFE0F skipped",
+  blocked: "\u23ED\uFE0F kept: its image was not deleted",
   failed: "\u274C failed"
 };
 function outcomeLabel({ progress, dryRun = false, versionId }) {
@@ -25466,11 +25467,16 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         for (const result2 of results) {
           if (result2.success) collectDigests(digs, result2.digests);
         }
-        return { versionName: v.name, digests: digs };
+        return { versionName: v.name, versionId: v.id, digests: digs, complete: results.every((r) => r.success) };
       });
       const digestResults = await Promise.all(digestPromises);
+      const unresolvedCandidates = [];
       for (const result2 of digestResults) {
         digestMap.set(result2.versionName, result2.digests);
+        if (!result2.complete) unresolvedCandidates.push(result2.versionId);
+      }
+      if (unresolvedCandidates.length > 0) {
+        action_logger_default.warn(`[${pkg.name}] The manifest of ${unresolvedCandidates.length} image(s) selected for deletion could not be fully read. Untagged versions of this package are deleted only after these images were deleted.`);
       }
       const allDigests = /* @__PURE__ */ new Set();
       for (const digs of digestMap.values()) {
@@ -25486,9 +25492,13 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         action_logger_default.debug(` [${pkg.name}] archLayers: none`, MODULE4);
       }
       const firstOwner = /* @__PURE__ */ new Map();
+      const ownerIdsOf = /* @__PURE__ */ new Map();
       taggedToDelete.forEach((v, index) => {
         for (const digest of digestMap.get(v.name) || []) {
           if (!firstOwner.has(digest)) firstOwner.set(digest, index);
+          const ids = ownerIdsOf.get(digest);
+          if (ids) ids.push(v.id);
+          else ownerIdsOf.set(digest, [v.id]);
         }
       });
       const layersOf = taggedToDelete.map(() => []);
@@ -25496,7 +25506,7 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       for (const layer of archLayers) {
         const owner2 = firstOwner.get(layer.name);
         if (owner2 !== void 0 && !used.has(layer.name)) {
-          layersOf[owner2].push(layer);
+          layersOf[owner2].push({ ...layer, dependsOn: ownerIdsOf.get(layer.name) });
           used.add(layer.name);
         }
       }
@@ -25521,7 +25531,9 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       if (toDelete.length > 0) {
         return {
           package: { id: pkg.id, name: pkg.name, type: pkg.packageType },
-          versions: toDelete
+          versions: toDelete,
+          // images whose manifest could not be fully read: every untagged version waits for them (set once per package)
+          ...unresolvedCandidates.length > 0 ? { unresolvedCandidates } : {}
         };
       }
       return null;
@@ -25592,13 +25604,20 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
     const normalizedOwner = owner.toLowerCase();
     let errorCount = 0;
     action_logger_default.info(`Starting deletion of package versions for owner: ${normalizedOwner}`);
-    for (const { package: pkg, versions } of filtered) {
+    for (const { package: pkg, versions, unresolvedCandidates = [] } of filtered) {
       const normalizedPackageName = (pkg.name || "").toLowerCase();
       const packageType = pkg.type;
       action_logger_default.debug(`Preparing to delete ${versions.length} versions of ${normalizedOwner}/${normalizedPackageName} (${packageType})`, _MODULE);
       action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
-      for (let i = 0; i < versions.length; i += batchSize) {
-        const batch = versions.slice(i, i + batchSize);
+      const isImage = (version) => (version.metadata?.container?.tags ?? []).length > 0;
+      const phases = [versions.filter(isImage), versions.filter((version) => !isImage(version))];
+      const imagesNotDeleted = (version) => [...version.dependsOn ?? [], ...unresolvedCandidates].filter((id) => progress.outcomes.get(id) !== "deleted");
+      const batches = phases.flatMap((phaseVersions) => {
+        const chunks = [];
+        for (let i = 0; i < phaseVersions.length; i += batchSize) chunks.push(phaseVersions.slice(i, i + batchSize));
+        return chunks;
+      });
+      for (const batch of batches) {
         const promises3 = batch.map(async (version) => {
           const tags = version.metadata?.container?.tags ?? [];
           const detail = packageType === "maven" ? version.name : tags.length ? tags.join(", ") : version.name;
@@ -25606,6 +25625,15 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
             action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - version id: ${version.id} (${detail}) will NOT be deleted (dry-run mode)`);
             recordOutcome(progress, version.id, "simulated");
             return { success: true, dryRun: true };
+          }
+          if (!isImage(version)) {
+            const waiting = imagesNotDeleted(version);
+            if (waiting.length > 0) {
+              const shown = waiting.slice(0, 5).join(", ") + (waiting.length > 5 ? `, ... (${waiting.length - 5} more)` : "");
+              action_logger_default.warn(`Kept ${normalizedPackageName} v:${version.id} (${detail}) - the image(s) it may belong to were not deleted: ${shown}`);
+              recordOutcome(progress, version.id, "blocked");
+              return { success: false, skipped: true, blocked: true };
+            }
           }
           try {
             await deleteSinglePackageVersion({
