@@ -25421,10 +25421,10 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       } else {
         action_logger_default.debug(` [${pkg.name}] taggedToDelete: none`, MODULE4);
       }
-      const toDeleteNames = new Set(taggedToDelete.map((v) => v.name));
+      const toDeleteIds = new Set(taggedToDelete.map((v) => v.id));
       const retainedTags = /* @__PURE__ */ new Set();
       for (const v of pkg.versions) {
-        if (v.metadata.container.tags.length > 0 && !toDeleteNames.has(v.name)) {
+        if (v.metadata.container.tags.length > 0 && !toDeleteIds.has(v.id)) {
           v.metadata.container.tags.forEach((tag) => {
             retainedTags.add(tag);
           });
@@ -25467,12 +25467,12 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
         for (const result2 of results) {
           if (result2.success) collectDigests(digs, result2.digests);
         }
-        return { versionName: v.name, versionId: v.id, digests: digs, complete: results.every((r) => r.success) };
+        return { versionId: v.id, digests: digs, complete: results.every((r) => r.success) };
       });
       const digestResults = await Promise.all(digestPromises);
       const unresolvedCandidates = [];
       for (const result2 of digestResults) {
-        digestMap.set(result2.versionName, result2.digests);
+        digestMap.set(result2.versionId, result2.digests);
         if (!result2.complete) unresolvedCandidates.push(result2.versionId);
       }
       if (unresolvedCandidates.length > 0) {
@@ -25494,7 +25494,7 @@ var ContainerStrategy = class extends abstractPackageStrategy_default {
       const firstOwner = /* @__PURE__ */ new Map();
       const ownerIdsOf = /* @__PURE__ */ new Map();
       taggedToDelete.forEach((v, index) => {
-        for (const digest of digestMap.get(v.name) || []) {
+        for (const digest of digestMap.get(v.id) || []) {
           if (!firstOwner.has(digest)) firstOwner.set(digest, index);
           const ids = ownerIdsOf.get(digest);
           if (ids) ids.push(v.id);
@@ -25611,7 +25611,13 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       action_logger_default.dryrun(`[DRY-RUN] ${normalizedOwner}/${normalizedPackageName} (${packageType}) - ${versions.length} versions will NOT be deleted (dry-run mode)`);
       const isImage = (version) => (version.metadata?.container?.tags ?? []).length > 0;
       const phases = [versions.filter(isImage), versions.filter((version) => !isImage(version))];
-      const imagesNotDeleted = (version) => [...version.dependsOn ?? [], ...unresolvedCandidates].filter((id) => progress.outcomes.get(id) !== "deleted");
+      const notDeleted = (id) => progress.outcomes.get(id) !== "deleted";
+      let unresolvedLeft = null;
+      const imagesNotDeleted = (version) => {
+        unresolvedLeft ??= unresolvedCandidates.filter(notDeleted);
+        const own = (version.dependsOn ?? []).filter(notDeleted);
+        return unresolvedLeft.length > 0 ? [...unresolvedLeft, ...own] : own;
+      };
       const batches = phases.flatMap((phaseVersions) => {
         const chunks = [];
         for (let i = 0; i < phaseVersions.length; i += batchSize) chunks.push(phaseVersions.slice(i, i + batchSize));
