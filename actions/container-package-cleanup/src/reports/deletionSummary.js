@@ -44,6 +44,7 @@ function summarizeDeletion({ selected, progress = null, dryRun = false, deleteSt
 const OUTCOME_LABELS = {
   deleted: "✅ deleted",
   skipped: "⚠️ skipped",
+  blocked: "⏭️ kept: its image was not deleted",
   failed: "❌ failed"
 };
 
