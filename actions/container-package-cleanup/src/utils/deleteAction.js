@@ -64,8 +64,15 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       // the images listed in its dependsOn and the images whose manifest could not be fully read.
       const isImage = (version) => (version.metadata?.container?.tags ?? []).length > 0;
       const phases = [versions.filter(isImage), versions.filter(version => !isImage(version))];
-      const imagesNotDeleted = (version) => [...(version.dependsOn ?? []), ...unresolvedCandidates]
-        .filter(id => progress.outcomes.get(id) !== "deleted");
+      const notDeleted = (id) => progress.outcomes.get(id) !== "deleted";
+      // The images with an unreadable manifest are all tagged, so their outcome is final when the untagged
+      // versions start: check them once per package, not once per version.
+      let unresolvedLeft = null;
+      const imagesNotDeleted = (version) => {
+        unresolvedLeft ??= unresolvedCandidates.filter(notDeleted);
+        const own = (version.dependsOn ?? []).filter(notDeleted);
+        return unresolvedLeft.length > 0 ? [...unresolvedLeft, ...own] : own;
+      };
       const batches = phases.flatMap((phaseVersions) => {
         const chunks = [];
         for (let i = 0; i < phaseVersions.length; i += batchSize) chunks.push(phaseVersions.slice(i, i + batchSize));

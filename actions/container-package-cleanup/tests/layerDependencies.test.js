@@ -232,6 +232,35 @@ describe('layers wait for their images', () => {
     });
   });
 
+  describe('versions that share a name', () => {
+    // GHCR names a version by its digest, so this is not expected; the protection must not depend on it
+    it('keeps a layer of an image whose name is shared with another candidate, when that image was not deleted', async () => {
+      failDeletes({ 501: 'boom' });
+      const toDelete = await select([
+        ver(501, 'sha256:duplicate', ['a']),
+        ver(502, 'sha256:duplicate', ['b']),
+        ver(503, 'sha256:layer-l', [])
+      ], { a: ['sha256:layer-l'], b: [] });
+      const { progress } = await execute(toDelete);
+
+      expect(toDelete[0].versions.find(v => v.id === 503).dependsOn).toEqual([501]);
+      expect(requested()).toEqual([501, 502]);
+      expect(outcomesOf(progress)[503]).toBe('blocked');
+    });
+
+    it('still protects the layers of a retained image whose name equals the name of a candidate', async () => {
+      const fresh = { ...ver(512, 'sha256:duplicate', ['fresh']), created_at: '2025-01-20T00:00:00Z' };
+      const [entry] = await select([
+        ver(511, 'sha256:duplicate', ['old']),
+        fresh,
+        ver(513, 'sha256:layer-l', [])
+      ], { old: [], fresh: ['sha256:layer-l'] });
+
+      // the fresh image is retained and references layer L, so L must not be selected
+      expect(entry.versions.map(v => v.id)).toEqual([511]);
+    });
+  });
+
   describe('order of the phases', () => {
     it('starts the delete of a dangling version only after the image phase has finished', async () => {
       const toDelete = await select([ver(401, 'sha256:image', ['x']), ver(402, 'sha256:dangling', [])], {});

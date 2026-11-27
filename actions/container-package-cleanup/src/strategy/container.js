@@ -194,10 +194,11 @@ class ContainerStrategy extends AbstractPackageStrategy {
             // 2.1) Retained images: every tagged version that is NOT going to be deleted
             // (fresh, latest, excluded, or not matched by includePatterns).
             // Their referenced manifests (platform/attestation versions) must never be deleted.
-            const toDeleteNames = new Set(taggedToDelete.map(v => v.name));
+            // by id, not by name: another version with the same name must not make a retained image look deleted
+            const toDeleteIds = new Set(taggedToDelete.map(v => v.id));
             const retainedTags = new Set();
             for (const v of pkg.versions) {
-                if (v.metadata.container.tags.length > 0 && !toDeleteNames.has(v.name)) {
+                if (v.metadata.container.tags.length > 0 && !toDeleteIds.has(v.id)) {
                     v.metadata.container.tags.forEach(tag => { retainedTags.add(tag) });
                 }
             }
@@ -249,12 +250,13 @@ class ContainerStrategy extends AbstractPackageStrategy {
                     if (result.success) collectDigests(digs, result.digests);
                 }
                 // A failed read of any tag leaves the layers of this image uncertain
-                return { versionName: v.name, versionId: v.id, digests: digs, complete: results.every(r => r.success) };
+                return { versionId: v.id, digests: digs, complete: results.every(r => r.success) };
             });
             const digestResults = await Promise.all(digestPromises);
             const unresolvedCandidates = [];
             for (const result of digestResults) {
-                digestMap.set(result.versionName, result.digests);
+                // keyed by id: two versions with the same name must not overwrite each other's manifest
+                digestMap.set(result.versionId, result.digests);
                 if (!result.complete) unresolvedCandidates.push(result.versionId);
             }
             if (unresolvedCandidates.length > 0) {
@@ -288,7 +290,7 @@ class ContainerStrategy extends AbstractPackageStrategy {
             const firstOwner = new Map();
             const ownerIdsOf = new Map();
             taggedToDelete.forEach((v, index) => {
-                for (const digest of digestMap.get(v.name) || []) {
+                for (const digest of digestMap.get(v.id) || []) {
                     if (!firstOwner.has(digest)) firstOwner.set(digest, index);
                     const ids = ownerIdsOf.get(digest);
                     if (ids) ids.push(v.id);
