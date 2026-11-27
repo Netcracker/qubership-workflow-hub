@@ -25612,11 +25612,16 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       const isImage = (version) => (version.metadata?.container?.tags ?? []).length > 0;
       const phases = [versions.filter(isImage), versions.filter((version) => !isImage(version))];
       const notDeleted = (id) => progress.outcomes.get(id) !== "deleted";
-      let unresolvedLeft = null;
+      const describeIds = (ids) => ids.slice(0, 5).join(", ") + (ids.length > 5 ? `, ... (${ids.length - 5} more)` : "");
+      let unresolvedText = null;
       const imagesNotDeleted = (version) => {
-        unresolvedLeft ??= unresolvedCandidates.filter(notDeleted);
+        if (unresolvedText === null) {
+          const left = unresolvedCandidates.filter(notDeleted);
+          unresolvedText = left.length > 0 ? describeIds(left) : "";
+        }
+        if (unresolvedText !== "") return unresolvedText;
         const own = (version.dependsOn ?? []).filter(notDeleted);
-        return unresolvedLeft.length > 0 ? [...unresolvedLeft, ...own] : own;
+        return own.length > 0 ? describeIds(own) : "";
       };
       const batches = phases.flatMap((phaseVersions) => {
         const chunks = [];
@@ -25634,9 +25639,8 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
           }
           if (!isImage(version)) {
             const waiting = imagesNotDeleted(version);
-            if (waiting.length > 0) {
-              const shown = waiting.slice(0, 5).join(", ") + (waiting.length > 5 ? `, ... (${waiting.length - 5} more)` : "");
-              action_logger_default.warn(`Kept ${normalizedPackageName} v:${version.id} (${detail}) - the image(s) it may belong to were not deleted: ${shown}`);
+            if (waiting !== "") {
+              action_logger_default.warn(`Kept ${normalizedPackageName} v:${version.id} (${detail}) - the image(s) it may belong to were not deleted: ${waiting}`);
               recordOutcome(progress, version.id, "blocked");
               return { success: false, skipped: true, blocked: true };
             }
