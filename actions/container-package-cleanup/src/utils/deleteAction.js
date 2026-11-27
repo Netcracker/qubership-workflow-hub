@@ -65,13 +65,20 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
       const isImage = (version) => (version.metadata?.container?.tags ?? []).length > 0;
       const phases = [versions.filter(isImage), versions.filter(version => !isImage(version))];
       const notDeleted = (id) => progress.outcomes.get(id) !== "deleted";
+      const describeIds = (ids) => ids.slice(0, 5).join(", ") + (ids.length > 5 ? `, ... (${ids.length - 5} more)` : "");
       // The images with an unreadable manifest are all tagged, so their outcome is final when the untagged
-      // versions start: check them once per package, not once per version.
-      let unresolvedLeft = null;
+      // versions start. They are checked once per package and, while any of them is left, they block every
+      // untagged version: the text for the log is built once and reused, nothing is copied per version.
+      let unresolvedText = null;
+      // the images an untagged version still waits for, as a short text, or "" when it may be deleted
       const imagesNotDeleted = (version) => {
-        unresolvedLeft ??= unresolvedCandidates.filter(notDeleted);
+        if (unresolvedText === null) {
+          const left = unresolvedCandidates.filter(notDeleted);
+          unresolvedText = left.length > 0 ? describeIds(left) : "";
+        }
+        if (unresolvedText !== "") return unresolvedText;
         const own = (version.dependsOn ?? []).filter(notDeleted);
-        return unresolvedLeft.length > 0 ? [...unresolvedLeft, ...own] : own;
+        return own.length > 0 ? describeIds(own) : "";
       };
       const batches = phases.flatMap((phaseVersions) => {
         const chunks = [];
@@ -92,9 +99,8 @@ async function deletePackageVersion(filtered, { wrapper, owner, isOrganization =
 
           if (!isImage(version)) {
             const waiting = imagesNotDeleted(version);
-            if (waiting.length > 0) {
-              const shown = waiting.slice(0, 5).join(", ") + (waiting.length > 5 ? `, ... (${waiting.length - 5} more)` : "");
-              log.warn(`Kept ${normalizedPackageName} v:${version.id} (${detail}) - the image(s) it may belong to were not deleted: ${shown}`);
+            if (waiting !== "") {
+              log.warn(`Kept ${normalizedPackageName} v:${version.id} (${detail}) - the image(s) it may belong to were not deleted: ${waiting}`);
               recordOutcome(progress, version.id, "blocked");
               return { success: false, skipped: true, blocked: true };
             }

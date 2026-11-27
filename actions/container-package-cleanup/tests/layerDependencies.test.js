@@ -214,6 +214,9 @@ describe('layers wait for their images', () => {
       expect(requested()).toEqual([201, 202]);
       expect(outcomesOf(progress)).toEqual({ 201: 'deleted', 202: 'failed', 203: 'blocked', 204: 'blocked' });
       expect(progress).toMatchObject({ deleted: 1, failed: 1, skipped: 2 });
+      // the warning names the image that is still missing
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('v:203'));
+      expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('were not deleted: 202'));
     });
 
     it('deletes the layers once the unreadable image was deleted too', async () => {
